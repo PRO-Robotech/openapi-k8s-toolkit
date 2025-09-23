@@ -3,6 +3,7 @@
 import React, { FC, useEffect, useState } from 'react'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
+import { isMultilineString } from 'utils/isMultilineString'
 import { Styled } from './styled'
 
 type TYamlEditProps = {
@@ -11,11 +12,36 @@ type TYamlEditProps = {
   onChange: (values: Record<string, unknown>) => void
 }
 
+// Function to process values and format multiline strings properly
+const processValuesForYaml = (values: any): any => {
+  if (Array.isArray(values)) {
+    return values.map(processValuesForYaml)
+  }
+  
+  if (values && typeof values === 'object') {
+    const processed: any = {}
+    for (const [key, value] of Object.entries(values)) {
+      processed[key] = processValuesForYaml(value)
+    }
+    return processed
+  }
+  
+  return values
+}
+
 export const YamlEditor: FC<TYamlEditProps> = ({ theme, currentValues, onChange }) => {
   const [yamlData, setYamlData] = useState<string>('')
 
   useEffect(() => {
-    setYamlData(yaml.stringify(currentValues))
+    const yamlString = yaml.stringify(currentValues, {
+      // Use literal block scalar for multiline strings
+      blockQuote: 'literal',
+      // Preserve line breaks
+      lineWidth: 0,
+      // Use double quotes for strings that need escaping
+      doubleQuotedAsJSON: false,
+    })
+    setYamlData(yamlString)
   }, [currentValues])
 
   return (
