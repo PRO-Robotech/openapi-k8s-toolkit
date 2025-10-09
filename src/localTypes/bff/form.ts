@@ -41,6 +41,7 @@ export type TPrepareFormRes =
       hiddenPaths: string[][] | undefined
       expandedPaths: string[][] | undefined
       persistedPaths: string[][] | undefined
+      sortPaths: string[][] | undefined
       kindName: string | undefined
       isNamespaced: boolean
       formPrefills?: TFormPrefill
