@@ -67,6 +67,7 @@ export const BlackholeFormDataProvider: FC<TBlackholeFormDataProviderProps> = ({
     hiddenPaths?: string[][]
     expandedPaths: string[][]
     persistedPaths: string[][]
+    sortPaths?: string[][]
     kindName: string
     isNamespaced?: boolean
     isError?: boolean
@@ -108,6 +109,7 @@ export const BlackholeFormDataProvider: FC<TBlackholeFormDataProviderProps> = ({
             hiddenPaths: data.hiddenPaths,
             expandedPaths: data.expandedPaths || [],
             persistedPaths: data.persistedPaths || [],
+            sortPaths: data.sortPaths,
             kindName: data.kindName || '',
             formPrefills: data.formPrefills,
             namespacesData: data.namespacesData,
@@ -167,6 +169,7 @@ export const BlackholeFormDataProvider: FC<TBlackholeFormDataProviderProps> = ({
       hiddenPaths={preparedData.hiddenPaths}
       expandedPaths={preparedData.expandedPaths}
       persistedPaths={preparedData.persistedPaths}
+      sortPaths={preparedData.sortPaths}
       prefillValuesSchema={data.prefillValuesSchema}
       prefillValueNamespaceOnly={data.prefillValueNamespaceOnly}
       isCreate={isCreate}
