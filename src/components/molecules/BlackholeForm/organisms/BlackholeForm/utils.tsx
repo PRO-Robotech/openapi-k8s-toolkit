@@ -235,6 +235,7 @@ export const getStringMultilineFormItemFromSwagger = ({
   removeField,
   persistedControls,
   onRemoveByMinus,
+  isBase64,
 }: {
   name: TFormName
   arrKey?: number
@@ -247,6 +248,7 @@ export const getStringMultilineFormItemFromSwagger = ({
   removeField: ({ path }: { path: TFormName }) => void
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
+  isBase64?: boolean
 }) => {
   return (
     <FormStringMultilineInput
@@ -262,6 +264,7 @@ export const getStringMultilineFormItemFromSwagger = ({
       removeField={removeField}
       persistedControls={persistedControls}
       onRemoveByMinus={onRemoveByMinus}
+      isBase64={isBase64}
     />
   )
 }
@@ -533,7 +536,7 @@ export const getArrayFormItemFromSwagger = ({
                             urlParams,
                             onRemoveByMinus: () => remove(field.name),
                           })}
-                        {fieldType === 'multilineString' &&
+                        {(fieldType === 'multilineString' || fieldType === 'multilineStringBase64') &&
                           getStringMultilineFormItemFromSwagger({
                             name: Array.isArray(name) ? [...name, field.name] : [name, field.name],
                             arrKey: field.key,
@@ -550,6 +553,7 @@ export const getArrayFormItemFromSwagger = ({
                             removeField,
                             persistedControls,
                             onRemoveByMinus: () => remove(field.name),
+                            isBase64: fieldType === 'multilineStringBase64',
                           })}
                         {fieldType === 'boolean' &&
                           getBooleanFormItemFromSwagger({
@@ -846,7 +850,7 @@ export const getObjectFormItemsDraft = ({
             urlParams,
           })
         }
-        if (properties[el].type === 'multilineString') {
+        if (properties[el].type === 'multilineString' || properties[el].type === 'multilineStringBase64') {
           return getStringMultilineFormItemFromSwagger({
             name: Array.isArray(name) ? [...name, String(el)] : [name, String(el)],
             arrKey,
@@ -863,6 +867,7 @@ export const getObjectFormItemsDraft = ({
             isAdditionalProperties: properties[el].isAdditionalProperties,
             removeField,
             persistedControls,
+            isBase64: properties[el].type === 'multilineStringBase64',
           })
         }
         if (properties[el].type === 'boolean') {

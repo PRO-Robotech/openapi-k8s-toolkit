@@ -704,7 +704,14 @@ export const BlackholeForm: FC<TBlackholeFormCreateProps> = ({
               const itemType = getArrayItemType(properties, arrayPath as (string | number)[])
               if (itemType === 'object') form.setFieldValue(itemPath as any, {})
               else if (itemType === 'array') form.setFieldValue(itemPath as any, [])
-              else if (itemType === 'number' || itemType === 'integer') form.setFieldValue(itemPath as any, 0)
+              else if (itemType === 'listInput') form.setFieldValue(itemPath as any, undefined)
+              else if (
+                itemType === 'number' ||
+                itemType === 'integer' ||
+                itemType === 'rangeInputCpu' ||
+                itemType === 'rangeInputMemory'
+              )
+                form.setFieldValue(itemPath as any, 0)
               else if (itemType === 'boolean') form.setFieldValue(itemPath as any, false)
               else form.setFieldValue(itemPath as any, '') // string / unknown
             }
@@ -1105,12 +1112,16 @@ export const BlackholeForm: FC<TBlackholeFormCreateProps> = ({
     const fullPath = [...arrPath, name] as TFormName
     const currentValue = form.getFieldValue(fullPath)
     if (currentValue === undefined) {
-      if (type === 'string') {
+      if (type === 'string' || type === 'multilineString' || type === 'multilineStringBase64') {
         form.setFieldValue(fullPath as any, '')
       } else if (type === 'number' || type === 'integer') {
         form.setFieldValue(fullPath as any, 0)
       } else if (type === 'array') {
         form.setFieldValue(fullPath as any, [])
+      } else if (type === 'rangeInputCpu' || type === 'rangeInputMemory') {
+        form.setFieldValue(fullPath as any, 0)
+      } else if (type === 'listInput') {
+        form.setFieldValue(fullPath as any, undefined)
       } else {
         // object / unknown -> make it an object
         form.setFieldValue(fullPath as any, {})
@@ -1182,8 +1193,6 @@ export const BlackholeForm: FC<TBlackholeFormCreateProps> = ({
     console.log(value)
     setPersistedKeys([...persistedKeys.filter(arr => JSON.stringify(arr) !== JSON.stringify(value))])
   }
-
-  console.log('allValues', allValues)
 
   return (
     <>
