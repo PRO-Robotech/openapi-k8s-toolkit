@@ -124,8 +124,26 @@ export const materializeAdditionalFromValues = (
    *
    * This is used when a new field appears in the data but doesn't yet exist in the schema.
    */
-  const makeChildFromAP = (ap: any): OpenAPIV2.SchemaObject => {
-    const t = ap?.type ?? 'object'
+  const makeChildFromAP = (ap: any, value?: unknown): OpenAPIV2.SchemaObject => {
+    // Determine type based on actual value if not explicitly defined in additionalProperties
+    let t = ap?.type
+    if (!t && value !== undefined && value !== null) {
+      if (Array.isArray(value)) {
+        t = 'array'
+      } else if (typeof value === 'object') {
+        t = 'object'
+      } else if (typeof value === 'string') {
+        t = 'string'
+      } else if (typeof value === 'number') {
+        t = 'number'
+      } else if (typeof value === 'boolean') {
+        t = 'boolean'
+      } else {
+        t = 'object'
+      }
+    }
+    t = t ?? 'object'
+    
     const child: OpenAPIV2.SchemaObject = { type: t } as any
 
     // Copy common schema details (if present)
@@ -133,6 +151,20 @@ export const materializeAdditionalFromValues = (
     if (ap?.items) (child as any).items = _.cloneDeep(ap.items)
     if (ap?.required)
       (child as any).required = _.cloneDeep(ap.required)
+
+    // If value is an array and items type is not defined, infer it from the first item
+    if (t === 'array' && Array.isArray(value) && value.length > 0 && !ap?.items) {
+      const firstItem = value[0]
+      if (typeof firstItem === 'string') {
+        ;(child as any).items = { type: 'string' }
+      } else if (typeof firstItem === 'number') {
+        ;(child as any).items = { type: 'number' }
+      } else if (typeof firstItem === 'boolean') {
+        ;(child as any).items = { type: 'boolean' }
+      } else if (typeof firstItem === 'object') {
+        ;(child as any).items = { type: 'object' }
+      }
+    }
 
       // Mark as originating from `additionalProperties`
     ;(child as any).isAdditionalProperties = true
@@ -177,7 +209,16 @@ export const materializeAdditionalFromValues = (
 
           // If the key doesn't exist in schema, create it from `additionalProperties`
           if (!schemaNode.properties![k]) {
-            schemaNode.properties![k] = makeChildFromAP(ap)
+            // Check if there's a nested property definition in additionalProperties
+            const nestedProp = ap?.properties?.[k]
+            if (nestedProp) {
+              // Use the nested property definition from additionalProperties
+              schemaNode.properties![k] = _.cloneDeep(nestedProp) as any
+              ;(schemaNode.properties![k] as any).isAdditionalProperties = true
+            } else {
+              // Create from additionalProperties with value-based type inference
+              schemaNode.properties![k] = makeChildFromAP(ap, vo[k])
+            }
             // If it's an existing additional property, merge any nested structure
           } else if ((schemaNode.properties![k] as any).isAdditionalProperties && ap?.properties) {
             ;(schemaNode.properties![k] as any).properties ??= _.cloneDeep(ap.properties)

@@ -42,7 +42,11 @@ export const FormStringInput: FC<TFormStringInputProps> = ({
   const formValue = Form.useWatch(formFieldName)
 
   // Derive multiline based on current local value
-  const isMultiline = useMemo(() => isMultilineString(formValue), [formValue])
+  const isMultiline = useMemo(() => {
+    // Normalize value for multiline check
+    const value = typeof formValue === 'string' ? formValue : (formValue === null || formValue === undefined ? '' : String(formValue))
+    return isMultilineString(value)
+  }, [formValue])
 
   const title = (
     <>
@@ -77,6 +81,23 @@ export const FormStringInput: FC<TFormStringInputProps> = ({
         rules={[{ required: forceNonRequired === false && required?.includes(getStringByName(name)) }]}
         validateTrigger="onBlur"
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
+        normalize={(value) => {
+          // Normalize value to string - prevent "[object Object]" display
+          if (value === undefined || value === null) {
+            return ''
+          }
+          if (typeof value === 'string') {
+            return value
+          }
+          if (typeof value === 'number' || typeof value === 'boolean') {
+            return String(value)
+          }
+          // If it's an object or array, it shouldn't be in a string field - return empty string
+          if (typeof value === 'object') {
+            return ''
+          }
+          return String(value)
+        }}
       >
         <Input.TextArea
           placeholder={getStringByName(name)}

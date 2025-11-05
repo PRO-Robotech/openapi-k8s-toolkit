@@ -394,9 +394,11 @@ export const getArrayFormItemFromSwagger = ({
           {(fields, { add, remove }, { errors }) => (
             <>
               {fields.map(field => {
-                const fieldType = (
+                const rawFieldType = (
                   schema.items as (OpenAPIV2.ItemsObject & { properties?: OpenAPIV2.SchemaObject }) | undefined
                 )?.type
+                // Handle type as string or string[] (OpenAPI v2 allows both)
+                const fieldType = Array.isArray(rawFieldType) ? rawFieldType[0] : rawFieldType
                 const description = (schema.items as (OpenAPIV2.ItemsObject & { description?: string }) | undefined)
                   ?.description
                 const entry = schema.items as
@@ -577,7 +579,29 @@ export const getArrayFormItemFromSwagger = ({
                   type="text"
                   size="small"
                   onClick={() => {
-                    add()
+                    // Determine initial value based on item type
+                    const fieldType = (
+                      schema.items as (OpenAPIV2.ItemsObject & { properties?: OpenAPIV2.SchemaObject }) | undefined
+                    )?.type
+                    
+                    let initialValue: unknown
+                    // Handle type as string or string[] (OpenAPI v2 allows both)
+                    const typeStr = Array.isArray(fieldType) ? fieldType[0] : fieldType
+                    if (typeStr === 'string') {
+                      initialValue = ''
+                    } else if (typeStr === 'number' || typeStr === 'integer') {
+                      initialValue = 0
+                    } else if (typeStr === 'boolean') {
+                      initialValue = false
+                    } else if (typeStr === 'array') {
+                      initialValue = []
+                    } else if (typeStr === 'object') {
+                      initialValue = {}
+                    } else {
+                      initialValue = ''
+                    }
+                    
+                    add(initialValue)
                   }}
                 >
                   <PlusIcon />

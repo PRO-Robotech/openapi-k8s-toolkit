@@ -68,13 +68,60 @@ export const FormObjectFromSwagger: FC<TFormObjectFromSwaggerProps> = ({
         properties?: OpenAPIV2.SchemaObject['properties']
         required?: string
       }
+      
+      // Check if the field name exists in additionalProperties.properties
+      // If so, use the type from that property definition
+      const nestedProp = addProps?.properties?.[additionalPropValue] as OpenAPIV2.SchemaObject | undefined
+      let fieldType: string = addProps.type
+      let fieldItems: { type: string } | undefined = addProps.items
+      let fieldNestedProperties = addProps.properties || {}
+      let fieldRequired: string | undefined = addProps.required
+      
+      if (nestedProp) {
+        // Use the nested property definition if it exists
+        // Handle type - it can be string or string[] in OpenAPI v2
+        if (nestedProp.type) {
+          if (Array.isArray(nestedProp.type)) {
+            fieldType = nestedProp.type[0] || addProps.type
+          } else if (typeof nestedProp.type === 'string') {
+            fieldType = nestedProp.type
+          } else {
+            fieldType = addProps.type
+          }
+        } else {
+          fieldType = addProps.type
+        }
+        
+        // Handle items - it can be ItemsObject or ReferenceObject
+        if (nestedProp.items) {
+          // Check if it's a valid ItemsObject with type property
+          if ('type' in nestedProp.items && typeof nestedProp.items.type === 'string') {
+            fieldItems = { type: nestedProp.items.type }
+          } else {
+            fieldItems = addProps.items
+          }
+        } else {
+          fieldItems = addProps.items
+        }
+        
+        fieldNestedProperties = nestedProp.properties || {}
+        // Handle required field - it can be string[] in OpenAPI schema
+        if (Array.isArray(nestedProp.required)) {
+          fieldRequired = nestedProp.required.join(',')
+        } else if (typeof nestedProp.required === 'string') {
+          fieldRequired = nestedProp.required
+        } else {
+          fieldRequired = addProps.required
+        }
+      }
+      
       inputProps?.addField({
         path: Array.isArray(name) ? [...name, String(collapseTitle)] : [name, String(collapseTitle)],
         name: additionalPropValue,
-        type: addProps.type,
-        items: addProps.items,
-        nestedProperties: addProps.properties || {},
-        required: addProps.required,
+        type: fieldType,
+        items: fieldItems,
+        nestedProperties: fieldNestedProperties,
+        required: fieldRequired,
       })
       setAddditionalPropValue(undefined)
     }
