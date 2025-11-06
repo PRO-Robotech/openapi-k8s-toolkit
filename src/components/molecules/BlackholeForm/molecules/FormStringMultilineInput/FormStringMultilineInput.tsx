@@ -1,8 +1,9 @@
 /* eslint-disable no-nested-ternary */
-import React, { FC, useState, useEffect, useMemo } from 'react'
+// import React, { FC, useState, useEffect, useMemo } from 'react'
+import React, { FC, useState, useEffect } from 'react'
 import { Flex, Input, Typography, Tooltip, Button, Form } from 'antd'
 import { getStringByName } from 'utils/getStringByName'
-import { isMultilineString } from 'utils/isMultilineString'
+// import { isMultilineString } from 'utils/isMultilineString'
 import { TFormName, TPersistedControls } from 'localTypes/form'
 import { MinusIcon, feedbackIcons } from 'components/atoms'
 import { PersistedCheckbox, HiddenContainer, ResetedFormItem, CustomSizeTitle } from '../../atoms'
@@ -47,7 +48,7 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
   const form = Form.useFormInstance()
 
   // Derive multiline based on current local value
-  const isMultiline = useMemo(() => isMultilineString(formValue), [formValue])
+  // const isMultiline = useMemo(() => isMultilineString(formValue), [formValue])
 
   const title = (
     <>
@@ -99,8 +100,10 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
       >
         <Input.TextArea
           placeholder={getStringByName(name)}
-          rows={isMultiline ? 4 : 1}
-          autoSize={!isMultiline ? { minRows: 1, maxRows: 1 } : { minRows: 2, maxRows: 10 }}
+          // rows={isMultiline ? 4 : 1}
+          rows={4}
+          // autoSize={!isMultiline ? { minRows: 1, maxRows: 1 } : { minRows: 2, maxRows: 10 }}
+          autoSize={{ minRows: 2, maxRows: 10 }}
         />
       </ResetedFormItem>
       {isBase64 && (
@@ -116,8 +119,10 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
                 // optional: surface a message via antd or keep silent
               }
             }}
-            rows={isMultiline ? 4 : 1}
-            autoSize={!isMultiline ? { minRows: 1, maxRows: 1 } : { minRows: 2, maxRows: 10 }}
+            // rows={isMultiline ? 4 : 1}
+            rows={4}
+            // autoSize={!isMultiline ? { minRows: 1, maxRows: 1 } : { minRows: 2, maxRows: 10 }}
+            autoSize={{ minRows: 2, maxRows: 10 }}
           />
         </Styled.MarginBottom>
       )}
