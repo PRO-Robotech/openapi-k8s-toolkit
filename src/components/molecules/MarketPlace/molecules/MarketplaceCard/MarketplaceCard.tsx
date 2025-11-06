@@ -2,9 +2,11 @@
 import React, { FC } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Typography, Flex, theme } from 'antd'
-import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
+import { useListWatch } from 'hooks/useListThenWatch'
+// import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
 import { TMarketPlacePanel } from 'localTypes/marketplace'
-import { getPathToNav, getCreatePathToNav, getListPath } from './utils'
+// import { getPathToNav, getCreatePathToNav, getListPath } from './utils'
+import { getPathToNav, getCreatePathToNav } from './utils'
 import { Styled } from './styled'
 
 export type TMarketplaceCardProps = {
@@ -75,24 +77,49 @@ export const MarketplaceCard: FC<TMarketplaceCardProps> = ({
           baseprefix,
         })
 
-  const listUrl: string | undefined =
-    addedMode && type !== 'direct'
-      ? getListPath({
-          clusterName,
-          namespace,
-          type,
-          typeName,
-          apiGroup,
-          apiVersion,
-        })
-      : undefined
+  // const listUrl: string | undefined =
+  //   addedMode && type !== 'direct'
+  //     ? getListPath({
+  //         clusterName,
+  //         namespace,
+  //         type,
+  //         typeName,
+  //         apiGroup,
+  //         apiVersion,
+  //       })
+  //     : undefined
 
-  const { data: k8sList, error: k8sListError } = useDirectUnknownResource<{ items?: [] }>({
-    uri: listUrl || '',
-    queryKey: [listUrl || ''],
-    refetchInterval: false,
-    isEnabled: addedMode && listUrl !== undefined,
+  // const { data: k8sList, error: k8sListError } = useDirectUnknownResource<{ items?: [] }>({
+  //   uri: listUrl || '',
+  //   queryKey: [listUrl || ''],
+  //   refetchInterval: false,
+  //   isEnabled: addedMode && listUrl !== undefined,
+  // })
+
+  const { state, status, lastError } = useListWatch({
+    wsUrl: `/api/clusters/${clusterName}/openapi-bff-ws/listThenWatch/listWatchWs`,
+    paused: false,
+    ignoreRemove: false,
+    autoDrain: true,
+    preserveStateOnUrlChange: true,
+    query: {
+      namespace,
+      apiVersion: apiVersion || '',
+      apiGroup,
+      plural: type,
+    },
+    isEnabled: Boolean(apiVersion && addedMode && type !== 'direct'),
   })
+
+  // const isLoading = status === 'connecting'
+  const k8sListError = status === 'closed' && lastError ? lastError : undefined
+  const k8sList = {
+    items: state.order.map(key => {
+      const res = state.byKey[key]
+      return res
+    }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as { items: any[] }
 
   if (addedMode && (k8sListError || type === 'direct') && !showZeroResources) {
     return null

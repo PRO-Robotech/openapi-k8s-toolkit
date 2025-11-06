@@ -40,12 +40,12 @@ export const prepareDataForManageableBreadcrumbs = ({
   replaceValues,
   idToCompare,
 }: {
-  data: { id: string; breadcrumbItems: TLink[] }[]
+  data: ({ id: string; breadcrumbItems: TLink[] } | undefined)[]
   replaceValues: Record<string, string | undefined>
   pathname: string
   idToCompare: string
 }): { breadcrumbItems: BreadcrumbItemType[] } | undefined => {
-  const foundData = data.find(el => el.id === idToCompare)
+  const foundData = data.find(el => el?.id === idToCompare)
 
   if (!foundData) {
     return undefined
