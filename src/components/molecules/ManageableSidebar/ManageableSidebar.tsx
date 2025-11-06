@@ -1,8 +1,9 @@
 import React, { FC, useEffect, useState } from 'react'
 import { Spin } from 'antd'
 import { ItemType } from 'antd/es/menu/interface'
-import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
-import { TSidebarResponse } from './types'
+import { useListWatch } from 'hooks/useListThenWatch'
+// import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
+// import { TSidebarResponse } from './types'
 import { prepareDataForManageableSidebar } from './utils'
 import { Styled } from './styled'
 
@@ -54,8 +55,10 @@ export const ManageableSidebar: FC<TManageableSidebarProps> = ({ data, noMarginT
 }
 
 export type TManageableSidebarWithDataProviderProps = {
-  uri: string
-  refetchInterval?: number | false
+  wsUrl: string
+  apiGroup: string
+  apiVersion: string
+  plural: string
   isEnabled?: boolean
   replaceValues: Record<string, string | undefined>
   pathname: string
@@ -66,8 +69,10 @@ export type TManageableSidebarWithDataProviderProps = {
 }
 
 export const ManageableSidebarWithDataProvider: FC<TManageableSidebarWithDataProviderProps> = ({
-  uri,
-  refetchInterval,
+  wsUrl,
+  apiGroup,
+  apiVersion,
+  plural,
   isEnabled,
   replaceValues,
   pathname,
@@ -76,16 +81,39 @@ export const ManageableSidebarWithDataProvider: FC<TManageableSidebarWithDataPro
   hidden,
   noMarginTop,
 }) => {
-  const {
-    data: rawData,
-    isError: rawDataError,
-    isLoading: rawDataLoading,
-  } = useDirectUnknownResource<TSidebarResponse>({
-    uri,
-    refetchInterval,
-    queryKey: ['sidebar', uri],
+  // const {
+  //   data: rawData,
+  //   isError: rawDataError,
+  //   isLoading: rawDataLoading,
+  // } = useDirectUnknownResource<TSidebarResponse>({
+  //   uri,
+  //   refetchInterval,
+  //   queryKey: ['sidebar', uri],
+  //   isEnabled,
+  // })
+  const { state, status, lastError } = useListWatch({
+    wsUrl,
+    paused: false,
+    ignoreRemove: false,
+    autoDrain: true,
+    preserveStateOnUrlChange: true,
+    query: {
+      apiVersion,
+      apiGroup,
+      plural,
+    },
     isEnabled,
   })
+
+  const rawDataLoading = status === 'connecting'
+  const rawDataError = status === 'closed' && lastError ? lastError : undefined
+  const rawData = {
+    items: state.order.map(key => {
+      const res = state.byKey[key]
+      return res
+    }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as { items: any[] }
 
   if (rawDataError) {
     return null
