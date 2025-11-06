@@ -29,6 +29,14 @@ export { useBuiltinResourceTypes } from './hooks/useBuiltinResourceTypes'
 export { useCrdData } from './hooks/useCrdData'
 export { useDirectUnknownResource } from './hooks/useDirectUnknownResource'
 export { usePermissions } from './hooks/usePermissions'
+export { useListWatch, useInfiniteSentinel } from './hooks/useListThenWatch'
+export type {
+  TConnStatus,
+  TUseListWatchQuery,
+  TUseListWatchOptions,
+  TUseListWatchReturn,
+} from './hooks/useListThenWatch'
+
 /* types */
 export type { TRequestError } from './localTypes/api'
 export type { TClusterList } from './localTypes/clusterList'
