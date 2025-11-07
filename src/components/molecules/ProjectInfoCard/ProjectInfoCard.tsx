@@ -1,12 +1,11 @@
 /* eslint-disable max-lines-per-function */
 import React, { FC, useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useListWatch } from 'hooks/useListThenWatch'
-// import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
+import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
 import { usePermissions } from 'hooks/usePermissions'
 import { DeleteModal, Spacer } from 'components/atoms'
 import { Typography, Flex, Spin } from 'antd'
-// import { TMarketPlacePanelResponse } from 'localTypes/marketplace'
+import { TMarketPlacePanelResponse } from 'localTypes/marketplace'
 import { MarketplaceCard } from 'components/molecules'
 import { DropdownActions, DropdownAccessGroups } from './molecules'
 import { Styled } from './styled'
@@ -43,103 +42,60 @@ export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
 }) => {
   const navigate = useNavigate()
 
-  // const {
-  //   data: marketplacePanels,
-  //   isLoading: marketplaceIsLoading,
-  //   // error: marketplaceError,
-  // } = useDirectUnknownResource<TMarketPlacePanelResponse>({
-  //   uri: `/api/clusters/${clusterName}/k8s/apis/${baseApiGroup}/${baseApiVersion}/${mpResourceName}/`,
-  //   refetchInterval: 5000,
-  //   queryKey: ['marketplacePanels', clusterName || 'no-cluster'],
-  //   isEnabled: clusterName !== undefined,
-  // })
-
-  const { state, status } = useListWatch({
-    wsUrl: `/api/clusters/${clusterName}/openapi-bff-ws/listThenWatch/listWatchWs`,
-    paused: false,
-    ignoreRemove: false,
-    autoDrain: true,
-    preserveStateOnUrlChange: true,
-    query: {
-      apiVersion: baseApiVersion,
-      apiGroup: baseApiGroup,
-      plural: mpResourceName,
-    },
-    isEnabled: clusterName !== undefined,
+  const {
+    data: marketplacePanels,
+    isLoading: marketplaceIsLoading,
+    // error: marketplaceError,
+  } = useK8sSmartResource<TMarketPlacePanelResponse>({
+    cluster: clusterName || '',
+    group: baseApiGroup,
+    version: baseApiVersion,
+    plural: mpResourceName,
+    isEnabled: Boolean(clusterName !== undefined),
   })
-
-  const marketplaceIsLoading = status === 'connecting'
-  const marketplacePanels = {
-    items: state.order.map(key => {
-      const res = state.byKey[key]
-      return res
-    }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as { items: any[] }
-
-  // const {
-  //   data: project,
-  //   isLoading,
-  //   error,
-  // } = useDirectUnknownResource<{
-  //   apiVersion: string
-  //   kind: 'Project'
-  //   metadata: {
-  //     labels: {
-  //       paas: string
-  //       pj: string
-  //     }
-  //     name: string
-  //     resourceVersion: string
-  //     uid: string
-  //   }
-  //   spec: {
-  //     businessName?: string
-  //     description: string
-  //     prefix: string
-  //   }
-  //   status: {
-  //     conditions: {
-  //       lastTransitionTime: string
-  //       message: string
-  //       reason: string
-  //       status: string
-  //       type: string
-  //     }[]
-  //   }
-  // }>({
-  //   uri: `/api/clusters/${clusterName}/k8s/apis/${baseProjectApiGroup}/${baseProjectVersion}/${projectResourceName}/${namespace}`,
-  //   refetchInterval: 5000,
-  //   queryKey: ['projects', clusterName || 'no-cluster'],
-  //   isEnabled: clusterName !== undefined,
-  // })
 
   const {
-    state: stateProject,
-    status: statusProject,
-    lastError: lastErrorProject,
-  } = useListWatch({
-    wsUrl: `/api/clusters/${clusterName}/openapi-bff-ws/listThenWatch/listWatchWs`,
-    paused: false,
-    ignoreRemove: false,
-    autoDrain: true,
-    preserveStateOnUrlChange: true,
-    query: {
-      apiVersion: baseProjectVersion,
-      apiGroup: baseProjectApiGroup,
-      plural: projectResourceName,
-      fieldSelector: `metadata.name=${namespace}`,
-    },
-    isEnabled: clusterName !== undefined,
+    data: projectArr,
+    isLoading,
+    error,
+  } = useK8sSmartResource<
+    {
+      apiVersion: string
+      kind: 'Project'
+      metadata: {
+        labels: {
+          paas: string
+          pj: string
+        }
+        name: string
+        resourceVersion: string
+        uid: string
+      }
+      spec: {
+        businessName?: string
+        description: string
+        prefix: string
+      }
+      status: {
+        conditions: {
+          lastTransitionTime: string
+          message: string
+          reason: string
+          status: string
+          type: string
+        }[]
+      }
+    }[]
+  >({
+    cluster: clusterName || '',
+    group: baseProjectApiGroup,
+    version: baseProjectVersion,
+    plural: projectResourceName,
+    fieldSelector: `metadata.name=${namespace}`,
+    isEnabled: Boolean(clusterName !== undefined),
   })
 
-  const isLoading = statusProject === 'connecting'
-  const error = statusProject === 'closed' && lastErrorProject ? lastErrorProject : undefined
-  const projectArr = stateProject.order.map(key => {
-    const res = stateProject.byKey[key]
-    return res
-  })
-  const project = projectArr.length > 0 ? projectArr[0] : undefined
+  const project = projectArr && projectArr.length > 0 ? projectArr[0] : undefined
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false)
 

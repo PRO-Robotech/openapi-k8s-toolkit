@@ -3,6 +3,7 @@ import { getCrdResources, getCrdResourceSingle } from 'api/getCrdResource'
 import { TCrdResources, TSingleResource } from 'localTypes/k8s'
 import { TJSON } from 'localTypes/JSON'
 
+/* same as api resource */
 export const useCrdResources = <T = TJSON[]>({
   clusterName,
   namespace,
@@ -43,6 +44,7 @@ export const useCrdResources = <T = TJSON[]>({
   })
 }
 
+/* same as api resource */
 export const useCrdResourceSingle = ({
   clusterName,
   namespace,

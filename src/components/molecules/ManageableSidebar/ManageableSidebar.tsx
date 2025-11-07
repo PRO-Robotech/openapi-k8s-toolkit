@@ -1,9 +1,8 @@
 import React, { FC, useEffect, useState } from 'react'
 import { Spin } from 'antd'
 import { ItemType } from 'antd/es/menu/interface'
-import { useListWatch } from 'hooks/useListThenWatch'
-// import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
-// import { TSidebarResponse } from './types'
+import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
+import { TSidebarResponse } from './types'
 import { prepareDataForManageableSidebar } from './utils'
 import { Styled } from './styled'
 
@@ -55,7 +54,7 @@ export const ManageableSidebar: FC<TManageableSidebarProps> = ({ data, noMarginT
 }
 
 export type TManageableSidebarWithDataProviderProps = {
-  wsUrl: string
+  cluster: string
   apiGroup: string
   apiVersion: string
   plural: string
@@ -69,7 +68,7 @@ export type TManageableSidebarWithDataProviderProps = {
 }
 
 export const ManageableSidebarWithDataProvider: FC<TManageableSidebarWithDataProviderProps> = ({
-  wsUrl,
+  cluster,
   apiGroup,
   apiVersion,
   plural,
@@ -81,39 +80,17 @@ export const ManageableSidebarWithDataProvider: FC<TManageableSidebarWithDataPro
   hidden,
   noMarginTop,
 }) => {
-  // const {
-  //   data: rawData,
-  //   isError: rawDataError,
-  //   isLoading: rawDataLoading,
-  // } = useDirectUnknownResource<TSidebarResponse>({
-  //   uri,
-  //   refetchInterval,
-  //   queryKey: ['sidebar', uri],
-  //   isEnabled,
-  // })
-  const { state, status, lastError } = useListWatch({
-    wsUrl,
-    paused: false,
-    ignoreRemove: false,
-    autoDrain: true,
-    preserveStateOnUrlChange: true,
-    query: {
-      apiVersion,
-      apiGroup,
-      plural,
-    },
+  const {
+    data: rawData,
+    isError: rawDataError,
+    isLoading: rawDataLoading,
+  } = useK8sSmartResource<TSidebarResponse>({
+    cluster,
+    group: apiGroup,
+    version: apiVersion,
+    plural,
     isEnabled,
   })
-
-  const rawDataLoading = status === 'connecting'
-  const rawDataError = status === 'closed' && lastError ? lastError : undefined
-  const rawData = {
-    items: state.order.map(key => {
-      const res = state.byKey[key]
-      return res
-    }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as { items: any[] }
 
   if (rawDataError) {
     return null

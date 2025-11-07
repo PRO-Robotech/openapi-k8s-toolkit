@@ -1,13 +1,11 @@
 /* eslint-disable max-lines-per-function */
-import React, { FC, useEffect, useState, useMemo } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { AxiosError } from 'axios'
 import { usePermissions } from 'hooks/usePermissions'
-import { useListWatch } from 'hooks/useListThenWatch'
-// import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
+import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
 import { DeleteModal, Spacer } from 'components/atoms'
 import { notification, Typography, Flex, Switch, Spin, Alert } from 'antd'
-// import { TMarketPlacePanelResponse, TMarketPlacePanelResource, TMarketPlacePanel } from 'localTypes/marketplace'
-import { TMarketPlacePanelResource, TMarketPlacePanel } from 'localTypes/marketplace'
+import { TMarketPlacePanelResponse, TMarketPlacePanelResource, TMarketPlacePanel } from 'localTypes/marketplace'
 import { AddCard } from './atoms'
 import { AddEditFormModal, MarketplaceCard, SearchTextInput } from './molecules'
 import { Styled } from './styled'
@@ -51,42 +49,17 @@ export const MarketPlace: FC<TMarketPlaceProps> = ({
   const [uniqueTags, setUniqueTags] = useState<string[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
 
-  // const {
-  //   data: marketplacePanels,
-  //   isLoading,
-  //   error,
-  // } = useDirectUnknownResource<TMarketPlacePanelResponse>({
-  //   uri: `/api/clusters/${clusterName}/k8s/apis/${baseApiGroup}/${baseApiVersion}/${mpResourceName}/`,
-  //   refetchInterval: 5000,
-  //   queryKey: ['marketplacePanels', clusterName || 'no-cluster'],
-  //   isEnabled: clusterName !== undefined,
-  // })
-
-  const { state, status, lastError } = useListWatch({
-    wsUrl: `/api/clusters/${clusterName}/openapi-bff-ws/listThenWatch/listWatchWs`,
-    paused: false,
-    ignoreRemove: false,
-    autoDrain: true,
-    preserveStateOnUrlChange: true,
-    query: {
-      apiVersion: baseApiVersion,
-      apiGroup: baseApiGroup,
-      plural: mpResourceName,
-    },
-    isEnabled: clusterName !== undefined,
+  const {
+    data: marketplacePanels,
+    isLoading,
+    error,
+  } = useK8sSmartResource<TMarketPlacePanelResponse>({
+    cluster: clusterName || '',
+    group: baseApiGroup,
+    version: baseApiVersion,
+    plural: mpResourceName,
+    isEnabled: Boolean(clusterName !== undefined),
   })
-
-  const isLoading = status === 'connecting'
-  const error = status === 'closed' && lastError ? lastError : undefined
-  const marketplacePanels = useMemo(() => {
-    return {
-      items: state.order.map(key => {
-        const res = state.byKey[key]
-        return res
-      }),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as { items: any[] }
-  }, [state])
 
   const createPermission = usePermissions({
     group: baseApiGroup,

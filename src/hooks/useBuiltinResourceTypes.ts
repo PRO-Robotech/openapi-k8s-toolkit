@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getBuiltinResourceTypes } from 'api/getBuiltinResourceTypes'
 import { TBuiltinResourceTypeList } from 'localTypes/k8s'
 
+/* /api/v1 */
 export const useBuiltinResourceTypes = ({ clusterName }: { clusterName: string }) => {
   return useQuery({
     queryKey: ['useBuiltinResourceTypes', clusterName],

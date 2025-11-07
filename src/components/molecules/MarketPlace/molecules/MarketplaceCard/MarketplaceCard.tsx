@@ -2,7 +2,7 @@
 import React, { FC } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Typography, Flex, theme } from 'antd'
-import { useListWatch } from 'hooks/useListThenWatch'
+import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
 // import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
 import { TMarketPlacePanel } from 'localTypes/marketplace'
 // import { getPathToNav, getCreatePathToNav, getListPath } from './utils'
@@ -96,30 +96,14 @@ export const MarketplaceCard: FC<TMarketplaceCardProps> = ({
   //   isEnabled: addedMode && listUrl !== undefined,
   // })
 
-  const { state, status, lastError } = useListWatch({
-    wsUrl: `/api/clusters/${clusterName}/openapi-bff-ws/listThenWatch/listWatchWs`,
-    paused: false,
-    ignoreRemove: false,
-    autoDrain: true,
-    preserveStateOnUrlChange: true,
-    query: {
-      namespace,
-      apiVersion: apiVersion || '',
-      apiGroup,
-      plural: type,
-    },
+  const { data: k8sList, error: k8sListError } = useK8sSmartResource<{ items?: [] }>({
+    cluster: clusterName || '',
+    namespace,
+    group: apiGroup,
+    version: apiVersion || '',
+    plural: type,
     isEnabled: Boolean(apiVersion && addedMode && type !== 'direct'),
   })
-
-  // const isLoading = status === 'connecting'
-  const k8sListError = status === 'closed' && lastError ? lastError : undefined
-  const k8sList = {
-    items: state.order.map(key => {
-      const res = state.byKey[key]
-      return res
-    }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as { items: any[] }
 
   if (addedMode && (k8sListError || type === 'direct') && !showZeroResources) {
     return null
