@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getApiResourceTypes, getApiResourceTypesByApiGroup } from 'api/getApiResourceTypes'
 import { TApiGroupList, TApiGroupResourceTypeList } from 'localTypes/k8s'
 
+/* /apis/ */
 export const useApisResourceTypes = ({ clusterName }: { clusterName: string }) => {
   return useQuery({
     queryKey: ['useApisResourceTypes', clusterName],
@@ -19,6 +20,7 @@ export const useApisResourceTypes = ({ clusterName }: { clusterName: string }) =
   })
 }
 
+/* /apis/${apiGroup}/${apiVersion}/ */
 export const useApiResourceTypesByGroup = ({
   clusterName,
   apiGroup,

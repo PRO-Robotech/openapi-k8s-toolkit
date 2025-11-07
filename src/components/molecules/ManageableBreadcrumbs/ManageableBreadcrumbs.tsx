@@ -2,9 +2,8 @@ import React, { FC } from 'react'
 // import { Breadcrumb, Spin } from 'antd'
 import { Spin } from 'antd'
 import { BreadcrumbItemType } from 'antd/es/breadcrumb/Breadcrumb'
-import { useListWatch } from 'hooks/useListThenWatch'
-// import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
-// import { TBreadcrumbResponse } from './types'
+import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
+import { TBreadcrumbResponse } from './types'
 import { prepareDataForManageableBreadcrumbs } from './utils'
 import { CollapsibleBreadcrumb } from './molecules'
 import { Styled } from './styled'
@@ -23,6 +22,7 @@ export const ManageableBreadcrumbs: FC<TManageableBreadcrumbsProps> = ({ data })
 }
 
 export type TManageableBreadcrumbsWithDataProviderProps = {
+  cluster: string
   wsUrl: string
   apiGroup: string
   apiVersion: string
@@ -34,7 +34,7 @@ export type TManageableBreadcrumbsWithDataProviderProps = {
 }
 
 export const ManageableBreadcrumbsWithDataProvider: FC<TManageableBreadcrumbsWithDataProviderProps> = ({
-  wsUrl,
+  cluster,
   apiGroup,
   apiVersion,
   plural,
@@ -43,39 +43,17 @@ export const ManageableBreadcrumbsWithDataProvider: FC<TManageableBreadcrumbsWit
   pathname,
   idToCompare,
 }) => {
-  // const {
-  //   data: rawData,
-  //   isError: rawDataError,
-  //   isLoading: rawDataLoading,
-  // } = useDirectUnknownResource<TBreadcrumbResponse>({
-  //   uri,
-  //   refetchInterval,
-  //   queryKey: ['breadcrumb', uri],
-  //   isEnabled,
-  // })
-  const { state, status, lastError } = useListWatch({
-    wsUrl,
-    paused: false,
-    ignoreRemove: false,
-    autoDrain: true,
-    preserveStateOnUrlChange: true,
-    query: {
-      apiVersion,
-      apiGroup,
-      plural,
-    },
+  const {
+    data: rawData,
+    isError: rawDataError,
+    isLoading: rawDataLoading,
+  } = useK8sSmartResource<TBreadcrumbResponse>({
+    cluster: cluster || '',
+    group: apiGroup,
+    version: apiVersion,
+    plural,
     isEnabled,
   })
-
-  const rawDataLoading = status === 'connecting'
-  const rawDataError = status === 'closed' && lastError ? lastError : undefined
-  const rawData = {
-    items: state.order.map(key => {
-      const res = state.byKey[key]
-      return res
-    }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as { items: any[] }
 
   if (rawDataError) {
     return null

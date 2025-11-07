@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getCrdData } from 'api/getCrdData'
 import { TCRD } from 'localTypes/k8s'
 
+/* /apis/apiextensions.k8s.io/${apiExtensionVersion}/customresourcedefinitions/${crdName} */
 export const useCrdData = ({
   clusterName,
   apiExtensionVersion,
