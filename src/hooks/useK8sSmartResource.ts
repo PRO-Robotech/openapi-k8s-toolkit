@@ -23,6 +23,7 @@ const buildListUri = ({
   namespace,
   fieldSelector,
   labelSelector,
+  limit,
 }: {
   cluster: string
   group?: string
@@ -31,6 +32,7 @@ const buildListUri = ({
   namespace?: string
   fieldSelector?: string
   labelSelector?: string
+  limit?: number
 }) => {
   const prefix = buildApiPrefix(group, version)
   const ns = namespace ? `/namespaces/${namespace}` : ''
@@ -39,6 +41,7 @@ const buildListUri = ({
   const params = new URLSearchParams()
   if (fieldSelector) params.append('fieldSelector', fieldSelector)
   if (labelSelector) params.append('labelSelector', labelSelector)
+  if (limit) params.append('limit', String(limit))
 
   return params.toString() ? `${base}?${params.toString()}` : base
 }
@@ -51,6 +54,7 @@ type UseK8sSmartResourceParams<T> = {
   namespace?: string
   fieldSelector?: string
   labelSelector?: string
+  limit?: number
   isEnabled?: boolean
   listRefetchInterval?: number | false
   mapListWatchState?: (state: { order: string[]; byKey: Record<string, TSingleResource> }) => T
@@ -74,6 +78,7 @@ export const useK8sSmartResource = <T>({
   labelSelector,
   isEnabled = true,
   listRefetchInterval = 5000,
+  limit,
   mapListWatchState,
 }: UseK8sSmartResourceParams<T>): SmartResult<T> => {
   // 1️⃣ Check verbs
@@ -100,6 +105,7 @@ export const useK8sSmartResource = <T>({
     namespace,
     fieldSelector,
     labelSelector,
+    limit,
   })
 
   // 3️⃣ REST list (when can list but can’t watch)
@@ -134,6 +140,7 @@ export const useK8sSmartResource = <T>({
     autoDrain: true,
     preserveStateOnUrlChange: true,
     isEnabled: watchEnabled,
+    pageSize: limit,
     query: {
       apiGroup: group,
       apiVersion: version,

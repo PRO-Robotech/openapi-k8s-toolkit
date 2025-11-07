@@ -23,7 +23,6 @@ export const ManageableBreadcrumbs: FC<TManageableBreadcrumbsProps> = ({ data })
 
 export type TManageableBreadcrumbsWithDataProviderProps = {
   cluster: string
-  wsUrl: string
   apiGroup: string
   apiVersion: string
   plural: string

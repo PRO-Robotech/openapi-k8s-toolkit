@@ -2,7 +2,6 @@
 import React, { FC, useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
-// import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
 import { usePermissions } from 'hooks/usePermissions'
 import { DeleteModal, Spacer } from 'components/atoms'
 import { Typography, Flex, Spin } from 'antd'
@@ -42,17 +41,6 @@ export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
   children,
 }) => {
   const navigate = useNavigate()
-
-  // const {
-  //   data: marketplacePanels,
-  //   isLoading: marketplaceIsLoading,
-  //   // error: marketplaceError,
-  // } = useDirectUnknownResource<TMarketPlacePanelResponse>({
-  //   uri: `/api/clusters/${clusterName}/k8s/apis/${baseApiGroup}/${baseApiVersion}/${mpResourceName}/`,
-  //   refetchInterval: 5000,
-  //   queryKey: ['marketplacePanels', clusterName || 'no-cluster'],
-  //   isEnabled: clusterName !== undefined,
-  // })
 
   const {
     data: marketplacePanels,
@@ -103,11 +91,11 @@ export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
     group: baseProjectApiGroup,
     version: baseProjectVersion,
     plural: projectResourceName,
+    fieldSelector: `metadata.name=${namespace}`,
     isEnabled: Boolean(clusterName !== undefined),
   })
 
-  const project =
-    projectArr && projectArr.length > 0 ? projectArr.find(({ metadata }) => metadata.name === namespace) : undefined
+  const project = projectArr && projectArr.length > 0 ? projectArr[0] : undefined
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false)
 
