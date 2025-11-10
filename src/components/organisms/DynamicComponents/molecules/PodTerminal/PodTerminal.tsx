@@ -2,7 +2,8 @@
 import React, { FC } from 'react'
 import { Flex, Spin } from 'antd'
 import { PodTerminal as Terminal } from 'components'
-import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
+import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
+// import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
@@ -39,20 +40,39 @@ export const PodTerminal: FC<{ data: TDynamicComponentsAppTypeMap['PodTerminal']
 
   const podNamePrepared = parseAll({ text: podName, replaceValues, multiQueryData })
 
+  // const {
+  //   data: podInfo,
+  //   isError: isPodInfoError,
+  //   isLoading: isLoadingPodInfo,
+  // } = useDirectUnknownResource<
+  //   unknown & {
+  //     status: unknown & { containerStatuses: { name: string; state?: unknown & { running?: unknown } }[] }
+  //   }
+  // >({
+  //   uri: `/api/clusters/${clusterPrepared}/k8s/api/v1/namespaces/${namespacePrepared}/pods/${podNamePrepared}`,
+  //   refetchInterval: 5000,
+  //   queryKey: [clusterPrepared || 'no-cluster', 'pods', podNamePrepared],
+  //   isEnabled: clusterPrepared !== undefined && namespacePrepared !== undefined && podNamePrepared !== undefined,
+  // })
+
   const {
-    data: podInfo,
+    data: podInfoList,
     isError: isPodInfoError,
     isLoading: isLoadingPodInfo,
-  } = useDirectUnknownResource<
-    unknown & {
+  } = useK8sSmartResource<{
+    items?: (unknown & {
       status: unknown & { containerStatuses: { name: string; state?: unknown & { running?: unknown } }[] }
-    }
-  >({
-    uri: `/api/clusters/${clusterPrepared}/k8s/api/v1/namespaces/${namespacePrepared}/pods/${podNamePrepared}`,
-    refetchInterval: 5000,
-    queryKey: [clusterPrepared || 'no-cluster', 'pods', podNamePrepared],
+    })[]
+  }>({
+    cluster: clusterPrepared,
+    namespace: namespacePrepared,
+    version: 'v1',
+    plural: 'pods',
+    fieldSelector: `metadata.name=${podNamePrepared}`,
     isEnabled: clusterPrepared !== undefined && namespacePrepared !== undefined && podNamePrepared !== undefined,
   })
+
+  const podInfo = podInfoList?.items && podInfoList.items.length > 0 ? podInfoList.items[0] : undefined
 
   if (isMultiqueryLoading) {
     return <div>Loading multiquery</div>
