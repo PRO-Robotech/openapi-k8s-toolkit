@@ -9,6 +9,7 @@ import { PlusOutlined, ClearOutlined, MinusOutlined } from '@ant-design/icons'
 import { EditIcon, DeleteIcon, PaddingContainer, DeleteModal, DeleteModalMany } from 'components/atoms'
 import { EnrichedTableProvider } from 'components/molecules'
 import { usePermissions } from 'hooks/usePermissions'
+import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
 import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
 import { getLinkToForm } from 'utils/tableLocations'
 import { prepareTemplate } from 'utils/prepareTemplate'
@@ -41,6 +42,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     id,
     fetchUrl,
+    k8sResourceToFetch,
     pathToItems,
     clusterNamePartOfUrl,
     labelSelector,
@@ -106,7 +108,20 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     refetchInterval: false,
   })
 
-  const fetchUrlPrepared = parseAll({ text: fetchUrl, replaceValues, multiQueryData })
+  const fetchUrlPrepared = fetchUrl ? parseAll({ text: fetchUrl, replaceValues, multiQueryData }) : undefined
+
+  const k8sResourceToFetchPrepared = k8sResourceToFetch
+    ? {
+        group: k8sResourceToFetch.group
+          ? parseAll({ text: k8sResourceToFetch.group, replaceValues, multiQueryData })
+          : undefined,
+        version: parseAll({ text: k8sResourceToFetch.version, replaceValues, multiQueryData }),
+        plural: parseAll({ text: k8sResourceToFetch.plural, replaceValues, multiQueryData }),
+        namespace: k8sResourceToFetch.namespace
+          ? parseAll({ text: k8sResourceToFetch.namespace, replaceValues, multiQueryData })
+          : undefined,
+      }
+    : undefined
 
   const sParams = new URLSearchParams()
 
@@ -154,10 +169,29 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
   } = useDirectUnknownResource<unknown>({
     uri: `${fetchUrlPrepared}${searchParams ? `?${searchParams}` : ''}`,
     queryKey: [`${fetchUrlPrepared}${searchParams ? `?${searchParams}` : ''}`],
-    isEnabled: !isMultiqueryLoading,
+    isEnabled: Boolean(!isMultiqueryLoading && fetchUrlPrepared),
   })
 
-  if (isMultiqueryLoading) {
+  const {
+    data: fetchedDataSocket,
+    isLoading: isFetchedDataSocketLoading,
+    error: fetchedDataSocketError,
+  } = useK8sSmartResource<{ items?: unknown }>({
+    cluster: clusterName || '',
+    namespace: k8sResourceToFetchPrepared?.namespace,
+    group: k8sResourceToFetchPrepared?.group,
+    version: k8sResourceToFetchPrepared?.version || '',
+    plural: k8sResourceToFetchPrepared?.plural || '',
+    fieldSelector: sParams.get('fieldSelector') || undefined,
+    labelSelector: sParams.get('labelSelector') || undefined,
+    isEnabled: Boolean(!isMultiqueryLoading && k8sResourceToFetchPrepared),
+  })
+
+  if (fetchUrlPrepared && isMultiqueryLoading) {
+    return <div>Loading multiquery</div>
+  }
+
+  if (k8sResourceToFetchPrepared && isMultiqueryLoading) {
     return <div>Loading multiquery</div>
   }
 
@@ -165,7 +199,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
   //   return <div>No data has been fetched</div>
   // }
 
-  if (isFetchedDataLoading) {
+  if (fetchUrlPrepared && isFetchedDataLoading) {
     return (
       <Flex justify="center">
         <Spin />
@@ -173,13 +207,27 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     )
   }
 
-  if (fetchedDataError) {
+  if (k8sResourceToFetchPrepared && isFetchedDataSocketLoading) {
+    return (
+      <Flex justify="center">
+        <Spin />
+      </Flex>
+    )
+  }
+
+  if (fetchUrlPrepared && fetchedDataError) {
     return <div>Error: {JSON.stringify(fetchedDataError)}</div>
   }
 
+  if (k8sResourceToFetchPrepared && fetchedDataSocketError) {
+    return <div>Error: {JSON.stringify(fetchedDataError)}</div>
+  }
+
+  const dataFromOneOfHooks = fetchedData || fetchedDataSocket?.items
+
   const items = Array.isArray(pathToItems)
-    ? _.get(fetchedData, pathToItems)
-    : jp.query(fetchedData, `$${pathToItems}`)[0]
+    ? _.get(dataFromOneOfHooks, pathToItems)
+    : jp.query(dataFromOneOfHooks, `$${pathToItems}`)[0]
 
   if (!items) {
     return <div>No data on this path {JSON.stringify(pathToItems)}</div>

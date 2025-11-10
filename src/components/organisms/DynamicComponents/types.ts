@@ -69,7 +69,13 @@ export type TDynamicComponentsAppTypeMap = {
   SidebarProvider: { id: number | string } & Omit<TManageableSidebarWithDataProviderProps, 'replaceValues'>
   EnrichedTable: {
     id: number | string
-    fetchUrl: string
+    fetchUrl?: string
+    k8sResourceToFetch?: {
+      group?: string
+      version: string
+      plural: string
+      namespace?: string
+    }
     pathToItems: string | string[] // jsonpath or keys as string[]
     clusterNamePartOfUrl: string
     labelSelector?: Record<string, string>
