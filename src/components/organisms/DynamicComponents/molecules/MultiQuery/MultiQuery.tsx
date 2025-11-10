@@ -1,7 +1,7 @@
 /* eslint-disable react/no-array-index-key */
 import React, { FC } from 'react'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/multiQueryProvider'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
 import { parseMutliqueryText } from '../utils'
 
 export const MultiQuery: FC<{ data: TDynamicComponentsAppTypeMap['multiQuery'] }> = ({ data }) => {
@@ -17,7 +17,7 @@ export const MultiQuery: FC<{ data: TDynamicComponentsAppTypeMap['multiQuery'] }
     return (
       <div>
         <h4>Errors:</h4>
-        <ul>{errors.map((e, i) => e && <li key={i}>{e.message}</li>)}</ul>
+        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
       </div>
     )
   }

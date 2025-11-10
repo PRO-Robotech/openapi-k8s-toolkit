@@ -2,7 +2,7 @@
 import React, { FC } from 'react'
 import { NodeTerminal as Terminal } from 'components'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/multiQueryProvider'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
 import { useFactoryConfig } from '../../../DynamicRendererWithProviders/factoryConfigProvider'
 import { parseAll } from '../utils'

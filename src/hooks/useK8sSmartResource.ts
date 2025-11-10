@@ -46,7 +46,7 @@ const buildListUri = ({
   return params.toString() ? `${base}?${params.toString()}` : base
 }
 
-type UseK8sSmartResourceParams<T> = {
+export type TUseK8sSmartResourceParams<T> = {
   cluster: string
   group?: string
   version: string
@@ -80,7 +80,7 @@ export const useK8sSmartResource = <T>({
   listRefetchInterval = 5000,
   limit,
   mapListWatchState,
-}: UseK8sSmartResourceParams<T>): SmartResult<T> => {
+}: TUseK8sSmartResourceParams<T>): SmartResult<T> => {
   // 1️⃣ Check verbs
   const {
     canList,

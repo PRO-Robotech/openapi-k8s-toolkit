@@ -2,7 +2,7 @@
 import React, { FC, useState, useEffect } from 'react'
 import { YamlEditorSingleton as Editor } from 'components'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/multiQueryProvider'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/themeContext'
 import { parseAll } from '../utils'
@@ -74,7 +74,7 @@ export const YamlEditorSingleton: FC<{ data: TDynamicComponentsAppTypeMap['YamlE
       <Editor
         cluster={clusterPrepared}
         theme={theme}
-        prefillValuesSchema={prefillValues}
+        prefillValuesSchema={prefillValues as any}
         isNameSpaced={isNameSpaced}
         isCreate={false}
         type={type}
