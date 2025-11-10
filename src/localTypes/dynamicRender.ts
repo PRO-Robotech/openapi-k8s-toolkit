@@ -1,4 +1,5 @@
 import { ReactElement } from 'react'
+import { TUseK8sSmartResourceParams } from 'hooks/useK8sSmartResource'
 // A map where keys are item types and values are the data shape for each
 /*
   type MyItemTypeMap = {
@@ -38,7 +39,8 @@ export type TRendererComponents<T extends TItemTypeMap> = {
 
 export type TFactoryDataK8s<T extends TItemTypeMap> = {
   key: string
-  urlsToFetch: string[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  urlsToFetch: string | TUseK8sSmartResourceParams<any>
   withScrollableMainContentCard?: boolean
   data: TRenderableItem<T>[]
   sidebarTags?: string[]
