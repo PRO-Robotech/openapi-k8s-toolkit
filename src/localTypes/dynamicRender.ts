@@ -40,7 +40,7 @@ export type TRendererComponents<T extends TItemTypeMap> = {
 export type TFactoryDataK8s<T extends TItemTypeMap> = {
   key: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  urlsToFetch: string | TUseK8sSmartResourceParams<any>
+  urlsToFetch: (string | TUseK8sSmartResourceParams<any>)[]
   withScrollableMainContentCard?: boolean
   data: TRenderableItem<T>[]
   sidebarTags?: string[]
