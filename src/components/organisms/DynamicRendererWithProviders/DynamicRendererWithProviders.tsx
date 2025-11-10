@@ -7,7 +7,8 @@ import { DynamicRenderer, TDynamicRendererProps } from '../DynamicRenderer'
 import { ThemeProvider } from './themeContext'
 import { FactoryConfigContextProvider } from './factoryConfigProvider'
 import { PartsOfUrlProvider } from './partsOfUrlContext'
-import { MultiQueryProvider } from './multiQueryProvider'
+// import { MultiQueryProvider } from './multiQueryProvider'
+import { MultiQueryProvider } from './hybridDataProvider'
 
 export const DynamicRendererWithProviders = <T extends TItemTypeMap>(
   props: TDynamicRendererProps<T> & {
@@ -38,7 +39,7 @@ export const DynamicRendererWithProviders = <T extends TItemTypeMap>(
       <ThemeProvider theme={theme}>
         <FactoryConfigContextProvider value={{ nodeTerminalDefaultProfile }}>
           <PartsOfUrlProvider value={{ partsOfUrl: location.pathname.split('/') }}>
-            <MultiQueryProvider urls={preparedUrlsToFetch} dataToApplyToContext={dataToApplyToContext}>
+            <MultiQueryProvider items={preparedUrlsToFetch} dataToApplyToContext={dataToApplyToContext}>
               <DynamicRenderer {...props} />
             </MultiQueryProvider>
           </PartsOfUrlProvider>

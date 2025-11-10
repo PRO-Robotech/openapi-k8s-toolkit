@@ -2,7 +2,7 @@
 import React, { FC } from 'react'
 import { Typography } from 'antd'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/multiQueryProvider'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
 import { parseAll } from '../utils'
 import { getResult } from './utils'
@@ -50,7 +50,7 @@ export const StatusText: FC<{ data: TDynamicComponentsAppTypeMap['StatusText']; 
       <div>
         <h4>Errors:</h4>
         {/* eslint-disable-next-line react/no-array-index-key */}
-        <ul>{errors.map((e, i) => e && <li key={i}>{e.message}</li>)}</ul>
+        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
       </div>
     )
   }
