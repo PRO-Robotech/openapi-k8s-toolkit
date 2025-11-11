@@ -28,9 +28,9 @@ export const useK8sVerbs = ({
 
   const { data, isError, isLoading, error } = useDirectUnknownResource<K8sVerbsResponse>({
     uri,
-    queryKey: ['k8s-verbs', group || '', version, plural],
+    queryKey: ['k8s-verbs', cluster, group || '', version, plural],
     refetchInterval: false,
-    isEnabled,
+    isEnabled: Boolean(isEnabled && cluster && version && plural),
   })
 
   const verbs = data?.verbs || []

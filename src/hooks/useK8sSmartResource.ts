@@ -93,7 +93,7 @@ export const useK8sSmartResource = <T>({
     group,
     version,
     plural,
-    isEnabled,
+    isEnabled: Boolean(isEnabled && cluster && cluster.length > 0),
   })
 
   // 2️⃣ Build REST list URI
@@ -109,7 +109,9 @@ export const useK8sSmartResource = <T>({
   })
 
   // 3️⃣ REST list (when can list but can’t watch)
-  const restEnabled = Boolean(isEnabled && canList && !canWatch && !verbsLoading && !verbsIsError)
+  const restEnabled = Boolean(
+    cluster && cluster.length > 0 && isEnabled && canList && !canWatch && !verbsLoading && !verbsIsError,
+  )
   const {
     data: restData,
     isLoading: restLoading,
@@ -132,7 +134,10 @@ export const useK8sSmartResource = <T>({
   })
 
   // 4️⃣ list+watch (when can list and can watch)
-  const watchEnabled = Boolean(isEnabled && canList && canWatch && !verbsLoading && !verbsIsError)
+  const watchEnabled = Boolean(
+    cluster && cluster.length > 0 && isEnabled && canList && canWatch && !verbsLoading && !verbsIsError,
+  )
+
   const { state, status, lastError } = useListWatch({
     wsUrl: `/api/clusters/${cluster}/openapi-bff-ws/listThenWatch/listWatchWs`,
     paused: false,
