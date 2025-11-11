@@ -458,6 +458,15 @@ export const useListWatch = ({
       }
       if (!frame) return
 
+      // Logs from Server (errors basically)
+      if (frame.type === 'SERVER_LOG') {
+        const level = frame.level || 'info'
+        const msg = frame.message
+        // eslint-disable-next-line no-console
+        ;(console[level] || console.log).call(console, '[useListWatch][server]', msg)
+        return
+      }
+
       // Initial snapshot (with optional paging token) establishes base state
       if (frame.type === 'INITIAL') {
         dispatch({ type: 'RESET', items: frame.items })
