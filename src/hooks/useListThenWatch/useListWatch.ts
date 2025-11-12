@@ -383,21 +383,6 @@ export const useListWatch = ({
     connect()
   }, [closeWS, connect, setStatusSafe])
 
-  // React to isEnabled flips by connecting/closing
-  useEffect(() => {
-    if (!mountedRef.current) return
-    if (isEnabled) {
-      connect()
-    } else {
-      if (reconnectTimerRef.current) {
-        window.clearTimeout(reconnectTimerRef.current)
-        reconnectTimerRef.current = null
-      }
-      closeWS()
-      setStatusSafe('closed')
-    }
-  }, [isEnabled, closeWS, connect, setStatusSafe])
-
   // --------------- URL & Query change policies ---------------
   /** Update base URL; optionally reset state; reconnect if enabled */
   const setUrl = useCallback(
@@ -472,6 +457,15 @@ export const useListWatch = ({
         return
       }
       if (!frame) return
+
+      // Logs from Server (errors basically)
+      if (frame.type === 'SERVER_LOG') {
+        const level = frame.level || 'info'
+        const msg = frame.message
+        // eslint-disable-next-line no-console
+        ;(console[level] || console.log).call(console, '[useListWatch][server]', msg)
+        return
+      }
 
       // Initial snapshot (with optional paging token) establishes base state
       if (frame.type === 'INITIAL') {
@@ -561,6 +555,21 @@ export const useListWatch = ({
   useEffect(() => {
     if (wsUrl !== urlRef.current) setUrl(wsUrl)
   }, [wsUrl, setUrl])
+
+  // React to isEnabled flips by connecting/closing
+  useEffect(() => {
+    if (!mountedRef.current) return
+    if (isEnabled) {
+      connect()
+    } else {
+      if (reconnectTimerRef.current) {
+        window.clearTimeout(reconnectTimerRef.current)
+        reconnectTimerRef.current = null
+      }
+      closeWS()
+      setStatusSafe('closed')
+    }
+  }, [isEnabled, closeWS, connect, setStatusSafe])
 
   // --------------- react to *effective* query changes by resId ---------------
   useEffect(() => {

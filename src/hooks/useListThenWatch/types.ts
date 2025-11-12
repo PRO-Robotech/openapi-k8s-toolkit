@@ -36,7 +36,13 @@ type TDeltaFrame = {
   item: TSingleResource
 }
 
-export type TServerFrame = TInitialFrame | TPageFrame | TPageErrorFrame | TDeltaFrame
+type TConsoleFrame = {
+  type: 'SERVER_LOG'
+  level: 'info' | 'warn' | 'error'
+  message: string
+}
+
+export type TServerFrame = TInitialFrame | TPageFrame | TPageErrorFrame | TDeltaFrame | TConsoleFrame
 
 // Outgoing scroll request to server
 // Sent when the bottom sentinel intersects view and `continue` exists.

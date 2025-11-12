@@ -58,8 +58,8 @@ export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
     data: projectArr,
     isLoading,
     error,
-  } = useK8sSmartResource<
-    {
+  } = useK8sSmartResource<{
+    items: {
       apiVersion: string
       kind: 'Project'
       metadata: {
@@ -86,7 +86,7 @@ export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
         }[]
       }
     }[]
-  >({
+  }>({
     cluster: clusterName || '',
     group: baseProjectApiGroup,
     version: baseProjectVersion,
@@ -95,7 +95,7 @@ export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
     isEnabled: Boolean(clusterName !== undefined),
   })
 
-  const project = projectArr && projectArr.length > 0 ? projectArr[0] : undefined
+  const project = projectArr && projectArr.items && projectArr.items.length > 0 ? projectArr.items[0] : undefined
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false)
 
