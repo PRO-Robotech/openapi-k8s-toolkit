@@ -138,7 +138,7 @@ export const useK8sSmartResource = <T>({
     cluster && cluster.length > 0 && isEnabled && canList && canWatch && !verbsLoading && !verbsIsError,
   )
 
-  const { state, status, lastError } = useListWatch({
+  const { state, status, hasInitial, lastError } = useListWatch({
     wsUrl: `/api/clusters/${cluster}/openapi-bff-ws/listThenWatch/listWatchWs`,
     paused: false,
     ignoreRemove: false,
@@ -181,7 +181,10 @@ export const useK8sSmartResource = <T>({
     : 'disabled'
 
   const isLoading =
-    (isEnabled && verbsLoading) || (used === 'watch' && status === 'connecting') || (used === 'list' && restLoading)
+    (isEnabled && verbsLoading) ||
+    (used === 'watch' && status === 'connecting') ||
+    (used === 'watch' && status === 'open' && !hasInitial) ||
+    (used === 'list' && restLoading)
 
   let error: AxiosError | Error | string | undefined
   if (verbsIsError) error = verbsErrorObj as Error
