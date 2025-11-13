@@ -180,14 +180,25 @@ export const EditModal: FC<TEditModalProps> = ({
                       {...restField}
                       name={[name, 'operator']}
                       rules={[
-                        { required: true, message: 'Operator is required.' },
-                        {
-                          validator: (_, v) =>
-                            v && operatorOptions.includes(v)
-                              ? Promise.resolve()
-                              : Promise.reject(new Error('Select a valid operator.')),
-                        },
+                        ({ getFieldValue }) => ({
+                          validator(_, v) {
+                            const nameV = getFieldValue(['tolerations', name, 'key'])
+                            if ((nameV === 'nameV' || !nameV) && (!v || v !== 'Exists')) {
+                              return Promise.reject(new Error('Operator must be Exists when `key` is empty'))
+                            }
+                            return Promise.resolve()
+                          },
+                        }),
                       ]}
+                      // rules={[
+                      //   { required: true, message: 'Operator is required.' },
+                      //   {
+                      //     validator: (_, v) =>
+                      //       v && operatorOptions.includes(v)
+                      //         ? Promise.resolve()
+                      //         : Promise.reject(new Error('Select a valid operator.')),
+                      //   },
+                      // ]}
                     >
                       <Select
                         placeholder="Select operator"

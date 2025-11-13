@@ -122,7 +122,9 @@ export type TDynamicComponentsAppTypeMap = {
     apiGroup?: string
     apiVersion?: string
     typeName: string
+    forcedKind?: string
     prefillValuesRequestIndex: number
+    pathToData?: string | string[] // jsonpath or keys as string[]
     substractHeight?: number
     readOnly?: boolean
   }

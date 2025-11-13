@@ -223,7 +223,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     return <div>Error: {JSON.stringify(fetchedDataError)}</div>
   }
 
-  const dataFromOneOfHooks = fetchedData || fetchedDataSocket?.items
+  const dataFromOneOfHooks = fetchedData || fetchedDataSocket
 
   const items = Array.isArray(pathToItems)
     ? _.get(dataFromOneOfHooks, pathToItems)

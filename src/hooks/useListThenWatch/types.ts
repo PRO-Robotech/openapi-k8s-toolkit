@@ -42,7 +42,12 @@ type TConsoleFrame = {
   message: string
 }
 
-export type TServerFrame = TInitialFrame | TPageFrame | TPageErrorFrame | TDeltaFrame | TConsoleFrame
+type TInitialError = {
+  type: 'INITIAL_ERROR'
+  message: string
+}
+
+export type TServerFrame = TInitialFrame | TPageFrame | TPageErrorFrame | TDeltaFrame | TConsoleFrame | TInitialError
 
 // Outgoing scroll request to server
 // Sent when the bottom sentinel intersects view and `continue` exists.
