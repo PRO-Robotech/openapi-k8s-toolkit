@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-console */
 /* eslint-disable no-nested-ternary */
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect, useState, useRef } from 'react'
 import { theme as antdtheme, notification, Flex, Button, Modal, Typography } from 'antd'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
@@ -50,9 +50,37 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<TRequestError>()
 
+  // store initial and latest prefill YAML
+  const initialPrefillYamlRef = useRef<string | null>(null)
+  const latestPrefillYamlRef = useRef<string | null>(null)
+
+  // useEffect(() => {
+  //   setYamlData(yaml.stringify(prefillValuesSchema))
+  // }, [prefillValuesSchema])
+
+  // Apply prefill only once automatically, but keep track of latest
   useEffect(() => {
-    setYamlData(yaml.stringify(prefillValuesSchema))
+    if (prefillValuesSchema === undefined) return
+
+    const nextYaml = yaml.stringify(prefillValuesSchema)
+
+    // first time we see a prefill: set editor and store as initial
+    if (initialPrefillYamlRef.current === null) {
+      initialPrefillYamlRef.current = nextYaml
+      setYamlData(nextYaml)
+    }
+
+    // always treat this as the latest version
+    latestPrefillYamlRef.current = nextYaml
   }, [prefillValuesSchema])
+
+  const handleReload = () => {
+    // Prefer latest if we have it; fallback to initial
+    const nextYaml = latestPrefillYamlRef.current ?? initialPrefillYamlRef.current
+    if (nextYaml !== null) {
+      setYamlData(nextYaml)
+    }
+  }
 
   const onSubmit = () => {
     setIsLoading(true)
@@ -137,6 +165,7 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
               Submit
             </Button>
             {backlink && <Button onClick={() => navigate(backlink)}>Cancel</Button>}
+            <Button onClick={handleReload}>Reload</Button>
           </Flex>
         </Styled.ControlsRowContainer>
       )}
