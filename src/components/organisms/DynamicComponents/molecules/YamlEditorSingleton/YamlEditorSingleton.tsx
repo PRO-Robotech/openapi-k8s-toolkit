@@ -6,6 +6,7 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataP
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/themeContext'
 import { parseAll } from '../utils'
+import { getDataByPath, getPrefillValuesWithForces } from './utils'
 
 export const YamlEditorSingleton: FC<{ data: TDynamicComponentsAppTypeMap['YamlEditorSingleton']; children?: any }> = ({
   data,
@@ -23,7 +24,9 @@ export const YamlEditorSingleton: FC<{ data: TDynamicComponentsAppTypeMap['YamlE
     apiGroup,
     apiVersion,
     typeName,
+    forcedKind,
     prefillValuesRequestIndex,
+    pathToData,
     substractHeight,
     ...props
   } = data
@@ -63,7 +66,9 @@ export const YamlEditorSingleton: FC<{ data: TDynamicComponentsAppTypeMap['YamlE
 
   const typeNamePrepared = parseAll({ text: typeName, replaceValues, multiQueryData })
 
-  const prefillValues = multiQueryData[`req${prefillValuesRequestIndex}`]
+  const prefillValuesRaw = multiQueryData[`req${prefillValuesRequestIndex}`]
+  const prefillValues = pathToData ? getDataByPath({ prefillValuesRaw, pathToData }) : prefillValuesRaw
+  const prefillValuesWithForces = getPrefillValuesWithForces({ prefillValues, forcedKind, apiGroup, apiVersion })
 
   if (isMultiqueryLoading) {
     return <div>Loading multiquery</div>
@@ -74,7 +79,7 @@ export const YamlEditorSingleton: FC<{ data: TDynamicComponentsAppTypeMap['YamlE
       <Editor
         cluster={clusterPrepared}
         theme={theme}
-        prefillValuesSchema={prefillValues as any}
+        prefillValuesSchema={prefillValuesWithForces}
         isNameSpaced={isNameSpaced}
         isCreate={false}
         type={type}
