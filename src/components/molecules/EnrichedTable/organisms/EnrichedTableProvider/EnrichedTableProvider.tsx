@@ -106,6 +106,7 @@ export const EnrichedTableProvider: FC<TEnrichedTableProviderProps> = ({
     setIsError(undefined)
     setIsLoading(true)
     const payload: TPrepareTableReq = {
+      clusterName: cluster,
       customizationId,
       tableMappingsReplaceValues,
       forceDefaultAdditionalPrinterColumns,

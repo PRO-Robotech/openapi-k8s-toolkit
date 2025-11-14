@@ -10,6 +10,7 @@ export type TPrepareTableReq = {
   customizationId?: string
   tableMappingsReplaceValues?: Record<string, string | undefined>
   forceDefaultAdditionalPrinterColumns?: TAdditionalPrinterColumns
+  clusterName: string
   namespace?: string
   k8sResource?: {
     resource: string
