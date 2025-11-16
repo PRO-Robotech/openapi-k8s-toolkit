@@ -107,6 +107,13 @@ export type TDynamicComponentsAppTypeMap = {
     nodeName: string
     substractHeight?: number
   }
+  VMVNC: {
+    id: number | string
+    cluster: string
+    namespace: string
+    vmName: string
+    substractHeight?: number
+  }
   PodLogs: {
     id: number | string
     cluster: string
