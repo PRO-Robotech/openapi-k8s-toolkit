@@ -19,6 +19,6 @@ export type TNavigationResource = unknown & {
       clear: string
       change: string
     }
-    baseFactroiesMapping?: Record<string, string>
+    baseFactoriesMapping?: Record<string, string>
   }
 }
