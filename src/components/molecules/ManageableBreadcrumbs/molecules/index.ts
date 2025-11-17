@@ -1,1 +1,1 @@
-export * from './CollapsibleBreadcrumb'
+export { CollapsibleBreadcrumb } from './CollapsibleBreadcrumb'

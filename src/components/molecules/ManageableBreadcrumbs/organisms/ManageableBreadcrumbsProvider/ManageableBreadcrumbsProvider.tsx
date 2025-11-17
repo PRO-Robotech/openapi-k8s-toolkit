@@ -1,27 +1,13 @@
 import React, { FC } from 'react'
 // import { Breadcrumb, Spin } from 'antd'
 import { Spin } from 'antd'
-import { BreadcrumbItemType } from 'antd/es/breadcrumb/Breadcrumb'
 import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
+import { ManageableBreadcrumbs } from '../ManageableBreadcrumbs'
 import { TBreadcrumbResponse } from './types'
 import { prepareDataForManageableBreadcrumbs } from './utils'
-import { CollapsibleBreadcrumb } from './molecules'
 import { Styled } from './styled'
 
-export type TManageableBreadcrumbsProps = {
-  data: { breadcrumbItems: BreadcrumbItemType[] }
-}
-
-export const ManageableBreadcrumbs: FC<TManageableBreadcrumbsProps> = ({ data }) => {
-  return (
-    <Styled.HeightDiv>
-      {/* <Breadcrumb separator=">" items={data.breadcrumbItems} /> */}
-      <CollapsibleBreadcrumb items={data.breadcrumbItems} />
-    </Styled.HeightDiv>
-  )
-}
-
-export type TManageableBreadcrumbsWithDataProviderProps = {
+export type TManageableBreadcrumbsProviderProps = {
   cluster: string
   apiGroup: string
   apiVersion: string
@@ -32,7 +18,7 @@ export type TManageableBreadcrumbsWithDataProviderProps = {
   idToCompare: string
 }
 
-export const ManageableBreadcrumbsWithDataProvider: FC<TManageableBreadcrumbsWithDataProviderProps> = ({
+export const ManageableBreadcrumbsProvider: FC<TManageableBreadcrumbsProviderProps> = ({
   cluster,
   apiGroup,
   apiVersion,

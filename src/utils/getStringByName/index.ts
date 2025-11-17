@@ -1,1 +1,1 @@
-export * from './getStringByName'
+export { getStringByName } from './getStringByName'

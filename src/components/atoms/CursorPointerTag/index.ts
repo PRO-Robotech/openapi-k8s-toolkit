@@ -1,1 +1,1 @@
-export * from './CursorPointerTag'
+export { CursorPointerTag } from './CursorPointerTag'

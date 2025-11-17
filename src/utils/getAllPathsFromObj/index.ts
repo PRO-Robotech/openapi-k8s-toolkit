@@ -1,1 +1,1 @@
-export * from './getAllPathsFromObj'
+export { getAllPathsFromObj } from './getAllPathsFromObj'

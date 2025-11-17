@@ -1,1 +1,1 @@
-export * from './PersistedCheckbox'
+export { PersistedCheckbox } from './PersistedCheckbox'

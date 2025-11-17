@@ -35,6 +35,8 @@ export const Events: FC<{ data: TDynamicComponentsAppTypeMap['Events']; children
     baseFactoryNamespacedBuiltinKey,
     baseFactoryClusterSceopedBuiltinKey,
     baseNamespaceFactoryKey,
+    baseNavigationPluralName,
+    baseNavigationSpecificName,
     ...props
   } = data
 
@@ -115,6 +117,8 @@ export const Events: FC<{ data: TDynamicComponentsAppTypeMap['Events']; children
         baseFactoryNamespacedBuiltinKey={baseFactoryNamespacedBuiltinKey}
         baseFactoryClusterSceopedBuiltinKey={baseFactoryClusterSceopedBuiltinKey}
         baseNamespaceFactoryKey={baseNamespaceFactoryKey}
+        baseNavigationPluralName={baseNavigationPluralName}
+        baseNavigationSpecificName={baseNavigationSpecificName}
         {...props}
       />
       {children}

@@ -1,1 +1,1 @@
-export * from './getGroupsByCategory'
+export { getGroupsByCategory } from './getGroupsByCategory'

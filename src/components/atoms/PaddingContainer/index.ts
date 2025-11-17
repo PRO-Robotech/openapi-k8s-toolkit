@@ -1,1 +1,1 @@
-export * from './PaddingContainer'
+export { PaddingContainer } from './PaddingContainer'

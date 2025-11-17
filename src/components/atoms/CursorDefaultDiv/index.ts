@@ -1,1 +1,1 @@
-export * from './CursorDefaultDiv'
+export { CursorDefaultDiv } from './CursorDefaultDiv'

@@ -1,1 +1,1 @@
-export * from './DropdownAccessGroups'
+export { DropdownAccessGroups } from './DropdownAccessGroups'

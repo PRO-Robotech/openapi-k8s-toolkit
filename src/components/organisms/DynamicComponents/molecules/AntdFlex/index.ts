@@ -1,1 +1,1 @@
-export * from './AntdFlex'
+export { AntdFlex } from './AntdFlex'

@@ -1,11 +1,11 @@
 import React, { FC } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { theme as antdtheme, Flex, Typography } from 'antd'
-import { EarthIcon, Spacer } from 'components/atoms'
-import { getUppercase } from 'utils/getUppercase'
+import { EarthIcon, Spacer, ResourceLink } from 'components/atoms'
 import { hslFromString } from 'utils/hslFromString'
+import { getNamespaceLink } from 'utils/getResourceLink'
 import { TEventsV1Event } from '../../types'
-import { eventText, timeAgo, getResourceLink, getNamespaceLink, formatEventSummary } from './utils'
+import { eventText, timeAgo, formatEventSummary } from './utils'
 import { Styled } from './styled'
 
 type TEventRowProps = {
@@ -19,6 +19,7 @@ type TEventRowProps = {
   baseFactoryNamespacedBuiltinKey: string
   baseFactoryClusterSceopedBuiltinKey: string
   baseNamespaceFactoryKey: string
+  baseFactoriesMapping?: Record<string, string>
 }
 
 export const EventRow: FC<TEventRowProps> = ({
@@ -32,30 +33,13 @@ export const EventRow: FC<TEventRowProps> = ({
   baseFactoryNamespacedBuiltinKey,
   baseFactoryClusterSceopedBuiltinKey,
   baseNamespaceFactoryKey,
+  baseFactoriesMapping,
 }) => {
   const { token } = antdtheme.useToken()
   const navigate = useNavigate()
 
-  const abbr = e.regarding?.kind ? getUppercase(e.regarding.kind) : undefined
-  const bgColor = e.regarding?.kind && abbr ? hslFromString(e.regarding?.kind, theme) : 'initial'
   const bgColorNamespace = hslFromString('Namespace', theme)
 
-  const regardingKind: string | undefined = e.regarding?.kind
-  const regardingApiVersion: string = e.regarding?.apiVersion || 'v1'
-  const pluralName: string | undefined =
-    regardingKind && regardingApiVersion ? getPlural?.(regardingKind, regardingApiVersion) : undefined
-  const resourceLink: string | undefined = getResourceLink({
-    baseprefix,
-    cluster,
-    namespace: e.regarding?.namespace,
-    apiGroupVersion: regardingApiVersion,
-    pluralName,
-    name: e.regarding?.name,
-    baseFactoryNamespacedAPIKey,
-    baseFactoryClusterSceopedAPIKey,
-    baseFactoryNamespacedBuiltinKey,
-    baseFactoryClusterSceopedBuiltinKey,
-  })
   const namespaceLink: string | undefined = getNamespaceLink({
     baseprefix,
     cluster,
@@ -72,21 +56,21 @@ export const EventRow: FC<TEventRowProps> = ({
     >
       <Flex justify="space-between" align="center">
         <Flex align="center" gap={16}>
-          <Flex align="center" gap={8}>
-            <Styled.Abbr $bgColor={bgColor}>{abbr}</Styled.Abbr>
-            {resourceLink ? (
-              <Typography.Link
-                onClick={e => {
-                  e.preventDefault()
-                  navigate(resourceLink)
-                }}
-              >
-                {e.regarding?.name}
-              </Typography.Link>
-            ) : (
-              <Typography.Text>{e.regarding?.name}</Typography.Text>
-            )}
-          </Flex>
+          <ResourceLink
+            kind={e.regarding?.kind}
+            apiVersion={e.regarding?.apiVersion || 'v1'}
+            namespace={e.regarding?.namespace}
+            name={e.regarding?.name}
+            theme={theme}
+            baseprefix={baseprefix}
+            cluster={cluster}
+            getPlural={getPlural}
+            baseFactoryNamespacedAPIKey={baseFactoryNamespacedAPIKey}
+            baseFactoryClusterSceopedAPIKey={baseFactoryClusterSceopedAPIKey}
+            baseFactoryNamespacedBuiltinKey={baseFactoryNamespacedBuiltinKey}
+            baseFactoryClusterSceopedBuiltinKey={baseFactoryClusterSceopedBuiltinKey}
+            baseFactoriesMapping={baseFactoriesMapping}
+          />
           {e.regarding?.namespace && (
             <Flex align="center" gap={8}>
               <Styled.Abbr $bgColor={bgColorNamespace}>NS</Styled.Abbr>

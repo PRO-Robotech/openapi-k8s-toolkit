@@ -1,1 +1,1 @@
-export * from './DebugNameViewer'
+export { DebugNameViewer } from './DebugNameViewer'

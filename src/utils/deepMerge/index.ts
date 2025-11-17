@@ -1,1 +1,1 @@
-export * from './deepMerge'
+export { deepMerge } from './deepMerge'

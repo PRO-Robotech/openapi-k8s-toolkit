@@ -1,1 +1,1 @@
-export * from './Taints'
+export { Taints } from './Taints'

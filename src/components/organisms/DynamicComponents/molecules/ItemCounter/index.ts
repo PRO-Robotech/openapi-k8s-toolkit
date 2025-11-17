@@ -1,1 +1,1 @@
-export * from './ItemCounter'
+export { ItemCounter } from './ItemCounter'

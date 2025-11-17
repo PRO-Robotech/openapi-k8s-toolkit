@@ -1,1 +1,1 @@
-export * from './normalizeValuesForQuotas'
+export { normalizeValuesForQuotasToNumber } from './normalizeValuesForQuotas'

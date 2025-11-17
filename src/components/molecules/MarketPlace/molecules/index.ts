@@ -1,3 +1,4 @@
-export * from './AddEditFormModal'
-export * from './MarketplaceCard'
-export * from './SearchTextInput'
+export { AddEditFormModal } from './AddEditFormModal'
+export { MarketplaceCard } from './MarketplaceCard'
+export type { TMarketplaceCardProps } from './MarketplaceCard'
+export { SearchTextInput } from './SearchTextInput'

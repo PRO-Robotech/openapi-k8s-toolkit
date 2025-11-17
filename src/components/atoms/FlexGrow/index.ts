@@ -1,1 +1,1 @@
-export * from './FlexGrow'
+export { FlexGrow } from './FlexGrow'

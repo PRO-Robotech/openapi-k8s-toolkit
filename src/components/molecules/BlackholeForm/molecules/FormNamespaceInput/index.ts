@@ -1,1 +1,1 @@
-export * from './FormNamespaceInput'
+export { FormNamespaceInput } from './FormNamespaceInput'

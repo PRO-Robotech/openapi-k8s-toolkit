@@ -1,1 +1,1 @@
-export * from './NodeTerminal'
+export { NodeTerminal } from './NodeTerminal'

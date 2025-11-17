@@ -1,1 +1,1 @@
-export * from './ProjectInfoCard'
+export { ProjectInfoCard } from './ProjectInfoCard'

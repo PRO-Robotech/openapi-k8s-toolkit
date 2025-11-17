@@ -1,1 +1,1 @@
-export * from './getSortedKinds'
+export { getSortedKinds } from './getSortedKinds'

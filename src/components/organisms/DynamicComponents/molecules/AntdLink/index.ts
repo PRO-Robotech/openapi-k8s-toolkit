@@ -1,1 +1,1 @@
-export * from './AntdLink'
+export { AntdLink } from './AntdLink'

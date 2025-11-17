@@ -1,1 +1,1 @@
-export * from './FormInlineYamlEditor'
+export { FormInlineYamlEditor } from './FormInlineYamlEditor'

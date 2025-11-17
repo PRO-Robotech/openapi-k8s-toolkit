@@ -1,1 +1,1 @@
-export * from './AntdButton'
+export { AntdButton } from './AntdButton'

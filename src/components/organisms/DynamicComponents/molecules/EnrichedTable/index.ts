@@ -1,1 +1,1 @@
-export * from './EnrichedTable'
+export { EnrichedTable } from './EnrichedTable'

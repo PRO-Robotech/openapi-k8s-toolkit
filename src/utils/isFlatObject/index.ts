@@ -1,1 +1,1 @@
-export * from './isFlatObject'
+export { isFlatObject } from './isFlatObject'

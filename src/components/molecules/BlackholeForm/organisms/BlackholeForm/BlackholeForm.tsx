@@ -47,7 +47,7 @@ import {
   IsTouchedPersistedProvider,
 } from './context'
 
-type TBlackholeFormCreateProps = {
+export type TBlackholeFormProps = {
   cluster: string
   theme: 'light' | 'dark'
   urlParams: TUrlParams
@@ -77,7 +77,7 @@ type TBlackholeFormCreateProps = {
 
 const Editor = React.lazy(() => import('@monaco-editor/react'))
 
-export const BlackholeForm: FC<TBlackholeFormCreateProps> = ({
+export const BlackholeForm: FC<TBlackholeFormProps> = ({
   cluster,
   theme,
   urlParams,

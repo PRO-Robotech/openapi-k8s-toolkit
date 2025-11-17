@@ -1,1 +1,1 @@
-export * from './FormListInput'
+export { FormListInput } from './FormListInput'

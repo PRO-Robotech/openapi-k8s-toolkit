@@ -2,9 +2,9 @@ import { CSSProperties } from 'react'
 import { CardProps, FlexProps, RowProps, ColProps, ButtonProps, TabsProps, SelectProps } from 'antd'
 import type { TextProps } from 'antd/es/typography/Text'
 import type { LinkProps } from 'antd/es/typography/Link'
-import { TContentCardProps, TSpacerProps } from 'components/atoms'
-import { TManageableSidebarWithDataProviderProps, TEnrichedTableProviderProps } from 'components/molecules'
-import { TUnitInput } from './molecules/ConverterBytes/types'
+import type { TContentCardProps, TSpacerProps } from 'components/atoms'
+import type { TManageableSidebarProviderProps, TEnrichedTableProviderProps } from 'components/molecules'
+import type { TUnitInput } from './molecules/ConverterBytes/types'
 
 export type TDynamicComponentsAppTypeMap = {
   DefaultDiv: { id: number | string } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
@@ -66,7 +66,7 @@ export type TDynamicComponentsAppTypeMap = {
     errorText: string
     fallbackText: string
   } & Omit<TextProps, 'id' | 'children'>
-  SidebarProvider: { id: number | string } & Omit<TManageableSidebarWithDataProviderProps, 'replaceValues'>
+  SidebarProvider: { id: number | string } & Omit<TManageableSidebarProviderProps, 'replaceValues'>
   EnrichedTable: {
     id: number | string
     fetchUrl?: string
@@ -305,5 +305,28 @@ export type TDynamicComponentsAppTypeMap = {
     baseFactoryNamespacedBuiltinKey: string
     baseFactoryClusterSceopedBuiltinKey: string
     baseNamespaceFactoryKey: string
+    baseNavigationPluralName: string
+    baseNavigationSpecificName: string
+  }
+  OwnerRefs: {
+    id: number | string
+    baseprefix?: string
+    clusterNamePartOfUrl: string
+    reqIndex: string // full object for forced labels
+    errorText: string
+    notArrayErrorText: string
+    emptyArrayErrorText: string
+    isNotRefsArrayErrorText: string
+    containerStyle?: CSSProperties
+    listFlexProps?: FlexProps
+    jsonPathToArrayOfRefs: string
+    keysToForcedLabel?: string | string[] // jsonpath or keys as string[]
+    forcedRelatedValuePath?: string
+    baseFactoryNamespacedAPIKey: string
+    baseFactoryClusterSceopedAPIKey: string
+    baseFactoryNamespacedBuiltinKey: string
+    baseFactoryClusterSceopedBuiltinKey: string
+    baseNavigationPluralName: string
+    baseNavigationSpecificName: string
   }
 }

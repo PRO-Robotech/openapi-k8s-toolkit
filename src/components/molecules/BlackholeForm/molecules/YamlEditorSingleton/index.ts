@@ -1,1 +1,1 @@
-export * from './YamlEditorSingleton'
+export { YamlEditorSingleton } from './YamlEditorSingleton'

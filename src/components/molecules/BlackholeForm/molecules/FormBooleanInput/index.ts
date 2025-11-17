@@ -1,1 +1,1 @@
-export * from './FormBooleanInput'
+export { FormBooleanInput } from './FormBooleanInput'

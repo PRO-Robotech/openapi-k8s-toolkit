@@ -1,1 +1,1 @@
-export * from './SecretBase64Plain'
+export { SecretBase64Plain } from './SecretBase64Plain'
