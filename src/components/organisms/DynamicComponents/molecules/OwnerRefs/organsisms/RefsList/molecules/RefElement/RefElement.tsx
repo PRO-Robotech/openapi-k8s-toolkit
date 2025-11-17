@@ -1,14 +1,18 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { FC } from 'react'
 import jp from 'jsonpath'
 import _ from 'lodash'
 import { ResourceLink } from 'components/atoms'
 import { TOwnerReference } from '../../../../types'
+import { findOwnerReferencePath, resolveFormPath } from './utils'
 
 type TRefElementProps = {
   reference: TOwnerReference
   keysToForcedLabel?: string | string[] // jsonpath or keys as string[]
+  forcedRelatedValuePath?: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rawObjectToFindLabel?: any
+  jsonPathToArrayOfRefs: string
   theme: 'dark' | 'light'
   baseprefix?: string
   cluster: string
@@ -23,7 +27,9 @@ type TRefElementProps = {
 export const RefElement: FC<TRefElementProps> = ({
   reference,
   keysToForcedLabel,
+  forcedRelatedValuePath,
   rawObjectToFindLabel,
+  jsonPathToArrayOfRefs,
   theme,
   baseprefix,
   cluster,
@@ -36,10 +42,31 @@ export const RefElement: FC<TRefElementProps> = ({
 }) => {
   let forcedName: string | undefined
 
-  if (keysToForcedLabel) {
+  if (keysToForcedLabel && rawObjectToFindLabel) {
     forcedName = Array.isArray(keysToForcedLabel)
       ? _.get(rawObjectToFindLabel, keysToForcedLabel)
       : jp.query(rawObjectToFindLabel, `$${keysToForcedLabel}`)[0]
+  }
+
+  if (forcedRelatedValuePath && rawObjectToFindLabel) {
+    try {
+      const ownerRefPathSegs = findOwnerReferencePath(
+        rawObjectToFindLabel,
+        jsonPathToArrayOfRefs, // ".spec.customRef"
+        reference,
+      )
+
+      const relatedPath =
+        forcedRelatedValuePath && ownerRefPathSegs
+          ? resolveFormPath(forcedRelatedValuePath, ownerRefPathSegs)
+          : undefined
+
+      if (relatedPath) {
+        forcedName = _.get(rawObjectToFindLabel, relatedPath)
+      }
+    } catch {
+      // ignore
+    }
   }
 
   return (

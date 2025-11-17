@@ -318,8 +318,10 @@ export type TDynamicComponentsAppTypeMap = {
     emptyArrayErrorText: string
     isNotRefsArrayErrorText: string
     containerStyle?: CSSProperties
+    listFlexProps?: FlexProps
     jsonPathToArrayOfRefs: string
     keysToForcedLabel?: string | string[] // jsonpath or keys as string[]
+    forcedRelatedValuePath?: string
     baseFactoryNamespacedAPIKey: string
     baseFactoryClusterSceopedAPIKey: string
     baseFactoryNamespacedBuiltinKey: string

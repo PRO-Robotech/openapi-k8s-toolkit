@@ -28,7 +28,9 @@ export const OwnerRefs: FC<{ data: TDynamicComponentsAppTypeMap['OwnerRefs']; ch
     emptyArrayErrorText,
     isNotRefsArrayErrorText,
     containerStyle,
+    listFlexProps,
     keysToForcedLabel,
+    forcedRelatedValuePath,
     jsonPathToArrayOfRefs,
     baseFactoryNamespacedAPIKey,
     baseFactoryClusterSceopedAPIKey,
@@ -56,11 +58,10 @@ export const OwnerRefs: FC<{ data: TDynamicComponentsAppTypeMap['OwnerRefs']; ch
 
   if (jsonRoot === undefined) {
     // eslint-disable-next-line no-console
-    console.log(`Item Counter: ${id}: No root for json path`)
     return <div style={containerStyle}>{errorText}</div>
   }
 
-  const refsArr = jp.query(jsonRoot, `$${jsonPathToArrayOfRefs}`)
+  const refsArr = jp.query(jsonRoot, `$${jsonPathToArrayOfRefs}`)[0]
 
   if (!Array.isArray(refsArr)) {
     return <div style={containerStyle}>{notArrayErrorText}</div>
@@ -81,23 +82,26 @@ export const OwnerRefs: FC<{ data: TDynamicComponentsAppTypeMap['OwnerRefs']; ch
   }
 
   return (
-    <>
+    <div style={containerStyle}>
       <RefsList
         theme={theme}
         baseprefix={baseprefix}
         cluster={clusterName}
         refsArr={guardedRefsArr}
         keysToForcedLabel={keysToForcedLabel}
-        rawObjectToFindLabel={keysToForcedLabel ? (jsonRoot as any) : undefined}
+        forcedRelatedValuePath={forcedRelatedValuePath}
+        jsonPathToArrayOfRefs={jsonPathToArrayOfRefs}
+        rawObjectToFindLabel={jsonRoot as any}
         baseFactoryNamespacedAPIKey={baseFactoryNamespacedAPIKey}
         baseFactoryClusterSceopedAPIKey={baseFactoryClusterSceopedAPIKey}
         baseFactoryNamespacedBuiltinKey={baseFactoryNamespacedBuiltinKey}
         baseFactoryClusterSceopedBuiltinKey={baseFactoryClusterSceopedBuiltinKey}
         baseNavigationPluralName={baseNavigationPluralName}
         baseNavigationSpecificName={baseNavigationSpecificName}
+        listFlexProps={listFlexProps}
         {...props}
       />
       {children}
-    </>
+    </div>
   )
 }

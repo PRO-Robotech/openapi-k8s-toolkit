@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
+import { Flex, FlexProps } from 'antd'
 import { getKinds } from 'api/bff/search/getKinds'
 import { getSortedKindsAll } from 'utils/getSortedKindsAll'
 import { pluralByKind } from 'utils/pluralByKind'
@@ -15,14 +16,17 @@ export type TRefsListProps = {
   cluster: string
   refsArr: TOwnerReference[]
   keysToForcedLabel?: string | string[] // jsonpath or keys as string[]
+  forcedRelatedValuePath?: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rawObjectToFindLabel?: any
+  jsonPathToArrayOfRefs: string
   baseFactoryNamespacedAPIKey: string
   baseFactoryClusterSceopedAPIKey: string
   baseFactoryNamespacedBuiltinKey: string
   baseFactoryClusterSceopedBuiltinKey: string
   baseNavigationPluralName: string
   baseNavigationSpecificName: string
+  listFlexProps?: FlexProps
 }
 
 export const RefsList: FC<TRefsListProps> = ({
@@ -31,13 +35,16 @@ export const RefsList: FC<TRefsListProps> = ({
   cluster,
   refsArr,
   keysToForcedLabel,
+  forcedRelatedValuePath,
   rawObjectToFindLabel,
+  jsonPathToArrayOfRefs,
   baseFactoryNamespacedAPIKey,
   baseFactoryClusterSceopedAPIKey,
   baseFactoryNamespacedBuiltinKey,
   baseFactoryClusterSceopedBuiltinKey,
   baseNavigationPluralName,
   baseNavigationSpecificName,
+  listFlexProps,
 }) => {
   // const [error, setError] = useState<TRequestError | undefined>()
   // const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -81,13 +88,15 @@ export const RefsList: FC<TRefsListProps> = ({
       : undefined
 
   return (
-    <div>
+    <Flex vertical gap={8} {...listFlexProps}>
       {refsArr.map(ref => (
         <RefElement
           key={JSON.stringify(ref)}
           reference={ref}
           keysToForcedLabel={keysToForcedLabel}
+          forcedRelatedValuePath={forcedRelatedValuePath}
           rawObjectToFindLabel={rawObjectToFindLabel}
+          jsonPathToArrayOfRefs={jsonPathToArrayOfRefs}
           theme={theme}
           baseprefix={baseprefix}
           cluster={cluster}
@@ -99,6 +108,6 @@ export const RefsList: FC<TRefsListProps> = ({
           baseFactoriesMapping={baseFactoriesMapping}
         />
       ))}
-    </div>
+    </Flex>
   )
 }
