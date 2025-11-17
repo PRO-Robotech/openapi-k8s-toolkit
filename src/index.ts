@@ -88,3 +88,4 @@ export type {
 export type { TVersionEntry, TKindItem, TKindIndex } from './localTypes/bff/search'
 export type { TGetDerefedSwaggerRes } from './localTypes/bff/swagger'
 export type { TKindWithVersion } from './localTypes/search'
+export type { TNavigationResource } from './localTypes/navigations'
