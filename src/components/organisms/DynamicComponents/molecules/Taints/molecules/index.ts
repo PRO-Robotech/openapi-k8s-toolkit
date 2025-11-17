@@ -1,1 +1,1 @@
-export * from './EditModal'
+export { EditModal } from './EditModal'

@@ -1,3 +1,5 @@
-export * from './DynamicRenderer'
-export * from './DynamicComponents'
-export * from './DynamicRendererWithProviders'
+export { DynamicRenderer } from './DynamicRenderer'
+export type { TDynamicRendererProps } from './DynamicRenderer'
+export { DynamicComponents } from './DynamicComponents'
+export type { TDynamicComponentsAppTypeMap } from './DynamicComponents'
+export { DynamicRendererWithProviders } from './DynamicRendererWithProviders'

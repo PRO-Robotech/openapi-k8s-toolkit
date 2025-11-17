@@ -1,1 +1,1 @@
-export * from './HiddenContainer'
+export { HiddenContainer } from './HiddenContainer'

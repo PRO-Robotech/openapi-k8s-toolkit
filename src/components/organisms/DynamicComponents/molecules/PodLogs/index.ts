@@ -1,1 +1,1 @@
-export * from './PodLogs'
+export { PodLogs } from './PodLogs'

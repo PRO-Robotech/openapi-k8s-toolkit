@@ -1,1 +1,1 @@
-export * from './SidebarProvider'
+export { SidebarProvider } from './SidebarProvider'

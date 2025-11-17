@@ -1,1 +1,1 @@
-export * from './StatusText'
+export { StatusText } from './StatusText'

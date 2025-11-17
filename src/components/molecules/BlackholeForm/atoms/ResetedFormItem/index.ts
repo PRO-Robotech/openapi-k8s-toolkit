@@ -1,1 +1,1 @@
-export * from './ResetedFormItem'
+export { ResetedFormItem } from './ResetedFormItem'

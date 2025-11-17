@@ -1,1 +1,1 @@
-export * from './nestedStringsArrayInclude'
+export { includesArray } from './nestedStringsArrayInclude'

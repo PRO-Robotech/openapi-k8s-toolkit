@@ -1,1 +1,1 @@
-export * from './VisibilityContainer'
+export { VisibilityContainer } from './VisibilityContainer'

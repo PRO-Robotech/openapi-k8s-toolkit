@@ -11,7 +11,7 @@ import { TFormPrefill } from 'localTypes/formExtensions'
 import { YamlEditorSingleton } from '../../molecules/YamlEditorSingleton'
 import { BlackholeForm } from '../BlackholeForm'
 
-export type TBlackholeFormDataProviderProps = {
+export type TBlackholeFormProviderProps = {
   theme: 'light' | 'dark'
   cluster: string
   urlParams: TUrlParams
@@ -46,7 +46,7 @@ export type TBlackholeFormDataProviderProps = {
   designNewLayoutHeight?: number
 }
 
-export const BlackholeFormDataProvider: FC<TBlackholeFormDataProviderProps> = ({
+export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
   theme,
   cluster,
   urlParams,

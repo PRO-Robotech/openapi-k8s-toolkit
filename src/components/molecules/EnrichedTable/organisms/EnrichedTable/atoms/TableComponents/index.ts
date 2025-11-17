@@ -1,1 +1,1 @@
-export * from './TableComponents'
+export { TableComponents } from './TableComponents'

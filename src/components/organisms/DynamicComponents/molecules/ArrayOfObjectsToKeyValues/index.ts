@@ -1,1 +1,1 @@
-export * from './ArrayOfObjectsToKeyValues'
+export { ArrayOfObjectsToKeyValues } from './ArrayOfObjectsToKeyValues'

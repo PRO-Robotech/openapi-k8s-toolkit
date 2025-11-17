@@ -1,1 +1,1 @@
-export * from './getUppercase'
+export { getUppercase } from './getUppercase'

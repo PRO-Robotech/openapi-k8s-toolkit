@@ -1,1 +1,1 @@
-export * from './TrimmedTags'
+export { TrimmedTags } from './TrimmedTags'

@@ -1,1 +1,1 @@
-export * from './AddCard'
+export { AddCard } from './AddCard'

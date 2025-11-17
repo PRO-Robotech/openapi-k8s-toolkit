@@ -1,1 +1,1 @@
-export * from './FormStringMultilineInput'
+export { FormStringMultilineInput } from './FormStringMultilineInput'

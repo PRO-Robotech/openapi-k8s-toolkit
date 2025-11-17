@@ -1,1 +1,1 @@
-export * from './YamlEditor'
+export { YamlEditor } from './YamlEditor'

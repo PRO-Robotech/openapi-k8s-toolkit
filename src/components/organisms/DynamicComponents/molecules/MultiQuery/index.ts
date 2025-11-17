@@ -1,1 +1,1 @@
-export * from './MultiQuery'
+export { MultiQuery } from './MultiQuery'

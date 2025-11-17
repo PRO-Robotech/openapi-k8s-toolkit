@@ -1,1 +1,1 @@
-export * from './AntdCol'
+export { AntdCol } from './AntdCol'

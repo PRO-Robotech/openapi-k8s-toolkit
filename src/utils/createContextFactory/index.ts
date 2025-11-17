@@ -1,1 +1,1 @@
-export * from './createContextFactory'
+export { createContextFactory } from './createContextFactory'

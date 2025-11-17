@@ -1,1 +1,1 @@
-export * from './PodTerminal'
+export { PodTerminal } from './PodTerminal'

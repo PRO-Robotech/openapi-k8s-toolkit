@@ -1,1 +1,1 @@
-export * from './MonacoEditor'
+export { MonacoEditor } from './MonacoEditor'

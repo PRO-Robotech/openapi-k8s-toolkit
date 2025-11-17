@@ -1,1 +1,1 @@
-export * from './MarketplaceCard'
+export { MarketplaceCard } from './MarketplaceCard'

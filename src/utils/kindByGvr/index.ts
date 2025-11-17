@@ -1,1 +1,1 @@
-export * from './kindByGvr'
+export { kindByGvr } from './kindByGvr'

@@ -1,1 +1,1 @@
-export * from './TableFactory'
+export { TableFactory } from './TableFactory'

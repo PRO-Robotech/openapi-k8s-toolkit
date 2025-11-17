@@ -1,1 +1,1 @@
-export * from './FormObjectFromSwagger'
+export { FormObjectFromSwagger } from './FormObjectFromSwagger'

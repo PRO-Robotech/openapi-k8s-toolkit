@@ -23,7 +23,7 @@ import { reducer } from './reducer'
 import { EventRow } from './molecules'
 import { Styled } from './styled'
 
-type TEventsProps = {
+export type TEventsProps = {
   theme: 'dark' | 'light'
   baseprefix?: string
   cluster: string

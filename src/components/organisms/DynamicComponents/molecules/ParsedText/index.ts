@@ -1,1 +1,1 @@
-export * from './ParsedText'
+export { ParsedText } from './ParsedText'

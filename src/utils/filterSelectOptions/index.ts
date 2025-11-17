@@ -1,1 +1,1 @@
-export * from './filterSelectOptions'
+export { filterSelectOptions } from './filterSelectOptions'

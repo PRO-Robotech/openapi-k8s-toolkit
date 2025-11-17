@@ -1,1 +1,1 @@
-export * from './FilterDropdown'
+export { FilterDropdown } from './FilterDropdown'

@@ -1,1 +1,1 @@
-export * from './tableLocations'
+export { getLinkToBuiltinForm, getLinkToApiForm, getLinkToForm } from './tableLocations'

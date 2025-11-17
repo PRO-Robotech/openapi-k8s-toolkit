@@ -1,1 +1,1 @@
-export * from './DropdownActions'
+export { DropdownActions } from './DropdownActions'
