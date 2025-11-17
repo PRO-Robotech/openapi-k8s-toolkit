@@ -305,5 +305,26 @@ export type TDynamicComponentsAppTypeMap = {
     baseFactoryNamespacedBuiltinKey: string
     baseFactoryClusterSceopedBuiltinKey: string
     baseNamespaceFactoryKey: string
+    baseNavigationPluralName: string
+    baseNavigationSpecificName: string
+  }
+  OwnerRefs: {
+    id: number | string
+    baseprefix?: string
+    clusterNamePartOfUrl: string
+    reqIndex: string // full object for forced labels
+    errorText: string
+    notArrayErrorText: string
+    emptyArrayErrorText: string
+    isNotRefsArrayErrorText: string
+    containerStyle?: CSSProperties
+    jsonPathToArrayOfRefs: string
+    keysToForcedLabel?: string | string[] // jsonpath or keys as string[]
+    baseFactoryNamespacedAPIKey: string
+    baseFactoryClusterSceopedAPIKey: string
+    baseFactoryNamespacedBuiltinKey: string
+    baseFactoryClusterSceopedBuiltinKey: string
+    baseNavigationPluralName: string
+    baseNavigationSpecificName: string
   }
 }

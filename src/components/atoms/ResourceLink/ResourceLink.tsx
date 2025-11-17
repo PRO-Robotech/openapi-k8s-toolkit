@@ -20,6 +20,7 @@ type TResourceLinkProps = {
   baseFactoryClusterSceopedAPIKey: string
   baseFactoryNamespacedBuiltinKey: string
   baseFactoryClusterSceopedBuiltinKey: string
+  baseFactoriesMapping?: Record<string, string>
 }
 
 export const ResourceLink: FC<TResourceLinkProps> = ({
@@ -36,6 +37,7 @@ export const ResourceLink: FC<TResourceLinkProps> = ({
   baseFactoryClusterSceopedAPIKey,
   baseFactoryNamespacedBuiltinKey,
   baseFactoryClusterSceopedBuiltinKey,
+  baseFactoriesMapping,
 }) => {
   const navigate = useNavigate()
 
@@ -59,6 +61,7 @@ export const ResourceLink: FC<TResourceLinkProps> = ({
     baseFactoryClusterSceopedAPIKey,
     baseFactoryNamespacedBuiltinKey,
     baseFactoryClusterSceopedBuiltinKey,
+    baseFactoriesMapping,
   })
 
   return (

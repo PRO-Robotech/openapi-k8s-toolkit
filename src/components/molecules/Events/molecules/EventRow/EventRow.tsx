@@ -19,6 +19,7 @@ type TEventRowProps = {
   baseFactoryNamespacedBuiltinKey: string
   baseFactoryClusterSceopedBuiltinKey: string
   baseNamespaceFactoryKey: string
+  baseFactoriesMapping?: Record<string, string>
 }
 
 export const EventRow: FC<TEventRowProps> = ({
@@ -32,6 +33,7 @@ export const EventRow: FC<TEventRowProps> = ({
   baseFactoryNamespacedBuiltinKey,
   baseFactoryClusterSceopedBuiltinKey,
   baseNamespaceFactoryKey,
+  baseFactoriesMapping,
 }) => {
   const { token } = antdtheme.useToken()
   const navigate = useNavigate()
@@ -67,6 +69,7 @@ export const EventRow: FC<TEventRowProps> = ({
             baseFactoryClusterSceopedAPIKey={baseFactoryClusterSceopedAPIKey}
             baseFactoryNamespacedBuiltinKey={baseFactoryNamespacedBuiltinKey}
             baseFactoryClusterSceopedBuiltinKey={baseFactoryClusterSceopedBuiltinKey}
+            baseFactoriesMapping={baseFactoriesMapping}
           />
           {e.regarding?.namespace && (
             <Flex align="center" gap={8}>
