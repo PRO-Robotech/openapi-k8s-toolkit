@@ -14,6 +14,7 @@ export type TManageableSidebarProviderProps = {
   replaceValues: Record<string, string | undefined>
   pathname: string
   idToCompare: string
+  fallbackIdToCompare?: string
   currentTags?: string[]
   hidden?: boolean
   noMarginTop?: boolean
@@ -28,6 +29,7 @@ export const ManageableSidebarProvider: FC<TManageableSidebarProviderProps> = ({
   replaceValues,
   pathname,
   idToCompare,
+  fallbackIdToCompare,
   currentTags,
   hidden,
   noMarginTop,
@@ -71,6 +73,7 @@ export const ManageableSidebarProvider: FC<TManageableSidebarProviderProps> = ({
     replaceValues,
     pathname,
     idToCompare,
+    fallbackIdToCompare,
     currentTags,
   })
 

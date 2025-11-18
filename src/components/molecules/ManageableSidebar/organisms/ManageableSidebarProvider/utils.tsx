@@ -118,15 +118,19 @@ export const prepareDataForManageableSidebar = ({
   replaceValues,
   pathname,
   idToCompare,
+  fallbackIdToCompare,
   currentTags,
 }: {
   data: { id: string; menuItems: TLink[]; keysAndTags?: Record<string, string[]>; externalKeys?: string[] }[]
   replaceValues: Record<string, string | undefined>
   pathname: string
   idToCompare: string
+  fallbackIdToCompare?: string
   currentTags?: string[]
 }): { menuItems: ItemType[]; selectedKeys: string[] } | undefined => {
-  const foundData = data.find(el => el.id === idToCompare)
+  const foundData =
+    data.find(el => el.id === idToCompare) ||
+    (fallbackIdToCompare ? data.find(el => el.id === fallbackIdToCompare) : undefined)
 
   if (!foundData) {
     return undefined
