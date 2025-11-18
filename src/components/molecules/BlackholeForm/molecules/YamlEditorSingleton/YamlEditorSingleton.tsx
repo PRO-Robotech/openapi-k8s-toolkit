@@ -88,7 +88,7 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
       description: 'The source data has been updated. Reload to apply the latest changes (will discard your edits).',
       btn,
       placement: 'bottomRight',
-      duration: 30, // keep it open until user closes
+      duration: 30,
     })
   }, [api, handleReload])
 
