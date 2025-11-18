@@ -20,6 +20,7 @@ export type TRefsListProps = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rawObjectToFindLabel?: any
   jsonPathToArrayOfRefs: string
+  forcedNamespace?: string
   baseFactoryNamespacedAPIKey: string
   baseFactoryClusterSceopedAPIKey: string
   baseFactoryNamespacedBuiltinKey: string
@@ -38,6 +39,7 @@ export const RefsList: FC<TRefsListProps> = ({
   forcedRelatedValuePath,
   rawObjectToFindLabel,
   jsonPathToArrayOfRefs,
+  forcedNamespace,
   baseFactoryNamespacedAPIKey,
   baseFactoryClusterSceopedAPIKey,
   baseFactoryNamespacedBuiltinKey,
@@ -97,6 +99,7 @@ export const RefsList: FC<TRefsListProps> = ({
           forcedRelatedValuePath={forcedRelatedValuePath}
           rawObjectToFindLabel={rawObjectToFindLabel}
           jsonPathToArrayOfRefs={jsonPathToArrayOfRefs}
+          forcedNamespace={forcedNamespace}
           theme={theme}
           baseprefix={baseprefix}
           cluster={cluster}

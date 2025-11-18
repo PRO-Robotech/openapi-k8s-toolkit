@@ -32,6 +32,7 @@ export const OwnerRefs: FC<{ data: TDynamicComponentsAppTypeMap['OwnerRefs']; ch
     keysToForcedLabel,
     forcedRelatedValuePath,
     jsonPathToArrayOfRefs,
+    forcedNamespace,
     baseFactoryNamespacedAPIKey,
     baseFactoryClusterSceopedAPIKey,
     baseFactoryNamespacedBuiltinKey,
@@ -53,6 +54,13 @@ export const OwnerRefs: FC<{ data: TDynamicComponentsAppTypeMap['OwnerRefs']; ch
     template: clusterNamePartOfUrl,
     replaceValues,
   })
+
+  const preparedForcedNamespace = forcedNamespace
+    ? prepareTemplate({
+        template: forcedNamespace,
+        replaceValues,
+      })
+    : undefined
 
   const jsonRoot = multiQueryData[`req${reqIndex}`]
 
@@ -91,6 +99,7 @@ export const OwnerRefs: FC<{ data: TDynamicComponentsAppTypeMap['OwnerRefs']; ch
         keysToForcedLabel={keysToForcedLabel}
         forcedRelatedValuePath={forcedRelatedValuePath}
         jsonPathToArrayOfRefs={jsonPathToArrayOfRefs}
+        forcedNamespace={preparedForcedNamespace}
         rawObjectToFindLabel={jsonRoot as any}
         baseFactoryNamespacedAPIKey={baseFactoryNamespacedAPIKey}
         baseFactoryClusterSceopedAPIKey={baseFactoryClusterSceopedAPIKey}

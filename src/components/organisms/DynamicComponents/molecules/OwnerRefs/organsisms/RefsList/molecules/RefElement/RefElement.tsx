@@ -13,6 +13,7 @@ type TRefElementProps = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rawObjectToFindLabel?: any
   jsonPathToArrayOfRefs: string
+  forcedNamespace?: string
   theme: 'dark' | 'light'
   baseprefix?: string
   cluster: string
@@ -30,6 +31,7 @@ export const RefElement: FC<TRefElementProps> = ({
   forcedRelatedValuePath,
   rawObjectToFindLabel,
   jsonPathToArrayOfRefs,
+  forcedNamespace,
   theme,
   baseprefix,
   cluster,
@@ -41,6 +43,7 @@ export const RefElement: FC<TRefElementProps> = ({
   baseFactoriesMapping,
 }) => {
   let forcedName: string | undefined
+  let objectNamespace: string | undefined
 
   if (keysToForcedLabel && rawObjectToFindLabel) {
     forcedName = Array.isArray(keysToForcedLabel)
@@ -69,11 +72,21 @@ export const RefElement: FC<TRefElementProps> = ({
     }
   }
 
+  if (rawObjectToFindLabel) {
+    try {
+      const defaultFetched = _.get(rawObjectToFindLabel, ['metadata', 'namespace'])
+      const socketFetched = _.get(rawObjectToFindLabel, ['items', 0, 'metadata', 'namespace'])
+      objectNamespace = socketFetched || defaultFetched
+    } catch {
+      // ignore
+    }
+  }
+
   return (
     <ResourceLink
       kind={reference.kind}
       apiVersion={reference.apiVersion}
-      namespace={reference.namespace}
+      namespace={forcedNamespace || reference.namespace || objectNamespace}
       forcedName={forcedName}
       name={reference.name}
       theme={theme}
