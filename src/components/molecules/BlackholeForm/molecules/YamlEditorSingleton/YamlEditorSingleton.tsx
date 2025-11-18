@@ -27,6 +27,8 @@ type TYamlEditorSingletonProps = {
   readOnly?: boolean
 }
 
+const NOTIFICATION_KEY = 'yaml-data-changed' // Single static key = only one notification
+
 export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
   theme,
   cluster,
@@ -56,29 +58,24 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
   // before applying any data yaml is empty
   const firstLoadRef = useRef(true)
 
-  // useEffect(() => {
-  //   setYamlData(yaml.stringify(prefillValuesSchema))
-  // }, [prefillValuesSchema])
+  // Unified reload function — closes notification + applies latest data
+  const handleReload = useCallback(() => {
+    api.destroy(NOTIFICATION_KEY) // Always close the notification first
 
-  const handleReload = () => {
-    // Prefer latest if we have it; fallback to initial
     const nextYaml = latestPrefillYamlRef.current ?? initialPrefillYamlRef.current
     if (nextYaml !== null) {
       setYamlData(nextYaml)
     }
-  }
+  }, [api])
 
-  // notification on yaml external change
+  // Show (or update) the "Data changed" notification — only one ever exists
   const openNotificationYamlChanged = useCallback(() => {
-    const key = `open${Date.now()}`
-
     const btn = (
       <Button
         type="primary"
         size="small"
         onClick={() => {
           handleReload()
-          api.destroy(key) // close this specific notification
         }}
       >
         Reload
@@ -86,20 +83,18 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
     )
 
     api.info({
+      key: NOTIFICATION_KEY,
       message: 'Data changed',
-      description: 'Reload will flush changes and reload data to latest',
+      description: 'The source data has been updated. Reload to apply the latest changes (will discard your edits).',
       btn,
-      key,
-      onClose: () => console.log('Notification closed'),
       placement: 'bottomRight',
-      duration: 30, // keep it open until user closes
+      duration: 30,
     })
-  }, [api])
+  }, [api, handleReload])
 
   // Apply prefill only once automatically, but keep track of latest
   useEffect(() => {
     if (prefillValuesSchema === undefined) return
-    console.log(prefillValuesSchema)
 
     const nextYaml = yaml.stringify(prefillValuesSchema)
 
@@ -212,7 +207,6 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
         <Modal
           open={!!error}
           onOk={() => setError(undefined)}
-          // onClose={() => setError(undefined)}
           onCancel={() => setError(undefined)}
           title={
             <Typography.Text type="danger">
