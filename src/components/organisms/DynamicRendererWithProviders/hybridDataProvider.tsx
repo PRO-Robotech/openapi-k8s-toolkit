@@ -110,13 +110,15 @@ export const MultiQueryProvider: FC<MultiQueryProviderProps> = ({ items, dataToA
       queryKey: ['multi-url', i, url],
       queryFn: async () => {
         const res = await axios.get(url)
-        return res.data as unknown
+        return structuredClone(res.data) as unknown
       },
+      structuralSharing: false,
+      refetchInterval: 5000,
     })),
   })
 
   // Assemble context value
-  const value: MultiQueryContextValue = useMemo(() => {
+  const value: MultiQueryContextValue = (() => {
     if (typeof dataToApplyToContext !== 'undefined') {
       return { data: { req0: dataToApplyToContext }, isLoading: false, isError: false, errors: [] }
     }
@@ -144,7 +146,7 @@ export const MultiQueryProvider: FC<MultiQueryProviderProps> = ({ items, dataToA
     const isError = state.entries.some(e => e.isError) || urlQueries.some(q => q.isError)
 
     return { data, isLoading, isError, errors }
-  }, [dataToApplyToContext, k8sCount, urlCount, state.entries, urlQueries])
+  })()
 
   return (
     <MultiQueryContext.Provider value={value}>

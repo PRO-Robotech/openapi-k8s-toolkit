@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-console */
 /* eslint-disable no-nested-ternary */
-import React, { FC, useEffect, useState, useRef } from 'react'
+import React, { FC, useEffect, useState, useRef, useCallback } from 'react'
 import { theme as antdtheme, notification, Flex, Button, Modal, Typography } from 'antd'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
@@ -53,26 +53,12 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
   // store initial and latest prefill YAML
   const initialPrefillYamlRef = useRef<string | null>(null)
   const latestPrefillYamlRef = useRef<string | null>(null)
+  // before applying any data yaml is empty
+  const firstLoadRef = useRef(true)
 
   // useEffect(() => {
   //   setYamlData(yaml.stringify(prefillValuesSchema))
   // }, [prefillValuesSchema])
-
-  // Apply prefill only once automatically, but keep track of latest
-  useEffect(() => {
-    if (prefillValuesSchema === undefined) return
-
-    const nextYaml = yaml.stringify(prefillValuesSchema)
-
-    // first time we see a prefill: set editor and store as initial
-    if (initialPrefillYamlRef.current === null) {
-      initialPrefillYamlRef.current = nextYaml
-      setYamlData(nextYaml)
-    }
-
-    // always treat this as the latest version
-    latestPrefillYamlRef.current = nextYaml
-  }, [prefillValuesSchema])
 
   const handleReload = () => {
     // Prefer latest if we have it; fallback to initial
@@ -81,6 +67,59 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
       setYamlData(nextYaml)
     }
   }
+
+  // notification on yaml external change
+  const openNotificationYamlChanged = useCallback(() => {
+    const key = `open${Date.now()}`
+
+    const btn = (
+      <Button
+        type="primary"
+        size="small"
+        onClick={() => {
+          handleReload()
+          api.destroy(key) // close this specific notification
+        }}
+      >
+        Reload
+      </Button>
+    )
+
+    api.info({
+      message: 'Data changed',
+      description: 'Reload will flush changes and reload data to latest',
+      btn,
+      key,
+      onClose: () => console.log('Notification closed'),
+      placement: 'bottomRight',
+      duration: 30, // keep it open until user closes
+    })
+  }, [api])
+
+  // Apply prefill only once automatically, but keep track of latest
+  useEffect(() => {
+    if (prefillValuesSchema === undefined) return
+    console.log(prefillValuesSchema)
+
+    const nextYaml = yaml.stringify(prefillValuesSchema)
+
+    // first time: initialize and skip notification
+    if (firstLoadRef.current) {
+      initialPrefillYamlRef.current = nextYaml
+      latestPrefillYamlRef.current = nextYaml
+      setYamlData(nextYaml)
+
+      firstLoadRef.current = false
+      return
+    }
+
+    // subsequent updates: notify if changed
+    if (nextYaml !== latestPrefillYamlRef.current) {
+      openNotificationYamlChanged()
+    }
+
+    latestPrefillYamlRef.current = nextYaml
+  }, [prefillValuesSchema, openNotificationYamlChanged])
 
   const onSubmit = () => {
     setIsLoading(true)
