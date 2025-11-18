@@ -320,6 +320,7 @@ export type TDynamicComponentsAppTypeMap = {
     containerStyle?: CSSProperties
     listFlexProps?: FlexProps
     jsonPathToArrayOfRefs: string
+    forcedNamespace?: string
     keysToForcedLabel?: string | string[] // jsonpath or keys as string[]
     forcedRelatedValuePath?: string
     baseFactoryNamespacedAPIKey: string
