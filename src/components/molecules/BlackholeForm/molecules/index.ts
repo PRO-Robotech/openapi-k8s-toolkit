@@ -1,5 +1,4 @@
 export { YamlEditor } from './YamlEditor'
-export { YamlEditorSingleton } from './YamlEditorSingleton'
 export { FormListInput } from './FormListInput'
 export { FormRangeInput } from './FormRangeInput'
 export { FormNamespaceInput } from './FormNamespaceInput'

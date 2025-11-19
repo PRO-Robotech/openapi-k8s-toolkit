@@ -19,8 +19,11 @@ export {
 } from './EnrichedTable'
 export type { TEnrichedTableProviderProps, TEnrichedTableProps } from './EnrichedTable'
 
+/* YamlEditorSingleton */
+export { YamlEditorSingleton } from './YamlEditorSingleton'
+
 /* BlackholeForm */
-export { BlackholeFormProvider, BlackholeForm, getObjectFormItemsDraft, YamlEditorSingleton } from './BlackholeForm'
+export { BlackholeFormProvider, BlackholeForm, getObjectFormItemsDraft } from './BlackholeForm'
 export type { TBlackholeFormProviderProps, TBlackholeFormProps } from './BlackholeForm'
 
 /* MarketPlace */
