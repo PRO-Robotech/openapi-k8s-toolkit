@@ -37,6 +37,7 @@ import {
   ResourceBadge,
   Events,
   OwnerRefs,
+  Toggler,
 } from './molecules'
 import { TDynamicComponentsAppTypeMap } from './types'
 
@@ -78,4 +79,5 @@ export const DynamicComponents: TRendererComponents<TDynamicComponentsAppTypeMap
   ResourceBadge,
   Events,
   OwnerRefs,
+  Toggler,
 }
