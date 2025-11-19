@@ -8,7 +8,7 @@ import { OpenAPIV2 } from 'openapi-types'
 import { TUrlParams } from 'localTypes/form'
 import { TPrepareFormReq, TPrepareFormRes } from 'localTypes/bff/form'
 import { TFormPrefill } from 'localTypes/formExtensions'
-import { YamlEditorSingleton } from '../../molecules/YamlEditorSingleton'
+import { YamlEditorSingleton } from '../../../YamlEditorSingleton'
 import { BlackholeForm } from '../BlackholeForm'
 
 export type TBlackholeFormProviderProps = {

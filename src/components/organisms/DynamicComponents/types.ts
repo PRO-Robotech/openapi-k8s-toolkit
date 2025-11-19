@@ -330,4 +330,47 @@ export type TDynamicComponentsAppTypeMap = {
     baseNavigationPluralName: string
     baseNavigationSpecificName: string
   }
+  Toggler: {
+    id: number | string
+    reqIndex: string
+    jsonPathToValue: string
+    criteria: {
+      type: 'forSuccess' | 'forError'
+      operator: 'exists' | 'equals'
+      valueToCompare?: string
+    }
+    notificationSuccessMessage?: string
+    notificationErrorMessage?: string
+    notificationSuccessMessageDescription?: string
+    notificationErrorMessageDescription?: string
+    containerStyle?: CSSProperties
+    endpoint: string
+    pathToValue: string
+    valueToSubmit: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      onValue: any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      offValue?: any
+      toRemoveWhenOff?: boolean
+    }
+  }
+  TogglerSegmented: {
+    id: number | string
+    reqIndex: string
+    jsonPathToValue: string
+    notificationSuccessMessage?: string
+    notificationErrorMessage?: string
+    notificationSuccessMessageDescription?: string
+    notificationErrorMessageDescription?: string
+    containerStyle?: CSSProperties
+    endpoint: string
+    pathToValue: string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    possibleValues: any[]
+    valuesMap?: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      value: any
+      renderedValue: string | number
+    }[]
+  }
 }
