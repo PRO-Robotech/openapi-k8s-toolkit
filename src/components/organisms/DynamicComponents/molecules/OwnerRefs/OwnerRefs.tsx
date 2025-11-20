@@ -32,6 +32,7 @@ export const OwnerRefs: FC<{ data: TDynamicComponentsAppTypeMap['OwnerRefs']; ch
     keysToForcedLabel,
     forcedRelatedValuePath,
     jsonPathToArrayOfRefs,
+    forcedApiVersion,
     forcedNamespace,
     baseFactoryNamespacedAPIKey,
     baseFactoryClusterSceopedAPIKey,
@@ -55,6 +56,19 @@ export const OwnerRefs: FC<{ data: TDynamicComponentsAppTypeMap['OwnerRefs']; ch
     replaceValues,
   })
 
+  const preparedForcedApiVersion = forcedApiVersion
+    ? forcedApiVersion.map(({ kind, apiVersion }) => ({
+        kind: prepareTemplate({
+          template: kind,
+          replaceValues,
+        }),
+        apiVersion: prepareTemplate({
+          template: apiVersion,
+          replaceValues,
+        }),
+      }))
+    : undefined
+
   const preparedForcedNamespace = forcedNamespace
     ? prepareTemplate({
         template: forcedNamespace,
@@ -69,7 +83,7 @@ export const OwnerRefs: FC<{ data: TDynamicComponentsAppTypeMap['OwnerRefs']; ch
     return <div style={containerStyle}>{errorText}</div>
   }
 
-  const refsArr = jp.query(jsonRoot, `$${jsonPathToArrayOfRefs}`)[0]
+  const refsArr = jp.query(jsonRoot, `$${jsonPathToArrayOfRefs}`).flat()
 
   if (!Array.isArray(refsArr)) {
     return <div style={containerStyle}>{notArrayErrorText}</div>
@@ -79,11 +93,19 @@ export const OwnerRefs: FC<{ data: TDynamicComponentsAppTypeMap['OwnerRefs']; ch
     return <div style={containerStyle}>{emptyArrayErrorText}</div>
   }
 
-  if (refsArr.some(el => !isOwnerReference(el))) {
+  const refsArrWithForcedApiVersion = refsArr.map(el => {
+    const forceFound = preparedForcedApiVersion?.find(force => force.kind === el.kind)
+    if (forceFound) {
+      return { ...el, apiVersion: forceFound.apiVersion }
+    }
+    return el
+  })
+
+  if (refsArrWithForcedApiVersion.some(el => !isOwnerReference(el))) {
     return <div style={containerStyle}>{isNotRefsArrayErrorText}</div>
   }
 
-  const guardedRefsArr: TOwnerReference[] = refsArr as TOwnerReference[]
+  const guardedRefsArr: TOwnerReference[] = refsArrWithForcedApiVersion as TOwnerReference[]
 
   if (isMultiqueryLoading) {
     return <div>Loading multiquery</div>
