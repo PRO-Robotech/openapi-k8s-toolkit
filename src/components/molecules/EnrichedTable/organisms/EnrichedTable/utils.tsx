@@ -42,6 +42,9 @@ export const getCellRender = ({
 }): JSX.Element => {
   if (possibleCustomTypeWithProps) {
     const { type, customProps } = possibleCustomTypeWithProps
+    if (type === 'factory') {
+      return <TableFactory record={record} customProps={customProps} theme={theme} />
+    }
     if (value === undefined && possibleUndefinedValue) {
       return <ShortenedTextWithTooltip trimLength={possibleTrimLength} text={possibleUndefinedValue} />
     }
@@ -78,9 +81,6 @@ export const getCellRender = ({
         tags = [String(value)]
       }
       return <TrimmedTags tags={tags} trimLength={possibleTrimLength} />
-    }
-    if (type === 'factory') {
-      return <TableFactory record={record} customProps={customProps} theme={theme} />
     }
   }
   if (value === null) {
