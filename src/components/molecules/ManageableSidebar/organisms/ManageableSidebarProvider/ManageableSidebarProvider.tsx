@@ -40,8 +40,8 @@ export const ManageableSidebarProvider: FC<TManageableSidebarProviderProps> = ({
     isLoading: rawDataLoading,
   } = useK8sSmartResource<TSidebarResponse>({
     cluster,
-    group: apiGroup,
-    version: apiVersion,
+    apiGroup,
+    apiVersion,
     plural,
     isEnabled,
   })

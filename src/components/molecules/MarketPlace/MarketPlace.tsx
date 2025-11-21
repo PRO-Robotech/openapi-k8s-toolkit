@@ -55,8 +55,8 @@ export const MarketPlace: FC<TMarketPlaceProps> = ({
     error,
   } = useK8sSmartResource<TMarketPlacePanelResponse>({
     cluster,
-    group: baseApiGroup,
-    version: baseApiVersion,
+    apiGroup: baseApiGroup,
+    apiVersion: baseApiVersion,
     plural: marketplacePlural,
   })
 

@@ -175,8 +175,8 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
   } = useK8sSmartResource<{ items?: unknown }>({
     cluster: clusterPrepared || '',
     namespace: k8sResourceToFetchPrepared?.namespace,
-    group: k8sResourceToFetchPrepared?.apiGroup,
-    version: k8sResourceToFetchPrepared?.apiVersion || '',
+    apiGroup: k8sResourceToFetchPrepared?.apiGroup,
+    apiVersion: k8sResourceToFetchPrepared?.apiVersion || '',
     plural: k8sResourceToFetchPrepared?.plural || '',
     fieldSelector: sParams.get('fieldSelector') || undefined,
     labelSelector: sParams.get('labelSelector') || undefined,

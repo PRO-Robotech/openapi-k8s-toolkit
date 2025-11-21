@@ -48,8 +48,8 @@ export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
     // error: marketplaceError,
   } = useK8sSmartResource<TMarketPlacePanelResponse>({
     cluster,
-    group: baseApiGroup,
-    version: baseApiVersion,
+    apiGroup: baseApiGroup,
+    apiVersion: baseApiVersion,
     plural: marketplacePlural,
   })
 
@@ -87,8 +87,8 @@ export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
     }[]
   }>({
     cluster,
-    group: baseProjectApiGroup,
-    version: baseProjectVersion,
+    apiGroup: baseProjectApiGroup,
+    apiVersion: baseProjectVersion,
     plural: projectPlural,
     fieldSelector: `metadata.name=${namespace}`,
   })

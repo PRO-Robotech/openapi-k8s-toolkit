@@ -76,8 +76,8 @@ export const RefsList: FC<TRefsListProps> = ({
     items: TNavigationResource[]
   }>({
     cluster,
-    group: 'front.in-cloud.io',
-    version: 'v1alpha1',
+    apiGroup: 'front.in-cloud.io',
+    apiVersion: 'v1alpha1',
     plural: baseNavigationPlural,
     fieldSelector: `metadata.name=${baseNavigationName}`,
   })

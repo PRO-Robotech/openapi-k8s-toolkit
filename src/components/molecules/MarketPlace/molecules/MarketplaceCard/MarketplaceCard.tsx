@@ -80,8 +80,8 @@ export const MarketplaceCard: FC<TMarketplaceCardProps> = ({
   const { data: k8sList, error: k8sListError } = useK8sSmartResource<{ items?: [] }>({
     cluster,
     namespace,
-    group: apiGroup,
-    version: apiVersion || '',
+    apiGroup,
+    apiVersion: apiVersion || '',
     plural: type,
     isEnabled: Boolean(apiVersion && addedMode && type !== 'direct'),
   })
