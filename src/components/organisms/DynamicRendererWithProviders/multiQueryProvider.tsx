@@ -1,4 +1,4 @@
-import React, { FC, useContext, createContext, useMemo, ReactNode } from 'react'
+import React, { FC, useContext, createContext, ReactNode } from 'react'
 import axios from 'axios'
 import { useQueries } from '@tanstack/react-query'
 
@@ -52,15 +52,17 @@ export const MultiQueryProvider: FC<TMultiQueryProviderProps> = ({ urls, dataToA
     isError = false
   }
 
-  const value = useMemo(
-    () => ({ data, isLoading, isError, errors }),
-    /*
-      We use JSON.stringify(data) and JSON.stringify(errors) as dependencies to safely memoize when values deeply change (since data is a new object every render).
-      Alternatively, you could use a deep comparison hook or lodash.isEqual if needed.
-    */
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [JSON.stringify(data), isLoading, isError, JSON.stringify(errors)],
-  )
+  // eslint-disable-next-line react/jsx-no-constructed-context-values
+  const value = { data, isLoading, isError, errors }
+  // const value = useMemo(
+  //   () => ({ data, isLoading, isError, errors }),
+  //   /*
+  //     We use JSON.stringify(data) and JSON.stringify(errors) as dependencies to safely memoize when values deeply change (since data is a new object every render).
+  //     Alternatively, you could use a deep comparison hook or lodash.isEqual if needed.
+  //   */
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  //   [JSON.stringify(data), isLoading, isError, JSON.stringify(errors)],
+  // )
 
   return <MultiQueryContext.Provider value={value}>{children}</MultiQueryContext.Provider>
 }
