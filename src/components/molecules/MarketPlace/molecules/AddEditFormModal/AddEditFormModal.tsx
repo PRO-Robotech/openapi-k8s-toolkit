@@ -6,11 +6,11 @@ import { v4 as uuidv4 } from 'uuid'
 import { TMarketPlacePanel, TMarketPlacePanelResource } from 'localTypes/marketplace'
 
 type TAddEditFormModalProps = {
-  clusterName?: string
+  cluster: string
   baseApiGroup: string
   baseApiVersion: string
-  mpResourceName: string
-  mpResourceKind: string
+  marketplacePlural: string
+  marketplaceKind: string
   isOpen: boolean | TMarketPlacePanelResource
   setIsOpen: Dispatch<SetStateAction<boolean | TMarketPlacePanelResource>>
   setError: Dispatch<SetStateAction<AxiosError | Error | undefined>>
@@ -19,11 +19,11 @@ type TAddEditFormModalProps = {
 }
 
 export const AddEditFormModal: FC<TAddEditFormModalProps> = ({
-  clusterName,
+  cluster,
   baseApiGroup,
   baseApiVersion,
-  mpResourceName,
-  mpResourceKind,
+  marketplacePlural,
+  marketplaceKind,
   isOpen,
   setIsOpen,
   setError,
@@ -42,7 +42,7 @@ export const AddEditFormModal: FC<TAddEditFormModalProps> = ({
           type: 'direct',
           apiGroup: '',
           apiVersion: '',
-          typeName: '',
+          plural: '',
           pathToNav: '',
           tags: [],
           disabled: false,
@@ -53,10 +53,10 @@ export const AddEditFormModal: FC<TAddEditFormModalProps> = ({
   const onSubmit = (values: TMarketPlacePanel) => {
     if (typeof isOpen === 'boolean') {
       createNewEntry({
-        endpoint: `/api/clusters/${clusterName}/k8s/apis/${baseApiGroup}/${baseApiVersion}/${mpResourceName}`,
+        endpoint: `/api/clusters/${cluster}/k8s/apis/${baseApiGroup}/${baseApiVersion}/${marketplacePlural}`,
         body: {
           apiVersion: `${baseApiGroup}/${baseApiVersion}`,
-          kind: mpResourceKind,
+          kind: marketplaceKind,
           metadata: {
             name: uuidv4(),
           },
@@ -78,10 +78,10 @@ export const AddEditFormModal: FC<TAddEditFormModalProps> = ({
     }
 
     updateEntry({
-      endpoint: `/api/clusters/${clusterName}/k8s/apis/${baseApiGroup}/${baseApiVersion}/${mpResourceName}/${isOpen.metadata.name}`,
+      endpoint: `/api/clusters/${cluster}/k8s/apis/${baseApiGroup}/${baseApiVersion}/${marketplacePlural}/${isOpen.metadata.name}`,
       body: {
         apiVersion: `${baseApiGroup}/${baseApiVersion}`,
-        kind: mpResourceKind,
+        kind: marketplaceKind,
         metadata: {
           name: isOpen.metadata.name,
           resourceVersion: isOpen.metadata.resourceVersion,
@@ -145,7 +145,7 @@ export const AddEditFormModal: FC<TAddEditFormModalProps> = ({
         <Form.Item label="Enter API version" name="apiVersion">
           <Input disabled={type === 'direct'} />
         </Form.Item>
-        <Form.Item label="Enter resource type" name="typeName">
+        <Form.Item label="Enter resource type" name="plural">
           <Input disabled={type === 'direct'} />
         </Form.Item>
         <Form.Item label="Enter path" name="pathToNav">

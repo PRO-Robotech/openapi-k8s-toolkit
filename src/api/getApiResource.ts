@@ -1,22 +1,22 @@
 import axios, { AxiosResponse } from 'axios'
 
 export const getApiResources = async <T>({
-  clusterName,
+  cluster,
   namespace,
   apiGroup,
   apiVersion,
-  typeName,
-  specificName,
+  plural,
+  name,
   labels,
   fields,
   limit,
 }: {
-  clusterName: string
+  cluster: string
   namespace?: string
   apiGroup: string
   apiVersion: string
-  typeName: string
-  specificName?: string
+  plural: string
+  name?: string
   labels?: string[]
   fields?: string[]
   limit: string | null
@@ -33,30 +33,30 @@ export const getApiResources = async <T>({
   }
   const searchParams = params.toString()
   return axios.get(
-    `/api/clusters/${clusterName}/k8s/apis/${apiGroup}/${apiVersion}${
+    `/api/clusters/${cluster}/k8s/apis/${apiGroup}/${apiVersion}${
       namespace ? `/namespaces/${namespace}` : ''
-    }/${typeName}${specificName ? `/${specificName}` : ''}${searchParams.length > 0 ? `?${searchParams}` : ''}`,
+    }/${plural}${name ? `/${name}` : ''}${searchParams.length > 0 ? `?${searchParams}` : ''}`,
   )
 }
 
 export const getApiResourceSingle = async <T>({
-  clusterName,
+  cluster,
   namespace,
   apiGroup,
   apiVersion,
-  typeName,
-  entryName,
+  plural,
+  name,
 }: {
-  clusterName: string
+  cluster: string
   namespace?: string
   apiGroup: string
   apiVersion: string
-  typeName: string
-  entryName: string
+  plural: string
+  name: string
 }): Promise<AxiosResponse<T>> => {
   return axios.get(
-    `/api/clusters/${clusterName}/k8s/apis/${apiGroup}/${apiVersion}${
+    `/api/clusters/${cluster}/k8s/apis/${apiGroup}/${apiVersion}${
       namespace ? `/namespaces/${namespace}` : ''
-    }/${typeName}/${entryName}`,
+    }/${plural}/${name}`,
   )
 }

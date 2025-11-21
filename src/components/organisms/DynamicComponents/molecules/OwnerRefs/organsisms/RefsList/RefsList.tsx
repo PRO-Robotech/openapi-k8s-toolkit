@@ -25,8 +25,8 @@ export type TRefsListProps = {
   baseFactoryClusterSceopedAPIKey: string
   baseFactoryNamespacedBuiltinKey: string
   baseFactoryClusterSceopedBuiltinKey: string
-  baseNavigationPluralName: string
-  baseNavigationSpecificName: string
+  baseNavigationPlural: string
+  baseNavigationName: string
   listFlexProps?: FlexProps
 }
 
@@ -44,8 +44,8 @@ export const RefsList: FC<TRefsListProps> = ({
   baseFactoryClusterSceopedAPIKey,
   baseFactoryNamespacedBuiltinKey,
   baseFactoryClusterSceopedBuiltinKey,
-  baseNavigationPluralName,
-  baseNavigationSpecificName,
+  baseNavigationPlural,
+  baseNavigationName,
   listFlexProps,
 }) => {
   // const [error, setError] = useState<TRequestError | undefined>()
@@ -57,7 +57,7 @@ export const RefsList: FC<TRefsListProps> = ({
   useEffect(() => {
     // setIsLoading(true)
     // setError(undefined)
-    getKinds({ clusterName: cluster })
+    getKinds({ cluster })
       .then(data => {
         setKindIndex(data)
         setKindWithVersion(getSortedKindsAll(data))
@@ -78,8 +78,8 @@ export const RefsList: FC<TRefsListProps> = ({
     cluster,
     group: 'front.in-cloud.io',
     version: 'v1alpha1',
-    plural: baseNavigationPluralName,
-    fieldSelector: `metadata.name=${baseNavigationSpecificName}`,
+    plural: baseNavigationPlural,
+    fieldSelector: `metadata.name=${baseNavigationName}`,
   })
 
   const getPlural = kindsWithVersion ? pluralByKind(kindsWithVersion) : undefined

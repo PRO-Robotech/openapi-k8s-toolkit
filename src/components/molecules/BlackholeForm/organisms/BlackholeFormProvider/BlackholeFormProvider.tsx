@@ -17,12 +17,12 @@ export type TBlackholeFormProviderProps = {
   urlParams: TUrlParams
   urlParamsForPermissions: {
     apiGroup?: string
-    typeName?: string
+    plural?: string
   }
   data:
     | {
         type: 'builtin'
-        typeName: string
+        plural: string
         prefillValuesSchema?: TJSON
         prefillValueNamespaceOnly?: string
       }
@@ -30,7 +30,7 @@ export type TBlackholeFormProviderProps = {
         type: 'apis'
         apiGroup: string
         apiVersion: string
-        typeName: string
+        plural: string
         prefillValuesSchema?: TJSON
         prefillValueNamespaceOnly?: string
       }
@@ -68,7 +68,7 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
     expandedPaths: string[][]
     persistedPaths: string[][]
     sortPaths?: string[][]
-    kindName: string
+    kind: string
     isNamespaced?: boolean
     isError?: boolean
     formPrefills?: TFormPrefill
@@ -89,7 +89,7 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
     setIsLoading(true)
     const payload: TPrepareFormReq = {
       data,
-      clusterName: cluster,
+      cluster,
       customizationId,
     }
     axios
@@ -110,10 +110,11 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
             expandedPaths: data.expandedPaths || [],
             persistedPaths: data.persistedPaths || [],
             sortPaths: data.sortPaths,
-            kindName: data.kindName || '',
+            kind: data.kind || '',
             formPrefills: data.formPrefills,
             namespacesData: data.namespacesData,
           })
+          setIsError(undefined)
         }
       })
       .catch((e: AxiosError) => {
@@ -138,7 +139,7 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
         type={data.type}
         isNameSpaced={isNamespaced}
         apiGroupApiVersion={data.type === 'builtin' ? 'api/v1' : `${data.apiGroup}/${data.apiVersion}`}
-        typeName={data.typeName}
+        plural={data.plural}
         backlink={backlink}
         designNewLayout={designNewLayout}
         designNewLayoutHeight={designNewLayoutHeight}
@@ -176,8 +177,8 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
       type={data.type}
       isNameSpaced={isNamespaced ? preparedData.namespacesData : false}
       apiGroupApiVersion={data.type === 'builtin' ? 'api/v1' : `${data.apiGroup}/${data.apiVersion}`}
-      kindName={preparedData.kindName}
-      typeName={data.typeName}
+      kind={preparedData.kind}
+      plural={data.plural}
       backlink={backlink}
       designNewLayout={designNewLayout}
       designNewLayoutHeight={designNewLayoutHeight}

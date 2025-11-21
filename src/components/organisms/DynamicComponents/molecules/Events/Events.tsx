@@ -3,7 +3,6 @@ import React, { FC } from 'react'
 import jp from 'jsonpath'
 import _ from 'lodash'
 import { Events as StandaloneEvents } from 'components/molecules'
-import { prepareTemplate } from 'utils/prepareTemplate'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
@@ -22,7 +21,7 @@ export const Events: FC<{ data: TDynamicComponentsAppTypeMap['Events']; children
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     id,
     baseprefix,
-    clusterNamePartOfUrl,
+    cluster,
     wsUrl,
     pageSize,
     substractHeight,
@@ -35,8 +34,8 @@ export const Events: FC<{ data: TDynamicComponentsAppTypeMap['Events']; children
     baseFactoryNamespacedBuiltinKey,
     baseFactoryClusterSceopedBuiltinKey,
     baseNamespaceFactoryKey,
-    baseNavigationPluralName,
-    baseNavigationSpecificName,
+    baseNavigationPlural,
+    baseNavigationName,
     ...props
   } = data
 
@@ -48,10 +47,7 @@ export const Events: FC<{ data: TDynamicComponentsAppTypeMap['Events']; children
     return acc
   }, {})
 
-  const clusterName = prepareTemplate({
-    template: clusterNamePartOfUrl,
-    replaceValues,
-  })
+  const clusterPrepared = parseAll({ text: cluster, replaceValues, multiQueryData })
 
   const wsUrlPrepared = parseAll({ text: wsUrl, replaceValues, multiQueryData })
 
@@ -108,7 +104,7 @@ export const Events: FC<{ data: TDynamicComponentsAppTypeMap['Events']; children
       <StandaloneEvents
         theme={theme}
         baseprefix={baseprefix}
-        cluster={clusterName}
+        cluster={clusterPrepared}
         wsUrl={wsUrlWithParams}
         pageSize={pageSize}
         substractHeight={substractHeight || 340}
@@ -117,8 +113,8 @@ export const Events: FC<{ data: TDynamicComponentsAppTypeMap['Events']; children
         baseFactoryNamespacedBuiltinKey={baseFactoryNamespacedBuiltinKey}
         baseFactoryClusterSceopedBuiltinKey={baseFactoryClusterSceopedBuiltinKey}
         baseNamespaceFactoryKey={baseNamespaceFactoryKey}
-        baseNavigationPluralName={baseNavigationPluralName}
-        baseNavigationSpecificName={baseNavigationSpecificName}
+        baseNavigationPlural={baseNavigationPlural}
+        baseNavigationName={baseNavigationName}
         {...props}
       />
       {children}

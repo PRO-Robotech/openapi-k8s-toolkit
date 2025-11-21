@@ -3,24 +3,24 @@ import { getApiResources, getApiResourceSingle } from 'api/getApiResource'
 import { TApiResources, TSingleResource } from 'localTypes/k8s'
 
 export const useApiResources = ({
-  clusterName,
+  cluster,
   namespace,
   apiGroup,
   apiVersion,
-  typeName,
-  specificName,
+  plural,
+  name,
   labels,
   fields,
   limit,
   refetchInterval,
   isEnabled,
 }: {
-  clusterName: string
+  cluster: string
   namespace?: string
   apiGroup: string
   apiVersion: string
-  typeName: string
-  specificName?: string
+  plural: string
+  name?: string
   labels?: string[]
   fields?: string[]
   limit: string | null
@@ -28,26 +28,15 @@ export const useApiResources = ({
   isEnabled?: boolean
 }) => {
   return useQuery({
-    queryKey: [
-      'useApiResources',
-      clusterName,
-      namespace,
-      apiGroup,
-      apiVersion,
-      typeName,
-      specificName,
-      labels,
-      fields,
-      limit,
-    ],
+    queryKey: ['useApiResources', cluster, namespace, apiGroup, apiVersion, plural, name, labels, fields, limit],
     queryFn: async () => {
       const response = await getApiResources<TApiResources>({
-        clusterName,
+        cluster,
         namespace,
         apiGroup,
         apiVersion,
-        typeName,
-        specificName,
+        plural,
+        name,
         labels,
         fields,
         limit,
@@ -66,33 +55,33 @@ export const useApiResources = ({
 }
 
 export const useApiResourceSingle = ({
-  clusterName,
+  cluster,
   namespace,
   apiGroup,
   apiVersion,
-  typeName,
-  entryName,
+  plural,
+  name,
   refetchInterval,
 }: {
-  clusterName: string
+  cluster: string
   namespace?: string
   apiGroup: string
   apiVersion: string
-  typeName: string
-  entryName: string
+  plural: string
+  name: string
   refetchInterval?: number | false
 }) => {
   return useQuery({
-    queryKey: ['useApiResourceSingle', clusterName, namespace, apiGroup, apiVersion, typeName, entryName],
+    queryKey: ['useApiResourceSingle', cluster, namespace, apiGroup, apiVersion, plural, name],
     queryFn: async () =>
       (
         await getApiResourceSingle<TSingleResource>({
-          clusterName,
+          cluster,
           namespace,
           apiGroup,
           apiVersion,
-          typeName,
-          entryName,
+          plural,
+          name,
         })
       ).data,
     refetchInterval: refetchInterval !== undefined ? refetchInterval : 5000,

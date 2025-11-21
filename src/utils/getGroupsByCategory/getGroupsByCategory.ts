@@ -2,13 +2,13 @@ import { TApiGroupList, TBuiltinResourceTypeList } from 'localTypes/k8s'
 import { filterIfBuiltInInstanceNamespaceScoped } from 'api/bff/scopes/filterScopes'
 
 export const getGroupsByCategory = async ({
-  clusterName,
+  cluster,
   apiGroupListData,
   builtinResourceTypesData,
   namespace,
   noncrds = ['apps', 'autoscaling', 'batch', 'policy'],
 }: {
-  clusterName: string
+  cluster: string
   namespace?: string
   apiGroupListData?: TApiGroupList
   builtinResourceTypesData?: TBuiltinResourceTypeList
@@ -34,7 +34,7 @@ export const getGroupsByCategory = async ({
   const filteredBuiltinData = await filterIfBuiltInInstanceNamespaceScoped({
     namespace,
     data: builtinResourceTypesData,
-    clusterName,
+    cluster,
   })
 
   return { crdGroups, nonCrdGroups, builtinGroups: filteredBuiltinData, apiExtensionVersion }

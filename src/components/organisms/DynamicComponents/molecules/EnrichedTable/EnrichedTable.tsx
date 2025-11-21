@@ -12,7 +12,6 @@ import { usePermissions } from 'hooks/usePermissions'
 import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
 import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
 import { getLinkToForm } from 'utils/tableLocations'
-import { prepareTemplate } from 'utils/prepareTemplate'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
@@ -44,7 +43,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     fetchUrl,
     k8sResourceToFetch,
     pathToItems,
-    clusterNamePartOfUrl,
+    cluster,
     labelSelector,
     labelSelectorFull,
     fieldSelector,
@@ -63,10 +62,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     return acc
   }, {})
 
-  const clusterName = prepareTemplate({
-    template: clusterNamePartOfUrl,
-    replaceValues,
-  })
+  const clusterPrepared = parseAll({ text: cluster, replaceValues, multiQueryData })
 
   const namespacePrepared = namespace ? parseAll({ text: namespace, replaceValues, multiQueryData }) : undefined
 
@@ -76,22 +72,22 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
           ? parseAll({ text: k8sResource.apiGroup, replaceValues, multiQueryData })
           : undefined,
         apiVersion: parseAll({ text: k8sResource.apiVersion, replaceValues, multiQueryData }),
-        resource: parseAll({ text: k8sResource.resource, replaceValues, multiQueryData }),
+        plural: parseAll({ text: k8sResource.plural, replaceValues, multiQueryData }),
       }
     : undefined
 
   const k8sResourcePrepared =
     k8sResourcePrePrepared?.apiGroup === '-'
-      ? { apiVersion: k8sResourcePrePrepared.apiVersion, resource: k8sResourcePrePrepared.resource }
+      ? { apiVersion: k8sResourcePrePrepared.apiVersion, plural: k8sResourcePrePrepared.plural }
       : k8sResourcePrePrepared
 
   const dataForControlsPrepared = dataForControls
     ? {
-        cluster: clusterName,
+        cluster: clusterPrepared,
         syntheticProject: dataForControls.syntheticProject
           ? parseAll({ text: dataForControls.syntheticProject, replaceValues, multiQueryData })
           : undefined,
-        resource: parseAll({ text: dataForControls.resource, replaceValues, multiQueryData }),
+        plural: parseAll({ text: dataForControls.plural, replaceValues, multiQueryData }),
         apiGroup: dataForControls.apiGroup
           ? parseAll({ text: dataForControls.apiGroup, replaceValues, multiQueryData })
           : undefined,
@@ -100,10 +96,10 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     : undefined
 
   const createPermission = usePermissions({
-    group: dataForControlsPrepared?.apiGroup,
-    resource: dataForControlsPrepared?.resource || '',
+    apiGroup: dataForControlsPrepared?.apiGroup,
+    plural: dataForControlsPrepared?.plural || '',
     namespace: namespacePrepared,
-    clusterName,
+    cluster: clusterPrepared,
     verb: 'create',
     refetchInterval: false,
   })
@@ -112,10 +108,10 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
 
   const k8sResourceToFetchPrepared = k8sResourceToFetch
     ? {
-        group: k8sResourceToFetch.group
-          ? parseAll({ text: k8sResourceToFetch.group, replaceValues, multiQueryData })
+        apiGroup: k8sResourceToFetch.apiGroup
+          ? parseAll({ text: k8sResourceToFetch.apiGroup, replaceValues, multiQueryData })
           : undefined,
-        version: parseAll({ text: k8sResourceToFetch.version, replaceValues, multiQueryData }),
+        apiVersion: parseAll({ text: k8sResourceToFetch.apiVersion, replaceValues, multiQueryData }),
         plural: parseAll({ text: k8sResourceToFetch.plural, replaceValues, multiQueryData }),
         namespace: k8sResourceToFetch.namespace
           ? parseAll({ text: k8sResourceToFetch.namespace, replaceValues, multiQueryData })
@@ -177,10 +173,10 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     isLoading: isFetchedDataSocketLoading,
     error: fetchedDataSocketError,
   } = useK8sSmartResource<{ items?: unknown }>({
-    cluster: clusterName || '',
+    cluster: clusterPrepared || '',
     namespace: k8sResourceToFetchPrepared?.namespace,
-    group: k8sResourceToFetchPrepared?.group,
-    version: k8sResourceToFetchPrepared?.version || '',
+    group: k8sResourceToFetchPrepared?.apiGroup,
+    version: k8sResourceToFetchPrepared?.apiVersion || '',
     plural: k8sResourceToFetchPrepared?.plural || '',
     fieldSelector: sParams.get('fieldSelector') || undefined,
     labelSelector: sParams.get('labelSelector') || undefined,
@@ -248,7 +244,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     <>
       <EnrichedTableProvider
         tableMappingsReplaceValues={replaceValues}
-        cluster={clusterName}
+        cluster={clusterPrepared}
         namespace={namespacePrepared}
         theme={theme}
         dataItems={items}
@@ -285,13 +281,13 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
               type="primary"
               onClick={() => {
                 const url = getLinkToForm({
-                  cluster: clusterName,
+                  cluster: clusterPrepared,
                   baseprefix,
                   namespace: namespacePrepared,
                   syntheticProject: params.syntheticProject,
                   apiGroup: dataForControlsPrepared.apiGroup,
                   apiVersion: dataForControlsPrepared.apiVersion,
-                  typeName: dataForControlsPrepared.resource,
+                  plural: dataForControlsPrepared.plural,
                   fullPath,
                 })
                 navigate(url)

@@ -33,7 +33,7 @@ export const ManageableBreadcrumbsProvider: FC<TManageableBreadcrumbsProviderPro
     isError: rawDataError,
     isLoading: rawDataLoading,
   } = useK8sSmartResource<TBreadcrumbResponse>({
-    cluster: cluster || '',
+    cluster,
     group: apiGroup,
     version: apiVersion,
     plural,

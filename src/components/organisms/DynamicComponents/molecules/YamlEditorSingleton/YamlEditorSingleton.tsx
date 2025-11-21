@@ -23,7 +23,7 @@ export const YamlEditorSingleton: FC<{ data: TDynamicComponentsAppTypeMap['YamlE
     type,
     apiGroup,
     apiVersion,
-    typeName,
+    plural,
     forcedKind,
     prefillValuesRequestIndex,
     pathToData,
@@ -64,7 +64,7 @@ export const YamlEditorSingleton: FC<{ data: TDynamicComponentsAppTypeMap['YamlE
     ? parseAll({ text: apiVersion, replaceValues, multiQueryData })
     : 'no-api-version'
 
-  const typeNamePrepared = parseAll({ text: typeName, replaceValues, multiQueryData })
+  const pluralPrepared = parseAll({ text: plural, replaceValues, multiQueryData })
 
   const prefillValuesRaw = multiQueryData[`req${prefillValuesRequestIndex}`]
   const prefillValues = pathToData ? getDataByPath({ prefillValuesRaw, pathToData }) : prefillValuesRaw
@@ -84,7 +84,7 @@ export const YamlEditorSingleton: FC<{ data: TDynamicComponentsAppTypeMap['YamlE
         isCreate={false}
         type={type}
         apiGroupApiVersion={type === 'builtin' ? 'api/v1' : `${apiGroupPrepared}/${apiVersionPrepared}`}
-        typeName={typeNamePrepared}
+        plural={pluralPrepared}
         designNewLayout
         designNewLayoutHeight={height}
         openNotification

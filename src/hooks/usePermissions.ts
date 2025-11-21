@@ -2,18 +2,18 @@ import { useQuery } from '@tanstack/react-query'
 import { checkPermission } from 'api/permissions'
 
 export const usePermissions = ({
-  clusterName,
+  cluster,
   namespace,
-  group,
-  resource,
+  apiGroup,
+  plural,
   verb,
   name,
   refetchInterval,
   enabler,
 }: {
-  clusterName: string
-  group?: string
-  resource: string
+  cluster: string
+  apiGroup?: string
+  plural: string
   namespace?: string
   name?: string
   verb: 'create' | 'delete' | 'patch' | 'update'
@@ -21,15 +21,15 @@ export const usePermissions = ({
   enabler?: boolean
 }) => {
   return useQuery({
-    queryKey: ['usePermissions', clusterName, namespace, group, resource, verb, name],
+    queryKey: ['usePermissions', cluster, namespace, apiGroup, plural, verb, name],
     queryFn: async () =>
       (
         await checkPermission({
-          clusterName,
+          cluster,
           body: {
             namespace,
-            group,
-            resource,
+            apiGroup,
+            plural,
             verb,
           },
         })
