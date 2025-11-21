@@ -14,7 +14,6 @@ export type TDynamicComponentsAppTypeMap = {
     text: string
     href: string
   } & Omit<LinkProps, 'id' | 'children' | 'href'>
-  // antdCard: { id: number | string; price: number }
   antdCard: { id: number | string } & Omit<CardProps, 'id'>
   antdFlex: { id: number | string } & Omit<FlexProps, 'id' | 'children'>
   antdRow: { id: number | string } & Omit<RowProps, 'id' | 'children'>
@@ -26,26 +25,26 @@ export type TDynamicComponentsAppTypeMap = {
   parsedText: { id: number | string; text: string; formatter?: 'timestamp'; style?: CSSProperties }
   ProjectInfoCard: {
     id: number | string
-    clusterNamePartOfUrl: string
-    namespacePartOfUrl: string
+    cluster: string
+    namespace: string
     baseApiGroup: string
     baseApiVersion: string
     baseProjectApiGroup: string
     baseProjectVersion: string
-    projectResourceName: string
-    mpResourceName: string
+    projectPlural: string
+    marketplacePlural: string
     accessGroups: string[]
     baseprefix?: string
     showZeroResources?: boolean
   }
   MarketplaceCard: {
     id: number | string
-    clusterNamePartOfUrl: string
-    namespacePartOfUrl: string
+    cluster: string
+    namespace: string
     baseApiGroup: string
     baseApiVersion: string
-    mpResourceName: string
-    mpResourceKind: string
+    marketplacePlural: string
+    marketplaceKind: string
     baseprefix?: string
     standalone?: boolean
     forceAddedMode?: boolean
@@ -71,13 +70,13 @@ export type TDynamicComponentsAppTypeMap = {
     id: number | string
     fetchUrl?: string
     k8sResourceToFetch?: {
-      group?: string
-      version: string
+      apiGroup?: string
+      apiVersion: string
       plural: string
       namespace?: string
     }
     pathToItems: string | string[] // jsonpath or keys as string[]
-    clusterNamePartOfUrl: string
+    cluster: string
     labelSelector?: Record<string, string>
     labelSelectorFull?: {
       reqIndex: number
@@ -121,7 +120,7 @@ export type TDynamicComponentsAppTypeMap = {
     type: 'builtin' | 'apis'
     apiGroup?: string
     apiVersion?: string
-    typeName: string
+    plural: string
     forcedKind?: string
     prefillValuesRequestIndex: number
     pathToData?: string | string[] // jsonpath or keys as string[]
@@ -289,7 +288,7 @@ export type TDynamicComponentsAppTypeMap = {
   Events: {
     id: number | string
     baseprefix?: string
-    clusterNamePartOfUrl: string
+    cluster: string
     wsUrl: string
     pageSize?: number
     substractHeight?: number
@@ -305,13 +304,13 @@ export type TDynamicComponentsAppTypeMap = {
     baseFactoryNamespacedBuiltinKey: string
     baseFactoryClusterSceopedBuiltinKey: string
     baseNamespaceFactoryKey: string
-    baseNavigationPluralName: string
-    baseNavigationSpecificName: string
+    baseNavigationPlural: string
+    baseNavigationName: string
   }
   OwnerRefs: {
     id: number | string
     baseprefix?: string
-    clusterNamePartOfUrl: string
+    cluster: string
     reqIndex: string // full object for forced labels
     errorText: string
     notArrayErrorText: string
@@ -331,8 +330,8 @@ export type TDynamicComponentsAppTypeMap = {
     baseFactoryClusterSceopedAPIKey: string
     baseFactoryNamespacedBuiltinKey: string
     baseFactoryClusterSceopedBuiltinKey: string
-    baseNavigationPluralName: string
-    baseNavigationSpecificName: string
+    baseNavigationPlural: string
+    baseNavigationName: string
   }
   Toggler: {
     id: number | string

@@ -11,14 +11,14 @@ import { DropdownActions, DropdownAccessGroups } from './molecules'
 import { Styled } from './styled'
 
 export type TProjectInfoCardProps = {
-  clusterName?: string
+  cluster: string
   namespace?: string
   baseApiGroup: string
   baseApiVersion: string
   baseProjectApiGroup: string
   baseProjectVersion: string
-  projectResourceName: string
-  mpResourceName: string
+  projectPlural: string
+  marketplacePlural: string
   baseprefix?: string
   accessGroups: string[]
   showZeroResources?: boolean
@@ -27,14 +27,14 @@ export type TProjectInfoCardProps = {
 }
 
 export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
-  clusterName,
+  cluster,
   namespace,
   baseApiGroup,
   baseApiVersion,
   baseProjectApiGroup,
   baseProjectVersion,
-  mpResourceName,
-  projectResourceName,
+  marketplacePlural,
+  projectPlural,
   baseprefix,
   accessGroups,
   showZeroResources,
@@ -47,11 +47,10 @@ export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
     isLoading: marketplaceIsLoading,
     // error: marketplaceError,
   } = useK8sSmartResource<TMarketPlacePanelResponse>({
-    cluster: clusterName || '',
-    group: baseApiGroup,
-    version: baseApiVersion,
-    plural: mpResourceName,
-    isEnabled: Boolean(clusterName !== undefined),
+    cluster,
+    apiGroup: baseApiGroup,
+    apiVersion: baseApiVersion,
+    plural: marketplacePlural,
   })
 
   const {
@@ -87,12 +86,11 @@ export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
       }
     }[]
   }>({
-    cluster: clusterName || '',
-    group: baseProjectApiGroup,
-    version: baseProjectVersion,
-    plural: projectResourceName,
+    cluster,
+    apiGroup: baseProjectApiGroup,
+    apiVersion: baseProjectVersion,
+    plural: projectPlural,
     fieldSelector: `metadata.name=${namespace}`,
-    isEnabled: Boolean(clusterName !== undefined),
   })
 
   const project = projectArr && projectArr.items && projectArr.items.length > 0 ? projectArr.items[0] : undefined
@@ -100,26 +98,26 @@ export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false)
 
   const updatePermission = usePermissions({
-    group: baseProjectApiGroup,
-    resource: projectResourceName,
-    clusterName: clusterName || '',
+    apiGroup: baseProjectApiGroup,
+    plural: projectPlural,
+    cluster,
     verb: 'update',
     refetchInterval: false,
   })
 
   const deletePermission = usePermissions({
-    group: baseProjectApiGroup,
-    resource: projectResourceName,
-    clusterName: clusterName || '',
+    apiGroup: baseProjectApiGroup,
+    plural: projectPlural,
+    cluster,
     verb: 'delete',
     refetchInterval: false,
   })
 
   const openUpdate = useCallback(() => {
     navigate(
-      `/${baseprefix}/${clusterName}/forms/apis/${baseProjectApiGroup}/${baseProjectVersion}/${projectResourceName}/${namespace}?backlink=${baseprefix}/clusters/${clusterName}`,
+      `/${baseprefix}/${cluster}/forms/apis/${baseProjectApiGroup}/${baseProjectVersion}/${projectPlural}/${namespace}?backlink=${baseprefix}/clusters/${cluster}`,
     )
-  }, [baseprefix, clusterName, namespace, baseProjectApiGroup, baseProjectVersion, projectResourceName, navigate])
+  }, [baseprefix, cluster, namespace, baseProjectApiGroup, baseProjectVersion, projectPlural, navigate])
 
   if (isLoading) {
     return <Spin />
@@ -163,12 +161,11 @@ export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
       <Spacer $space={12} $samespace />
       <Flex gap={22} wrap>
         {marketplaceIsLoading && <Spin />}
-        {clusterName &&
-          namespace &&
+        {namespace &&
           marketplacePanels?.items
             .map(({ spec }) => spec)
             .sort()
-            .map(({ name, description, icon, type, pathToNav, typeName, apiGroup, apiVersion, tags, disabled }) => (
+            .map(({ name, description, icon, type, pathToNav, plural, apiGroup, apiVersion, tags, disabled }) => (
               <MarketplaceCard
                 baseprefix={baseprefix}
                 key={name}
@@ -177,11 +174,11 @@ export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
                 icon={icon}
                 isEditMode={false}
                 name={name}
-                clusterName={clusterName}
+                cluster={cluster}
                 namespace={namespace}
                 type={type}
                 pathToNav={pathToNav}
-                typeName={typeName}
+                plural={plural}
                 apiGroup={apiGroup}
                 apiVersion={apiVersion}
                 tags={tags}
@@ -195,9 +192,9 @@ export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
           name={project.metadata.name}
           onClose={() => {
             setIsDeleteModalOpen(false)
-            navigate(`${baseprefix}/clusters/${clusterName}`)
+            navigate(`${baseprefix}/clusters/${cluster}`)
           }}
-          endpoint={`/api/clusters/${clusterName}/k8s/apis/${baseProjectApiGroup}/${baseProjectVersion}/${projectResourceName}/${project.metadata.name}`}
+          endpoint={`/api/clusters/${cluster}/k8s/apis/${baseProjectApiGroup}/${baseProjectVersion}/${projectPlural}/${project.metadata.name}`}
         />
       )}
     </>

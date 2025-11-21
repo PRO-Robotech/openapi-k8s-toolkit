@@ -4,19 +4,19 @@ import { TCRD } from 'localTypes/k8s'
 
 /* /apis/apiextensions.k8s.io/${apiExtensionVersion}/customresourcedefinitions/${crdName} */
 export const useCrdData = ({
-  clusterName,
+  cluster,
   apiExtensionVersion,
   crdName,
 }: {
-  clusterName: string
+  cluster: string
   apiExtensionVersion: string
   crdName: string
 }) => {
   return useQuery({
-    queryKey: ['useCrdData', clusterName, apiExtensionVersion, crdName],
+    queryKey: ['useCrdData', cluster, apiExtensionVersion, crdName],
     queryFn: async () => {
       const response = await getCrdData<TCRD>({
-        clusterName,
+        cluster,
         apiExtensionVersion,
         crdName,
       })

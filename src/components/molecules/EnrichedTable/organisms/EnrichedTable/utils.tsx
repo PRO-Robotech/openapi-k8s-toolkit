@@ -282,17 +282,17 @@ export const getEnrichedColumnsWithControls = ({
                     navigate(
                       `${baseprefix}/${value.cluster}${value.namespace ? `/${value.namespace}` : ''}${
                         value.syntheticProject ? `/${value.syntheticProject}` : ''
-                      }/${value.pathPrefix}/${value.apiGroupAndVersion}/${value.typeName}/${value.entryName}?backlink=${
+                      }/${value.pathPrefix}/${value.apiGroupAndVersion}/${value.plural}/${value.name}?backlink=${
                         value.backlink
                       }`,
                     )
                   }
                   if (key === 'delete') {
                     value.onDeleteHandle(
-                      value.entryName,
+                      value.name,
                       `${value.deletePathPrefix}/${value.apiGroupAndVersion}${
                         value.namespace ? `/namespaces/${value.namespace}` : ''
-                      }/${value.typeName}/${value.entryName}`,
+                      }/${value.plural}/${value.name}`,
                     )
                   }
                 },
@@ -318,7 +318,7 @@ export const getEnrichedColumnsWithControls = ({
                 navigate(
                   `${baseprefix}/${value.cluster}${value.namespace ? `/${value.namespace}` : ''}${
                     value.syntheticProject ? `/${value.syntheticProject}` : ''
-                  }/${value.pathPrefix}/${value.apiGroupAndVersion}/${value.typeName}/${value.entryName}?backlink=${
+                  }/${value.pathPrefix}/${value.apiGroupAndVersion}/${value.plural}/${value.name}?backlink=${
                     value.backlink
                   }`,
                 )
@@ -332,10 +332,10 @@ export const getEnrichedColumnsWithControls = ({
               onClick={e => {
                 e.stopPropagation()
                 value.onDeleteHandle(
-                  value.entryName,
+                  value.name,
                   `${value.deletePathPrefix}/${value.apiGroupAndVersion}${
                     value.namespace ? `/namespaces/${value.namespace}` : ''
-                  }/${value.typeName}/${value.entryName}`,
+                  }/${value.plural}/${value.name}`,
                 )
               }}
               icon={deleteIcon || <DeleteOutlined size={14} />}

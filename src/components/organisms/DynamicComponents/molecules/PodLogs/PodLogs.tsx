@@ -74,7 +74,7 @@ export const PodLogs: FC<{ data: TDynamicComponentsAppTypeMap['PodLogs']; childr
   }>({
     cluster: clusterPrepared,
     namespace: namespacePrepared,
-    version: 'v1',
+    apiVersion: 'v1',
     plural: 'pods',
     fieldSelector: `metadata.name=${podNamePrepared}`,
     isEnabled: clusterPrepared !== undefined && namespacePrepared !== undefined && podNamePrepared !== undefined,

@@ -33,9 +33,9 @@ export const ManageableBreadcrumbsProvider: FC<TManageableBreadcrumbsProviderPro
     isError: rawDataError,
     isLoading: rawDataLoading,
   } = useK8sSmartResource<TBreadcrumbResponse>({
-    cluster: cluster || '',
-    group: apiGroup,
-    version: apiVersion,
+    cluster,
+    apiGroup,
+    apiVersion,
     plural,
     isEnabled,
   })

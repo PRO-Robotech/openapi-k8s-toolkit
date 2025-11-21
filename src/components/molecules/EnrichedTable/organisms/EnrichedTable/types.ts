@@ -2,8 +2,8 @@ export type TInternalDataForControls = {
   cluster: string
   pathPrefix: string
   apiGroupAndVersion: string
-  typeName: string
-  entryName: string
+  plural: string
+  name: string
   backlink: string
   namespace?: string
   syntheticProject?: string

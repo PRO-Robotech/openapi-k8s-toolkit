@@ -56,7 +56,7 @@ export const FormListInput: FC<TFormListInputProps> = ({
   const isTouchedPeristed = useIsTouchedPersisted()
   const updateTouched = useUpdateIsTouchedPersisted()
 
-  const { clusterName, namespace, syntheticProject, entryName } = urlParams
+  const { cluster, namespace, syntheticProject, name: entryName } = urlParams
   const form = Form.useFormInstance()
   const fieldValue = Form.useWatch(name === 'nodeName' ? 'nodeNameBecauseOfSuddenBug' : name, form)
 
@@ -140,7 +140,7 @@ export const FormListInput: FC<TFormListInputProps> = ({
 
   const uri = prepareTemplate({
     template: customProps.valueUri,
-    replaceValues: { clusterName, namespace, syntheticProject, relatedFieldValue, entryName },
+    replaceValues: { cluster, namespace, syntheticProject, relatedFieldValue, name: entryName },
   })
 
   const {

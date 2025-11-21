@@ -36,7 +36,7 @@ export const FormRangeInput: FC<TFormRangeInputProps> = ({
   urlParams,
   onRemoveByMinus,
 }) => {
-  const { clusterName, namespace, syntheticProject, entryName } = urlParams
+  const { cluster, namespace, syntheticProject, name: entryName } = urlParams
 
   const minMaxAndStep = isEdit ? customProps.edit : customProps.add
 
@@ -44,35 +44,35 @@ export const FormRangeInput: FC<TFormRangeInputProps> = ({
     minMaxAndStep.min.type === 'resourceValue'
       ? prepareTemplate({
           template: minMaxAndStep.min.valueUri,
-          replaceValues: { clusterName, namespace, syntheticProject, entryName },
+          replaceValues: { cluster, namespace, syntheticProject, name: entryName },
         })
       : undefined
   const minSubstractFirstValueUri =
     minMaxAndStep.min.type === 'substractResourceValues'
       ? prepareTemplate({
           template: minMaxAndStep.min.firstValueUri,
-          replaceValues: { clusterName, namespace, syntheticProject, entryName },
+          replaceValues: { cluster, namespace, syntheticProject, name: entryName },
         })
       : undefined
   const minSubstractSecondValueUri =
     minMaxAndStep.min.type === 'substractResourceValues'
       ? prepareTemplate({
           template: minMaxAndStep.min.secondValueUri,
-          replaceValues: { clusterName, namespace, syntheticProject, entryName },
+          replaceValues: { cluster, namespace, syntheticProject, name: entryName },
         })
       : undefined
   const minAddFirstValueUri =
     minMaxAndStep.min.type === 'addResourceValues'
       ? prepareTemplate({
           template: minMaxAndStep.min.firstValueUri,
-          replaceValues: { clusterName, namespace, syntheticProject, entryName },
+          replaceValues: { cluster, namespace, syntheticProject, name: entryName },
         })
       : undefined
   const minAddSecondValueUri =
     minMaxAndStep.min.type === 'addResourceValues'
       ? prepareTemplate({
           template: minMaxAndStep.min.secondValueUri,
-          replaceValues: { clusterName, namespace, syntheticProject, entryName },
+          replaceValues: { cluster, namespace, syntheticProject, name: entryName },
         })
       : undefined
 
@@ -80,35 +80,35 @@ export const FormRangeInput: FC<TFormRangeInputProps> = ({
     minMaxAndStep.max.type === 'resourceValue'
       ? prepareTemplate({
           template: minMaxAndStep.max.valueUri,
-          replaceValues: { clusterName, namespace, syntheticProject, entryName },
+          replaceValues: { cluster, namespace, syntheticProject, name: entryName },
         })
       : undefined
   const maxSubstractFirstValueUri =
     minMaxAndStep.max.type === 'substractResourceValues'
       ? prepareTemplate({
           template: minMaxAndStep.max.firstValueUri,
-          replaceValues: { clusterName, namespace, syntheticProject, entryName },
+          replaceValues: { cluster, namespace, syntheticProject, name: entryName },
         })
       : undefined
   const maxSubstractSecondValueUri =
     minMaxAndStep.max.type === 'substractResourceValues'
       ? prepareTemplate({
           template: minMaxAndStep.max.secondValueUri,
-          replaceValues: { clusterName, namespace, syntheticProject, entryName },
+          replaceValues: { cluster, namespace, syntheticProject, name: entryName },
         })
       : undefined
   const maxAddFirstValueUri =
     minMaxAndStep.max.type === 'addResourceValues'
       ? prepareTemplate({
           template: minMaxAndStep.max.firstValueUri,
-          replaceValues: { clusterName, namespace, syntheticProject, entryName },
+          replaceValues: { cluster, namespace, syntheticProject, name: entryName },
         })
       : undefined
   const maxAddSecondValueUri =
     minMaxAndStep.max.type === 'addResourceValues'
       ? prepareTemplate({
           template: minMaxAndStep.max.secondValueUri,
-          replaceValues: { clusterName, namespace, syntheticProject, entryName },
+          replaceValues: { cluster, namespace, syntheticProject, name: entryName },
         })
       : undefined
 

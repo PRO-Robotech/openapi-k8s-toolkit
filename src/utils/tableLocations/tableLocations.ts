@@ -7,7 +7,7 @@ export const getLinkToBuiltinForm = ({
   baseprefix,
   namespace,
   syntheticProject,
-  typeName,
+  plural,
   inside,
   fullPath,
 }: {
@@ -15,7 +15,7 @@ export const getLinkToBuiltinForm = ({
   baseprefix?: string
   namespace?: string
   syntheticProject?: string
-  typeName: string
+  plural: string
   inside?: boolean
   fullPath: string
 }): string => {
@@ -25,7 +25,7 @@ export const getLinkToBuiltinForm = ({
     fullPath,
   })
 
-  return `${mainRoute}/forms/builtin/v1/${typeName}?backlink=${backlink}`
+  return `${mainRoute}/forms/builtin/v1/${plural}?backlink=${backlink}`
 }
 
 export const getLinkToApiForm = ({
@@ -35,7 +35,7 @@ export const getLinkToApiForm = ({
   syntheticProject,
   apiGroup,
   apiVersion,
-  typeName,
+  plural,
   inside,
   fullPath,
 }: {
@@ -45,7 +45,7 @@ export const getLinkToApiForm = ({
   syntheticProject?: string
   apiGroup?: string // api
   apiVersion?: string // api
-  typeName: string
+  plural: string
   inside?: boolean
   fullPath: string
   searchMount?: boolean
@@ -56,7 +56,7 @@ export const getLinkToApiForm = ({
     fullPath,
   })
 
-  return `${mainRoute}/forms/apis/${apiGroup}/${apiVersion}/${typeName}?backlink=${backlink}`
+  return `${mainRoute}/forms/apis/${apiGroup}/${apiVersion}/${plural}?backlink=${backlink}`
 }
 
 export const getLinkToForm = ({
@@ -69,7 +69,7 @@ export const getLinkToForm = ({
   syntheticProject?: string
   apiGroup?: string // api
   apiVersion?: string // api
-  typeName: string
+  plural: string
   inside?: boolean
   fullPath: string
   searchMount?: boolean

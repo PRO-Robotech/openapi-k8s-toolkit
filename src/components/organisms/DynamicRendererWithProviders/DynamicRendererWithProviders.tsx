@@ -11,7 +11,15 @@ import { PartsOfUrlProvider } from './partsOfUrlContext'
 // import { MultiQueryProvider } from './multiQueryProvider'
 import { MultiQueryProvider } from './hybridDataProvider'
 
-const STRING_KEYS = ['cluster', 'group', 'version', 'plural', 'namespace', 'fieldSelector', 'labelSelector'] as const
+const STRING_KEYS = [
+  'cluster',
+  'apiGroup',
+  'apiVersion',
+  'plural',
+  'namespace',
+  'fieldSelector',
+  'labelSelector',
+] as const
 
 export const DynamicRendererWithProviders = <T extends TItemTypeMap>(
   props: TDynamicRendererProps<T> & {
@@ -30,7 +38,7 @@ export const DynamicRendererWithProviders = <T extends TItemTypeMap>(
   const k8sResourcesUrls = urlsToFetch.filter(el => typeof el !== 'string') as Pick<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     TUseK8sSmartResourceParams<any>,
-    'cluster' | 'group' | 'version' | 'plural' | 'namespace' | 'fieldSelector' | 'labelSelector' | 'limit'
+    'cluster' | 'apiGroup' | 'apiVersion' | 'plural' | 'namespace' | 'fieldSelector' | 'labelSelector' | 'limit'
   >[]
 
   const preparedUrlsToFetch: string[] = prepareUrlsToFetchForDynamicRenderer({
@@ -41,7 +49,7 @@ export const DynamicRendererWithProviders = <T extends TItemTypeMap>(
   const preparedK8sResoucesUrls: Pick<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     TUseK8sSmartResourceParams<any>,
-    'cluster' | 'group' | 'version' | 'plural' | 'namespace' | 'fieldSelector' | 'labelSelector' | 'limit'
+    'cluster' | 'apiGroup' | 'apiVersion' | 'plural' | 'namespace' | 'fieldSelector' | 'labelSelector' | 'limit'
   >[] = k8sResourcesUrls.map(res => {
     let next = { ...res }
     // eslint-disable-next-line no-restricted-syntax

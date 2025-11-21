@@ -6,6 +6,7 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/themeContext'
+import { parseAll } from '../utils'
 import { RefsList } from './organsisms/RefsList'
 import { isOwnerReference } from './guard'
 import { TOwnerReference } from './types'
@@ -21,7 +22,7 @@ export const OwnerRefs: FC<{ data: TDynamicComponentsAppTypeMap['OwnerRefs']; ch
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     id,
     baseprefix,
-    clusterNamePartOfUrl,
+    cluster,
     reqIndex,
     errorText,
     notArrayErrorText,
@@ -38,8 +39,8 @@ export const OwnerRefs: FC<{ data: TDynamicComponentsAppTypeMap['OwnerRefs']; ch
     baseFactoryClusterSceopedAPIKey,
     baseFactoryNamespacedBuiltinKey,
     baseFactoryClusterSceopedBuiltinKey,
-    baseNavigationPluralName,
-    baseNavigationSpecificName,
+    baseNavigationPlural,
+    baseNavigationName,
     ...props
   } = data
 
@@ -51,10 +52,7 @@ export const OwnerRefs: FC<{ data: TDynamicComponentsAppTypeMap['OwnerRefs']; ch
     return acc
   }, {})
 
-  const clusterName = prepareTemplate({
-    template: clusterNamePartOfUrl,
-    replaceValues,
-  })
+  const clusterPrepared = parseAll({ text: cluster, replaceValues, multiQueryData })
 
   const preparedForcedApiVersion = forcedApiVersion
     ? forcedApiVersion.map(({ kind, apiVersion }) => ({
@@ -116,7 +114,7 @@ export const OwnerRefs: FC<{ data: TDynamicComponentsAppTypeMap['OwnerRefs']; ch
       <RefsList
         theme={theme}
         baseprefix={baseprefix}
-        cluster={clusterName}
+        cluster={clusterPrepared}
         refsArr={guardedRefsArr}
         keysToForcedLabel={keysToForcedLabel}
         forcedRelatedValuePath={forcedRelatedValuePath}
@@ -127,8 +125,8 @@ export const OwnerRefs: FC<{ data: TDynamicComponentsAppTypeMap['OwnerRefs']; ch
         baseFactoryClusterSceopedAPIKey={baseFactoryClusterSceopedAPIKey}
         baseFactoryNamespacedBuiltinKey={baseFactoryNamespacedBuiltinKey}
         baseFactoryClusterSceopedBuiltinKey={baseFactoryClusterSceopedBuiltinKey}
-        baseNavigationPluralName={baseNavigationPluralName}
-        baseNavigationSpecificName={baseNavigationSpecificName}
+        baseNavigationPlural={baseNavigationPlural}
+        baseNavigationName={baseNavigationName}
         listFlexProps={listFlexProps}
         {...props}
       />

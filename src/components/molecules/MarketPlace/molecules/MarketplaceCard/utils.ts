@@ -1,18 +1,18 @@
 export const getPathToNav = ({
-  clusterName,
+  cluster,
   namespace,
   type,
   pathToNav,
-  typeName,
+  plural,
   apiGroup,
   apiVersion,
   baseprefix,
 }: {
-  clusterName: string
+  cluster: string
   namespace: string
   type: string
   pathToNav?: string
-  typeName?: string
+  plural?: string
   apiGroup?: string
   apiVersion?: string
   baseprefix?: string
@@ -24,31 +24,31 @@ export const getPathToNav = ({
   }
 
   if (type === 'crd') {
-    return `/${baseprefix}/${clusterName}/${namespace}/crd-table/${apiGroup}/${apiVersion}/${apiExtensionVersion}/${typeName}`
+    return `/${baseprefix}/${cluster}/${namespace}/crd-table/${apiGroup}/${apiVersion}/${apiExtensionVersion}/${plural}`
   }
 
   if (type === 'nonCrd') {
-    return `/${baseprefix}/${clusterName}/${namespace}/api-table/${apiGroup}/${apiVersion}/${typeName}`
+    return `/${baseprefix}/${cluster}/${namespace}/api-table/${apiGroup}/${apiVersion}/${plural}`
   }
 
-  return `/${baseprefix}/${clusterName}/${namespace}/builtin-table/${typeName}`
+  return `/${baseprefix}/${cluster}/${namespace}/builtin-table/${plural}`
 }
 
 export const getCreatePathToNav = ({
-  clusterName,
+  cluster,
   namespace,
   type,
   pathToNav,
-  typeName,
+  plural,
   apiGroup,
   apiVersion,
   baseprefix,
 }: {
-  clusterName: string
+  cluster: string
   namespace: string
   type: string
   pathToNav?: string
-  typeName?: string
+  plural?: string
   apiGroup?: string
   apiVersion?: string
   baseprefix?: string
@@ -58,42 +58,42 @@ export const getCreatePathToNav = ({
   }
 
   if (type === 'crd') {
-    return `/${baseprefix}/${clusterName}/${namespace}/forms/crds/${apiGroup}/${apiVersion}/${typeName}?backlink=${window.location.pathname}`
+    return `/${baseprefix}/${cluster}/${namespace}/forms/crds/${apiGroup}/${apiVersion}/${plural}?backlink=${window.location.pathname}`
   }
 
   if (type === 'nonCrd') {
-    return `/${baseprefix}/${clusterName}/${namespace}/forms/apis/${apiGroup}/${apiVersion}/${typeName}?backlink=${window.location.pathname}`
+    return `/${baseprefix}/${cluster}/${namespace}/forms/apis/${apiGroup}/${apiVersion}/${plural}?backlink=${window.location.pathname}`
   }
 
-  return `/${baseprefix}/${clusterName}/${namespace}/forms/builtin/${apiVersion}/${typeName}?backlink=${window.location.pathname}`
+  return `/${baseprefix}/${cluster}/${namespace}/forms/builtin/${apiVersion}/${plural}?backlink=${window.location.pathname}`
 }
 
 export const getListPath = ({
-  clusterName,
+  cluster,
   namespace,
   type,
-  typeName,
+  plural,
   apiGroup,
   apiVersion,
 }: {
-  clusterName: string
+  cluster: string
   namespace: string
   type: string
-  typeName?: string
+  plural?: string
   apiGroup?: string
   apiVersion?: string
 }): string | undefined => {
   if (type === 'crd') {
-    return `/api/clusters/${clusterName}/k8s/apis/${apiGroup}/${apiVersion}${
+    return `/api/clusters/${cluster}/k8s/apis/${apiGroup}/${apiVersion}${
       namespace ? `/namespaces/${namespace}` : ''
-    }/${typeName}`
+    }/${plural}`
   }
 
   if (type === 'nonCrd') {
-    return `/api/clusters/${clusterName}/k8s/apis/${apiGroup}/${apiVersion}${
+    return `/api/clusters/${cluster}/k8s/apis/${apiGroup}/${apiVersion}${
       namespace ? `/namespaces/${namespace}` : ''
-    }/${typeName}`
+    }/${plural}`
   }
 
-  return `/api/clusters/${clusterName}/k8s/api/v1${namespace ? `/namespaces/${namespace}` : ''}/${typeName}`
+  return `/api/clusters/${cluster}/k8s/api/v1${namespace ? `/namespaces/${namespace}` : ''}/${plural}`
 }

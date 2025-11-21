@@ -8,27 +8,27 @@ import {
 import { TApiGroupResourceTypeList, TBuiltinResourceTypeList } from 'localTypes/k8s'
 
 export const filterIfApiInstanceNamespaceScoped = async ({
+  cluster,
   namespace,
-  data,
   apiGroup,
   apiVersion,
-  clusterName,
+  data,
 }: {
   namespace?: string
   data?: TApiGroupResourceTypeList
   apiGroup: string
   apiVersion: string
-  clusterName: string
+  cluster: string
 }) => {
   const payload: TFilterIfApiInstanceNamespaceScopedReq = {
+    cluster,
     namespace,
-    data,
     apiGroup,
     apiVersion,
-    clusterName,
+    data,
   }
   const result = await axios.post<TFilterIfApiInstanceNamespaceScopedRes>(
-    `/api/clusters/${clusterName}/openapi-bff/scopes/filterScopes/filterIfApiNamespaceScoped`,
+    `/api/clusters/${cluster}/openapi-bff/scopes/filterScopes/filterIfApiNamespaceScoped`,
     payload,
   )
 
@@ -36,21 +36,21 @@ export const filterIfApiInstanceNamespaceScoped = async ({
 }
 
 export const filterIfBuiltInInstanceNamespaceScoped = async ({
+  cluster,
   namespace,
   data,
-  clusterName,
 }: {
+  cluster: string
   namespace?: string
   data?: TBuiltinResourceTypeList
-  clusterName: string
 }) => {
   const payload: TFilterIfBuiltInInstanceNamespaceScopedReq = {
+    cluster,
     namespace,
     data,
-    clusterName,
   }
   const result = await axios.post<TFilterIfBuiltInInstanceNamespaceScopedRes>(
-    `/api/clusters/${clusterName}/openapi-bff/scopes/filterScopes/filterIfBuiltInNamespaceScoped`,
+    `/api/clusters/${cluster}/openapi-bff/scopes/filterScopes/filterIfBuiltInNamespaceScoped`,
     payload,
   )
 

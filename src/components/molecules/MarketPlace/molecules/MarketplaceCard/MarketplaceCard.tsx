@@ -11,7 +11,7 @@ import { Styled } from './styled'
 
 export type TMarketplaceCardProps = {
   baseprefix?: string
-  clusterName: string
+  cluster: string
   namespace: string
   isEditMode?: boolean
   onDeleteClick?: () => void
@@ -26,11 +26,11 @@ export const MarketplaceCard: FC<TMarketplaceCardProps> = ({
   description,
   name,
   icon,
-  clusterName,
+  cluster,
   namespace,
   type,
   pathToNav,
-  typeName,
+  plural,
   apiGroup,
   apiVersion,
   tags,
@@ -57,50 +57,31 @@ export const MarketplaceCard: FC<TMarketplaceCardProps> = ({
   const navigateUrl =
     addedMode || standalone
       ? getPathToNav({
-          clusterName,
+          cluster,
           namespace,
           type,
           pathToNav,
-          typeName,
+          plural,
           apiGroup,
           apiVersion,
           baseprefix,
         })
       : getCreatePathToNav({
-          clusterName,
+          cluster,
           namespace,
           type,
           pathToNav,
-          typeName,
+          plural,
           apiGroup,
           apiVersion,
           baseprefix,
         })
 
-  // const listUrl: string | undefined =
-  //   addedMode && type !== 'direct'
-  //     ? getListPath({
-  //         clusterName,
-  //         namespace,
-  //         type,
-  //         typeName,
-  //         apiGroup,
-  //         apiVersion,
-  //       })
-  //     : undefined
-
-  // const { data: k8sList, error: k8sListError } = useDirectUnknownResource<{ items?: [] }>({
-  //   uri: listUrl || '',
-  //   queryKey: [listUrl || ''],
-  //   refetchInterval: false,
-  //   isEnabled: addedMode && listUrl !== undefined,
-  // })
-
   const { data: k8sList, error: k8sListError } = useK8sSmartResource<{ items?: [] }>({
-    cluster: clusterName || '',
+    cluster,
     namespace,
-    group: apiGroup,
-    version: apiVersion || '',
+    apiGroup,
+    apiVersion: apiVersion || '',
     plural: type,
     isEnabled: Boolean(apiVersion && addedMode && type !== 'direct'),
   })

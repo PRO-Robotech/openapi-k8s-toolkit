@@ -8,7 +8,7 @@ export type TPrepareFormReq = {
   data:
     | {
         type: 'builtin'
-        typeName: string
+        plural: string
         prefillValuesSchema?: TJSON
         prefillValueNamespaceOnly?: string
       }
@@ -16,11 +16,11 @@ export type TPrepareFormReq = {
         type: 'apis'
         apiGroup: string
         apiVersion: string
-        typeName: string
+        plural: string
         prefillValuesSchema?: TJSON
         prefillValueNamespaceOnly?: string
       }
-  clusterName: string
+  cluster: string
   customizationId?: string
 }
 
@@ -28,7 +28,7 @@ export type TPrepareFormRes =
   | {
       result: 'error'
       error: string | undefined
-      kindName: string | undefined
+      kind: string | undefined
       fallbackToManualMode: true
       isNamespaced: boolean
     }
@@ -42,7 +42,7 @@ export type TPrepareFormRes =
       expandedPaths: string[][] | undefined
       persistedPaths: string[][] | undefined
       sortPaths: string[][] | undefined
-      kindName: string | undefined
+      kind: string | undefined
       isNamespaced: boolean
       formPrefills?: TFormPrefill
       namespacesData?: string[]

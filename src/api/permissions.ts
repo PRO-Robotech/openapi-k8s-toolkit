@@ -1,13 +1,13 @@
 import axios, { AxiosResponse } from 'axios'
 
 export const checkPermission = async ({
-  clusterName,
+  cluster,
   body,
 }: {
-  clusterName: string
+  cluster: string
   body: {
-    group?: string
-    resource: string
+    apiGroup?: string
+    plural: string
     verb: 'get' | 'list' | 'watch' | 'create' | 'delete' | 'patch' | 'update'
     namespace?: string
     name?: string
@@ -24,15 +24,15 @@ export const checkPermission = async ({
     kind: 'SelfSubjectAccessReview',
     spec: {
       resourceAttributes: {
-        ...(body.group ? { group: body.group } : {}),
-        resource: body.resource,
+        ...(body.apiGroup ? { group: body.apiGroup } : {}),
+        resource: body.plural,
         verb: body.verb,
         ...(body.namespace ? { namespace: body.namespace } : {}),
         ...(body.name ? { name: body.name } : {}),
       },
     },
   })
-  return axios.post(`/api/clusters/${clusterName}/k8s/apis/authorization.k8s.io/v1/selfsubjectaccessreviews`, data, {
+  return axios.post(`/api/clusters/${cluster}/k8s/apis/authorization.k8s.io/v1/selfsubjectaccessreviews`, data, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

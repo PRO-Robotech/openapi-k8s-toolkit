@@ -134,12 +134,12 @@ export const EnrichedTable: FC<TEnrichedTableProps> = ({
                     selectData.onChange(
                       selectedRowKeys,
                       rows.map(({ internalDataForControls }) => ({
-                        name: internalDataForControls.entryName,
+                        name: internalDataForControls.name,
                         endpoint: `${internalDataForControls.deletePathPrefix}/${
                           internalDataForControls.apiGroupAndVersion
                         }${
                           internalDataForControls.namespace ? `/namespaces/${internalDataForControls.namespace}` : ''
-                        }/${internalDataForControls.typeName}/${internalDataForControls.entryName}`,
+                        }/${internalDataForControls.plural}/${internalDataForControls.name}`,
                       })),
                     )
                   },

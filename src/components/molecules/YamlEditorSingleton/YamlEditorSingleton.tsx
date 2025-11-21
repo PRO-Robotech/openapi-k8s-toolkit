@@ -19,7 +19,7 @@ type TYamlEditorSingletonProps = {
   isCreate?: boolean
   type: 'builtin' | 'apis'
   apiGroupApiVersion: string
-  typeName: string
+  plural: string
   backlink?: string | null
   designNewLayout?: boolean
   designNewLayoutHeight?: number
@@ -37,7 +37,7 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
   isCreate,
   type,
   apiGroupApiVersion,
-  typeName,
+  plural,
   backlink,
   designNewLayout,
   designNewLayoutHeight,
@@ -125,7 +125,7 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
     const body = currentValues
     const endpoint = `/api/clusters/${cluster}/k8s/${type === 'builtin' ? '' : 'apis/'}${apiGroupApiVersion}${
       isNameSpaced ? `/namespaces/${namespace}` : ''
-    }/${typeName}/${isCreate ? '' : name}`
+    }/${plural}/${isCreate ? '' : name}`
     if (isCreate) {
       createNewEntry({ endpoint, body })
         .then(res => {

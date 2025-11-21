@@ -17,7 +17,7 @@ export const prepare = ({
     syntheticProject?: string
     pathPrefix: string
     apiVersion: string
-    typeName: string
+    plural: string
     backlink: string
     deletePathPrefix: string
     onDeleteHandle: (name: string, endpoint: string) => void
@@ -115,8 +115,8 @@ export const prepare = ({
             syntheticProject: dataForControls.syntheticProject,
             pathPrefix: dataForControls.pathPrefix,
             apiGroupAndVersion: dataForControls.apiVersion,
-            typeName: dataForControls.typeName,
-            entryName: el.metadata.name,
+            plural: dataForControls.plural,
+            name: el.metadata.name,
             namespace: el.metadata.namespace || undefined,
             backlink: dataForControls.backlink,
             deletePathPrefix: dataForControls.deletePathPrefix,
@@ -221,8 +221,8 @@ export const prepare = ({
             synthetichProject: dataForControls.syntheticProject,
             pathPrefix: dataForControls.pathPrefix,
             apiGroupAndVersion: dataForControls.apiVersion,
-            typeName: dataForControls.typeName,
-            entryName: el.metadata.name,
+            plural: dataForControls.plural,
+            name: el.metadata.name,
             namespace: el.metadata.namespace || undefined,
             backlink: dataForControls.backlink,
             deletePathPrefix: dataForControls.deletePathPrefix,

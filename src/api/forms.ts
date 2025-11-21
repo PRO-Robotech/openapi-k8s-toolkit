@@ -1,4 +1,4 @@
-import axios, { AxiosResponse, isAxiosError } from 'axios'
+import axios, { AxiosResponse } from 'axios'
 
 export const createNewEntry = async <T>({
   endpoint,
@@ -49,6 +49,14 @@ export const patchEntryWithReplaceOp = async <T>({
     },
   }
 
+  const addOp = [
+    {
+      op: 'add',
+      path: pathToValue,
+      value: body,
+    },
+  ]
+
   const replaceOp = [
     {
       op: 'replace',
@@ -58,31 +66,13 @@ export const patchEntryWithReplaceOp = async <T>({
   ]
 
   try {
-    // 1. Try replace first
-    return await axios.patch<T>(endpoint, replaceOp, config)
+    await axios.patch<T>(endpoint, addOp, config)
   } catch (error) {
-    // If it's NOT an axios error, rethrow — something else went wrong
-    if (!isAxiosError(error)) {
-      throw error
-    }
-
-    // If it's not a k8s-style validation error, just rethrow
-    const status = error.response?.status
-    if (status !== 422) {
-      throw error
-    }
-
-    // 2. Fallback: try add (for paths that didn't exist yet)
-    const addOp = [
-      {
-        op: 'add',
-        path: pathToValue,
-        value: body,
-      },
-    ]
-
-    return axios.patch<T>(endpoint, addOp, config)
+    // eslint-disable-next-line no-console
+    console.error(`Error trying to add: ${error}`)
   }
+
+  return axios.patch<T>(endpoint, replaceOp, config)
 }
 
 export const patchEntryWithDeleteOp = async <T>({

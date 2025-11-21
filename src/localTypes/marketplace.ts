@@ -5,7 +5,7 @@ export type TMarketPlacePanel = {
   type: 'crd' | 'nonCrd' | 'built-in' | 'direct'
   apiGroup?: string
   apiVersion?: string
-  typeName?: string
+  plural?: string
   pathToNav?: string
   tags: string[]
   disabled?: boolean

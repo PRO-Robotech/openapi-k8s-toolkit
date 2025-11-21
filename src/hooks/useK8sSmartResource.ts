@@ -7,9 +7,9 @@ import { useK8sVerbs } from './useK8sVerbs'
 import { useListWatch } from './useListThenWatch/useListWatch'
 
 /** Build the K8s API prefix: core => /api/<v>, groups => /apis/<g>/<v> */
-const buildApiPrefix = (group?: string, version?: string) => {
-  const g = (group ?? '').trim()
-  const v = (version ?? '').trim()
+const buildApiPrefix = (apiGroup?: string, apiVersion?: string) => {
+  const g = (apiGroup ?? '').trim()
+  const v = (apiVersion ?? '').trim()
   const isCore = !g || g === 'core' || g === 'v1'
   return isCore ? `/api/${v}` : `/apis/${g}/${v}`
 }
@@ -17,8 +17,8 @@ const buildApiPrefix = (group?: string, version?: string) => {
 /** Build full REST list URI under the cluster base; respects namespace. */
 const buildListUri = ({
   cluster,
-  group,
-  version,
+  apiGroup,
+  apiVersion,
   plural,
   namespace,
   fieldSelector,
@@ -26,15 +26,15 @@ const buildListUri = ({
   limit,
 }: {
   cluster: string
-  group?: string
-  version: string
+  apiGroup?: string
+  apiVersion: string
   plural: string
   namespace?: string
   fieldSelector?: string
   labelSelector?: string
   limit?: number
 }) => {
-  const prefix = buildApiPrefix(group, version)
+  const prefix = buildApiPrefix(apiGroup, apiVersion)
   const ns = namespace ? `/namespaces/${namespace}` : ''
   const base = `/api/clusters/${cluster}/k8s${prefix}${ns}/${plural}/`
 
@@ -48,8 +48,8 @@ const buildListUri = ({
 
 export type TUseK8sSmartResourceParams<T> = {
   cluster: string
-  group?: string
-  version: string
+  apiGroup?: string
+  apiVersion: string
   plural: string
   namespace?: string
   fieldSelector?: string
@@ -70,8 +70,8 @@ type SmartResult<T> = {
 
 export const useK8sSmartResource = <T>({
   cluster,
-  group,
-  version,
+  apiGroup,
+  apiVersion,
   plural,
   namespace,
   fieldSelector,
@@ -90,8 +90,8 @@ export const useK8sSmartResource = <T>({
     error: verbsErrorObj,
   } = useK8sVerbs({
     cluster,
-    group,
-    version,
+    group: apiGroup,
+    version: apiVersion,
     plural,
     isEnabled: Boolean(isEnabled && cluster && cluster.length > 0),
   })
@@ -99,8 +99,8 @@ export const useK8sSmartResource = <T>({
   // 2️⃣ Build REST list URI
   const listUri = buildListUri({
     cluster,
-    group,
-    version,
+    apiGroup,
+    apiVersion,
     plural,
     namespace,
     fieldSelector,
@@ -122,8 +122,8 @@ export const useK8sSmartResource = <T>({
     queryKey: [
       'k8s-list',
       cluster,
-      group || '',
-      version,
+      apiGroup || '',
+      apiVersion,
       namespace || '',
       plural,
       fieldSelector || '',
@@ -147,8 +147,8 @@ export const useK8sSmartResource = <T>({
     isEnabled: watchEnabled,
     pageSize: limit,
     query: {
-      apiGroup: group,
-      apiVersion: version,
+      apiGroup,
+      apiVersion,
       plural,
       namespace,
       fieldSelector,

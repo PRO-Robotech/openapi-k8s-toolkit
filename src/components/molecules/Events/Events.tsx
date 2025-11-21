@@ -37,8 +37,8 @@ export type TEventsProps = {
   baseFactoryNamespacedBuiltinKey: string
   baseFactoryClusterSceopedBuiltinKey: string
   baseNamespaceFactoryKey: string
-  baseNavigationPluralName: string
-  baseNavigationSpecificName: string
+  baseNavigationPlural: string
+  baseNavigationName: string
 }
 
 export const Events: FC<TEventsProps> = ({
@@ -53,8 +53,8 @@ export const Events: FC<TEventsProps> = ({
   baseFactoryNamespacedBuiltinKey,
   baseFactoryClusterSceopedBuiltinKey,
   baseNamespaceFactoryKey,
-  baseNavigationPluralName,
-  baseNavigationSpecificName,
+  baseNavigationPlural,
+  baseNavigationName,
 }) => {
   const { token } = antdtheme.useToken()
 
@@ -67,7 +67,7 @@ export const Events: FC<TEventsProps> = ({
   useEffect(() => {
     // setIsLoading(true)
     // setError(undefined)
-    getKinds({ clusterName: cluster })
+    getKinds({ cluster })
       .then(data => {
         setKindIndex(data)
         setKindWithVersion(getSortedKindsAll(data))
@@ -86,10 +86,10 @@ export const Events: FC<TEventsProps> = ({
     items: TNavigationResource[]
   }>({
     cluster,
-    group: 'front.in-cloud.io',
-    version: 'v1alpha1',
-    plural: baseNavigationPluralName,
-    fieldSelector: `metadata.name=${baseNavigationSpecificName}`,
+    apiGroup: 'front.in-cloud.io',
+    apiVersion: 'v1alpha1',
+    plural: baseNavigationPlural,
+    fieldSelector: `metadata.name=${baseNavigationName}`,
   })
 
   // pause behaviour
