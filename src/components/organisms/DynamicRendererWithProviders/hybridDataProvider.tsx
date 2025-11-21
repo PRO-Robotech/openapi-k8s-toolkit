@@ -78,7 +78,7 @@ const K8sFetcher: FC<K8sFetcherProps> = ({ index, params, dispatch }) => {
         error: (res.error as AxiosError | Error | string | undefined) ?? null,
       },
     })
-  }, [index, res.data, res.isLoading, res.isError, res.error, dispatch])
+  }, [index, res, res.data, res.isLoading, res.isError, res.error, dispatch])
 
   return null
 }
