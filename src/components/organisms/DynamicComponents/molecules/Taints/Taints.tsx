@@ -66,7 +66,7 @@ export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children
     return <span style={style}>{errorText}</span>
   }
 
-  const anythingForNow = jp.query(jsonRoot, `$${jsonPathToArray}`)
+  const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToArray}`)
 
   const { counter, taints, error: errorArrayOfObjects } = getItemsInside(anythingForNow)
 

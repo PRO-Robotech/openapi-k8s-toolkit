@@ -13,8 +13,8 @@ const getValue = ({
   logic: 'memoryLike' | 'cpuLike'
 }): number => {
   const dirtyValue = Array.isArray(keysToValue)
-    ? _.get(valueObj, keysToValue)
-    : jp.query(valueObj, `$${keysToValue}`)[0]
+    ? _.get(valueObj || {}, keysToValue)
+    : jp.query(valueObj || {}, `$${keysToValue}`)[0]
   if (logic === 'cpuLike') {
     return parseQuotaValueCpu(dirtyValue)
   }

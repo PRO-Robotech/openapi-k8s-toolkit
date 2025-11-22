@@ -81,7 +81,7 @@ export const OwnerRefs: FC<{ data: TDynamicComponentsAppTypeMap['OwnerRefs']; ch
     return <div style={containerStyle}>{errorText}</div>
   }
 
-  const refsArr = jp.query(jsonRoot, `$${jsonPathToArrayOfRefs}`).flat()
+  const refsArr = jp.query(jsonRoot || {}, `$${jsonPathToArrayOfRefs}`).flat()
 
   if (!Array.isArray(refsArr)) {
     return <div style={containerStyle}>{notArrayErrorText}</div>

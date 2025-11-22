@@ -152,13 +152,13 @@ export const EnrichedTable: FC<TEnrichedTableProps> = ({
                 if (pathToNavigate && recordKeysForNavigation) {
                   const recordValueRaw = Array.isArray(recordKeysForNavigation)
                     ? get(record, recordKeysForNavigation)
-                    : jp.query(record, `$${recordKeysForNavigation}`)[0]
+                    : jp.query(record || {}, `$${recordKeysForNavigation}`)[0]
 
                   let recordValueRawSecond: string = ''
                   if (recordKeysForNavigationSecond) {
                     recordValueRawSecond = Array.isArray(recordKeysForNavigationSecond)
                       ? get(record, recordKeysForNavigationSecond)
-                      : jp.query(record, `$${recordKeysForNavigationSecond}`)[0]
+                      : jp.query(record || {}, `$${recordKeysForNavigationSecond}`)[0]
                   } else {
                     recordValueRawSecond = 'no-second-record-keys'
                   }
@@ -167,7 +167,7 @@ export const EnrichedTable: FC<TEnrichedTableProps> = ({
                   if (recordKeysForNavigationThird) {
                     recordValueRawThird = Array.isArray(recordKeysForNavigationThird)
                       ? get(record, recordKeysForNavigationThird)
-                      : jp.query(record, `$${recordKeysForNavigationThird}`)[0]
+                      : jp.query(record || {}, `$${recordKeysForNavigationThird}`)[0]
                   } else {
                     recordValueRawThird = 'no-second-record-keys'
                   }

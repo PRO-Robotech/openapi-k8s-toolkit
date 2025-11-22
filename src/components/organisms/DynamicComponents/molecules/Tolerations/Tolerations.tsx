@@ -68,7 +68,7 @@ export const Tolerations: FC<{ data: TDynamicComponentsAppTypeMap['Tolerations']
     return <div style={containerStyle}>{errorText}</div>
   }
 
-  const anythingForNow = jp.query(jsonRoot, `$${jsonPathToArray}`)
+  const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToArray}`)
 
   const { counter, tolerations, error: errorArrayOfObjects } = getItemsInside(anythingForNow)
 

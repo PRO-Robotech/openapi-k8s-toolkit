@@ -10,8 +10,8 @@ export const getDataByPath = ({
   pathToData: string | string[]
 }): any => {
   return Array.isArray(pathToData)
-    ? _.get(prefillValuesRaw, pathToData)
-    : jp.query(prefillValuesRaw, `$${pathToData}`)[0]
+    ? _.get(prefillValuesRaw || {}, pathToData)
+    : jp.query(prefillValuesRaw || {}, `$${pathToData}`)[0]
 }
 
 export const getPrefillValuesWithForces = ({

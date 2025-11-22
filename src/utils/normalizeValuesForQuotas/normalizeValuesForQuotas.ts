@@ -43,7 +43,7 @@ export const normalizeValuesForQuotasToNumber = (object: any, properties: OpenAP
 
   memoryPaths.forEach(path => {
     const cleanPath = path.filter(el => typeof el === 'string').filter(el => el !== 'properties')
-    const value = _.get(newObject, cleanPath)
+    const value = _.get(newObject || {}, cleanPath)
     if (value || value === 0) {
       _.set(newObject, cleanPath, parseQuotaValueMemoryAndStorage(value))
     }
@@ -51,7 +51,7 @@ export const normalizeValuesForQuotasToNumber = (object: any, properties: OpenAP
 
   cpuPaths.forEach(path => {
     const cleanPath = path.filter(el => typeof el === 'string').filter(el => el !== 'properties')
-    const value = _.get(newObject, cleanPath)
+    const value = _.get(newObject || {}, cleanPath)
     if (value || value === 0) {
       _.set(newObject, cleanPath, parseQuotaValueCpu(value))
     }

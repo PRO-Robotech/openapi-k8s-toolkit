@@ -70,8 +70,8 @@ export const Events: FC<{ data: TDynamicComponentsAppTypeMap['Events']; children
   if (labelSelectorFull) {
     const root = multiQueryData[`req${labelSelectorFull.reqIndex}`]
     const value = Array.isArray(labelSelectorFull.pathToLabels)
-      ? _.get(root, labelSelectorFull.pathToLabels)
-      : jp.query(root, `$${labelSelectorFull.pathToLabels}`)[0]
+      ? _.get(root || {}, labelSelectorFull.pathToLabels)
+      : jp.query(root || {}, `$${labelSelectorFull.pathToLabels}`)[0]
 
     const serializedLabels = serializeLabelsWithNoEncoding(value)
     if (serializedLabels.length > 0) params.set('labelSelector', serializedLabels)

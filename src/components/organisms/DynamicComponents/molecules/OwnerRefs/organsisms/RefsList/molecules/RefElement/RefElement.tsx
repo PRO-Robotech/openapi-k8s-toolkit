@@ -47,8 +47,8 @@ export const RefElement: FC<TRefElementProps> = ({
 
   if (keysToForcedLabel && rawObjectToFindLabel) {
     forcedName = Array.isArray(keysToForcedLabel)
-      ? _.get(rawObjectToFindLabel, keysToForcedLabel)
-      : jp.query(rawObjectToFindLabel, `$${keysToForcedLabel}`)[0]
+      ? _.get(rawObjectToFindLabel || {}, keysToForcedLabel)
+      : jp.query(rawObjectToFindLabel || {}, `$${keysToForcedLabel}`)[0]
   }
 
   if (forcedRelatedValuePath && rawObjectToFindLabel) {
@@ -65,7 +65,7 @@ export const RefElement: FC<TRefElementProps> = ({
           : undefined
 
       if (relatedPath) {
-        forcedName = _.get(rawObjectToFindLabel, relatedPath)
+        forcedName = _.get(rawObjectToFindLabel || {}, relatedPath)
       }
     } catch {
       // ignore
@@ -74,8 +74,8 @@ export const RefElement: FC<TRefElementProps> = ({
 
   if (rawObjectToFindLabel) {
     try {
-      const defaultFetched = _.get(rawObjectToFindLabel, ['metadata', 'namespace'])
-      const socketFetched = _.get(rawObjectToFindLabel, ['items', 0, 'metadata', 'namespace'])
+      const defaultFetched = _.get(rawObjectToFindLabel || {}, ['metadata', 'namespace'])
+      const socketFetched = _.get(rawObjectToFindLabel || {}, ['items', 0, 'metadata', 'namespace'])
       objectNamespace = socketFetched || defaultFetched
     } catch {
       // ignore

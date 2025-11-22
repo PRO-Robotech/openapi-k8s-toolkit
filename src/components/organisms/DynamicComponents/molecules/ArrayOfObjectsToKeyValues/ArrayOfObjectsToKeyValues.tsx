@@ -45,7 +45,7 @@ export const ArrayOfObjectsToKeyValues: FC<{
     return <div>No root for json path</div>
   }
 
-  const anythingForNow = jp.query(jsonRoot, `$${jsonPathToArray}`)
+  const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToArray}`)
 
   const { data: arrayOfObjects, error: errorArrayOfObjects } = parseArrayOfAny(anythingForNow)
 

@@ -59,7 +59,7 @@ export const Toggler: FC<{ data: TDynamicComponentsAppTypeMap['Toggler']; childr
     return <div>No root for json path</div>
   }
 
-  const valueToCompare = jp.query(jsonRoot, `$${jsonPathToValue}`)[0]
+  const valueToCompare = jp.query(jsonRoot || {}, `$${jsonPathToValue}`)[0]
 
   let valueToSwitch: boolean = false
   if (criteria.type === 'forSuccess') {

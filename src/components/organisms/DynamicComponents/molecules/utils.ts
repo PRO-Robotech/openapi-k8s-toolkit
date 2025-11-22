@@ -51,7 +51,7 @@ export const parseMutliqueryText = ({
         )
 
         // Use lodash.get to safely access deep value
-        const value = _.get(multiQueryData[`req${reqIndex}`], path, fallback !== undefined ? fallback : undefined)
+        const value = _.get(multiQueryData[`req${reqIndex}`] || {}, path, fallback !== undefined ? fallback : undefined)
         if (value == null && !customFallback) {
           return fallback ?? 'Undefined with no fallback'
         }
@@ -104,7 +104,7 @@ export const parseJsonPathTemplate = ({
         }
 
         // Evaluate JSONPath and pick first result
-        const results = jp.query(jsonRoot, `$${jsonPathExpr}`)
+        const results = jp.query(jsonRoot || {}, `$${jsonPathExpr}`)
         // if (results.length === 0) {
         //   return ''
         // }

@@ -68,7 +68,7 @@ export const Annotations: FC<{ data: TDynamicComponentsAppTypeMap['Annotations']
     return <div style={containerStyle}>{errorText}</div>
   }
 
-  const anythingForNow = jp.query(jsonRoot, `$${jsonPathToObj}`)
+  const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToObj}`)
 
   const { counter, annotations, error: errorArrayOfObjects } = getItemsInside(anythingForNow)
 
