@@ -74,7 +74,7 @@ export const useK8sSmartResource = <T>(params: TUseK8sSmartResourceParams<T>) =>
 
   // 4️⃣ Compute GVR and full apiVersion for this resource
   const gvr = useMemo(
-    () => `${(apiGroup ?? '').trim()}~${apiVersion.trim()}~${plural.trim()}`,
+    () => `${(apiGroup ?? '').trim()}~${(apiVersion ?? '').trim()}~${(plural ?? '').trim()}`,
     [apiGroup, apiVersion, plural],
   )
 
