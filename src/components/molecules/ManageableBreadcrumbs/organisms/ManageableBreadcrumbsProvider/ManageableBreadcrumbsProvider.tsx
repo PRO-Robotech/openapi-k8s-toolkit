@@ -73,5 +73,5 @@ export const ManageableBreadcrumbsProvider: FC<TManageableBreadcrumbsProviderPro
     return <Styled.HeightDiv />
   }
 
-  return <ManageableBreadcrumbs data={result} />
+  return <ManageableBreadcrumbs key={JSON.stringify(idToCompare)} data={result} />
 }
