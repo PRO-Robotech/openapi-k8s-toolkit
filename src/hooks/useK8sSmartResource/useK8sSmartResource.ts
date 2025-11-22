@@ -80,7 +80,7 @@ export const useK8sSmartResource = <T>(params: TUseK8sSmartResourceParams<T>) =>
 
   const fullApiVersion = useMemo(() => {
     const g = (apiGroup ?? '').trim()
-    const v = apiVersion.trim()
+    const v = (apiVersion ?? '').trim()
     // core group → "v1", "v1beta1", etc.
     if (!g || g === 'core') {
       return v
