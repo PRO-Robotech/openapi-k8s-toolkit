@@ -134,8 +134,8 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
   if (labelSelectorFull) {
     const root = multiQueryData[`req${labelSelectorFull.reqIndex}`]
     const value = Array.isArray(labelSelectorFull.pathToLabels)
-      ? _.get(root, labelSelectorFull.pathToLabels)
-      : jp.query(root, `$${labelSelectorFull.pathToLabels}`)[0]
+      ? _.get(root || {}, labelSelectorFull.pathToLabels)
+      : jp.query(root || {}, `$${labelSelectorFull.pathToLabels}`)[0]
 
     const serializedLabels = serializeLabelsWithNoEncoding(value)
     if (serializedLabels.length > 0) sParams.set('labelSelector', serializedLabels)
@@ -219,15 +219,17 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     return <div>Error: {JSON.stringify(fetchedDataError)}</div>
   }
 
-  const dataFromOneOfHooks = fetchedData || fetchedDataSocket
+  const dataFromOneOfHooks = fetchedData || fetchedDataSocket || {}
 
   const items = Array.isArray(pathToItems)
-    ? _.get(dataFromOneOfHooks, pathToItems)
-    : jp.query(dataFromOneOfHooks, `$${pathToItems}`)[0]
+    ? _.get(dataFromOneOfHooks || {}, pathToItems)
+    : jp.query(dataFromOneOfHooks || {}, `$${pathToItems}`)[0]
 
-  if (!items) {
-    return <div>No data on this path {JSON.stringify(pathToItems)}</div>
-  }
+  const itemsAlwaysArr = Array.isArray(items) ? items : []
+
+  // if (!items) {
+  //   return <div>No data on this path {JSON.stringify(pathToItems)}</div>
+  // }
 
   const clearSelected = () => {
     setSelectedRowKeys([])
@@ -247,7 +249,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
         cluster={clusterPrepared}
         namespace={namespacePrepared}
         theme={theme}
-        dataItems={items}
+        dataItems={itemsAlwaysArr}
         tableProps={{
           borderless: true,
           paginationPosition: ['bottomRight'],

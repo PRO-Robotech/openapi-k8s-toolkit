@@ -54,7 +54,7 @@ export const LabelsToSearchParams: FC<{
     return <div>No root for json path</div>
   }
 
-  const anythingForNow = jp.query(jsonRoot, `$${jsonPathToLabels}`)
+  const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToLabels}`)
 
   const { data: labelsRaw, error: errorArrayOfObjects } = parseArrayOfAny(anythingForNow)
 

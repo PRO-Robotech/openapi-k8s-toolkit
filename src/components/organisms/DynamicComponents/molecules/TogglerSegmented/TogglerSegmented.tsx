@@ -62,7 +62,7 @@ export const TogglerSegmented: FC<{ data: TDynamicComponentsAppTypeMap['TogglerS
     return <div>No root for json path</div>
   }
 
-  const valueToCompare = jp.query(jsonRoot, `$${jsonPathToValue}`)[0]
+  const valueToCompare = jp.query(jsonRoot || {}, `$${jsonPathToValue}`)[0]
   const valueToSegmented = valuesMap?.find(el => el.value === valueToCompare)?.renderedValue
 
   const notificationSuccessMessagePrepared = notificationSuccessMessage

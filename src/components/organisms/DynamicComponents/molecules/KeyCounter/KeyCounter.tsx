@@ -51,7 +51,7 @@ export const KeyCounter: FC<{ data: TDynamicComponentsAppTypeMap['KeyCounter']; 
     return <span style={style}>{errorText}</span>
   }
 
-  const anythingForNow = jp.query(jsonRoot, `$${jsonPathToObj}`)
+  const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToObj}`)
 
   const { counter, error: errorArrayOfObjects } = getItemsInside(anythingForNow)
 

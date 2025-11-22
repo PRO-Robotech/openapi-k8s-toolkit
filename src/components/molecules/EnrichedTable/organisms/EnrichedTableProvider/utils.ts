@@ -138,7 +138,7 @@ export const prepare = ({
       dataSource = dataSource.map((el: TJSON) => {
         const newFieldsForComplexJsonPath: Record<string, TJSON> = {}
         customFields.forEach(({ dataIndex, jsonPath }) => {
-          const jpQueryResult = jp.query(el, `$${jsonPath}`)
+          const jpQueryResult = jp.query(el || {}, `$${jsonPath}`)
           newFieldsForComplexJsonPath[dataIndex] =
             Array.isArray(jpQueryResult) && jpQueryResult.length === 1 ? jpQueryResult[0] : jpQueryResult
         })
@@ -165,7 +165,7 @@ export const prepare = ({
             return
           }
 
-          const mapValue = jp.query(el, `$${flatMapColumn.jsonPath}`)[0]
+          const mapValue = jp.query(el || {}, `$${flatMapColumn.jsonPath}`)[0]
 
           // If the value is an object (map), expand it into multiple rows
           if (mapValue && typeof mapValue === 'object' && !Array.isArray(mapValue) && mapValue !== null) {

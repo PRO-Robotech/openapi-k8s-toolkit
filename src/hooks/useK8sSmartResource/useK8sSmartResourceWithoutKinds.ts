@@ -2,9 +2,9 @@
 import { useMemo } from 'react'
 import { AxiosError } from 'axios'
 import { TSingleResource } from 'localTypes/k8s'
-import { useDirectUnknownResource } from './useDirectUnknownResource'
-import { useK8sVerbs } from './useK8sVerbs'
-import { useListWatch } from './useListThenWatch/useListWatch'
+import { useDirectUnknownResource } from '../useDirectUnknownResource'
+import { useK8sVerbs } from '../useK8sVerbs'
+import { useListWatch } from '../useListThenWatch/useListWatch'
 
 /** Build the K8s API prefix: core => /api/<v>, groups => /apis/<g>/<v> */
 const buildApiPrefix = (apiGroup?: string, apiVersion?: string) => {
@@ -68,7 +68,7 @@ type SmartResult<T> = {
   _meta?: { used: 'list' | 'watch' | 'disabled' | 'verbs-loading' | 'verbs-error' }
 }
 
-export const useK8sSmartResource = <T>({
+export const useK8sSmartResourceWithoutKinds = <T>({
   cluster,
   apiGroup,
   apiVersion,
