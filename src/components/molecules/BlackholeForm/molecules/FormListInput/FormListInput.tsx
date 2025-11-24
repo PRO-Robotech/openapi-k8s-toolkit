@@ -56,7 +56,7 @@ export const FormListInput: FC<TFormListInputProps> = ({
   const isTouchedPeristed = useIsTouchedPersisted()
   const updateTouched = useUpdateIsTouchedPersisted()
 
-  const { clusterName, namespace, syntheticProject, entryName } = urlParams
+  const { cluster, namespace, syntheticProject, name: entryName } = urlParams
   const form = Form.useFormInstance()
   const fieldValue = Form.useWatch(name === 'nodeName' ? 'nodeNameBecauseOfSuddenBug' : name, form)
 
@@ -140,7 +140,7 @@ export const FormListInput: FC<TFormListInputProps> = ({
 
   const uri = prepareTemplate({
     template: customProps.valueUri,
-    replaceValues: { clusterName, namespace, syntheticProject, relatedFieldValue, entryName },
+    replaceValues: { cluster, namespace, syntheticProject, relatedFieldValue, name: entryName },
   })
 
   const {
@@ -162,12 +162,12 @@ export const FormListInput: FC<TFormListInputProps> = ({
     return <HeightContainer $height={64}>Error</HeightContainer>
   }
 
-  const items = !isErrorOptionsObj && !isLoadingOptionsObj && optionsObj ? _.get(optionsObj, ['items']) : []
+  const items = !isErrorOptionsObj && !isLoadingOptionsObj && optionsObj ? _.get(optionsObj || {}, ['items']) : []
   const filteredItems = customProps.criteria
     ? items.filter((item: object) => {
         const objValue = Array.isArray(customProps.criteria?.keysToValue)
-          ? _.get(item, customProps.criteria?.keysToValue || [])
-          : jp.query(item, `$${customProps.criteria?.keysToValue}`)[0]
+          ? _.get(item || {}, customProps.criteria?.keysToValue || [])
+          : jp.query(item || {}, `$${customProps.criteria?.keysToValue}`)[0]
         if (customProps.criteria?.type === 'equals') {
           return objValue === customProps.criteria?.value
         }
@@ -178,9 +178,9 @@ export const FormListInput: FC<TFormListInputProps> = ({
     customProps.criteria?.keepPrefilled !== false
       ? items.find((item: object) => {
           if (Array.isArray(customProps.keysToValue)) {
-            return _.get(item, customProps.keysToValue) === fieldValue
+            return _.get(item || {}, customProps.keysToValue) === fieldValue
           }
-          return jp.query(item, `$${customProps.keysToValue}`)[0] === fieldValue
+          return jp.query(item || {}, `$${customProps.keysToValue}`)[0] === fieldValue
         })
       : undefined
   const filteredItemsAndPrefilledValue = itemForPrefilledValue
@@ -190,17 +190,17 @@ export const FormListInput: FC<TFormListInputProps> = ({
     ? filteredItemsAndPrefilledValue
         .map((item: object) => {
           const value = Array.isArray(customProps.keysToValue)
-            ? _.get(item, customProps.keysToValue)
-            : jp.query(item, `$${customProps.keysToValue}`)[0]
+            ? _.get(item || {}, customProps.keysToValue)
+            : jp.query(item || {}, `$${customProps.keysToValue}`)[0]
           let label: string = ''
           if (customProps.keysToLabel) {
             label = Array.isArray(customProps.keysToLabel)
-              ? _.get(item, customProps.keysToLabel)
-              : jp.query(item, `$${customProps.keysToLabel}`)[0]
+              ? _.get(item || {}, customProps.keysToLabel)
+              : jp.query(item || {}, `$${customProps.keysToLabel}`)[0]
           } else {
             label = Array.isArray(customProps.keysToValue)
-              ? _.get(item, customProps.keysToValue)
-              : jp.query(item, `$${customProps.keysToValue}`)[0]
+              ? _.get(item || {}, customProps.keysToValue)
+              : jp.query(item || {}, `$${customProps.keysToValue}`)[0]
           }
           return {
             value,

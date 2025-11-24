@@ -1,1 +1,1 @@
-export * from './UncontrolledSelect'
+export { UncontrolledSelect } from './UncontrolledSelect'

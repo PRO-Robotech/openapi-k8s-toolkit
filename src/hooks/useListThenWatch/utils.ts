@@ -1,11 +1,8 @@
 import { TSingleResource } from 'localTypes/k8s'
 
 // Unique key per event for stable list rendering and updates
-export const eventKey = (e: TSingleResource) => {
-  const n = e.metadata?.name ?? ''
-  const ns = e.metadata?.namespace ?? ''
-  return `${ns}/${n}`
-}
+export const eventKey = (e: TSingleResource) =>
+  e.metadata?.uid ?? `${e.metadata?.namespace ?? ''}/${e.metadata?.name ?? ''}`
 
 // Compare resourceVersions safely (string-based)
 export const compareRV = (a: string, b: string): number => {

@@ -1,1 +1,1 @@
-export * from './ShortenedTextWithTooltip'
+export { ShortenedTextWithTooltip } from './ShortenedTextWithTooltip'

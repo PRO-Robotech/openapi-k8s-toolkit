@@ -1,1 +1,1 @@
-export * from './Tolerations'
+export { Tolerations } from './Tolerations'

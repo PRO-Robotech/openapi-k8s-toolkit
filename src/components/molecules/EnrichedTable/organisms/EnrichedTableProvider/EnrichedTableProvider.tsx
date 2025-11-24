@@ -19,7 +19,7 @@ export type TEnrichedTableProviderProps = {
   resourceSchema?: TJSON
 
   k8sResource?: {
-    resource: string
+    plural: string
     apiGroup?: string
     apiVersion: string
   }
@@ -29,7 +29,7 @@ export type TEnrichedTableProviderProps = {
   dataForControls?: {
     cluster: string
     syntheticProject?: string
-    resource: string
+    plural: string
     apiGroup?: string
     apiVersion: string
   }
@@ -85,19 +85,19 @@ export const EnrichedTableProvider: FC<TEnrichedTableProviderProps> = ({
   const [isError, setIsError] = useState<false | string | ReactNode>(false)
 
   const updatePermission = usePermissions({
-    group: dataForControls?.apiGroup,
-    resource: dataForControls?.resource || '',
+    apiGroup: dataForControls?.apiGroup,
+    plural: dataForControls?.plural || '',
     namespace,
-    clusterName: cluster,
+    cluster,
     verb: 'update',
     refetchInterval: false,
   })
 
   const deletePermission = usePermissions({
-    group: dataForControls?.apiGroup,
-    resource: dataForControls?.resource || '',
+    apiGroup: dataForControls?.apiGroup,
+    plural: dataForControls?.plural || '',
     namespace,
-    clusterName: cluster,
+    cluster,
     verb: 'delete',
     refetchInterval: false,
   })
@@ -106,6 +106,7 @@ export const EnrichedTableProvider: FC<TEnrichedTableProviderProps> = ({
     setIsError(undefined)
     setIsLoading(true)
     const payload: TPrepareTableReq = {
+      cluster,
       customizationId,
       tableMappingsReplaceValues,
       forceDefaultAdditionalPrinterColumns,
@@ -175,7 +176,7 @@ export const EnrichedTableProvider: FC<TEnrichedTableProviderProps> = ({
           syntheticProject: dataForControls.syntheticProject,
           pathPrefix:
             !dataForControls.apiGroup || dataForControls.apiGroup.length === 0 ? 'forms/builtin' : 'forms/apis',
-          typeName: dataForControls.resource,
+          plural: dataForControls.plural,
           apiVersion:
             !dataForControls.apiGroup || dataForControls.apiGroup.length === 0
               ? dataForControls.apiVersion

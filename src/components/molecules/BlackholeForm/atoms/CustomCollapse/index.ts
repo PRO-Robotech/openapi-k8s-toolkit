@@ -1,1 +1,1 @@
-export * from './CustomCollapse'
+export { CustomCollapse } from './CustomCollapse'

@@ -1,1 +1,1 @@
-export * from './TextAlignContainer'
+export { TextAlignContainer } from './TextAlignContainer'

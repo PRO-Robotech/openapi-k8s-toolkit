@@ -1,43 +1,43 @@
 import axios, { AxiosResponse } from 'axios'
 
 export const getCrdResources = async <T>({
-  clusterName,
+  cluster,
   namespace,
   apiGroup,
   apiVersion,
   crdName,
 }: {
-  clusterName: string
+  cluster: string
   namespace?: string
   apiGroup: string
   apiVersion: string
   crdName: string
 }): Promise<AxiosResponse<T>> => {
   return axios.get(
-    `/api/clusters/${clusterName}/k8s/apis/${apiGroup}/${apiVersion}${
+    `/api/clusters/${cluster}/k8s/apis/${apiGroup}/${apiVersion}${
       namespace ? `/namespaces/${namespace}` : ''
     }/${crdName}`,
   )
 }
 
 export const getCrdResourceSingle = async <T>({
-  clusterName,
+  cluster,
   namespace,
   apiGroup,
   apiVersion,
   crdName,
-  entryName,
+  name,
 }: {
-  clusterName: string
+  cluster: string
   namespace?: string
   apiGroup: string
   apiVersion: string
   crdName: string
-  entryName: string
+  name: string
 }): Promise<AxiosResponse<T>> => {
   return axios.get(
-    `/api/clusters/${clusterName}/k8s/apis/${apiGroup}/${apiVersion}${
+    `/api/clusters/${cluster}/k8s/apis/${apiGroup}/${apiVersion}${
       namespace ? `/namespaces/${namespace}` : ''
-    }/${crdName}/${entryName}`,
+    }/${crdName}/${name}`,
   )
 }

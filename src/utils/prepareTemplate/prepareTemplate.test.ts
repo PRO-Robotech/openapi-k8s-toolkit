@@ -2,11 +2,11 @@ import { prepareTemplate } from './prepareTemplate'
 
 describe('prepareTemplate', () => {
   it('replaces all placeholders with provided values', () => {
-    const template = '/api/{clusterName}/{namespace}/{entryType}'
+    const template = '/api/{cluster}/{namespace}/{plural}'
     const values = {
-      clusterName: 'cluster-01',
+      cluster: 'cluster-01',
       namespace: 'default',
-      entryType: 'pods',
+      plural: 'pods',
     }
 
     expect(prepareTemplate({ template, replaceValues: values })).toBe('/api/cluster-01/default/pods')
@@ -20,10 +20,10 @@ describe('prepareTemplate', () => {
   })
 
   it('replaces missing values with empty strings', () => {
-    const template = '/api/{clusterName}/{namespace}/{entryType}'
+    const template = '/api/{cluster}/{namespace}/{plural}'
     const values = {
-      clusterName: 'cluster-01',
-      entryType: 'pods',
+      cluster: 'cluster-01',
+      plural: 'pods',
       // namespace is undefined
     }
 
@@ -38,9 +38,9 @@ describe('prepareTemplate', () => {
   })
 
   it('ignores extra keys in the values object', () => {
-    const template = '/api/{entryType}'
+    const template = '/api/{plural}'
     const values = {
-      entryType: 'services',
+      plural: 'services',
       extraKey: 'notUsed',
     }
 
@@ -48,7 +48,7 @@ describe('prepareTemplate', () => {
   })
 
   it('handles empty values object gracefully', () => {
-    const template = '/api/{clusterName}/{entryType}'
+    const template = '/api/{cluster}/{plural}'
     expect(prepareTemplate({ template, replaceValues: {} })).toBe('/api//')
   })
 })

@@ -1,1 +1,1 @@
-export * from './CustomSizeTitle'
+export { CustomSizeTitle } from './CustomSizeTitle'

@@ -48,6 +48,7 @@ export type TSingleResource = unknown & {
   metadata: {
     name: string
     creationTimestamp: string
+    uid?: string
     namespace?: string
     managedFields?: any
   }

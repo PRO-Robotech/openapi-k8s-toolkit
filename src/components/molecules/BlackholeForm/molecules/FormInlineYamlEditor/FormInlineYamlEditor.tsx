@@ -9,11 +9,13 @@ import * as yaml from 'yaml'
 import { useOnValuesChangeCallback } from '../../organisms/BlackholeForm/context'
 import { Styled } from './styled'
 
-export const FormInlineYamlEditor: FC<{
+type TFormInlineYamlEditorProps = {
   path: TFormName
   persistedControls: TPersistedControls
   externalValue?: unknown
-}> = ({ path, persistedControls, externalValue }) => {
+}
+
+export const FormInlineYamlEditor: FC<TFormInlineYamlEditorProps> = ({ path, persistedControls, externalValue }) => {
   const { token } = antdtheme.useToken()
   const form = Form.useFormInstance()
   const onValuesChange = useOnValuesChangeCallback()

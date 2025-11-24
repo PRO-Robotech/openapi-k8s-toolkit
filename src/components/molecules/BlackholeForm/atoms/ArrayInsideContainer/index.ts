@@ -1,1 +1,1 @@
-export * from './ArrayInsideContainer'
+export { ArrayInsideContainer } from './ArrayInsideContainer'

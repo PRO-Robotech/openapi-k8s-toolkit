@@ -1,1 +1,1 @@
-export * from './PartsOfUrl'
+export { PartsOfUrl } from './PartsOfUrl'

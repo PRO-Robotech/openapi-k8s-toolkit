@@ -2,10 +2,11 @@
 import React, { FC, useState, useEffect } from 'react'
 import { YamlEditorSingleton as Editor } from 'components'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/multiQueryProvider'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/themeContext'
 import { parseAll } from '../utils'
+import { getDataByPath, getPrefillValuesWithForces } from './utils'
 
 export const YamlEditorSingleton: FC<{ data: TDynamicComponentsAppTypeMap['YamlEditorSingleton']; children?: any }> = ({
   data,
@@ -22,8 +23,10 @@ export const YamlEditorSingleton: FC<{ data: TDynamicComponentsAppTypeMap['YamlE
     type,
     apiGroup,
     apiVersion,
-    typeName,
+    plural,
+    forcedKind,
     prefillValuesRequestIndex,
+    pathToData,
     substractHeight,
     ...props
   } = data
@@ -61,9 +64,11 @@ export const YamlEditorSingleton: FC<{ data: TDynamicComponentsAppTypeMap['YamlE
     ? parseAll({ text: apiVersion, replaceValues, multiQueryData })
     : 'no-api-version'
 
-  const typeNamePrepared = parseAll({ text: typeName, replaceValues, multiQueryData })
+  const pluralPrepared = parseAll({ text: plural, replaceValues, multiQueryData })
 
-  const prefillValues = multiQueryData[`req${prefillValuesRequestIndex}`]
+  const prefillValuesRaw = multiQueryData[`req${prefillValuesRequestIndex}`]
+  const prefillValues = pathToData ? getDataByPath({ prefillValuesRaw, pathToData }) : prefillValuesRaw
+  const prefillValuesWithForces = getPrefillValuesWithForces({ prefillValues, forcedKind, apiGroup, apiVersion })
 
   if (isMultiqueryLoading) {
     return <div>Loading multiquery</div>
@@ -74,12 +79,12 @@ export const YamlEditorSingleton: FC<{ data: TDynamicComponentsAppTypeMap['YamlE
       <Editor
         cluster={clusterPrepared}
         theme={theme}
-        prefillValuesSchema={prefillValues}
+        prefillValuesSchema={prefillValuesWithForces}
         isNameSpaced={isNameSpaced}
         isCreate={false}
         type={type}
         apiGroupApiVersion={type === 'builtin' ? 'api/v1' : `${apiGroupPrepared}/${apiVersionPrepared}`}
-        typeName={typeNamePrepared}
+        plural={pluralPrepared}
         designNewLayout
         designNewLayoutHeight={height}
         openNotification

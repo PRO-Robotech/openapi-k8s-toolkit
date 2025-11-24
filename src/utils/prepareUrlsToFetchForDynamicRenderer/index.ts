@@ -1,1 +1,1 @@
-export * from './prepareUrlsToFetchForDynamicRenderer'
+export { prepareUrlsToFetchForDynamicRenderer } from './prepareUrlsToFetchForDynamicRenderer'

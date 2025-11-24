@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-console */
 /* eslint-disable no-nested-ternary */
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect, useState, useRef, useCallback } from 'react'
 import { theme as antdtheme, notification, Flex, Button, Modal, Typography } from 'antd'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
@@ -19,13 +19,15 @@ type TYamlEditorSingletonProps = {
   isCreate?: boolean
   type: 'builtin' | 'apis'
   apiGroupApiVersion: string
-  typeName: string
+  plural: string
   backlink?: string | null
   designNewLayout?: boolean
   designNewLayoutHeight?: number
   openNotification?: boolean
   readOnly?: boolean
 }
+
+const NOTIFICATION_KEY = 'yaml-data-changed' // Single static key = only one notification
 
 export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
   theme,
@@ -35,7 +37,7 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
   isCreate,
   type,
   apiGroupApiVersion,
-  typeName,
+  plural,
   backlink,
   designNewLayout,
   designNewLayoutHeight,
@@ -50,9 +52,69 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<TRequestError>()
 
+  // store initial and latest prefill YAML
+  const initialPrefillYamlRef = useRef<string | null>(null)
+  const latestPrefillYamlRef = useRef<string | null>(null)
+  // before applying any data yaml is empty
+  const firstLoadRef = useRef(true)
+
+  // Unified reload function — closes notification + applies latest data
+  const handleReload = useCallback(() => {
+    api.destroy(NOTIFICATION_KEY) // Always close the notification first
+
+    const nextYaml = latestPrefillYamlRef.current ?? initialPrefillYamlRef.current
+    if (nextYaml !== null) {
+      setYamlData(nextYaml)
+    }
+  }, [api])
+
+  // Show (or update) the "Data changed" notification — only one ever exists
+  const openNotificationYamlChanged = useCallback(() => {
+    const btn = (
+      <Button
+        type="primary"
+        size="small"
+        onClick={() => {
+          handleReload()
+        }}
+      >
+        Reload
+      </Button>
+    )
+
+    api.info({
+      key: NOTIFICATION_KEY,
+      message: 'Data changed',
+      description: 'The source data has been updated. Reload to apply the latest changes (will discard your edits).',
+      btn,
+      placement: 'bottomRight',
+      duration: 30,
+    })
+  }, [api, handleReload])
+
+  // Apply prefill only once automatically, but keep track of latest
   useEffect(() => {
-    setYamlData(yaml.stringify(prefillValuesSchema))
-  }, [prefillValuesSchema])
+    if (prefillValuesSchema === undefined) return
+
+    const nextYaml = yaml.stringify(prefillValuesSchema)
+
+    // first time: initialize and skip notification
+    if (firstLoadRef.current) {
+      initialPrefillYamlRef.current = nextYaml
+      latestPrefillYamlRef.current = nextYaml
+      setYamlData(nextYaml)
+
+      firstLoadRef.current = false
+      return
+    }
+
+    // subsequent updates: notify if changed
+    if (nextYaml !== latestPrefillYamlRef.current) {
+      openNotificationYamlChanged()
+    }
+
+    latestPrefillYamlRef.current = nextYaml
+  }, [prefillValuesSchema, openNotificationYamlChanged])
 
   const onSubmit = () => {
     setIsLoading(true)
@@ -63,7 +125,7 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
     const body = currentValues
     const endpoint = `/api/clusters/${cluster}/k8s/${type === 'builtin' ? '' : 'apis/'}${apiGroupApiVersion}${
       isNameSpaced ? `/namespaces/${namespace}` : ''
-    }/${typeName}/${isCreate ? '' : name}`
+    }/${plural}/${isCreate ? '' : name}`
     if (isCreate) {
       createNewEntry({ endpoint, body })
         .then(res => {
@@ -137,6 +199,7 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
               Submit
             </Button>
             {backlink && <Button onClick={() => navigate(backlink)}>Cancel</Button>}
+            <Button onClick={handleReload}>Reload</Button>
           </Flex>
         </Styled.ControlsRowContainer>
       )}
@@ -144,7 +207,6 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
         <Modal
           open={!!error}
           onOk={() => setError(undefined)}
-          // onClose={() => setError(undefined)}
           onCancel={() => setError(undefined)}
           title={
             <Typography.Text type="danger">

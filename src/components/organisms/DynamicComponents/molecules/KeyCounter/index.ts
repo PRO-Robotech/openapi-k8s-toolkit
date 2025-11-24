@@ -1,1 +1,1 @@
-export * from './KeyCounter'
+export { KeyCounter } from './KeyCounter'

@@ -9,11 +9,11 @@ import { PlusOutlined, ClearOutlined, MinusOutlined } from '@ant-design/icons'
 import { EditIcon, DeleteIcon, PaddingContainer, DeleteModal, DeleteModalMany } from 'components/atoms'
 import { EnrichedTableProvider } from 'components/molecules'
 import { usePermissions } from 'hooks/usePermissions'
+import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
 import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
 import { getLinkToForm } from 'utils/tableLocations'
-import { prepareTemplate } from 'utils/prepareTemplate'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/multiQueryProvider'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/themeContext'
 import { parseAll } from '../utils'
@@ -41,8 +41,9 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     id,
     fetchUrl,
+    k8sResourceToFetch,
     pathToItems,
-    clusterNamePartOfUrl,
+    cluster,
     labelSelector,
     labelSelectorFull,
     fieldSelector,
@@ -61,10 +62,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     return acc
   }, {})
 
-  const clusterName = prepareTemplate({
-    template: clusterNamePartOfUrl,
-    replaceValues,
-  })
+  const clusterPrepared = parseAll({ text: cluster, replaceValues, multiQueryData })
 
   const namespacePrepared = namespace ? parseAll({ text: namespace, replaceValues, multiQueryData }) : undefined
 
@@ -74,22 +72,22 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
           ? parseAll({ text: k8sResource.apiGroup, replaceValues, multiQueryData })
           : undefined,
         apiVersion: parseAll({ text: k8sResource.apiVersion, replaceValues, multiQueryData }),
-        resource: parseAll({ text: k8sResource.resource, replaceValues, multiQueryData }),
+        plural: parseAll({ text: k8sResource.plural, replaceValues, multiQueryData }),
       }
     : undefined
 
   const k8sResourcePrepared =
     k8sResourcePrePrepared?.apiGroup === '-'
-      ? { apiVersion: k8sResourcePrePrepared.apiVersion, resource: k8sResourcePrePrepared.resource }
+      ? { apiVersion: k8sResourcePrePrepared.apiVersion, plural: k8sResourcePrePrepared.plural }
       : k8sResourcePrePrepared
 
   const dataForControlsPrepared = dataForControls
     ? {
-        cluster: clusterName,
+        cluster: clusterPrepared,
         syntheticProject: dataForControls.syntheticProject
           ? parseAll({ text: dataForControls.syntheticProject, replaceValues, multiQueryData })
           : undefined,
-        resource: parseAll({ text: dataForControls.resource, replaceValues, multiQueryData }),
+        plural: parseAll({ text: dataForControls.plural, replaceValues, multiQueryData }),
         apiGroup: dataForControls.apiGroup
           ? parseAll({ text: dataForControls.apiGroup, replaceValues, multiQueryData })
           : undefined,
@@ -98,15 +96,28 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     : undefined
 
   const createPermission = usePermissions({
-    group: dataForControlsPrepared?.apiGroup,
-    resource: dataForControlsPrepared?.resource || '',
+    apiGroup: dataForControlsPrepared?.apiGroup,
+    plural: dataForControlsPrepared?.plural || '',
     namespace: namespacePrepared,
-    clusterName,
+    cluster: clusterPrepared,
     verb: 'create',
     refetchInterval: false,
   })
 
-  const fetchUrlPrepared = parseAll({ text: fetchUrl, replaceValues, multiQueryData })
+  const fetchUrlPrepared = fetchUrl ? parseAll({ text: fetchUrl, replaceValues, multiQueryData }) : undefined
+
+  const k8sResourceToFetchPrepared = k8sResourceToFetch
+    ? {
+        apiGroup: k8sResourceToFetch.apiGroup
+          ? parseAll({ text: k8sResourceToFetch.apiGroup, replaceValues, multiQueryData })
+          : undefined,
+        apiVersion: parseAll({ text: k8sResourceToFetch.apiVersion, replaceValues, multiQueryData }),
+        plural: parseAll({ text: k8sResourceToFetch.plural, replaceValues, multiQueryData }),
+        namespace: k8sResourceToFetch.namespace
+          ? parseAll({ text: k8sResourceToFetch.namespace, replaceValues, multiQueryData })
+          : undefined,
+      }
+    : undefined
 
   const sParams = new URLSearchParams()
 
@@ -123,8 +134,8 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
   if (labelSelectorFull) {
     const root = multiQueryData[`req${labelSelectorFull.reqIndex}`]
     const value = Array.isArray(labelSelectorFull.pathToLabels)
-      ? _.get(root, labelSelectorFull.pathToLabels)
-      : jp.query(root, `$${labelSelectorFull.pathToLabels}`)[0]
+      ? _.get(root || {}, labelSelectorFull.pathToLabels)
+      : jp.query(root || {}, `$${labelSelectorFull.pathToLabels}`)[0]
 
     const serializedLabels = serializeLabelsWithNoEncoding(value)
     if (serializedLabels.length > 0) sParams.set('labelSelector', serializedLabels)
@@ -154,10 +165,29 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
   } = useDirectUnknownResource<unknown>({
     uri: `${fetchUrlPrepared}${searchParams ? `?${searchParams}` : ''}`,
     queryKey: [`${fetchUrlPrepared}${searchParams ? `?${searchParams}` : ''}`],
-    isEnabled: !isMultiqueryLoading,
+    isEnabled: Boolean(!isMultiqueryLoading && fetchUrlPrepared),
   })
 
-  if (isMultiqueryLoading) {
+  const {
+    data: fetchedDataSocket,
+    isLoading: isFetchedDataSocketLoading,
+    error: fetchedDataSocketError,
+  } = useK8sSmartResource<{ items?: unknown }>({
+    cluster: clusterPrepared || '',
+    namespace: k8sResourceToFetchPrepared?.namespace,
+    apiGroup: k8sResourceToFetchPrepared?.apiGroup,
+    apiVersion: k8sResourceToFetchPrepared?.apiVersion || '',
+    plural: k8sResourceToFetchPrepared?.plural || '',
+    fieldSelector: sParams.get('fieldSelector') || undefined,
+    labelSelector: sParams.get('labelSelector') || undefined,
+    isEnabled: Boolean(!isMultiqueryLoading && k8sResourceToFetchPrepared),
+  })
+
+  if (fetchUrlPrepared && isMultiqueryLoading) {
+    return <div>Loading multiquery</div>
+  }
+
+  if (k8sResourceToFetchPrepared && isMultiqueryLoading) {
     return <div>Loading multiquery</div>
   }
 
@@ -165,7 +195,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
   //   return <div>No data has been fetched</div>
   // }
 
-  if (isFetchedDataLoading) {
+  if (fetchUrlPrepared && isFetchedDataLoading) {
     return (
       <Flex justify="center">
         <Spin />
@@ -173,17 +203,33 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     )
   }
 
-  if (fetchedDataError) {
+  if (k8sResourceToFetchPrepared && isFetchedDataSocketLoading) {
+    return (
+      <Flex justify="center">
+        <Spin />
+      </Flex>
+    )
+  }
+
+  if (fetchUrlPrepared && fetchedDataError) {
     return <div>Error: {JSON.stringify(fetchedDataError)}</div>
   }
 
-  const items = Array.isArray(pathToItems)
-    ? _.get(fetchedData, pathToItems)
-    : jp.query(fetchedData, `$${pathToItems}`)[0]
-
-  if (!items) {
-    return <div>No data on this path {JSON.stringify(pathToItems)}</div>
+  if (k8sResourceToFetchPrepared && fetchedDataSocketError) {
+    return <div>Error: {JSON.stringify(fetchedDataError)}</div>
   }
+
+  const dataFromOneOfHooks = fetchedData || fetchedDataSocket || {}
+
+  const items = Array.isArray(pathToItems)
+    ? _.get(dataFromOneOfHooks || {}, pathToItems)
+    : jp.query(dataFromOneOfHooks || {}, `$${pathToItems}`)[0]
+
+  const itemsAlwaysArr = Array.isArray(items) ? items : []
+
+  // if (!items) {
+  //   return <div>No data on this path {JSON.stringify(pathToItems)}</div>
+  // }
 
   const clearSelected = () => {
     setSelectedRowKeys([])
@@ -200,10 +246,10 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     <>
       <EnrichedTableProvider
         tableMappingsReplaceValues={replaceValues}
-        cluster={clusterName}
+        cluster={clusterPrepared}
         namespace={namespacePrepared}
         theme={theme}
-        dataItems={items}
+        dataItems={itemsAlwaysArr}
         tableProps={{
           borderless: true,
           paginationPosition: ['bottomRight'],
@@ -237,13 +283,13 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
               type="primary"
               onClick={() => {
                 const url = getLinkToForm({
-                  cluster: clusterName,
+                  cluster: clusterPrepared,
                   baseprefix,
                   namespace: namespacePrepared,
                   syntheticProject: params.syntheticProject,
                   apiGroup: dataForControlsPrepared.apiGroup,
                   apiVersion: dataForControlsPrepared.apiVersion,
-                  typeName: dataForControlsPrepared.resource,
+                  plural: dataForControlsPrepared.plural,
                   fullPath,
                 })
                 navigate(url)

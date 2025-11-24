@@ -1,1 +1,1 @@
-export * from './pluralByKind'
+export { pluralByKind } from './pluralByKind'

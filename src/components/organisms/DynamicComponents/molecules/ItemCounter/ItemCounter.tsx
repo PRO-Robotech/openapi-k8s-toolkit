@@ -4,7 +4,7 @@
 import React, { FC } from 'react'
 import jp from 'jsonpath'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/multiQueryProvider'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
 import { parseAll } from '../utils'
 import { getItemsInside } from './utils'
@@ -34,7 +34,7 @@ export const ItemCounter: FC<{ data: TDynamicComponentsAppTypeMap['ItemCounter']
     return (
       <div>
         <h4>Errors:</h4>
-        <ul>{errors.map((e, i) => e && <li key={i}>{e.message}</li>)}</ul>
+        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
       </div>
     )
   }
@@ -51,7 +51,7 @@ export const ItemCounter: FC<{ data: TDynamicComponentsAppTypeMap['ItemCounter']
     return <span style={style}>{errorText}</span>
   }
 
-  const anythingForNow = jp.query(jsonRoot, `$${jsonPathToArray}`)
+  const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToArray}`)
 
   const { counter, error: errorArrayOfObjects } = getItemsInside(anythingForNow)
 

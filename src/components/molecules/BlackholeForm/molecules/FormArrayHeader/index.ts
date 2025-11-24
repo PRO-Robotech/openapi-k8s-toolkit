@@ -1,1 +1,1 @@
-export * from './FormArrayHeader'
+export { FormArrayHeader } from './FormArrayHeader'

@@ -1,1 +1,1 @@
-export * from './AntdRow'
+export { AntdRow } from './AntdRow'

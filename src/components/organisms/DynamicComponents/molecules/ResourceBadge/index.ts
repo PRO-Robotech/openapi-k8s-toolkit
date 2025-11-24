@@ -1,1 +1,1 @@
-export * from './ResourceBadge'
+export { ResourceBadge } from './ResourceBadge'

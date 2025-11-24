@@ -2,9 +2,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { FC } from 'react'
 import { ProjectInfoCard as Card } from 'components/molecules'
-import { prepareTemplate } from 'utils/prepareTemplate'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/multiQueryProvider'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
 import { parseAll } from '../utils'
 
@@ -13,7 +12,7 @@ export const ProjectInfoCard: FC<{ data: TDynamicComponentsAppTypeMap['ProjectIn
   children,
 }) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { id, clusterNamePartOfUrl, namespacePartOfUrl, accessGroups, ...props } = data
+  const { id, cluster, namespace, accessGroups, ...props } = data
 
   const { data: multiQueryData, isError, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
@@ -23,15 +22,9 @@ export const ProjectInfoCard: FC<{ data: TDynamicComponentsAppTypeMap['ProjectIn
     return acc
   }, {})
 
-  const clusterName = prepareTemplate({
-    template: clusterNamePartOfUrl,
-    replaceValues,
-  })
+  const clusterPrepared = parseAll({ text: cluster, replaceValues, multiQueryData })
 
-  const namespace = prepareTemplate({
-    template: namespacePartOfUrl,
-    replaceValues,
-  })
+  const namespacePrepared = parseAll({ text: namespace, replaceValues, multiQueryData })
 
   const parsedAccessGroups = accessGroups.map(accessGroup =>
     parseAll({ text: accessGroup, replaceValues, multiQueryData }),
@@ -41,13 +34,13 @@ export const ProjectInfoCard: FC<{ data: TDynamicComponentsAppTypeMap['ProjectIn
     return (
       <div>
         <h4>Errors:</h4>
-        <ul>{errors.map((e, i) => e && <li key={i}>{e.message}</li>)}</ul>
+        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
       </div>
     )
   }
 
   return (
-    <Card clusterName={clusterName} namespace={namespace} accessGroups={parsedAccessGroups} {...props}>
+    <Card cluster={clusterPrepared} namespace={namespacePrepared} accessGroups={parsedAccessGroups} {...props}>
       {children}
     </Card>
   )

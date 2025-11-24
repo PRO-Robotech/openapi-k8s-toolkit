@@ -12,7 +12,7 @@ import { getUppercase } from 'utils/getUppercase'
 import { kindByGvr } from 'utils/kindByGvr'
 import { Styled } from './styled'
 
-type TSearchProps = {
+export type TSearchProps = {
   cluster: string
   theme: 'light' | 'dark'
   form: FormInstance

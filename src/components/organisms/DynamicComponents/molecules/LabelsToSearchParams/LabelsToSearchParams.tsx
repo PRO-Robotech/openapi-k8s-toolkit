@@ -6,7 +6,7 @@ import React, { FC } from 'react'
 import jp from 'jsonpath'
 import { Typography, Popover, Flex } from 'antd'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/multiQueryProvider'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
 import { parseAll } from '../utils'
 import { parseArrayOfAny, truncate } from './utils'
@@ -38,7 +38,7 @@ export const LabelsToSearchParams: FC<{
     return (
       <div>
         <h4>Errors:</h4>
-        <ul>{errors.map((e, i) => e && <li key={i}>{e.message}</li>)}</ul>
+        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
       </div>
     )
   }
@@ -54,7 +54,7 @@ export const LabelsToSearchParams: FC<{
     return <div>No root for json path</div>
   }
 
-  const anythingForNow = jp.query(jsonRoot, `$${jsonPathToLabels}`)
+  const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToLabels}`)
 
   const { data: labelsRaw, error: errorArrayOfObjects } = parseArrayOfAny(anythingForNow)
 

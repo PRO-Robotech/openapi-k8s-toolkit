@@ -7,24 +7,24 @@ import {
 } from 'localTypes/bff/scopes'
 
 export const checkIfApiInstanceNamespaceScoped = async ({
-  typeName,
+  plural,
   apiGroup,
   apiVersion,
-  clusterName,
+  cluster,
 }: {
-  typeName: string
+  plural: string
   apiGroup: string
   apiVersion: string
-  clusterName: string
+  cluster: string
 }) => {
   const payload: TCheckIfApiInstanceNamespaceScopedReq = {
-    typeName,
+    plural,
     apiGroup,
     apiVersion,
-    clusterName,
+    cluster,
   }
   const { data } = await axios.post<TCheckIfApiInstanceNamespaceScopedRes>(
-    `/api/clusters/${clusterName}/openapi-bff/scopes/checkScopes/checkIfApiNamespaceScoped`,
+    `/api/clusters/${cluster}/openapi-bff/scopes/checkScopes/checkIfApiNamespaceScoped`,
     payload,
   )
 
@@ -32,18 +32,18 @@ export const checkIfApiInstanceNamespaceScoped = async ({
 }
 
 export const checkIfBuiltInInstanceNamespaceScoped = async ({
-  typeName,
-  clusterName,
+  plural,
+  cluster,
 }: {
-  typeName: string
-  clusterName: string
+  plural: string
+  cluster: string
 }) => {
   const payload: TCheckIfBuiltInInstanceNamespaceScopedReq = {
-    typeName,
-    clusterName,
+    plural,
+    cluster,
   }
   const { data } = await axios.post<TCheckIfBuiltInInstanceNamespaceScopedRes>(
-    `/api/clusters/${clusterName}/openapi-bff/scopes/checkScopes/checkIfBuiltInNamespaceScoped`,
+    `/api/clusters/${cluster}/openapi-bff/scopes/checkScopes/checkIfBuiltInNamespaceScoped`,
     payload,
   )
 

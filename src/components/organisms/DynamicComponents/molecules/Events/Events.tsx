@@ -3,9 +3,8 @@ import React, { FC } from 'react'
 import jp from 'jsonpath'
 import _ from 'lodash'
 import { Events as StandaloneEvents } from 'components/molecules'
-import { prepareTemplate } from 'utils/prepareTemplate'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/multiQueryProvider'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/themeContext'
 import { parseAll } from '../utils'
@@ -22,7 +21,7 @@ export const Events: FC<{ data: TDynamicComponentsAppTypeMap['Events']; children
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     id,
     baseprefix,
-    clusterNamePartOfUrl,
+    cluster,
     wsUrl,
     pageSize,
     substractHeight,
@@ -35,6 +34,8 @@ export const Events: FC<{ data: TDynamicComponentsAppTypeMap['Events']; children
     baseFactoryNamespacedBuiltinKey,
     baseFactoryClusterSceopedBuiltinKey,
     baseNamespaceFactoryKey,
+    baseNavigationPlural,
+    baseNavigationName,
     ...props
   } = data
 
@@ -46,10 +47,7 @@ export const Events: FC<{ data: TDynamicComponentsAppTypeMap['Events']; children
     return acc
   }, {})
 
-  const clusterName = prepareTemplate({
-    template: clusterNamePartOfUrl,
-    replaceValues,
-  })
+  const clusterPrepared = parseAll({ text: cluster, replaceValues, multiQueryData })
 
   const wsUrlPrepared = parseAll({ text: wsUrl, replaceValues, multiQueryData })
 
@@ -72,8 +70,8 @@ export const Events: FC<{ data: TDynamicComponentsAppTypeMap['Events']; children
   if (labelSelectorFull) {
     const root = multiQueryData[`req${labelSelectorFull.reqIndex}`]
     const value = Array.isArray(labelSelectorFull.pathToLabels)
-      ? _.get(root, labelSelectorFull.pathToLabels)
-      : jp.query(root, `$${labelSelectorFull.pathToLabels}`)[0]
+      ? _.get(root || {}, labelSelectorFull.pathToLabels)
+      : jp.query(root || {}, `$${labelSelectorFull.pathToLabels}`)[0]
 
     const serializedLabels = serializeLabelsWithNoEncoding(value)
     if (serializedLabels.length > 0) params.set('labelSelector', serializedLabels)
@@ -106,7 +104,7 @@ export const Events: FC<{ data: TDynamicComponentsAppTypeMap['Events']; children
       <StandaloneEvents
         theme={theme}
         baseprefix={baseprefix}
-        cluster={clusterName}
+        cluster={clusterPrepared}
         wsUrl={wsUrlWithParams}
         pageSize={pageSize}
         substractHeight={substractHeight || 340}
@@ -115,6 +113,8 @@ export const Events: FC<{ data: TDynamicComponentsAppTypeMap['Events']; children
         baseFactoryNamespacedBuiltinKey={baseFactoryNamespacedBuiltinKey}
         baseFactoryClusterSceopedBuiltinKey={baseFactoryClusterSceopedBuiltinKey}
         baseNamespaceFactoryKey={baseNamespaceFactoryKey}
+        baseNavigationPlural={baseNavigationPlural}
+        baseNavigationName={baseNavigationName}
         {...props}
       />
       {children}

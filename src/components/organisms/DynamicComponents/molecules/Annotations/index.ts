@@ -1,1 +1,1 @@
-export * from './Annotations'
+export { Annotations } from './Annotations'

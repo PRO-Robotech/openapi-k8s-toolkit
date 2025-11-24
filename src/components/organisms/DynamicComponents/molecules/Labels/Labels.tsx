@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import { Popover, notification, Flex, Button } from 'antd'
 import { UncontrolledSelect, CursorPointerTag, CursorPointerTagMinContent, EditIcon, Spacer } from 'components/atoms'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/multiQueryProvider'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
 import { parseAll } from '../utils'
 import { EditModal } from './molecules'
@@ -62,7 +62,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
     return (
       <div>
         <h4>Errors:</h4>
-        <ul>{errors.map((e, i) => e && <li key={i}>{e.message}</li>)}</ul>
+        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
       </div>
     )
   }
@@ -78,7 +78,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
     return <div>No root for json path</div>
   }
 
-  const anythingForNow = jp.query(jsonRoot, `$${jsonPathToLabels}`)
+  const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToLabels}`)
 
   const { data: labelsRaw, error: errorArrayOfObjects } = parseArrayOfAny(anythingForNow)
 

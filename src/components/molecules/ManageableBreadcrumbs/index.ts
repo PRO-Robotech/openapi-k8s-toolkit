@@ -1,3 +1,2 @@
-export { ManageableBreadcrumbs, ManageableBreadcrumbsWithDataProvider } from './ManageableBreadcrumbs'
-export type { TManageableBreadcrumbsProps, TManageableBreadcrumbsWithDataProviderProps } from './ManageableBreadcrumbs'
-export { prepareDataForManageableBreadcrumbs } from './utils'
+export { ManageableBreadcrumbsProvider, prepareDataForManageableBreadcrumbs, ManageableBreadcrumbs } from './organisms'
+export type { TManageableBreadcrumbsProviderProps, TManageableBreadcrumbsProps } from './organisms'

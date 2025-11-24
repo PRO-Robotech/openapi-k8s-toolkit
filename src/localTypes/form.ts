@@ -26,8 +26,8 @@ export type TPersistedControls = {
 }
 
 export type TUrlParams = {
-  clusterName?: string
+  cluster?: string // optional because used for templating value uri
   namespace?: string
   syntheticProject?: string
-  entryName?: string
+  name?: string
 }

@@ -14,7 +14,7 @@ type BlackholeFormProps = {
   urlParams: TUrlParams
   urlParamsForPermissions: {
     apiGroup?: string
-    typeName?: string
+    plural?: string
   }
   formsPrefills?: TFormPrefill
   // staticProperties: OpenAPIV2.SchemaObject['properties']
@@ -29,8 +29,8 @@ type BlackholeFormProps = {
   isCreate?: boolean
   type: 'builtin' | 'apis'
   apiGroupApiVersion: string
-  kindName: string
-  typeName: string
+  kind: string
+  plural: string
   backlink?: string | null
   designNewLayout?: boolean
   designNewLayoutHeight?: number
@@ -63,8 +63,8 @@ const meta: Meta<Args> = {
     isCreate: { control: { type: 'boolean' } },
     type: { options: ['builtin', 'apis'], control: { type: 'radio' } },
     apiGroupApiVersion: { control: 'text' },
-    kindName: { control: 'text' },
-    typeName: { control: 'text' },
+    kind: { control: 'text' },
+    plural: { control: 'text' },
     backlink: { control: 'text' },
     designNewLayout: { control: { type: 'boolean' } },
     designNewLayoutHeight: { control: 'number' },
@@ -95,8 +95,8 @@ const meta: Meta<Args> = {
                 type={args.type}
                 isNameSpaced={args.isNameSpaced}
                 apiGroupApiVersion={args.apiGroupApiVersion}
-                kindName={args.kindName}
-                typeName={args.typeName}
+                kind={args.kind}
+                plural={args.plural}
                 backlink={args.backlink}
                 designNewLayout={args.designNewLayout}
                 designNewLayoutHeight={args.designNewLayoutHeight}
@@ -169,8 +169,8 @@ export const Default: Story = {
     isCreate: true,
     type: 'apis',
     apiGroupApiVersion: 'demo.story/v1',
-    kindName: 'Demo',
-    typeName: 'demo',
+    kind: 'Demo',
+    plural: 'demo',
     backlink: '',
     designNewLayout: true,
     designNewLayoutHeight: 700,

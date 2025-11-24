@@ -2,11 +2,12 @@ import { useQuery } from '@tanstack/react-query'
 import { getApiResourceTypes, getApiResourceTypesByApiGroup } from 'api/getApiResourceTypes'
 import { TApiGroupList, TApiGroupResourceTypeList } from 'localTypes/k8s'
 
-export const useApisResourceTypes = ({ clusterName }: { clusterName: string }) => {
+/* /apis/ */
+export const useApisResourceTypes = ({ cluster }: { cluster: string }) => {
   return useQuery({
-    queryKey: ['useApisResourceTypes', clusterName],
+    queryKey: ['useApisResourceTypes', cluster],
     queryFn: async () => {
-      const response = await getApiResourceTypes<TApiGroupList>({ clusterName })
+      const response = await getApiResourceTypes<TApiGroupList>({ cluster })
       // Deep clone the data (to avoid mutating the original response)
       const data = JSON.parse(JSON.stringify(response.data))
       // Remove deeply nested field
@@ -19,20 +20,21 @@ export const useApisResourceTypes = ({ clusterName }: { clusterName: string }) =
   })
 }
 
+/* /apis/${apiGroup}/${apiVersion}/ */
 export const useApiResourceTypesByGroup = ({
-  clusterName,
+  cluster,
   apiGroup,
   apiVersion,
 }: {
-  clusterName: string
+  cluster: string
   apiGroup: string
   apiVersion: string
 }) => {
   return useQuery({
-    queryKey: ['useApiResourceTypesByGroup', clusterName, apiGroup, apiVersion],
+    queryKey: ['useApiResourceTypesByGroup', cluster, apiGroup, apiVersion],
     queryFn: async () => {
       const response = await getApiResourceTypesByApiGroup<TApiGroupResourceTypeList>({
-        clusterName,
+        cluster,
         apiGroup,
         apiVersion,
       })

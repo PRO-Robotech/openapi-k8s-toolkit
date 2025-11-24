@@ -3,8 +3,9 @@ import { getCrdResources, getCrdResourceSingle } from 'api/getCrdResource'
 import { TCrdResources, TSingleResource } from 'localTypes/k8s'
 import { TJSON } from 'localTypes/JSON'
 
+/* same as api resource */
 export const useCrdResources = <T = TJSON[]>({
-  clusterName,
+  cluster,
   namespace,
   apiGroup,
   apiVersion,
@@ -12,7 +13,7 @@ export const useCrdResources = <T = TJSON[]>({
   refetchInterval,
   isEnabled,
 }: {
-  clusterName: string
+  cluster: string
   namespace?: string
   apiGroup: string
   apiVersion: string
@@ -21,10 +22,10 @@ export const useCrdResources = <T = TJSON[]>({
   isEnabled?: boolean
 }) => {
   return useQuery({
-    queryKey: ['useCrdResources', clusterName, namespace, apiGroup, apiVersion, crdName],
+    queryKey: ['useCrdResources', cluster, namespace, apiGroup, apiVersion, crdName],
     queryFn: async () => {
       const response = await getCrdResources<TCrdResources<T>>({
-        clusterName,
+        cluster,
         namespace,
         apiGroup,
         apiVersion,
@@ -43,34 +44,35 @@ export const useCrdResources = <T = TJSON[]>({
   })
 }
 
+/* same as api resource */
 export const useCrdResourceSingle = ({
-  clusterName,
+  cluster,
   namespace,
   apiGroup,
   apiVersion,
   crdName,
-  entryName,
+  name,
   refetchInterval,
 }: {
-  clusterName: string
+  cluster: string
   namespace?: string
   apiGroup: string
   apiVersion: string
   crdName: string
-  entryName: string
+  name: string
   refetchInterval?: number | false
 }) => {
   return useQuery({
-    queryKey: ['useCrdResourceSingle', clusterName, namespace, apiGroup, apiVersion, crdName, entryName],
+    queryKey: ['useCrdResourceSingle', cluster, namespace, apiGroup, apiVersion, crdName, name],
     queryFn: async () =>
       (
         await getCrdResourceSingle<TSingleResource>({
-          clusterName,
+          cluster,
           namespace,
           apiGroup,
           apiVersion,
           crdName,
-          entryName,
+          name,
         })
       ).data,
     refetchInterval: refetchInterval !== undefined ? refetchInterval : 5000,

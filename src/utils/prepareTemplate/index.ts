@@ -1,1 +1,1 @@
-export * from './prepareTemplate'
+export { prepareTemplate } from './prepareTemplate'

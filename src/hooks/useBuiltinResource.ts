@@ -3,20 +3,20 @@ import { getBuiltinResources, getBuiltinResourceSingle } from 'api/getBuiltinRes
 import { TBuiltinResources, TSingleResource } from '../localTypes/k8s'
 
 export const useBuiltinResources = ({
-  clusterName,
+  cluster,
   namespace,
-  typeName,
-  specificName,
+  plural,
+  name,
   labels,
   fields,
   limit,
   refetchInterval,
   isEnabled,
 }: {
-  clusterName: string
+  cluster: string
   namespace?: string
-  typeName: string
-  specificName?: string
+  plural: string
+  name?: string
   labels?: string[]
   fields?: string[]
   limit: string | null
@@ -24,13 +24,13 @@ export const useBuiltinResources = ({
   isEnabled?: boolean
 }) => {
   return useQuery({
-    queryKey: ['useBuiltinResourceType', clusterName, namespace, typeName, specificName, labels, fields, limit],
+    queryKey: ['useBuiltinResourceType', cluster, namespace, plural, name, labels, fields, limit],
     queryFn: async () => {
       const response = await getBuiltinResources<TBuiltinResources>({
-        clusterName,
+        cluster,
         namespace,
-        typeName,
-        specificName,
+        plural,
+        name,
         labels,
         fields,
         limit,
@@ -49,22 +49,21 @@ export const useBuiltinResources = ({
 }
 
 export const useBuiltinResourceSingle = ({
-  clusterName,
+  cluster,
   namespace,
-  typeName,
-  entryName,
+  plural,
+  name,
   refetchInterval,
 }: {
-  clusterName: string
+  cluster: string
   namespace?: string
-  typeName: string
-  entryName: string
+  plural: string
+  name: string
   refetchInterval?: number | false
 }) => {
   return useQuery({
-    queryKey: ['useBuiltinResourceSingle', clusterName, namespace, typeName, entryName],
-    queryFn: async () =>
-      (await getBuiltinResourceSingle<TSingleResource>({ clusterName, namespace, typeName, entryName })).data,
+    queryKey: ['useBuiltinResourceSingle', cluster, namespace, plural, name],
+    queryFn: async () => (await getBuiltinResourceSingle<TSingleResource>({ cluster, namespace, plural, name })).data,
     refetchInterval: refetchInterval !== undefined ? refetchInterval : 5000,
   })
 }

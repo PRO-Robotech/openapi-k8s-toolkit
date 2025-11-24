@@ -36,6 +36,9 @@ import {
   SecretBase64Plain,
   ResourceBadge,
   Events,
+  OwnerRefs,
+  Toggler,
+  TogglerSegmented,
 } from './molecules'
 import { TDynamicComponentsAppTypeMap } from './types'
 
@@ -76,4 +79,7 @@ export const DynamicComponents: TRendererComponents<TDynamicComponentsAppTypeMap
   SecretBase64Plain,
   ResourceBadge,
   Events,
+  OwnerRefs,
+  Toggler,
+  TogglerSegmented,
 }

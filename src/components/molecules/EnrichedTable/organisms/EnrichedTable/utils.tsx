@@ -42,6 +42,9 @@ export const getCellRender = ({
 }): JSX.Element => {
   if (possibleCustomTypeWithProps) {
     const { type, customProps } = possibleCustomTypeWithProps
+    if (type === 'factory') {
+      return <TableFactory record={record} customProps={customProps} theme={theme} />
+    }
     if (value === undefined && possibleUndefinedValue) {
       return <ShortenedTextWithTooltip trimLength={possibleTrimLength} text={possibleUndefinedValue} />
     }
@@ -78,9 +81,6 @@ export const getCellRender = ({
         tags = [String(value)]
       }
       return <TrimmedTags tags={tags} trimLength={possibleTrimLength} />
-    }
-    if (type === 'factory') {
-      return <TableFactory record={record} customProps={customProps} theme={theme} />
     }
   }
   if (value === null) {
@@ -282,17 +282,17 @@ export const getEnrichedColumnsWithControls = ({
                     navigate(
                       `${baseprefix}/${value.cluster}${value.namespace ? `/${value.namespace}` : ''}${
                         value.syntheticProject ? `/${value.syntheticProject}` : ''
-                      }/${value.pathPrefix}/${value.apiGroupAndVersion}/${value.typeName}/${value.entryName}?backlink=${
+                      }/${value.pathPrefix}/${value.apiGroupAndVersion}/${value.plural}/${value.name}?backlink=${
                         value.backlink
                       }`,
                     )
                   }
                   if (key === 'delete') {
                     value.onDeleteHandle(
-                      value.entryName,
+                      value.name,
                       `${value.deletePathPrefix}/${value.apiGroupAndVersion}${
                         value.namespace ? `/namespaces/${value.namespace}` : ''
-                      }/${value.typeName}/${value.entryName}`,
+                      }/${value.plural}/${value.name}`,
                     )
                   }
                 },
@@ -318,7 +318,7 @@ export const getEnrichedColumnsWithControls = ({
                 navigate(
                   `${baseprefix}/${value.cluster}${value.namespace ? `/${value.namespace}` : ''}${
                     value.syntheticProject ? `/${value.syntheticProject}` : ''
-                  }/${value.pathPrefix}/${value.apiGroupAndVersion}/${value.typeName}/${value.entryName}?backlink=${
+                  }/${value.pathPrefix}/${value.apiGroupAndVersion}/${value.plural}/${value.name}?backlink=${
                     value.backlink
                   }`,
                 )
@@ -332,10 +332,10 @@ export const getEnrichedColumnsWithControls = ({
               onClick={e => {
                 e.stopPropagation()
                 value.onDeleteHandle(
-                  value.entryName,
+                  value.name,
                   `${value.deletePathPrefix}/${value.apiGroupAndVersion}${
                     value.namespace ? `/namespaces/${value.namespace}` : ''
-                  }/${value.typeName}/${value.entryName}`,
+                  }/${value.plural}/${value.name}`,
                 )
               }}
               icon={deleteIcon || <DeleteOutlined size={14} />}

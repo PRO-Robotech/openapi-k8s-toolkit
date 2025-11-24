@@ -47,13 +47,13 @@ import {
   IsTouchedPersistedProvider,
 } from './context'
 
-type TBlackholeFormCreateProps = {
+export type TBlackholeFormProps = {
   cluster: string
   theme: 'light' | 'dark'
   urlParams: TUrlParams
   urlParamsForPermissions: {
     apiGroup?: string
-    typeName?: string
+    plural?: string
   }
   formsPrefills?: TFormPrefill
   staticProperties: OpenAPIV2.SchemaObject['properties']
@@ -68,8 +68,8 @@ type TBlackholeFormCreateProps = {
   isCreate?: boolean
   type: 'builtin' | 'apis'
   apiGroupApiVersion: string
-  kindName: string
-  typeName: string
+  kind: string
+  plural: string
   backlink?: string | null
   designNewLayout?: boolean
   designNewLayoutHeight?: number
@@ -77,7 +77,7 @@ type TBlackholeFormCreateProps = {
 
 const Editor = React.lazy(() => import('@monaco-editor/react'))
 
-export const BlackholeForm: FC<TBlackholeFormCreateProps> = ({
+export const BlackholeForm: FC<TBlackholeFormProps> = ({
   cluster,
   theme,
   urlParams,
@@ -95,8 +95,8 @@ export const BlackholeForm: FC<TBlackholeFormCreateProps> = ({
   isCreate,
   type,
   apiGroupApiVersion,
-  kindName,
-  typeName,
+  kind,
+  plural,
   backlink,
   designNewLayout,
   designNewLayoutHeight,
@@ -163,10 +163,10 @@ export const BlackholeForm: FC<TBlackholeFormCreateProps> = ({
   // A unique identifier for the YAML model of the currently selected resource
   const editorUri = useMemo(
     () =>
-      `inmemory://openapi-ui/${cluster}/${apiGroupApiVersion}/${type}/${typeName}/${kindName}${
+      `inmemory://openapi-ui/${cluster}/${apiGroupApiVersion}/${type}/${plural}/${kind}${
         isCreate ? '/create' : '/edit'
       }.yaml`,
-    [cluster, apiGroupApiVersion, type, typeName, kindName, isCreate],
+    [cluster, apiGroupApiVersion, type, plural, kind, isCreate],
   )
 
   // When the resource changes, cancel any in-flight requests and clear YAML to avoid bleed-through
@@ -195,20 +195,20 @@ export const BlackholeForm: FC<TBlackholeFormCreateProps> = ({
 
   // --- Feature: permissions ---
   const createPermission = usePermissions({
-    group: type === 'builtin' ? undefined : urlParamsForPermissions.apiGroup ? urlParamsForPermissions.apiGroup : '',
-    resource: urlParamsForPermissions.typeName || '',
+    apiGroup: type === 'builtin' ? undefined : urlParamsForPermissions.apiGroup ? urlParamsForPermissions.apiGroup : '',
+    plural: urlParamsForPermissions.plural || '',
     namespace: isNameSpaced ? namespaceFromFormData : undefined,
-    clusterName: cluster,
+    cluster,
     verb: 'create',
     refetchInterval: false,
     enabler: isCreate === true,
   })
 
   const updatePermission = usePermissions({
-    group: type === 'builtin' ? undefined : urlParamsForPermissions.apiGroup ? urlParamsForPermissions.apiGroup : '',
-    resource: urlParamsForPermissions.typeName || '',
+    apiGroup: type === 'builtin' ? undefined : urlParamsForPermissions.apiGroup ? urlParamsForPermissions.apiGroup : '',
+    plural: urlParamsForPermissions.plural || '',
     namespace: isNameSpaced ? namespaceFromFormData : undefined,
-    clusterName: cluster,
+    cluster,
     verb: 'update',
     refetchInterval: false,
     enabler: isCreate !== true,
@@ -248,7 +248,7 @@ export const BlackholeForm: FC<TBlackholeFormCreateProps> = ({
             const body = data
             const endpoint = `/api/clusters/${cluster}/k8s/${type === 'builtin' ? '' : 'apis/'}${apiGroupApiVersion}${
               isNameSpaced ? `/namespaces/${namespace}` : ''
-            }/${typeName}/${isCreate ? '' : name}`
+            }/${plural}/${isCreate ? '' : name}`
 
             if (isCreate) {
               createNewEntry({ endpoint, body })
@@ -329,7 +329,7 @@ export const BlackholeForm: FC<TBlackholeFormCreateProps> = ({
 
     if (isCreate) {
       _.set(allValues, ['apiVersion'], apiGroupApiVersion === 'api/v1' ? 'v1' : apiGroupApiVersion)
-      _.set(allValues, ['kind'], kindName)
+      _.set(allValues, ['kind'], kind)
     }
 
     if (formsPrefills) {
@@ -354,7 +354,7 @@ export const BlackholeForm: FC<TBlackholeFormCreateProps> = ({
 
     const sorted = Object.fromEntries(Object.entries(allValues).sort(([a], [b]) => a.localeCompare(b)))
     return sorted
-  }, [formsPrefills, prefillValueNamespaceOnly, isCreate, apiGroupApiVersion, kindName, normalizedPrefill])
+  }, [formsPrefills, prefillValueNamespaceOnly, isCreate, apiGroupApiVersion, kind, normalizedPrefill])
 
   // --- Feature: wild card prefills ---
   // Build wildcard-based prefill templates from both formsPrefills and normalizedPrefill
@@ -1005,7 +1005,7 @@ export const BlackholeForm: FC<TBlackholeFormCreateProps> = ({
     })
     setExpandedKeys([...uniqueKeys])
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiGroupApiVersion, formsPrefills, prefillValuesSchema, type, typeName])
+  }, [apiGroupApiVersion, formsPrefills, prefillValuesSchema, type, plural])
 
   // --- Feature: casting properties both sides ---
   /*

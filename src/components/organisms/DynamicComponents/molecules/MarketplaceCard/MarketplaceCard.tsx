@@ -1,9 +1,11 @@
+/* eslint-disable react/no-array-index-key */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { FC } from 'react'
 import { MarketPlace as Card } from 'components/molecules'
-import { prepareTemplate } from 'utils/prepareTemplate'
 import { TDynamicComponentsAppTypeMap } from '../../types'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
+import { parseAll } from '../utils'
 
 export const MarketplaceCard: FC<{ data: TDynamicComponentsAppTypeMap['MarketplaceCard']; children?: any }> = ({
   data,
@@ -11,8 +13,9 @@ export const MarketplaceCard: FC<{ data: TDynamicComponentsAppTypeMap['Marketpla
   children,
 }) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { id, clusterNamePartOfUrl, namespacePartOfUrl, ...props } = data
+  const { id, cluster, namespace, ...props } = data
 
+  const { data: multiQueryData, isError, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
@@ -20,15 +23,18 @@ export const MarketplaceCard: FC<{ data: TDynamicComponentsAppTypeMap['Marketpla
     return acc
   }, {})
 
-  const clusterName = prepareTemplate({
-    template: clusterNamePartOfUrl,
-    replaceValues,
-  })
+  const clusterPrepared = parseAll({ text: cluster, replaceValues, multiQueryData })
 
-  const namespace = prepareTemplate({
-    template: namespacePartOfUrl,
-    replaceValues,
-  })
+  const namespacePrepared = parseAll({ text: namespace, replaceValues, multiQueryData })
 
-  return <Card clusterName={clusterName} namespace={namespace} {...props} />
+  if (isError) {
+    return (
+      <div>
+        <h4>Errors:</h4>
+        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
+      </div>
+    )
+  }
+
+  return <Card cluster={clusterPrepared} namespace={namespacePrepared} {...props} />
 }

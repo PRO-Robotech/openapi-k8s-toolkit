@@ -43,7 +43,21 @@ export const patchEntryWithReplaceOp = async <T>({
   pathToValue: string
   body: unknown
 }): Promise<AxiosResponse<T>> => {
-  const patchData = [
+  const config = {
+    headers: {
+      'Content-Type': 'application/json-patch+json',
+    },
+  }
+
+  const addOp = [
+    {
+      op: 'add',
+      path: pathToValue,
+      value: body,
+    },
+  ]
+
+  const replaceOp = [
     {
       op: 'replace',
       path: pathToValue,
@@ -51,10 +65,35 @@ export const patchEntryWithReplaceOp = async <T>({
     },
   ]
 
-  return axios.patch(endpoint, patchData, {
-    method: 'PATCH',
+  try {
+    await axios.patch<T>(endpoint, addOp, config)
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(`Error trying to add: ${error}`)
+  }
+
+  return axios.patch<T>(endpoint, replaceOp, config)
+}
+
+export const patchEntryWithDeleteOp = async <T>({
+  endpoint,
+  pathToValue,
+}: {
+  endpoint: string
+  pathToValue: string
+}): Promise<AxiosResponse<T>> => {
+  const config = {
     headers: {
       'Content-Type': 'application/json-patch+json',
     },
-  })
+  }
+
+  const replaceOp = [
+    {
+      op: 'remove',
+      path: pathToValue,
+    },
+  ]
+
+  return axios.patch<T>(endpoint, replaceOp, config)
 }

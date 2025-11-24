@@ -1,3 +1,2 @@
-export { ManageableSidebar, ManageableSidebarWithDataProvider } from './ManageableSidebar'
-export type { TManageableSidebarProps, TManageableSidebarWithDataProviderProps } from './ManageableSidebar'
-export { prepareDataForManageableSidebar } from './utils'
+export { ManageableSidebarProvider, prepareDataForManageableSidebar, ManageableSidebar } from './organisms'
+export type { TManageableSidebarProviderProps, TManageableSidebarProps } from './organisms'

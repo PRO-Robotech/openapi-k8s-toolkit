@@ -1,1 +1,1 @@
-export * from './LabelsToSearchParams'
+export { LabelsToSearchParams } from './LabelsToSearchParams'

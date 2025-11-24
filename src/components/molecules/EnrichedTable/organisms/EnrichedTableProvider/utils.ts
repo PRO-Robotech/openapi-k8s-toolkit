@@ -17,7 +17,7 @@ export const prepare = ({
     syntheticProject?: string
     pathPrefix: string
     apiVersion: string
-    typeName: string
+    plural: string
     backlink: string
     deletePathPrefix: string
     onDeleteHandle: (name: string, endpoint: string) => void
@@ -115,8 +115,8 @@ export const prepare = ({
             syntheticProject: dataForControls.syntheticProject,
             pathPrefix: dataForControls.pathPrefix,
             apiGroupAndVersion: dataForControls.apiVersion,
-            typeName: dataForControls.typeName,
-            entryName: el.metadata.name,
+            plural: dataForControls.plural,
+            name: el.metadata.name,
             namespace: el.metadata.namespace || undefined,
             backlink: dataForControls.backlink,
             deletePathPrefix: dataForControls.deletePathPrefix,
@@ -138,7 +138,7 @@ export const prepare = ({
       dataSource = dataSource.map((el: TJSON) => {
         const newFieldsForComplexJsonPath: Record<string, TJSON> = {}
         customFields.forEach(({ dataIndex, jsonPath }) => {
-          const jpQueryResult = jp.query(el, `$${jsonPath}`)
+          const jpQueryResult = jp.query(el || {}, `$${jsonPath}`)
           newFieldsForComplexJsonPath[dataIndex] =
             Array.isArray(jpQueryResult) && jpQueryResult.length === 1 ? jpQueryResult[0] : jpQueryResult
         })
@@ -165,7 +165,7 @@ export const prepare = ({
             return
           }
 
-          const mapValue = jp.query(el, `$${flatMapColumn.jsonPath}`)[0]
+          const mapValue = jp.query(el || {}, `$${flatMapColumn.jsonPath}`)[0]
 
           // If the value is an object (map), expand it into multiple rows
           if (mapValue && typeof mapValue === 'object' && !Array.isArray(mapValue) && mapValue !== null) {
@@ -221,8 +221,8 @@ export const prepare = ({
             synthetichProject: dataForControls.syntheticProject,
             pathPrefix: dataForControls.pathPrefix,
             apiGroupAndVersion: dataForControls.apiVersion,
-            typeName: dataForControls.typeName,
-            entryName: el.metadata.name,
+            plural: dataForControls.plural,
+            name: el.metadata.name,
             namespace: el.metadata.namespace || undefined,
             backlink: dataForControls.backlink,
             deletePathPrefix: dataForControls.deletePathPrefix,

@@ -2,9 +2,9 @@ import { CSSProperties } from 'react'
 import { CardProps, FlexProps, RowProps, ColProps, ButtonProps, TabsProps, SelectProps } from 'antd'
 import type { TextProps } from 'antd/es/typography/Text'
 import type { LinkProps } from 'antd/es/typography/Link'
-import { TContentCardProps, TSpacerProps } from 'components/atoms'
-import { TManageableSidebarWithDataProviderProps, TEnrichedTableProviderProps } from 'components/molecules'
-import { TUnitInput } from './molecules/ConverterBytes/types'
+import type { TContentCardProps, TSpacerProps } from 'components/atoms'
+import type { TManageableSidebarProviderProps, TEnrichedTableProviderProps } from 'components/molecules'
+import type { TUnitInput } from './molecules/ConverterBytes/types'
 
 export type TDynamicComponentsAppTypeMap = {
   DefaultDiv: { id: number | string } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
@@ -14,7 +14,6 @@ export type TDynamicComponentsAppTypeMap = {
     text: string
     href: string
   } & Omit<LinkProps, 'id' | 'children' | 'href'>
-  // antdCard: { id: number | string; price: number }
   antdCard: { id: number | string } & Omit<CardProps, 'id'>
   antdFlex: { id: number | string } & Omit<FlexProps, 'id' | 'children'>
   antdRow: { id: number | string } & Omit<RowProps, 'id' | 'children'>
@@ -26,26 +25,26 @@ export type TDynamicComponentsAppTypeMap = {
   parsedText: { id: number | string; text: string; formatter?: 'timestamp'; style?: CSSProperties }
   ProjectInfoCard: {
     id: number | string
-    clusterNamePartOfUrl: string
-    namespacePartOfUrl: string
+    cluster: string
+    namespace: string
     baseApiGroup: string
     baseApiVersion: string
     baseProjectApiGroup: string
     baseProjectVersion: string
-    projectResourceName: string
-    mpResourceName: string
+    projectPlural: string
+    marketplacePlural: string
     accessGroups: string[]
     baseprefix?: string
     showZeroResources?: boolean
   }
   MarketplaceCard: {
     id: number | string
-    clusterNamePartOfUrl: string
-    namespacePartOfUrl: string
+    cluster: string
+    namespace: string
     baseApiGroup: string
     baseApiVersion: string
-    mpResourceName: string
-    mpResourceKind: string
+    marketplacePlural: string
+    marketplaceKind: string
     baseprefix?: string
     standalone?: boolean
     forceAddedMode?: boolean
@@ -66,12 +65,18 @@ export type TDynamicComponentsAppTypeMap = {
     errorText: string
     fallbackText: string
   } & Omit<TextProps, 'id' | 'children'>
-  SidebarProvider: { id: number | string } & Omit<TManageableSidebarWithDataProviderProps, 'replaceValues'>
+  SidebarProvider: { id: number | string } & Omit<TManageableSidebarProviderProps, 'replaceValues'>
   EnrichedTable: {
     id: number | string
-    fetchUrl: string
+    fetchUrl?: string
+    k8sResourceToFetch?: {
+      apiGroup?: string
+      apiVersion: string
+      plural: string
+      namespace?: string
+    }
     pathToItems: string | string[] // jsonpath or keys as string[]
-    clusterNamePartOfUrl: string
+    cluster: string
     labelSelector?: Record<string, string>
     labelSelectorFull?: {
       reqIndex: number
@@ -115,8 +120,10 @@ export type TDynamicComponentsAppTypeMap = {
     type: 'builtin' | 'apis'
     apiGroup?: string
     apiVersion?: string
-    typeName: string
+    plural: string
+    forcedKind?: string
     prefillValuesRequestIndex: number
+    pathToData?: string | string[] // jsonpath or keys as string[]
     substractHeight?: number
     readOnly?: boolean
   }
@@ -281,7 +288,7 @@ export type TDynamicComponentsAppTypeMap = {
   Events: {
     id: number | string
     baseprefix?: string
-    clusterNamePartOfUrl: string
+    cluster: string
     wsUrl: string
     pageSize?: number
     substractHeight?: number
@@ -297,5 +304,76 @@ export type TDynamicComponentsAppTypeMap = {
     baseFactoryNamespacedBuiltinKey: string
     baseFactoryClusterSceopedBuiltinKey: string
     baseNamespaceFactoryKey: string
+    baseNavigationPlural: string
+    baseNavigationName: string
+  }
+  OwnerRefs: {
+    id: number | string
+    baseprefix?: string
+    cluster: string
+    reqIndex: string // full object for forced labels
+    errorText: string
+    notArrayErrorText: string
+    emptyArrayErrorText: string
+    isNotRefsArrayErrorText: string
+    containerStyle?: CSSProperties
+    listFlexProps?: FlexProps
+    jsonPathToArrayOfRefs: string
+    forcedApiVersion?: {
+      kind: string
+      apiVersion: string
+    }[]
+    forcedNamespace?: string
+    keysToForcedLabel?: string | string[] // jsonpath or keys as string[]
+    forcedRelatedValuePath?: string
+    baseFactoryNamespacedAPIKey: string
+    baseFactoryClusterSceopedAPIKey: string
+    baseFactoryNamespacedBuiltinKey: string
+    baseFactoryClusterSceopedBuiltinKey: string
+    baseNavigationPlural: string
+    baseNavigationName: string
+  }
+  Toggler: {
+    id: number | string
+    reqIndex: string
+    jsonPathToValue: string
+    criteria: {
+      type: 'forSuccess' | 'forError'
+      operator: 'exists' | 'equals'
+      valueToCompare?: string
+    }
+    notificationSuccessMessage?: string
+    notificationErrorMessage?: string
+    notificationSuccessMessageDescription?: string
+    notificationErrorMessageDescription?: string
+    containerStyle?: CSSProperties
+    endpoint: string
+    pathToValue: string
+    valueToSubmit: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      onValue: any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      offValue?: any
+      toRemoveWhenOff?: boolean
+    }
+  }
+  TogglerSegmented: {
+    id: number | string
+    reqIndex: string
+    jsonPathToValue: string
+    notificationSuccessMessage?: string
+    notificationErrorMessage?: string
+    notificationSuccessMessageDescription?: string
+    notificationErrorMessageDescription?: string
+    containerStyle?: CSSProperties
+    endpoint: string
+    pathToValue: string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    possibleValues: any[]
+    valuesMap?: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      value: any
+      renderedValue: string | number
+    }[]
   }
 }

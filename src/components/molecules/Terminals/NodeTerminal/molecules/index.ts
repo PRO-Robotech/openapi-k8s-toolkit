@@ -1,1 +1,1 @@
-export * from './XTerminal'
+export { XTerminal } from './XTerminal'

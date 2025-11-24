@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { FC } from 'react'
-import { ManageableSidebarWithDataProvider } from 'components/molecules'
+import { ManageableSidebarProvider } from 'components/molecules'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
 
@@ -19,5 +19,5 @@ export const SidebarProvider: FC<{ data: TDynamicComponentsAppTypeMap['SidebarPr
     return acc
   }, {})
 
-  return <ManageableSidebarWithDataProvider replaceValues={replaceValues} {...props} />
+  return <ManageableSidebarProvider replaceValues={replaceValues} {...props} />
 }

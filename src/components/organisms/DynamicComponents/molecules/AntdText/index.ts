@@ -1,1 +1,1 @@
-export * from './AntdText'
+export { AntdText } from './AntdText'

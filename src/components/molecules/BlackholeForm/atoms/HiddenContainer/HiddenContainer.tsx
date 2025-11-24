@@ -4,11 +4,12 @@ import { useHiddenPathsLayout } from '../../organisms/BlackholeForm/context'
 import { PossibleHiddenContainer } from '../../atoms'
 import { includesPath, toArray } from './utils'
 
-export const HiddenContainer: FC<PropsWithChildren<{ name?: TFormName; secondName?: TFormName }>> = ({
-  name,
-  secondName,
-  children,
-}) => {
+type THiddenContainerProps = PropsWithChildren<{
+  name?: TFormName
+  secondName?: TFormName
+}>
+
+export const HiddenContainer: FC<THiddenContainerProps> = ({ name, secondName, children }) => {
   const hiddenPaths = useHiddenPathsLayout() // type: string[][]
 
   const nameArr = toArray(name)

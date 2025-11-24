@@ -1,5 +1,6 @@
 export * from './components'
 export * from './utils'
+
 /* api reqs */
 export { getClusterList } from './api/getClusterList'
 export { createNewEntry, updateEntry, deleteEntry } from './api/forms'
@@ -11,6 +12,7 @@ export { getBuiltinResourceTypes } from './api/getBuiltinResourceTypes'
 export { getCrdData } from './api/getCrdData'
 export { getDirectUnknownResource } from './api/getDirectUnknownResource'
 export { checkPermission } from './api/permissions'
+
 /* api reqs: bff */
 export { getSwagger } from './api/bff/swagger/getSwagger'
 export {
@@ -19,6 +21,7 @@ export {
 } from './api/bff/scopes/filterScopes'
 export { checkIfApiInstanceNamespaceScoped, checkIfBuiltInInstanceNamespaceScoped } from './api/bff/scopes/checkScopes'
 export { getKinds } from './api/bff/search/getKinds'
+
 /* hooks */
 export { useClusterList } from './hooks/useClusterList'
 export { useApiResources, useApiResourceSingle } from './hooks/useApiResource'
@@ -36,6 +39,8 @@ export type {
   TUseListWatchOptions,
   TUseListWatchReturn,
 } from './hooks/useListThenWatch'
+export { useK8sVerbs } from './hooks/useK8sVerbs'
+export { useK8sSmartResource } from './hooks/useK8sSmartResource'
 
 /* types */
 export type { TRequestError } from './localTypes/api'
@@ -83,3 +88,4 @@ export type {
 export type { TVersionEntry, TKindItem, TKindIndex } from './localTypes/bff/search'
 export type { TGetDerefedSwaggerRes } from './localTypes/bff/swagger'
 export type { TKindWithVersion } from './localTypes/search'
+export type { TNavigationResource } from './localTypes/navigations'

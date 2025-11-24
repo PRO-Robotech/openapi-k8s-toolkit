@@ -1,24 +1,22 @@
 /* eslint-disable max-lines-per-function */
-import React, { FC, useEffect, useState, useMemo } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { AxiosError } from 'axios'
 import { usePermissions } from 'hooks/usePermissions'
-import { useListWatch } from 'hooks/useListThenWatch'
-// import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
+import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
 import { DeleteModal, Spacer } from 'components/atoms'
 import { notification, Typography, Flex, Switch, Spin, Alert } from 'antd'
-// import { TMarketPlacePanelResponse, TMarketPlacePanelResource, TMarketPlacePanel } from 'localTypes/marketplace'
-import { TMarketPlacePanelResource, TMarketPlacePanel } from 'localTypes/marketplace'
+import { TMarketPlacePanelResponse, TMarketPlacePanelResource, TMarketPlacePanel } from 'localTypes/marketplace'
 import { AddCard } from './atoms'
 import { AddEditFormModal, MarketplaceCard, SearchTextInput } from './molecules'
 import { Styled } from './styled'
 
 export type TMarketPlaceProps = {
-  clusterName?: string
+  cluster: string
   namespace?: string
   baseApiGroup: string
   baseApiVersion: string
-  mpResourceName: string
-  mpResourceKind: string
+  marketplacePlural: string
+  marketplaceKind: string
   baseprefix?: string
   standalone?: boolean
   forceAddedMode?: boolean
@@ -26,12 +24,12 @@ export type TMarketPlaceProps = {
 }
 
 export const MarketPlace: FC<TMarketPlaceProps> = ({
-  clusterName,
+  cluster,
   namespace,
   baseApiGroup,
   baseApiVersion,
-  mpResourceName,
-  mpResourceKind,
+  marketplacePlural,
+  marketplaceKind,
   baseprefix,
   standalone,
   forceAddedMode,
@@ -51,63 +49,37 @@ export const MarketPlace: FC<TMarketPlaceProps> = ({
   const [uniqueTags, setUniqueTags] = useState<string[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
 
-  // const {
-  //   data: marketplacePanels,
-  //   isLoading,
-  //   error,
-  // } = useDirectUnknownResource<TMarketPlacePanelResponse>({
-  //   uri: `/api/clusters/${clusterName}/k8s/apis/${baseApiGroup}/${baseApiVersion}/${mpResourceName}/`,
-  //   refetchInterval: 5000,
-  //   queryKey: ['marketplacePanels', clusterName || 'no-cluster'],
-  //   isEnabled: clusterName !== undefined,
-  // })
-
-  const { state, status, lastError } = useListWatch({
-    wsUrl: `/api/clusters/${clusterName}/openapi-bff-ws/listThenWatch/listWatchWs`,
-    paused: false,
-    ignoreRemove: false,
-    autoDrain: true,
-    preserveStateOnUrlChange: true,
-    query: {
-      apiVersion: baseApiVersion,
-      apiGroup: baseApiGroup,
-      plural: mpResourceName,
-    },
-    isEnabled: clusterName !== undefined,
+  const {
+    data: marketplacePanels,
+    isLoading,
+    error,
+  } = useK8sSmartResource<TMarketPlacePanelResponse>({
+    cluster,
+    apiGroup: baseApiGroup,
+    apiVersion: baseApiVersion,
+    plural: marketplacePlural,
   })
 
-  const isLoading = status === 'connecting'
-  const error = status === 'closed' && lastError ? lastError : undefined
-  const marketplacePanels = useMemo(() => {
-    return {
-      items: state.order.map(key => {
-        const res = state.byKey[key]
-        return res
-      }),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as { items: any[] }
-  }, [state])
-
   const createPermission = usePermissions({
-    group: baseApiGroup,
-    resource: mpResourceName,
-    clusterName: clusterName || '',
+    apiGroup: baseApiGroup,
+    plural: marketplacePlural,
+    cluster,
     verb: 'create',
     refetchInterval: false,
   })
 
   const updatePermission = usePermissions({
-    group: baseApiGroup,
-    resource: mpResourceName,
-    clusterName: clusterName || '',
+    apiGroup: baseApiGroup,
+    plural: marketplacePlural,
+    cluster,
     verb: 'update',
     refetchInterval: false,
   })
 
   const deletePermission = usePermissions({
-    group: baseApiGroup,
-    resource: mpResourceName,
-    clusterName: clusterName || '',
+    apiGroup: baseApiGroup,
+    plural: marketplacePlural,
+    cluster,
     verb: 'delete',
     refetchInterval: false,
   })
@@ -230,10 +202,9 @@ export const MarketPlace: FC<TMarketPlaceProps> = ({
         />
       )}
       <Flex gap={22} wrap>
-        {clusterName &&
-          namespace &&
+        {namespace &&
           filteredAndSortedData.map(
-            ({ name, description, icon, type, pathToNav, typeName, apiGroup, apiVersion, tags, disabled }) => (
+            ({ name, description, icon, type, pathToNav, plural, apiGroup, apiVersion, tags, disabled }) => (
               <MarketplaceCard
                 baseprefix={baseprefix}
                 key={name}
@@ -242,11 +213,11 @@ export const MarketPlace: FC<TMarketPlaceProps> = ({
                 icon={icon}
                 isEditMode={isEditMode}
                 name={name}
-                clusterName={clusterName}
+                cluster={cluster}
                 namespace={namespace}
                 type={type}
                 pathToNav={pathToNav}
-                typeName={typeName}
+                plural={plural}
                 apiGroup={apiGroup}
                 apiVersion={apiVersion}
                 tags={tags}
@@ -273,11 +244,11 @@ export const MarketPlace: FC<TMarketPlaceProps> = ({
       </Flex>
       {isAddEditOpen && (
         <AddEditFormModal
-          clusterName={clusterName}
+          cluster={cluster}
           baseApiGroup={baseApiGroup}
           baseApiVersion={baseApiVersion}
-          mpResourceName={mpResourceName}
-          mpResourceKind={mpResourceKind}
+          marketplacePlural={marketplacePlural}
+          marketplaceKind={marketplaceKind}
           isOpen={isAddEditOpen}
           setError={setCreateUpdateError}
           setIsOpen={setIsAddEditOpen}
@@ -289,7 +260,7 @@ export const MarketPlace: FC<TMarketPlaceProps> = ({
         <DeleteModal
           name={isDeleteOpen.name}
           onClose={() => setIsDeleteOpen(false)}
-          endpoint={`/api/clusters/${clusterName}/k8s/apis/${baseApiGroup}/${baseApiVersion}/${mpResourceName}/${isDeleteOpen.name}`}
+          endpoint={`/api/clusters/${cluster}/k8s/apis/${baseApiGroup}/${baseApiVersion}/${marketplacePlural}/${isDeleteOpen.name}`}
         />
       )}
     </>

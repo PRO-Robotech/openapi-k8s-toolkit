@@ -1,25 +1,24 @@
 /* eslint-disable max-lines-per-function */
 import React, { FC, useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useListWatch } from 'hooks/useListThenWatch'
-// import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
+import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
 import { usePermissions } from 'hooks/usePermissions'
 import { DeleteModal, Spacer } from 'components/atoms'
 import { Typography, Flex, Spin } from 'antd'
-// import { TMarketPlacePanelResponse } from 'localTypes/marketplace'
+import { TMarketPlacePanelResponse } from 'localTypes/marketplace'
 import { MarketplaceCard } from 'components/molecules'
 import { DropdownActions, DropdownAccessGroups } from './molecules'
 import { Styled } from './styled'
 
 export type TProjectInfoCardProps = {
-  clusterName?: string
+  cluster: string
   namespace?: string
   baseApiGroup: string
   baseApiVersion: string
   baseProjectApiGroup: string
   baseProjectVersion: string
-  projectResourceName: string
-  mpResourceName: string
+  projectPlural: string
+  marketplacePlural: string
   baseprefix?: string
   accessGroups: string[]
   showZeroResources?: boolean
@@ -28,14 +27,14 @@ export type TProjectInfoCardProps = {
 }
 
 export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
-  clusterName,
+  cluster,
   namespace,
   baseApiGroup,
   baseApiVersion,
   baseProjectApiGroup,
   baseProjectVersion,
-  mpResourceName,
-  projectResourceName,
+  marketplacePlural,
+  projectPlural,
   baseprefix,
   accessGroups,
   showZeroResources,
@@ -43,127 +42,82 @@ export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
 }) => {
   const navigate = useNavigate()
 
-  // const {
-  //   data: marketplacePanels,
-  //   isLoading: marketplaceIsLoading,
-  //   // error: marketplaceError,
-  // } = useDirectUnknownResource<TMarketPlacePanelResponse>({
-  //   uri: `/api/clusters/${clusterName}/k8s/apis/${baseApiGroup}/${baseApiVersion}/${mpResourceName}/`,
-  //   refetchInterval: 5000,
-  //   queryKey: ['marketplacePanels', clusterName || 'no-cluster'],
-  //   isEnabled: clusterName !== undefined,
-  // })
-
-  const { state, status } = useListWatch({
-    wsUrl: `/api/clusters/${clusterName}/openapi-bff-ws/listThenWatch/listWatchWs`,
-    paused: false,
-    ignoreRemove: false,
-    autoDrain: true,
-    preserveStateOnUrlChange: true,
-    query: {
-      apiVersion: baseApiVersion,
-      apiGroup: baseApiGroup,
-      plural: mpResourceName,
-    },
-    isEnabled: clusterName !== undefined,
+  const {
+    data: marketplacePanels,
+    isLoading: marketplaceIsLoading,
+    // error: marketplaceError,
+  } = useK8sSmartResource<TMarketPlacePanelResponse>({
+    cluster,
+    apiGroup: baseApiGroup,
+    apiVersion: baseApiVersion,
+    plural: marketplacePlural,
   })
-
-  const marketplaceIsLoading = status === 'connecting'
-  const marketplacePanels = {
-    items: state.order.map(key => {
-      const res = state.byKey[key]
-      return res
-    }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as { items: any[] }
-
-  // const {
-  //   data: project,
-  //   isLoading,
-  //   error,
-  // } = useDirectUnknownResource<{
-  //   apiVersion: string
-  //   kind: 'Project'
-  //   metadata: {
-  //     labels: {
-  //       paas: string
-  //       pj: string
-  //     }
-  //     name: string
-  //     resourceVersion: string
-  //     uid: string
-  //   }
-  //   spec: {
-  //     businessName?: string
-  //     description: string
-  //     prefix: string
-  //   }
-  //   status: {
-  //     conditions: {
-  //       lastTransitionTime: string
-  //       message: string
-  //       reason: string
-  //       status: string
-  //       type: string
-  //     }[]
-  //   }
-  // }>({
-  //   uri: `/api/clusters/${clusterName}/k8s/apis/${baseProjectApiGroup}/${baseProjectVersion}/${projectResourceName}/${namespace}`,
-  //   refetchInterval: 5000,
-  //   queryKey: ['projects', clusterName || 'no-cluster'],
-  //   isEnabled: clusterName !== undefined,
-  // })
 
   const {
-    state: stateProject,
-    status: statusProject,
-    lastError: lastErrorProject,
-  } = useListWatch({
-    wsUrl: `/api/clusters/${clusterName}/openapi-bff-ws/listThenWatch/listWatchWs`,
-    paused: false,
-    ignoreRemove: false,
-    autoDrain: true,
-    preserveStateOnUrlChange: true,
-    query: {
-      apiVersion: baseProjectVersion,
-      apiGroup: baseProjectApiGroup,
-      plural: projectResourceName,
-      fieldSelector: `metadata.name=${namespace}`,
-    },
-    isEnabled: clusterName !== undefined,
+    data: projectArr,
+    isLoading,
+    error,
+  } = useK8sSmartResource<{
+    items: {
+      apiVersion: string
+      kind: 'Project'
+      metadata: {
+        labels: {
+          paas: string
+          pj: string
+        }
+        name: string
+        resourceVersion: string
+        uid: string
+      }
+      spec: {
+        businessName?: string
+        description: string
+        prefix: string
+      }
+      status: {
+        conditions: {
+          lastTransitionTime: string
+          message: string
+          reason: string
+          status: string
+          type: string
+        }[]
+      }
+    }[]
+  }>({
+    cluster,
+    apiGroup: baseProjectApiGroup,
+    apiVersion: baseProjectVersion,
+    plural: projectPlural,
+    fieldSelector: `metadata.name=${namespace}`,
   })
 
-  const isLoading = statusProject === 'connecting'
-  const error = statusProject === 'closed' && lastErrorProject ? lastErrorProject : undefined
-  const projectArr = stateProject.order.map(key => {
-    const res = stateProject.byKey[key]
-    return res
-  })
-  const project = projectArr.length > 0 ? projectArr[0] : undefined
+  const project = projectArr && projectArr.items && projectArr.items.length > 0 ? projectArr.items[0] : undefined
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false)
 
   const updatePermission = usePermissions({
-    group: baseProjectApiGroup,
-    resource: projectResourceName,
-    clusterName: clusterName || '',
+    apiGroup: baseProjectApiGroup,
+    plural: projectPlural,
+    cluster,
     verb: 'update',
     refetchInterval: false,
   })
 
   const deletePermission = usePermissions({
-    group: baseProjectApiGroup,
-    resource: projectResourceName,
-    clusterName: clusterName || '',
+    apiGroup: baseProjectApiGroup,
+    plural: projectPlural,
+    cluster,
     verb: 'delete',
     refetchInterval: false,
   })
 
   const openUpdate = useCallback(() => {
     navigate(
-      `/${baseprefix}/${clusterName}/forms/apis/${baseProjectApiGroup}/${baseProjectVersion}/${projectResourceName}/${namespace}?backlink=${baseprefix}/clusters/${clusterName}`,
+      `/${baseprefix}/${cluster}/forms/apis/${baseProjectApiGroup}/${baseProjectVersion}/${projectPlural}/${namespace}?backlink=${baseprefix}/clusters/${cluster}`,
     )
-  }, [baseprefix, clusterName, namespace, baseProjectApiGroup, baseProjectVersion, projectResourceName, navigate])
+  }, [baseprefix, cluster, namespace, baseProjectApiGroup, baseProjectVersion, projectPlural, navigate])
 
   if (isLoading) {
     return <Spin />
@@ -207,12 +161,11 @@ export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
       <Spacer $space={12} $samespace />
       <Flex gap={22} wrap>
         {marketplaceIsLoading && <Spin />}
-        {clusterName &&
-          namespace &&
+        {namespace &&
           marketplacePanels?.items
             .map(({ spec }) => spec)
             .sort()
-            .map(({ name, description, icon, type, pathToNav, typeName, apiGroup, apiVersion, tags, disabled }) => (
+            .map(({ name, description, icon, type, pathToNav, plural, apiGroup, apiVersion, tags, disabled }) => (
               <MarketplaceCard
                 baseprefix={baseprefix}
                 key={name}
@@ -221,11 +174,11 @@ export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
                 icon={icon}
                 isEditMode={false}
                 name={name}
-                clusterName={clusterName}
+                cluster={cluster}
                 namespace={namespace}
                 type={type}
                 pathToNav={pathToNav}
-                typeName={typeName}
+                plural={plural}
                 apiGroup={apiGroup}
                 apiVersion={apiVersion}
                 tags={tags}
@@ -239,9 +192,9 @@ export const ProjectInfoCard: FC<TProjectInfoCardProps> = ({
           name={project.metadata.name}
           onClose={() => {
             setIsDeleteModalOpen(false)
-            navigate(`${baseprefix}/clusters/${clusterName}`)
+            navigate(`${baseprefix}/clusters/${cluster}`)
           }}
-          endpoint={`/api/clusters/${clusterName}/k8s/apis/${baseProjectApiGroup}/${baseProjectVersion}/${projectResourceName}/${project.metadata.name}`}
+          endpoint={`/api/clusters/${cluster}/k8s/apis/${baseProjectApiGroup}/${baseProjectVersion}/${projectPlural}/${project.metadata.name}`}
         />
       )}
     </>

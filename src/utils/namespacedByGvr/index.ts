@@ -1,1 +1,1 @@
-export * from './namespacedByGvr'
+export { namespacedByGvr } from './namespacedByGvr'

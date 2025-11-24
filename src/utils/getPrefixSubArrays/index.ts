@@ -1,1 +1,1 @@
-export * from './getPrefixSubArrays'
+export { getPrefixSubarrays } from './getPrefixSubArrays'

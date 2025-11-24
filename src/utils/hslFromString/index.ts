@@ -1,1 +1,1 @@
-export * from './hslFromString'
+export { hslFromString } from './hslFromString'

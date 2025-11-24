@@ -17,13 +17,15 @@ import { pluralByKind } from 'utils/pluralByKind'
 import { TKindIndex } from 'localTypes/bff/search'
 import { TKindWithVersion } from 'localTypes/search'
 import { ResumeCircleIcon, PauseCircleIcon, LockedIcon, UnlockedIcon } from 'components/atoms'
+import { TNavigationResource } from 'localTypes/navigations'
+import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
 import { TScrollMsg, TServerFrame } from './types'
 import { eventKey, compareRV, getRV, getMaxRV } from './utils'
 import { reducer } from './reducer'
 import { EventRow } from './molecules'
 import { Styled } from './styled'
 
-type TEventsProps = {
+export type TEventsProps = {
   theme: 'dark' | 'light'
   baseprefix?: string
   cluster: string
@@ -35,6 +37,8 @@ type TEventsProps = {
   baseFactoryNamespacedBuiltinKey: string
   baseFactoryClusterSceopedBuiltinKey: string
   baseNamespaceFactoryKey: string
+  baseNavigationPlural: string
+  baseNavigationName: string
 }
 
 export const Events: FC<TEventsProps> = ({
@@ -49,6 +53,8 @@ export const Events: FC<TEventsProps> = ({
   baseFactoryNamespacedBuiltinKey,
   baseFactoryClusterSceopedBuiltinKey,
   baseNamespaceFactoryKey,
+  baseNavigationPlural,
+  baseNavigationName,
 }) => {
   const { token } = antdtheme.useToken()
 
@@ -61,7 +67,7 @@ export const Events: FC<TEventsProps> = ({
   useEffect(() => {
     // setIsLoading(true)
     // setError(undefined)
-    getKinds({ clusterName: cluster })
+    getKinds({ cluster })
       .then(data => {
         setKindIndex(data)
         setKindWithVersion(getSortedKindsAll(data))
@@ -75,6 +81,16 @@ export const Events: FC<TEventsProps> = ({
         console.error(error)
       })
   }, [cluster])
+
+  const { data: navigationDataArr } = useK8sSmartResource<{
+    items: TNavigationResource[]
+  }>({
+    cluster,
+    apiGroup: 'front.in-cloud.io',
+    apiVersion: 'v1alpha1',
+    plural: baseNavigationPlural,
+    fieldSelector: `metadata.name=${baseNavigationName}`,
+  })
 
   // pause behaviour
   const [isPaused, setIsPaused] = useState(false)
@@ -365,6 +381,11 @@ export const Events: FC<TEventsProps> = ({
 
   const getPlural = kindsWithVersion ? pluralByKind(kindsWithVersion) : undefined
 
+  const baseFactoriesMapping =
+    navigationDataArr && navigationDataArr.items && navigationDataArr.items.length > 0
+      ? navigationDataArr.items[0].spec?.baseFactoriesMapping
+      : undefined
+
   return (
     <Styled.Root $substractHeight={substractHeight || 340}>
       <Styled.Header>
@@ -425,6 +446,7 @@ export const Events: FC<TEventsProps> = ({
               baseFactoryNamespacedBuiltinKey={baseFactoryNamespacedBuiltinKey}
               baseFactoryClusterSceopedBuiltinKey={baseFactoryClusterSceopedBuiltinKey}
               baseNamespaceFactoryKey={baseNamespaceFactoryKey}
+              baseFactoriesMapping={baseFactoriesMapping}
             />
           ))
         ) : (

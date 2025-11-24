@@ -6,7 +6,7 @@ import jp from 'jsonpath'
 import { notification, Flex, Button } from 'antd'
 import { EditIcon } from 'components/atoms'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/multiQueryProvider'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
 import { parseAll } from '../utils'
 import { EditModal } from './molecules'
@@ -51,7 +51,7 @@ export const Tolerations: FC<{ data: TDynamicComponentsAppTypeMap['Tolerations']
     return (
       <div>
         <h4>Errors:</h4>
-        <ul>{errors.map((e, i) => e && <li key={i}>{e.message}</li>)}</ul>
+        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
       </div>
     )
   }
@@ -68,7 +68,7 @@ export const Tolerations: FC<{ data: TDynamicComponentsAppTypeMap['Tolerations']
     return <div style={containerStyle}>{errorText}</div>
   }
 
-  const anythingForNow = jp.query(jsonRoot, `$${jsonPathToArray}`)
+  const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToArray}`)
 
   const { counter, tolerations, error: errorArrayOfObjects } = getItemsInside(anythingForNow)
 
