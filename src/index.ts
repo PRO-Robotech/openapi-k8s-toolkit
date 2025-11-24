@@ -40,7 +40,7 @@ export type {
   TUseListWatchReturn,
 } from './hooks/useListThenWatch'
 export { useK8sVerbs } from './hooks/useK8sVerbs'
-export { useK8sSmartResource } from './hooks/useK8sSmartResource'
+export { useK8sSmartResource, useManyK8sSmartResource, useSmartResourceParams } from './hooks/useK8sSmartResource'
 
 /* types */
 export type { TRequestError } from './localTypes/api'

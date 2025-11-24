@@ -76,6 +76,7 @@ export type TDynamicComponentsAppTypeMap = {
       namespace?: string
     }
     pathToItems: string | string[] // jsonpath or keys as string[]
+    additionalReqsDataToEachItem?: number[]
     cluster: string
     labelSelector?: Record<string, string>
     labelSelectorFull?: {

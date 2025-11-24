@@ -43,6 +43,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     fetchUrl,
     k8sResourceToFetch,
     pathToItems,
+    additionalReqsDataToEachItem,
     cluster,
     labelSelector,
     labelSelectorFull,
@@ -227,6 +228,19 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
 
   const itemsAlwaysArr = Array.isArray(items) ? items : []
 
+  let additionalReqsData: any[] | undefined = []
+  if (additionalReqsDataToEachItem) {
+    additionalReqsDataToEachItem.forEach(item => {
+      additionalReqsData?.push(multiQueryData[`req${item}`])
+    })
+  }
+  additionalReqsData = additionalReqsData.length > 0 ? additionalReqsData : undefined
+
+  const itemsAlwaysArrWithAdditionalData = itemsAlwaysArr.map(el => ({
+    ...el,
+    ...(additionalReqsData ? { additionalReqsData } : {}),
+  }))
+
   // if (!items) {
   //   return <div>No data on this path {JSON.stringify(pathToItems)}</div>
   // }
@@ -249,7 +263,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
         cluster={clusterPrepared}
         namespace={namespacePrepared}
         theme={theme}
-        dataItems={itemsAlwaysArr}
+        dataItems={itemsAlwaysArrWithAdditionalData}
         tableProps={{
           borderless: true,
           paginationPosition: ['bottomRight'],
