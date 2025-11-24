@@ -119,26 +119,43 @@ export const MultiQueryProvider: FC<MultiQueryProviderProps> = ({ items, dataToA
 
   // Assemble context value
   const value: MultiQueryContextValue = (() => {
-    if (typeof dataToApplyToContext !== 'undefined') {
-      return { data: { req0: dataToApplyToContext }, isLoading: false, isError: false, errors: [] }
-    }
+    // if (typeof dataToApplyToContext !== 'undefined') {
+    //   return { data: { req0: dataToApplyToContext }, isLoading: false, isError: false, errors: [] }
+    // }
 
     const data: DataMap = {}
     const errors: Array<AxiosError | Error | string | null> = []
 
+    // ⭐ dataToApplyToContext becomes req0
+    const hasExtraReq0 = typeof dataToApplyToContext !== 'undefined'
+    const baseIndex = hasExtraReq0 ? 1 : 0
+
     // 1) K8s occupy req[0..k8sCount-1]
     for (let i = 0; i < k8sCount; i++) {
       const e = state.entries[i] ?? makeEmptyEntry()
-      data[`req${i}`] = e.data
-      errors[i] = e.isError ? e.error : null
+      // data[`req${i}`] = e.data
+      // errors[i] = e.isError ? e.error : null
+      const idx = baseIndex + i
+      data[`req${idx}`] = e.data
+      errors[idx] = e.isError ? e.error : null
     }
 
     // 2) URLs continue after K8s: req[k8sCount..total-1]
     for (let i = 0; i < urlCount; i++) {
       const q = urlQueries[i]
-      const idx = k8sCount + i
+      // const idx = k8sCount + i
+      // data[`req${idx}`] = q?.data
+      // errors[idx] = q?.isError ? ((q.error ?? null) as AxiosError | Error | string | null) : null
+      const idx = baseIndex + k8sCount + i
       data[`req${idx}`] = q?.data
       errors[idx] = q?.isError ? ((q.error ?? null) as AxiosError | Error | string | null) : null
+    }
+
+    // ⭐ Ensure dataToApplyToContext becomes req0 (override or create)
+    if (hasExtraReq0) {
+      data.req0 = dataToApplyToContext
+      // You can decide what you want for errors[0]; null is reasonable:
+      errors[0] = null
     }
 
     const isLoading = state.entries.some(e => e.isLoading) || urlQueries.some(q => q.isLoading)
