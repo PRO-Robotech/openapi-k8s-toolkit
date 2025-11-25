@@ -1,3 +1,4 @@
+/* eslint-disable no-plusplus */
 import _ from 'lodash'
 import jp from 'jsonpath'
 import { prepareTemplate } from 'utils/prepareTemplate'
@@ -70,60 +71,75 @@ export const parseJsonPathTemplate = ({
   text,
   multiQueryData,
   customFallback,
+  replaceValues,
 }: {
   text?: string
   multiQueryData: TDataMap
   customFallback?: string
+  replaceValues?: Record<string, string | undefined>
 }): string => {
   if (!text) return ''
 
-  // Regex to match: {reqsJsonPath[<index>]['<jsonpath>']}
-  // const placeholderRegex = /\{reqsJsonPath\[(\d+)\]\s*\[\s*(['"])([^'"]+)\2\s*\]\}/g
-
-  // Regex to match either:
-  // 1) {reqsJsonPath[<index>]['<path>']}
-  // 2) {reqsJsonPath[<index>]['<path>']['<fallback>']}
-  // const placeholderRegex = /\{reqsJsonPath\[(\d+)\]\s*\[\s*(['"])([^'"]+)\2\s*\](?:\s*\[\s*(['"])([^'"]*)\4\s*\])?\}/g
   const placeholderRegex =
     /\{reqsJsonPath\[(\d+)\]\s*\[\s*(['"])([\s\S]*?)\2\s*\](?:\s*\[\s*(['"])([\s\S]*?)\4\s*\])?\}/g
 
-  return text.replace(
-    placeholderRegex,
-    (match, reqIndexStr, _quote, jsonPathExpr, _smth, fallback = 'Undefined with no fallback') => {
-      try {
-        const reqIndex = parseInt(reqIndexStr, 10)
-        const jsonRoot = multiQueryData[`req${reqIndex}`]
+  const resolve = (input: string): string =>
+    input.replace(
+      placeholderRegex,
+      (match, reqIndexStr, _quote, rawJsonPathExpr, _fallbackQuote, inlineFallback = 'Undefined with no fallback') => {
+        try {
+          const reqIndex = Number(reqIndexStr)
+          const jsonRoot = multiQueryData[`req${reqIndex}`]
 
-        if (jsonRoot === undefined && !customFallback) {
-          // return ''
-          // no such request entry → use fallback (or empty)
-          return fallback
-        }
-        if (jsonRoot === undefined && customFallback) {
-          return customFallback
-        }
+          // ---- STEP 1: recursively resolve reqsJsonPath INSIDE jsonPathExpr ----
+          let jsonPathExpr = rawJsonPathExpr
+          let previous: string | null = null
+          let loopGuard = 0
 
-        // Evaluate JSONPath and pick first result
-        const results = jp.query(jsonRoot || {}, `$${jsonPathExpr}`)
-        // if (results.length === 0) {
-        //   return ''
-        // }
-        if (results.length === 0 || results[0] == null || results[0] === undefined) {
-          if (customFallback) {
-            return customFallback
+          while (previous !== jsonPathExpr && loopGuard < 10) {
+            previous = jsonPathExpr
+            jsonPathExpr = resolve(jsonPathExpr) // recursion on inner {reqsJsonPath...}
+            loopGuard++
           }
-          // no result or null → fallback
-          return fallback
-        }
 
-        // Return first result as string
-        return String(results[0])
-      } catch {
-        // On any error, leave the placeholder as-is
-        return match
-      }
-    },
-  )
+          // ---- STEP 2: apply prepareTemplate-style replacements INSIDE jsonPathExpr ----
+          if (replaceValues) {
+            jsonPathExpr = prepareTemplate({
+              template: jsonPathExpr,
+              replaceValues,
+            })
+          }
+
+          // ---- STEP 3: evaluate final JSONPath ----
+          if (jsonRoot === undefined && customFallback) return customFallback
+          if (jsonRoot === undefined) return inlineFallback
+
+          const results = jp.query(jsonRoot, `$${jsonPathExpr}`)
+          const value = results?.[0]
+
+          if (value == null) {
+            return customFallback ?? inlineFallback
+          }
+
+          return String(value)
+        } catch {
+          return match
+        }
+      },
+    )
+
+  // ---- outer multi-pass resolution ----
+  let result = text
+  let previous: string | null = null
+  let iterations = 0
+
+  while (result !== previous && iterations < 10) {
+    previous = result
+    result = resolve(result)
+    iterations++
+  }
+
+  return result
 }
 
 export const parseWithoutPartsOfUrl = ({
@@ -162,6 +178,7 @@ export const parseAll = ({
         multiQueryData,
       }),
       multiQueryData,
+      replaceValues,
     }),
     replaceValues,
   })
