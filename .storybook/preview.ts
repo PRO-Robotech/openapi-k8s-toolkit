@@ -6,6 +6,9 @@ const preview: Preview = {
     controls: { expanded: true },
     a11y: { disable: false },
     layout: 'padded',
+    docs: {
+      autodocs: true,
+    },
   },
 }
 

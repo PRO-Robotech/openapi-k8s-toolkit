@@ -268,6 +268,11 @@ export type TDynamicComponentsAppTypeMap = {
     standard?: 'si' | 'iec'
     notANumberText?: string
     style?: CSSProperties
+    /** If provided, value is in this unit instead of raw bytes */
+    fromUnit?: TUnitInput
+    /** If provided, convert to this explicit unit */
+    toUnit?: TUnitInput // do not enter if wanna auto format
+    /** If omitted and toUnit is missing, use auto-scaling */
   }
   SecretBase64Plain: {
     id: number | string

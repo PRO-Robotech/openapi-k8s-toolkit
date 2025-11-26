@@ -6,8 +6,8 @@ import path from 'path'
 const { parsed: options } = dotenv.config({ path: './.env.options' })
 
 const config: StorybookConfig = {
-  stories: ['../src/**/*.mdx', '../src/**/*.stories.@(ts|tsx|js|jsx)'],
-  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions', '@storybook/addon-a11y'],
+  stories: ['./docs/**/*.tsx', '../src/**/*.mdx', '../src/**/*.stories.@(ts|tsx|js|jsx)'],
+  // addons: ['@storybook/addon-essentials', '@storybook/addon-interactions', '@storybook/addon-a11y'],
   framework: {
     name: '@storybook/react-vite',
     options: {},
@@ -29,6 +29,10 @@ const config: StorybookConfig = {
           '../../../DynamicRendererWithProviders/partsOfUrlContext': path.resolve(
             __dirname,
             './mocks/partsOfUrlContext.tsx',
+          ),
+          '../../../DynamicRendererWithProviders/hybridDataProvider': path.resolve(
+            __dirname,
+            './mocks/hybridDataProvider.tsx',
           ),
           '../../../DynamicRendererWithProviders/themeContext': path.resolve(__dirname, './mocks/themeContext.tsx'),
         },

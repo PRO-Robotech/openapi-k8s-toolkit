@@ -2,21 +2,16 @@ import type { Meta, StoryObj } from '@storybook/react'
 import React, { CSSProperties } from 'react'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
+
 import { ResourceBadge } from './ResourceBadge'
+import { TDynamicComponentsAppTypeMap } from '../../types'
 
 // Storybook-only mocks (aliased in .storybook/main.ts via viteFinal)
-import { MultiQueryMockProvider } from '../../../../../../.storybook/mocks/multiQueryProvider'
-import { PartsOfUrlMockProvider } from '../../../../../../.storybook/mocks/partsOfUrlContext'
-import { ThemeProvider } from '../../../../../../.storybook/mocks/themeContext'
+import { SmartProvider } from '../../../../../../.storybook/mocks/SmartProvider'
 
-type ResourceBadgeInner = {
-  id: number | string
-  value: string // to get color and maybe abbr
-  abbreviation?: string
-  style?: CSSProperties
-}
+type TInner = TDynamicComponentsAppTypeMap['ResourceBadge']
 
-type ProviderArgs = {
+type TProviderArgs = {
   isLoading: boolean
   isError: boolean
   errors: { message: string }[]
@@ -25,9 +20,9 @@ type ProviderArgs = {
   theme: 'dark' | 'light'
 }
 
-type Args = ResourceBadgeInner & ProviderArgs
+type TArgs = TInner & TProviderArgs
 
-const meta: Meta<Args> = {
+const meta: Meta<TArgs> = {
   title: 'Factory/ResourceBadge',
   component: ResourceBadge as any,
   // Expose *inner* fields as top-level controls
@@ -49,29 +44,28 @@ const meta: Meta<Args> = {
   // Map flat args -> component's { data } prop
   render: args => (
     <>
-      <ThemeProvider value={{ theme: args.theme }}>
-        <MultiQueryMockProvider
-          value={{
-            isLoading: args.isLoading,
-            isError: args.isError,
-            errors: args.errors,
-            data: args.multiQueryData,
-          }}
-        >
-          <PartsOfUrlMockProvider value={{ partsOfUrl: args.partsOfUrl }}>
-            <div style={{ padding: 16 }}>
-              <ResourceBadge
-                data={{
-                  id: args.id,
-                  value: args.value,
-                  abbreviation: args.abbreviation,
-                  style: args.style,
-                }}
-              />
-            </div>
-          </PartsOfUrlMockProvider>
-        </MultiQueryMockProvider>
-      </ThemeProvider>
+      <SmartProvider
+        theme={args.theme}
+        multiQueryValue={{
+          isLoading: args.isLoading,
+          isError: args.isError,
+          errors: args.errors,
+          data: args.multiQueryData,
+        }}
+        partsOfUrl={args.partsOfUrl}
+      >
+        <div style={{ padding: 16 }}>
+          <ResourceBadge
+            data={{
+              id: args.id,
+              value: args.value,
+              abbreviation: args.abbreviation,
+              style: args.style,
+            }}
+          />
+        </div>
+      </SmartProvider>
+
       <Editor
         defaultLanguage="yaml"
         width="100%"
@@ -100,7 +94,7 @@ const meta: Meta<Args> = {
 }
 export default meta
 
-type Story = StoryObj<Args>
+type Story = StoryObj<TArgs>
 
 export const Default: Story = {
   args: {
