@@ -3,27 +3,16 @@ import React, { CSSProperties } from 'react'
 import { FlexProps } from 'antd'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
+
 import { SecretBase64Plain } from './SecretBase64Plain'
+import { TDynamicComponentsAppTypeMap } from '../../types'
 
 // Storybook-only mocks (aliased in .storybook/main.ts via viteFinal)
-import { MultiQueryMockProvider } from '../../../../../../.storybook/mocks/multiQueryProvider'
-import { PartsOfUrlMockProvider } from '../../../../../../.storybook/mocks/partsOfUrlContext'
-import { ThemeProvider } from '../../../../../../.storybook/mocks/themeContext'
+import { SmartProvider } from '../../../../../../.storybook/mocks/SmartProvider'
 
-type SecretBase64PlainInner = {
-  id: number | string
-  base64Value?: string // reqs | one of required
-  plainTextValue?: string // reqs | one of required
+type TInner = TDynamicComponentsAppTypeMap['SecretBase64Plain']
 
-  containerStyle?: CSSProperties
-  inputContainerStyle?: CSSProperties
-  flexProps?: Omit<FlexProps, 'children'>
-  niceLooking?: boolean
-  notificationWidth?: string // default 300px
-  notificationText?: string // Text copied to clipboard
-}
-
-type ProviderArgs = {
+type TProviderArgs = {
   isLoading: boolean
   isError: boolean
   errors: { message: string }[]
@@ -32,9 +21,9 @@ type ProviderArgs = {
   theme: 'dark' | 'light'
 }
 
-type Args = SecretBase64PlainInner & ProviderArgs
+type TArgs = TInner & TProviderArgs
 
-const meta: Meta<Args> = {
+const meta: Meta<TArgs> = {
   title: 'Factory/SecretBase64Plain',
   component: SecretBase64Plain as any,
   // Expose *inner* fields as top-level controls
@@ -61,34 +50,33 @@ const meta: Meta<Args> = {
   // Map flat args -> component's { data } prop
   render: args => (
     <>
-      <ThemeProvider value={{ theme: args.theme }}>
-        <MultiQueryMockProvider
-          value={{
-            isLoading: args.isLoading,
-            isError: args.isError,
-            errors: args.errors,
-            data: args.multiQueryData,
-          }}
-        >
-          <PartsOfUrlMockProvider value={{ partsOfUrl: args.partsOfUrl }}>
-            <div style={{ padding: 16 }}>
-              <SecretBase64Plain
-                data={{
-                  id: args.id,
-                  base64Value: args.base64Value,
-                  plainTextValue: args.plainTextValue,
-                  containerStyle: args.containerStyle,
-                  inputContainerStyle: args.inputContainerStyle,
-                  flexProps: args.flexProps,
-                  niceLooking: args.niceLooking,
-                  notificationWidth: args.notificationWidth,
-                  notificationText: args.notificationText,
-                }}
-              />
-            </div>
-          </PartsOfUrlMockProvider>
-        </MultiQueryMockProvider>
-      </ThemeProvider>
+      <SmartProvider
+        theme={args.theme}
+        multiQueryValue={{
+          isLoading: args.isLoading,
+          isError: args.isError,
+          errors: args.errors,
+          data: args.multiQueryData,
+        }}
+        partsOfUrl={args.partsOfUrl}
+      >
+        <div style={{ padding: 16 }}>
+          <SecretBase64Plain
+            data={{
+              id: args.id,
+              base64Value: args.base64Value,
+              plainTextValue: args.plainTextValue,
+              containerStyle: args.containerStyle,
+              inputContainerStyle: args.inputContainerStyle,
+              flexProps: args.flexProps,
+              niceLooking: args.niceLooking,
+              notificationWidth: args.notificationWidth,
+              notificationText: args.notificationText,
+            }}
+          />
+        </div>
+      </SmartProvider>
+
       <Editor
         defaultLanguage="yaml"
         width="100%"
@@ -122,7 +110,7 @@ const meta: Meta<Args> = {
 }
 export default meta
 
-type Story = StoryObj<Args>
+type Story = StoryObj<TArgs>
 
 export const Default: Story = {
   args: {

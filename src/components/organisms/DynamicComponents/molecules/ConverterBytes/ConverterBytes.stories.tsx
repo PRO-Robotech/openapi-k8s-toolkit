@@ -1,29 +1,15 @@
-// src/components/ParsedText/ParsedText.stories.tsx
 import type { Meta, StoryObj } from '@storybook/react'
 import React, { CSSProperties } from 'react'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
-import { TUnitInput } from './types'
+
 import { ConverterBytes } from './ConverterBytes'
+import { TDynamicComponentsAppTypeMap } from '../../types'
 
 // Storybook-only mocks (aliased in .storybook/main.ts via viteFinal)
-import { MultiQueryMockProvider } from '../../../../../../.storybook/mocks/multiQueryProvider'
-import { PartsOfUrlMockProvider } from '../../../../../../.storybook/mocks/partsOfUrlContext'
+import { SmartProvider } from '../../../../../../.storybook/mocks/SmartProvider'
 
-type ConverterBytesInner = {
-  id: number | string
-  bytesValue: string // reqs
-  unit?: TUnitInput // do not enter if wanna auto format
-  /** If true, returns "12.3 GiB" instead of just 12.3 */
-  format?: boolean
-  /** Max fraction digits when formatting (default 2) */
-  precision?: number
-  /** Locale for number formatting (default: undefined => user agent) */
-  locale?: string
-  standard?: 'si' | 'iec'
-  notANumberText?: string
-  style?: CSSProperties
-}
+type TInner = TDynamicComponentsAppTypeMap['ConverterBytes']
 
 type ProviderArgs = {
   isLoading: boolean
@@ -33,21 +19,39 @@ type ProviderArgs = {
   partsOfUrl: string[]
 }
 
-type Args = ConverterBytesInner & ProviderArgs
+type TArgs = TInner & ProviderArgs
 
-const meta: Meta<Args> = {
+const meta: Meta<TArgs> = {
   title: 'Factory/ConverterBytes',
   component: ConverterBytes as any,
   // Expose *inner* fields as top-level controls
   argTypes: {
     id: { control: 'text', description: 'data.id' },
-    bytesValue: { control: 'text', description: 'data.bytesValue' },
-    unit: { control: 'text', description: 'data.unit' },
+    bytesValue: {
+      control: 'text',
+      description: 'data.bytesValue (can include unit like "1536Ki")',
+    },
+    unit: {
+      control: 'text',
+      description: 'data.unit (bytes -> this unit). Leave empty for auto-scale.',
+    },
+    fromUnit: {
+      control: 'text',
+      description: 'data.fromUnit (value is in this unit instead of bytes; can override inline unit).',
+    },
+    toUnit: {
+      control: 'text',
+      description: 'data.toUnit (explicit target unit when using fromUnit or inline unit).',
+    },
     format: { control: { type: 'boolean' }, description: 'data.format' },
     precision: { control: 'number', description: 'data.precision' },
     locale: { control: 'text', description: 'data.locale' },
-    standard: { options: ['si', 'iec'], control: { type: 'radio' }, description: 'data.standard' },
-    notANumberText: { control: 'text', description: 'data.locale' },
+    standard: {
+      options: ['si', 'iec'],
+      control: { type: 'radio' },
+      description: 'data.standard (auto-scale base)',
+    },
+    notANumberText: { control: 'text', description: 'data.notANumberText' },
     style: { control: 'object', description: 'data.style' },
 
     // provider knobs
@@ -61,42 +65,45 @@ const meta: Meta<Args> = {
   // Map flat args -> component's { data } prop
   render: args => (
     <>
-      <MultiQueryMockProvider
-        value={{
+      <SmartProvider
+        multiQueryValue={{
           isLoading: args.isLoading,
           isError: args.isError,
           errors: args.errors,
           data: args.multiQueryData,
         }}
+        partsOfUrl={args.partsOfUrl}
       >
-        <PartsOfUrlMockProvider value={{ partsOfUrl: args.partsOfUrl }}>
-          <div style={{ padding: 16 }}>
-            <ConverterBytes
-              data={{
-                id: args.id,
-                bytesValue: args.bytesValue,
-                unit: args.unit,
-                format: args.format,
-                precision: args.precision,
-                locale: args.locale,
-                standard: args.standard,
-                notANumberText: args.notANumberText,
-                style: args.style,
-              }}
-            />
-          </div>
-        </PartsOfUrlMockProvider>
-      </MultiQueryMockProvider>
+        <div style={{ padding: 16 }}>
+          <ConverterBytes
+            data={{
+              id: args.id,
+              bytesValue: args.bytesValue,
+              unit: args.unit,
+              fromUnit: args.fromUnit,
+              toUnit: args.toUnit,
+              format: args.format,
+              precision: args.precision,
+              locale: args.locale,
+              standard: args.standard,
+              notANumberText: args.notANumberText,
+              style: args.style,
+            }}
+          />
+        </div>
+      </SmartProvider>
       <Editor
         defaultLanguage="yaml"
         width="100%"
-        height={150}
+        height={200}
         value={yaml.stringify({
           type: 'ConverterBytes',
           data: {
             id: args.id,
             bytesValue: args.bytesValue,
             unit: args.unit,
+            fromUnit: args.fromUnit,
+            toUnit: args.toUnit,
             format: args.format,
             precision: args.precision,
             locale: args.locale,
@@ -105,7 +112,7 @@ const meta: Meta<Args> = {
             style: args.style,
           },
         })}
-        theme={'vs-dark'}
+        theme="vs-dark"
         options={{
           theme: 'vs-dark',
           readOnly: true,
@@ -120,7 +127,7 @@ const meta: Meta<Args> = {
 }
 export default meta
 
-type Story = StoryObj<Args>
+type Story = StoryObj<TArgs>
 
 export const Default: Story = {
   args: {
@@ -177,8 +184,57 @@ export const Standard: Story = {
 export const Error: Story = {
   args: {
     ...Default.args,
-    id: 'example-converter-bytes',
+    id: 'example-converter-bytes-error',
     bytesValue: "{reqsJsonPath[0]['.data.block.bytessss']['-']}",
     notANumberText: '0',
+  },
+}
+
+/**
+ * New: demonstrates parsing inline unit in bytesValue (e.g. "1536Ki")
+ * and auto-scaling from that.
+ */
+export const InlineUnitAutoScale: Story = {
+  args: {
+    ...Default.args,
+    id: 'inline-unit-auto',
+    // directly embed the value + unit
+    bytesValue: '1536Ki',
+    unit: undefined,
+    fromUnit: undefined,
+    toUnit: undefined,
+    standard: 'iec',
+    format: true,
+  },
+}
+
+/**
+ * New: demonstrates explicit fromUnit + toUnit, ignoring inline unit if present.
+ */
+export const FromToUnits: Story = {
+  args: {
+    ...Default.args,
+    id: 'from-to-units',
+    bytesValue: '10', // numeric value only
+    fromUnit: 'GB',
+    toUnit: 'GiB',
+    format: true,
+    precision: 3,
+  },
+}
+
+/**
+ * New: demonstrates inline unit overridden by fromUnit.
+ * bytesValue says "Gi" but we force treat it as "GB".
+ */
+export const OverrideInlineFromUnit: Story = {
+  args: {
+    ...Default.args,
+    id: 'override-inline-from',
+    bytesValue: '10Gi', // inline "Gi"
+    fromUnit: 'GB', // we override and treat as GB
+    toUnit: 'GiB',
+    format: true,
+    precision: 4,
   },
 }

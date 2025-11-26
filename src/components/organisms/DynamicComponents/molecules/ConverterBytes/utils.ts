@@ -126,3 +126,56 @@ export const formatBytesAuto: (
 // convertBytes(1_000_000_000, "G");   // 1
 // formatBytesAuto(1234567890);        // "1.23 GB"
 // formatBytesAuto(1234567890, { standard: "iec" }); // "1.15 GiB"
+
+/** Internal helper: convert value in given unit -> bytes (number) */
+export const toBytes = (value: number, from: TUnitInput): number => {
+  if (!Number.isFinite(value)) {
+    console.error('value must be a finite number')
+    return -1
+  }
+  if (value < 0) {
+    console.error('value must be >= 0')
+    return -1
+  }
+  const canon = normalizeUnit(from)
+  const factor = UNIT_FACTORS[canon]
+  return value * factor
+}
+
+/**
+ * Generic helper: convert value in some unit -> target unit.
+ * Uses bytes as intermediate.
+ */
+export const convertStorage: (
+  value: number,
+  from: TUnitInput,
+  to: TUnitInput,
+  opts?: TConvertOptions,
+) => number | string = (value, from, to, opts) => {
+  const bytes = toBytes(value, from)
+  if (bytes < 0) return -1
+  return convertBytes(bytes, to, opts)
+}
+
+/**
+ * Try to parse a string like:
+ *   "12312312Ki"
+ *   "  12.5 GiB"
+ *   "1000"        (no unit -> unit undefined)
+ */
+export const parseValueWithUnit = (input: string): { value: number; unit?: TUnitInput } | null => {
+  const trimmed = input.trim()
+  if (!trimmed) return null
+
+  const match = trimmed.match(/^([+-]?\d+(?:\.\d+)?)(?:\s*([a-zA-Z]+))?$/)
+  if (!match) return null
+
+  const [, numPart, unitPart] = match
+  const value = Number(numPart)
+  if (!Number.isFinite(value)) return null
+
+  if (unitPart) {
+    return { value, unit: unitPart as TUnitInput }
+  }
+  return { value }
+}

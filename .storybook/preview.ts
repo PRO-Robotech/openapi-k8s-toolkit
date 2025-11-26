@@ -6,6 +6,14 @@ const preview: Preview = {
     controls: { expanded: true },
     a11y: { disable: false },
     layout: 'padded',
+    options: {
+      storySort: {
+        order: ['Welcome', ['overview']], // ensure it appears first
+      },
+    },
+    docs: {
+      autodocs: true,
+    },
   },
 }
 
