@@ -115,3 +115,5 @@ This toolkit abstracts those patterns into reusable building blocks so teams can
 ---
 
 ## 🤝 Contributing
+
+[Check this out](./CONTRIBUTING.md)
