@@ -1,9 +1,8 @@
 // .storybook/docs/Intro.stories.tsx
 import type { Meta, StoryObj } from '@storybook/react'
-import React from 'react'
+import React, { FC } from 'react'
 
-// Tiny dummy component used just so Storybook has a "component annotation"
-const IntroPage: React.FC = () => (
+const IntroPage: FC = () => (
   <div style={{ padding: 24, maxWidth: 900, margin: '0 auto' }}>
     <h1 style={{ fontSize: 32, marginBottom: 8 }}>🚀 Welcome to openapi-k8s-toolkit</h1>
 
@@ -63,11 +62,14 @@ data:
 )
 
 const meta: Meta<typeof IntroPage> = {
-  title: '📘 Welcome',
-  component: IntroPage, // 👈 this fixes the “component annotation is missing” error
+  title: 'Welcome',
+  component: IntroPage,
   parameters: {
     docs: {
-      page: () => <IntroPage />, // use the same component as the Docs page content
+      page: () => <IntroPage />,
+    },
+    options: {
+      initialActive: 'overview',
     },
   },
 }
