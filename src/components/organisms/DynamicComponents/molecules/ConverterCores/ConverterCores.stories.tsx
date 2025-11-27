@@ -3,13 +3,13 @@ import React from 'react'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
 
-import { ConverterBytes } from './ConverterBytes'
+import { ConverterCores } from './ConverterCores'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 
 // Storybook-only mocks (aliased in .storybook/main.ts via viteFinal)
 import { SmartProvider } from '../../../../../../.storybook/mocks/SmartProvider'
 
-type TInner = TDynamicComponentsAppTypeMap['ConverterBytes']
+type TInner = TDynamicComponentsAppTypeMap['ConverterCores']
 
 type ProviderArgs = {
   isLoading: boolean
@@ -22,23 +22,25 @@ type ProviderArgs = {
 type TArgs = TInner & ProviderArgs
 
 const meta: Meta<TArgs> = {
-  title: 'Factory/ConverterBytes',
-  component: ConverterBytes as any,
+  title: 'Factory/ConverterCores',
+  component: ConverterCores as any,
   // Expose *inner* fields as top-level controls
   argTypes: {
     id: { control: 'text', description: 'data.id' },
-    bytesValue: {
+    coresValue: {
       control: 'object',
       description:
-        'data.bytesValue (string or string[]). Values can include units like "1536Ki". If array, all entries are converted to bytes, summed, then formatted.',
+        'data.coresValue (string or string[]). Values can include units like "500m", "10u", "1000000n", "2 vcpu". If array, all entries are converted to cores, summed, then formatted.',
     },
     unit: {
       control: 'text',
-      description: 'data.unit (bytes -> this unit). Leave empty for auto-scale.',
+      description:
+        'data.unit (cores -> this unit, e.g. "core", "m", "mcore", "u", "ucore", "n", "ncore"). Leave empty for auto-scale.',
     },
     fromUnit: {
       control: 'text',
-      description: 'data.fromUnit (value is in this unit instead of bytes; can override inline units for all entries).',
+      description:
+        'data.fromUnit (value is in this unit instead of raw cores; overrides inline units for all entries).',
     },
     toUnit: {
       control: 'text',
@@ -47,11 +49,6 @@ const meta: Meta<TArgs> = {
     format: { control: { type: 'boolean' }, description: 'data.format' },
     precision: { control: 'number', description: 'data.precision' },
     locale: { control: 'text', description: 'data.locale' },
-    standard: {
-      options: ['si', 'iec'],
-      control: { type: 'radio' },
-      description: 'data.standard (auto-scale base)',
-    },
     notANumberText: { control: 'text', description: 'data.notANumberText' },
     style: { control: 'object', description: 'data.style' },
 
@@ -76,17 +73,16 @@ const meta: Meta<TArgs> = {
         partsOfUrl={args.partsOfUrl}
       >
         <div style={{ padding: 16 }}>
-          <ConverterBytes
+          <ConverterCores
             data={{
               id: args.id,
-              bytesValue: args.bytesValue,
+              coresValue: args.coresValue,
               unit: args.unit,
               fromUnit: args.fromUnit,
               toUnit: args.toUnit,
               format: args.format,
               precision: args.precision,
               locale: args.locale,
-              standard: args.standard,
               notANumberText: args.notANumberText,
               style: args.style,
             }}
@@ -98,17 +94,16 @@ const meta: Meta<TArgs> = {
         width="100%"
         height={220}
         value={yaml.stringify({
-          type: 'ConverterBytes',
+          type: 'ConverterCores',
           data: {
             id: args.id,
-            bytesValue: args.bytesValue,
+            coresValue: args.coresValue,
             unit: args.unit,
             fromUnit: args.fromUnit,
             toUnit: args.toUnit,
             format: args.format,
             precision: args.precision,
             locale: args.locale,
-            standard: args.standard,
             notANumberText: args.notANumberText,
             style: args.style,
           },
@@ -126,14 +121,15 @@ const meta: Meta<TArgs> = {
     controls: { expanded: true },
   },
 }
+
 export default meta
 
 type Story = StoryObj<TArgs>
 
 export const Default: Story = {
   args: {
-    id: 'example-converter-bytes',
-    bytesValue: "{reqsJsonPath[0]['.data.block.bytes']['-']}",
+    id: 'example-converter-cores',
+    coresValue: "{reqsJsonPath[0]['.data.block.cores']['-']}",
     format: true,
     style: { fontSize: 24 },
 
@@ -141,22 +137,43 @@ export const Default: Story = {
     isLoading: false,
     isError: false,
     errors: [],
-    multiQueryData: { req0: { data: { block: { bytes: 123456 } } } },
+    multiQueryData: { req0: { data: { block: { cores: 0.5 } } } },
     partsOfUrl: [],
   },
 }
 
-export const Unit: Story = {
+// Single string value, force millicores
+export const MillicoresUnit: Story = {
   args: {
     ...Default.args,
-    unit: 'Mi',
+    coresValue: '0.5', // 0.5 core
+    unit: 'm', // -> 500 mcore
+  },
+}
+
+// Single string value, force microcores
+export const MicrocoresUnit: Story = {
+  args: {
+    ...Default.args,
+    coresValue: '0.0001', // 1e-4 core
+    unit: 'ucore', // -> 100 ucore
+  },
+}
+
+// Single string value, force nanocores
+export const NanocoresUnit: Story = {
+  args: {
+    ...Default.args,
+    coresValue: '0.0000001', // 1e-7 core
+    unit: 'ncore', // -> 100 ncore
   },
 }
 
 export const FormatOff: Story = {
   args: {
     ...Default.args,
-    unit: 'k',
+    coresValue: '0.5',
+    unit: 'core',
     format: false,
   },
 }
@@ -164,6 +181,7 @@ export const FormatOff: Story = {
 export const Precision: Story = {
   args: {
     ...Default.args,
+    coresValue: '0.5',
     precision: 5,
   },
 }
@@ -171,107 +189,114 @@ export const Precision: Story = {
 export const Locale: Story = {
   args: {
     ...Default.args,
+    coresValue: '1234.5',
     locale: 'de-DE',
-  },
-}
-
-export const Standard: Story = {
-  args: {
-    ...Default.args,
-    standard: 'iec',
   },
 }
 
 export const Error: Story = {
   args: {
     ...Default.args,
-    id: 'example-converter-bytes-error',
-    bytesValue: "{reqsJsonPath[0]['.data.block.bytessss']['-']}",
+    id: 'example-converter-cores-error',
+    coresValue: "{reqsJsonPath[0]['.data.block.coressss']['-']}",
     notANumberText: '0',
   },
 }
 
 /**
- * Demonstrates parsing inline unit in bytesValue (e.g. "1536Ki")
- * and auto-scaling from that.
+ * Inline unit + auto-scale:
+ * - "500m"   -> 0.5 core  -> auto chooses core/mcore/ucore/ncore depending on thresholds
  */
-export const InlineUnitAutoScale: Story = {
+export const InlineUnitAutoScaleMilli: Story = {
   args: {
     ...Default.args,
-    id: 'inline-unit-auto',
-    // directly embed the value + unit
-    bytesValue: '1536Ki',
+    id: 'inline-unit-auto-milli',
+    coresValue: '500m',
     unit: undefined,
     fromUnit: undefined,
     toUnit: undefined,
-    standard: 'iec',
     format: true,
   },
 }
 
 /**
- * Demonstrates explicit fromUnit + toUnit, ignoring inline unit if present.
+ * Inline micro unit + auto-scale:
+ * - "100u"   -> 100 microcores -> 1e-4 core
  */
-export const FromToUnits: Story = {
+export const InlineUnitAutoScaleMicro: Story = {
   args: {
     ...Default.args,
-    id: 'from-to-units',
-    bytesValue: '10', // numeric value only
-    fromUnit: 'GB',
-    toUnit: 'GiB',
+    id: 'inline-unit-auto-micro',
+    coresValue: '100u',
+    unit: undefined,
+    fromUnit: undefined,
+    toUnit: undefined,
     format: true,
-    precision: 3,
   },
 }
 
 /**
- * Demonstrates inline unit overridden by fromUnit.
- * bytesValue says "Gi" but we force treat it as "GB".
+ * Inline nano unit + auto-scale:
+ * - "1000000n" -> 1e6 nanocores -> 1e-3 core
  */
-export const OverrideInlineFromUnit: Story = {
+export const InlineUnitAutoScaleNano: Story = {
   args: {
     ...Default.args,
-    id: 'override-inline-from',
-    bytesValue: '10Gi', // inline "Gi"
-    fromUnit: 'GB', // we override and treat as GB
-    toUnit: 'GiB',
+    id: 'inline-unit-auto-nano',
+    coresValue: '1000000n',
+    unit: undefined,
+    fromUnit: undefined,
+    toUnit: undefined,
     format: true,
-    precision: 4,
   },
 }
 
 /**
- * Array of values: all converted to bytes and summed.
+ * Array of values: all converted to cores and summed.
  * Example:
- *  - "10GiB"
- *  - "512Mi"
- *  - "1024" (bytes)
+ *  - "500m"      -> 0.5 core
+ *  - "0.25 core" -> 0.25 core
+ *  - "250m"      -> 0.25 core
+ *  Total = 1.0 core
  */
 export const ArrayValuesSum: Story = {
   args: {
     ...Default.args,
     id: 'array-values-sum',
-    bytesValue: ['10GiB', '512Mi', '1024'],
-    unit: 'GiB',
-    standard: 'iec',
+    coresValue: ['500m', '0.25 core', '250m'],
+    unit: 'core',
     format: true,
     precision: 3,
   },
 }
 
 /**
- * Explicit fromUnit + toUnit for array, ignoring inline units.
- * Here we treat ALL entries as "MB" regardless of inline unit.
+ * Explicit fromUnit + toUnit, ignoring inline units.
+ * Here we treat ALL entries as "m" regardless of inline unit.
  */
 export const FromToUnitsArray: Story = {
   args: {
     ...Default.args,
     id: 'from-to-units-array',
-    bytesValue: ['10', '20', '30'], // all "MB" because fromUnit='MB'
-    fromUnit: 'MB',
-    toUnit: 'GiB',
+    coresValue: ['500', '250', '250'], // all "m" because fromUnit='m'
+    fromUnit: 'm',
+    toUnit: 'core',
     format: true,
-    precision: 4,
-    standard: 'iec',
+    precision: 3,
+  },
+}
+
+/**
+ * Inline unit overridden by fromUnit for array values.
+ */
+export const OverrideInlineFromUnitArray: Story = {
+  args: {
+    ...Default.args,
+    id: 'override-inline-from-array',
+    coresValue: ['500m', '0.5 core'],
+    fromUnit: 'core', // both treated as "core"
+    toUnit: 'mcore',
+    format: true,
+    precision: 2,
   },
 }
