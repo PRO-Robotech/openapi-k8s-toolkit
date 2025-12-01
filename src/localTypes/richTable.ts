@@ -27,3 +27,5 @@ export type TAdditionalPrinterColumnsKeyTypeProps = Record<
     customProps?: unknown
   }
 >
+
+export type TAdditionalPrinterColumnsDisableSortersAndFilters = React.Key[]

@@ -9,6 +9,7 @@ import {
   TAdditionalPrinterColumnsTrimLengths,
   TAdditionalPrinterColumnsUndefinedValues,
   TAdditionalPrinterColumnsKeyTypeProps,
+  TAdditionalPrinterColumnsDisableSortersAndFilters,
 } from 'localTypes/richTable'
 import { TJSON } from 'localTypes/JSON'
 import { isFlatObject } from 'utils/isFlatObject'
@@ -115,6 +116,7 @@ export const getEnrichedColumns = ({
   additionalPrinterColumnsTrimLengths,
   additionalPrinterColumnsColWidths,
   additionalPrinterColumnsKeyTypeProps,
+  additionalPrinterColumnsDisableSortersAndFilters,
   theme,
   getRowKey, // for factory search
 }: {
@@ -123,6 +125,7 @@ export const getEnrichedColumns = ({
   additionalPrinterColumnsTrimLengths?: TAdditionalPrinterColumnsTrimLengths
   additionalPrinterColumnsColWidths?: TAdditionalPrinterColumnsColWidths
   additionalPrinterColumnsKeyTypeProps?: TAdditionalPrinterColumnsKeyTypeProps
+  additionalPrinterColumnsDisableSortersAndFilters?: TAdditionalPrinterColumnsDisableSortersAndFilters
   theme: 'dark' | 'light'
   getRowKey: (record: any) => React.Key // for factory search
 }): TableProps['columns'] | undefined => {
@@ -133,6 +136,7 @@ export const getEnrichedColumns = ({
   // for factory search
   // return columns.map(el => {
   return columns.map((el, colIndex) => {
+    const isSortersAndFitlersDisabled = additionalPrinterColumnsDisableSortersAndFilters?.some(key => key === el.key)
     const possibleUndefinedValue = additionalPrinterColumnsUndefinedValues?.find(({ key }) => key === el.key)?.value
     const possibleTrimLength = additionalPrinterColumnsTrimLengths?.find(({ key }) => key === el.key)?.value
     const possibleColWidth = additionalPrinterColumnsColWidths?.find(({ key }) => key === el.key)?.value
@@ -181,17 +185,30 @@ export const getEnrichedColumns = ({
           'data-colkey': String(colKey),
         } as React.TdHTMLAttributes<HTMLTableCellElement>
       },
-      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
-        <FilterDropdown
-          setSelectedKeys={setSelectedKeys}
-          selectedKeys={selectedKeys}
-          confirm={confirm}
-          clearFilters={clearFilters}
-          close={close}
-        />
-      ),
-      filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />,
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => {
+        if (isSortersAndFitlersDisabled) {
+          return null
+        }
+        return (
+          <FilterDropdown
+            setSelectedKeys={setSelectedKeys}
+            selectedKeys={selectedKeys}
+            confirm={confirm}
+            clearFilters={clearFilters}
+            close={close}
+          />
+        )
+      },
+      filterIcon: (filtered: boolean) => {
+        if (isSortersAndFitlersDisabled) {
+          return null
+        }
+        return <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />
+      },
       onFilter: (value, record) => {
+        if (isSortersAndFitlersDisabled) {
+          return false
+        }
         // for factory search
         if (useFactorySearch) {
           const text = getCellTextFromDOM(record)
@@ -220,49 +237,51 @@ export const getEnrichedColumns = ({
         }
         return false
       },
-      sorter: (a, b) => {
-        // for factory search
-        if (useFactorySearch) {
-          const aText = getCellTextFromDOM(a)
-          const bText = getCellTextFromDOM(b)
-          return aText.localeCompare(bText)
-        }
+      sorter: isSortersAndFitlersDisabled
+        ? false
+        : (a, b) => {
+            // for factory search
+            if (useFactorySearch) {
+              const aText = getCellTextFromDOM(a)
+              const bText = getCellTextFromDOM(b)
+              return aText.localeCompare(bText)
+            }
 
-        const { dataIndex } = el as { dataIndex: string | string[] } & unknown
-        const aEntry = Array.isArray(dataIndex) ? get(a, dataIndex) : a[dataIndex]
-        const bEntry = Array.isArray(dataIndex) ? get(b, dataIndex) : b[dataIndex]
-        if (typeof aEntry === 'object' && !Array.isArray(aEntry) && aEntry !== null) {
-          if (typeof bEntry === 'object' && !Array.isArray(bEntry) && bEntry !== null) {
-            return Object.keys(aEntry).length - Object.keys(bEntry).length
-          }
-          return Object.keys(aEntry).length ? -1 : 1
-        }
-        if (Array.isArray(aEntry)) {
-          if (Array.isArray(bEntry)) {
-            return aEntry.length - bEntry.length
-          }
-          return aEntry.length ? -1 : 1
-        }
-        if (typeof aEntry === 'boolean') {
-          if (aEntry === bEntry) {
+            const { dataIndex } = el as { dataIndex: string | string[] } & unknown
+            const aEntry = Array.isArray(dataIndex) ? get(a, dataIndex) : a[dataIndex]
+            const bEntry = Array.isArray(dataIndex) ? get(b, dataIndex) : b[dataIndex]
+            if (typeof aEntry === 'object' && !Array.isArray(aEntry) && aEntry !== null) {
+              if (typeof bEntry === 'object' && !Array.isArray(bEntry) && bEntry !== null) {
+                return Object.keys(aEntry).length - Object.keys(bEntry).length
+              }
+              return Object.keys(aEntry).length ? -1 : 1
+            }
+            if (Array.isArray(aEntry)) {
+              if (Array.isArray(bEntry)) {
+                return aEntry.length - bEntry.length
+              }
+              return aEntry.length ? -1 : 1
+            }
+            if (typeof aEntry === 'boolean') {
+              if (aEntry === bEntry) {
+                return 0
+              }
+              return aEntry ? -1 : 1
+            }
+            if (typeof aEntry === 'number') {
+              if (typeof bEntry === 'number') {
+                return aEntry - bEntry
+              }
+              return aEntry ? -1 : 1
+            }
+            if (typeof aEntry === 'string') {
+              if (typeof bEntry === 'string') {
+                return aEntry.localeCompare(bEntry)
+              }
+              return aEntry ? -1 : 1
+            }
             return 0
-          }
-          return aEntry ? -1 : 1
-        }
-        if (typeof aEntry === 'number') {
-          if (typeof bEntry === 'number') {
-            return aEntry - bEntry
-          }
-          return aEntry ? -1 : 1
-        }
-        if (typeof aEntry === 'string') {
-          if (typeof bEntry === 'string') {
-            return aEntry.localeCompare(bEntry)
-          }
-          return aEntry ? -1 : 1
-        }
-        return 0
-      },
+          },
     }
   })
 }
