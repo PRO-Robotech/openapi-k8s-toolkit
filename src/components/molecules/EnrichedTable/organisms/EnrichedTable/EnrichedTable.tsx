@@ -10,6 +10,7 @@ import {
   TAdditionalPrinterColumnsKeyTypeProps,
   TAdditionalPrinterColumnsTrimLengths,
   TAdditionalPrinterColumnsUndefinedValues,
+  TAdditionalPrinterColumnsDisableSortersAndFilters,
 } from 'localTypes/richTable'
 import { TableComponents } from './atoms'
 import { TInternalDataForControls } from './types'
@@ -28,6 +29,7 @@ export type TEnrichedTableProps = {
   additionalPrinterColumnsTrimLengths?: TAdditionalPrinterColumnsTrimLengths
   additionalPrinterColumnsColWidths?: TAdditionalPrinterColumnsColWidths
   additionalPrinterColumnsKeyTypeProps?: TAdditionalPrinterColumnsKeyTypeProps
+  additionalPrinterColumnsDisableSortersAndFilters?: TAdditionalPrinterColumnsDisableSortersAndFilters
   selectData?: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onChange: (selectedRowKeys: React.Key[], selectedRowsData: { name: string; endpoint: string }[]) => void
@@ -59,6 +61,7 @@ export const EnrichedTable: FC<TEnrichedTableProps> = ({
   additionalPrinterColumnsTrimLengths,
   additionalPrinterColumnsColWidths,
   additionalPrinterColumnsKeyTypeProps,
+  additionalPrinterColumnsDisableSortersAndFilters,
   selectData,
   withoutControls = false,
   tableProps,
@@ -69,13 +72,19 @@ export const EnrichedTable: FC<TEnrichedTableProps> = ({
     return null
   }
 
+  // for factory search
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rowKey = (record: any) => record.key
+
   const enrichedColumns = getEnrichedColumns({
     columns,
     additionalPrinterColumnsUndefinedValues,
     additionalPrinterColumnsTrimLengths,
     additionalPrinterColumnsColWidths,
     additionalPrinterColumnsKeyTypeProps,
+    additionalPrinterColumnsDisableSortersAndFilters,
     theme,
+    getRowKey: rowKey, // for factory search
   })
 
   if (!enrichedColumns) {
@@ -107,6 +116,8 @@ export const EnrichedTable: FC<TEnrichedTableProps> = ({
     >
       <TableComponents.HideableControls>
         <Table<AnyObject>
+          // for factory search
+          rowKey={rowKey}
           dataSource={dataSource}
           columns={columnsWithControls}
           pagination={

@@ -1,20 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ReactNode } from 'react'
 import { NavigateFunction } from 'react-router-dom'
 import { TableProps, Dropdown } from 'antd'
-import {
-  CheckOutlined,
-  CloseOutlined,
-  SearchOutlined,
-  // EditOutlined,
-  // DeleteOutlined,
-  MoreOutlined,
-} from '@ant-design/icons'
+import { CheckOutlined, CloseOutlined, SearchOutlined, MoreOutlined } from '@ant-design/icons'
 import { get } from 'lodash'
 import {
   TAdditionalPrinterColumnsColWidths,
   TAdditionalPrinterColumnsTrimLengths,
   TAdditionalPrinterColumnsUndefinedValues,
   TAdditionalPrinterColumnsKeyTypeProps,
+  TAdditionalPrinterColumnsDisableSortersAndFilters,
 } from 'localTypes/richTable'
 import { TJSON } from 'localTypes/JSON'
 import { isFlatObject } from 'utils/isFlatObject'
@@ -121,20 +116,27 @@ export const getEnrichedColumns = ({
   additionalPrinterColumnsTrimLengths,
   additionalPrinterColumnsColWidths,
   additionalPrinterColumnsKeyTypeProps,
+  additionalPrinterColumnsDisableSortersAndFilters,
   theme,
+  getRowKey, // for factory search
 }: {
   columns: TableProps['columns']
   additionalPrinterColumnsUndefinedValues?: TAdditionalPrinterColumnsUndefinedValues
   additionalPrinterColumnsTrimLengths?: TAdditionalPrinterColumnsTrimLengths
   additionalPrinterColumnsColWidths?: TAdditionalPrinterColumnsColWidths
   additionalPrinterColumnsKeyTypeProps?: TAdditionalPrinterColumnsKeyTypeProps
+  additionalPrinterColumnsDisableSortersAndFilters?: TAdditionalPrinterColumnsDisableSortersAndFilters
   theme: 'dark' | 'light'
+  getRowKey: (record: any) => React.Key // for factory search
 }): TableProps['columns'] | undefined => {
   if (!columns) {
     return undefined
   }
 
-  return columns.map(el => {
+  // for factory search
+  // return columns.map(el => {
+  return columns.map((el, colIndex) => {
+    const isSortersAndFitlersDisabled = additionalPrinterColumnsDisableSortersAndFilters?.some(key => key === el.key)
     const possibleUndefinedValue = additionalPrinterColumnsUndefinedValues?.find(({ key }) => key === el.key)?.value
     const possibleTrimLength = additionalPrinterColumnsTrimLengths?.find(({ key }) => key === el.key)?.value
     const possibleColWidth = additionalPrinterColumnsColWidths?.find(({ key }) => key === el.key)?.value
@@ -142,6 +144,25 @@ export const getEnrichedColumns = ({
       additionalPrinterColumnsKeyTypeProps && el.key
         ? additionalPrinterColumnsKeyTypeProps[el.key.toString()]
         : undefined
+
+    // for factory search
+    const useFactorySearch = possibleCustomTypeWithProps?.type === 'factory'
+
+    // for factory search
+    const colKey: React.Key =
+      (el.key != null && String(el.key)) ||
+      (Array.isArray((el as any).dataIndex)
+        ? (el as any).dataIndex.join('.')
+        : String((el as any).dataIndex ?? colIndex))
+
+    // for factory search
+    const getCellTextFromDOM = (record: any): string => {
+      const rowKey = getRowKey(record)
+      const selector = `td[data-rowkey="${String(rowKey)}"][data-colkey="${colKey}"]`
+      const cell = document.querySelector(selector) as HTMLElement | null
+      if (!cell) return ''
+      return (cell.innerText || cell.textContent || '').trim().toLowerCase()
+    }
 
     return {
       ...el,
@@ -155,17 +176,45 @@ export const getEnrichedColumns = ({
           theme,
         }),
       width: possibleColWidth,
-      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
-        <FilterDropdown
-          setSelectedKeys={setSelectedKeys}
-          selectedKeys={selectedKeys}
-          confirm={confirm}
-          clearFilters={clearFilters}
-          close={close}
-        />
-      ),
-      filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />,
+      // for factory search
+      onCell: (record: any): React.TdHTMLAttributes<HTMLTableCellElement> => {
+        const rowKey = getRowKey(record)
+
+        return {
+          'data-rowkey': String(rowKey),
+          'data-colkey': String(colKey),
+        } as React.TdHTMLAttributes<HTMLTableCellElement>
+      },
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => {
+        if (isSortersAndFitlersDisabled) {
+          return null
+        }
+        return (
+          <FilterDropdown
+            setSelectedKeys={setSelectedKeys}
+            selectedKeys={selectedKeys}
+            confirm={confirm}
+            clearFilters={clearFilters}
+            close={close}
+          />
+        )
+      },
+      filterIcon: (filtered: boolean) => {
+        if (isSortersAndFitlersDisabled) {
+          return null
+        }
+        return <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />
+      },
       onFilter: (value, record) => {
+        if (isSortersAndFitlersDisabled) {
+          return false
+        }
+        // for factory search
+        if (useFactorySearch) {
+          const text = getCellTextFromDOM(record)
+          return text.includes(String(value).toLowerCase())
+        }
+
         const { dataIndex } = el as { dataIndex: string | string[] } & unknown
         const entry = Array.isArray(dataIndex) ? get(record, dataIndex) : record[dataIndex]
         if (typeof entry === 'object' && !Array.isArray(entry)) {
@@ -188,42 +237,51 @@ export const getEnrichedColumns = ({
         }
         return false
       },
-      sorter: (a, b) => {
-        const { dataIndex } = el as { dataIndex: string | string[] } & unknown
-        const aEntry = Array.isArray(dataIndex) ? get(a, dataIndex) : a[dataIndex]
-        const bEntry = Array.isArray(dataIndex) ? get(b, dataIndex) : b[dataIndex]
-        if (typeof aEntry === 'object' && !Array.isArray(aEntry) && aEntry !== null) {
-          if (typeof bEntry === 'object' && !Array.isArray(bEntry) && bEntry !== null) {
-            return Object.keys(aEntry).length - Object.keys(bEntry).length
-          }
-          return Object.keys(aEntry).length ? -1 : 1
-        }
-        if (Array.isArray(aEntry)) {
-          if (Array.isArray(bEntry)) {
-            return aEntry.length - bEntry.length
-          }
-          return aEntry.length ? -1 : 1
-        }
-        if (typeof aEntry === 'boolean') {
-          if (aEntry === bEntry) {
+      sorter: isSortersAndFitlersDisabled
+        ? false
+        : (a, b) => {
+            // for factory search
+            if (useFactorySearch) {
+              const aText = getCellTextFromDOM(a)
+              const bText = getCellTextFromDOM(b)
+              return aText.localeCompare(bText)
+            }
+
+            const { dataIndex } = el as { dataIndex: string | string[] } & unknown
+            const aEntry = Array.isArray(dataIndex) ? get(a, dataIndex) : a[dataIndex]
+            const bEntry = Array.isArray(dataIndex) ? get(b, dataIndex) : b[dataIndex]
+            if (typeof aEntry === 'object' && !Array.isArray(aEntry) && aEntry !== null) {
+              if (typeof bEntry === 'object' && !Array.isArray(bEntry) && bEntry !== null) {
+                return Object.keys(aEntry).length - Object.keys(bEntry).length
+              }
+              return Object.keys(aEntry).length ? -1 : 1
+            }
+            if (Array.isArray(aEntry)) {
+              if (Array.isArray(bEntry)) {
+                return aEntry.length - bEntry.length
+              }
+              return aEntry.length ? -1 : 1
+            }
+            if (typeof aEntry === 'boolean') {
+              if (aEntry === bEntry) {
+                return 0
+              }
+              return aEntry ? -1 : 1
+            }
+            if (typeof aEntry === 'number') {
+              if (typeof bEntry === 'number') {
+                return aEntry - bEntry
+              }
+              return aEntry ? -1 : 1
+            }
+            if (typeof aEntry === 'string') {
+              if (typeof bEntry === 'string') {
+                return aEntry.localeCompare(bEntry)
+              }
+              return aEntry ? -1 : 1
+            }
             return 0
-          }
-          return aEntry ? -1 : 1
-        }
-        if (typeof aEntry === 'number') {
-          if (typeof bEntry === 'number') {
-            return aEntry - bEntry
-          }
-          return aEntry ? -1 : 1
-        }
-        if (typeof aEntry === 'string') {
-          if (typeof bEntry === 'string') {
-            return aEntry.localeCompare(bEntry)
-          }
-          return aEntry ? -1 : 1
-        }
-        return 0
-      },
+          },
     }
   })
 }

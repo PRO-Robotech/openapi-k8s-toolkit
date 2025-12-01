@@ -4,6 +4,7 @@ import {
   TAdditionalPrinterColumnsTrimLengths,
   TAdditionalPrinterColumnsColWidths,
   TAdditionalPrinterColumnsKeyTypeProps,
+  TAdditionalPrinterColumnsDisableSortersAndFilters,
 } from 'localTypes/richTable'
 
 export type TPrepareTableReq = {
@@ -26,6 +27,7 @@ export type TPrepareTableRes = {
   additionalPrinterColumnsTrimLengths?: TAdditionalPrinterColumnsTrimLengths
   additionalPrinterColumnsColWidths?: TAdditionalPrinterColumnsColWidths
   additionalPrinterColumnsKeyTypeProps?: TAdditionalPrinterColumnsKeyTypeProps
+  additionalPrinterColumnsDisableSortersAndFilters?: TAdditionalPrinterColumnsDisableSortersAndFilters
 
   pathToNavigate?: string
   recordKeysForNavigation?: string | string[] // jsonpath or keys as string[]
