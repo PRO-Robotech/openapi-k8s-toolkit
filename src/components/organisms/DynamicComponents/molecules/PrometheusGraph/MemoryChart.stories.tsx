@@ -25,7 +25,7 @@ type TProviderArgs = {
 type TArgs = TInner & TProviderArgs
 
 const meta: Meta<TArgs> = {
-  title: 'Factory/Prometheus/MemoryChart',
+  title: 'Factory/Prometheus/MemoryChart (PoW; not exported)',
   component: MemoryChart as any,
   argTypes: {
     // MemoryChart props
