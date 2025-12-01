@@ -69,6 +69,10 @@ export const EnrichedTable: FC<TEnrichedTableProps> = ({
     return null
   }
 
+  // for factory search
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rowKey = (record: any) => record.key
+
   const enrichedColumns = getEnrichedColumns({
     columns,
     additionalPrinterColumnsUndefinedValues,
@@ -76,6 +80,7 @@ export const EnrichedTable: FC<TEnrichedTableProps> = ({
     additionalPrinterColumnsColWidths,
     additionalPrinterColumnsKeyTypeProps,
     theme,
+    getRowKey: rowKey, // for factory search
   })
 
   if (!enrichedColumns) {
@@ -107,6 +112,8 @@ export const EnrichedTable: FC<TEnrichedTableProps> = ({
     >
       <TableComponents.HideableControls>
         <Table<AnyObject>
+          // for factory search
+          rowKey={rowKey}
           dataSource={dataSource}
           columns={columnsWithControls}
           pagination={

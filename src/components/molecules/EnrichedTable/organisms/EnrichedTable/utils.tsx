@@ -1,14 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ReactNode } from 'react'
 import { NavigateFunction } from 'react-router-dom'
 import { TableProps, Dropdown } from 'antd'
-import {
-  CheckOutlined,
-  CloseOutlined,
-  SearchOutlined,
-  // EditOutlined,
-  // DeleteOutlined,
-  MoreOutlined,
-} from '@ant-design/icons'
+import { CheckOutlined, CloseOutlined, SearchOutlined, MoreOutlined } from '@ant-design/icons'
 import { get } from 'lodash'
 import {
   TAdditionalPrinterColumnsColWidths,
@@ -122,6 +116,7 @@ export const getEnrichedColumns = ({
   additionalPrinterColumnsColWidths,
   additionalPrinterColumnsKeyTypeProps,
   theme,
+  getRowKey, // for factory search
 }: {
   columns: TableProps['columns']
   additionalPrinterColumnsUndefinedValues?: TAdditionalPrinterColumnsUndefinedValues
@@ -129,12 +124,15 @@ export const getEnrichedColumns = ({
   additionalPrinterColumnsColWidths?: TAdditionalPrinterColumnsColWidths
   additionalPrinterColumnsKeyTypeProps?: TAdditionalPrinterColumnsKeyTypeProps
   theme: 'dark' | 'light'
+  getRowKey: (record: any) => React.Key // for factory search
 }): TableProps['columns'] | undefined => {
   if (!columns) {
     return undefined
   }
 
-  return columns.map(el => {
+  // for factory search
+  // return columns.map(el => {
+  return columns.map((el, colIndex) => {
     const possibleUndefinedValue = additionalPrinterColumnsUndefinedValues?.find(({ key }) => key === el.key)?.value
     const possibleTrimLength = additionalPrinterColumnsTrimLengths?.find(({ key }) => key === el.key)?.value
     const possibleColWidth = additionalPrinterColumnsColWidths?.find(({ key }) => key === el.key)?.value
@@ -142,6 +140,25 @@ export const getEnrichedColumns = ({
       additionalPrinterColumnsKeyTypeProps && el.key
         ? additionalPrinterColumnsKeyTypeProps[el.key.toString()]
         : undefined
+
+    // for factory search
+    const useFactorySearch = possibleCustomTypeWithProps?.type === 'factory'
+
+    // for factory search
+    const colKey: React.Key =
+      (el.key != null && String(el.key)) ||
+      (Array.isArray((el as any).dataIndex)
+        ? (el as any).dataIndex.join('.')
+        : String((el as any).dataIndex ?? colIndex))
+
+    // for factory search
+    const getCellTextFromDOM = (record: any): string => {
+      const rowKey = getRowKey(record)
+      const selector = `td[data-rowkey="${String(rowKey)}"][data-colkey="${colKey}"]`
+      const cell = document.querySelector(selector) as HTMLElement | null
+      if (!cell) return ''
+      return (cell.innerText || cell.textContent || '').trim().toLowerCase()
+    }
 
     return {
       ...el,
@@ -155,6 +172,15 @@ export const getEnrichedColumns = ({
           theme,
         }),
       width: possibleColWidth,
+      // for factory search
+      onCell: (record: any): React.TdHTMLAttributes<HTMLTableCellElement> => {
+        const rowKey = getRowKey(record)
+
+        return {
+          'data-rowkey': String(rowKey),
+          'data-colkey': String(colKey),
+        } as React.TdHTMLAttributes<HTMLTableCellElement>
+      },
       filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
         <FilterDropdown
           setSelectedKeys={setSelectedKeys}
@@ -166,6 +192,12 @@ export const getEnrichedColumns = ({
       ),
       filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />,
       onFilter: (value, record) => {
+        // for factory search
+        if (useFactorySearch) {
+          const text = getCellTextFromDOM(record)
+          return text.includes(String(value).toLowerCase())
+        }
+
         const { dataIndex } = el as { dataIndex: string | string[] } & unknown
         const entry = Array.isArray(dataIndex) ? get(record, dataIndex) : record[dataIndex]
         if (typeof entry === 'object' && !Array.isArray(entry)) {
@@ -189,6 +221,13 @@ export const getEnrichedColumns = ({
         return false
       },
       sorter: (a, b) => {
+        // for factory search
+        if (useFactorySearch) {
+          const aText = getCellTextFromDOM(a)
+          const bText = getCellTextFromDOM(b)
+          return aText.localeCompare(bText)
+        }
+
         const { dataIndex } = el as { dataIndex: string | string[] } & unknown
         const aEntry = Array.isArray(dataIndex) ? get(a, dataIndex) : a[dataIndex]
         const bEntry = Array.isArray(dataIndex) ? get(b, dataIndex) : b[dataIndex]
