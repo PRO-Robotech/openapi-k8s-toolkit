@@ -1,5 +1,5 @@
 // utilts.test.ts (or whatever name you use)
-import { convertCores, formatCoresAuto, toCores, convertCompute, parseCoresWithUnit } from './utils'
+import { convertCores, formatCoresAuto, toCores, convertCompute, parseCoresWithUnit } from './converterCores'
 
 describe('core-units helpers (core/mcore/ucore/ncore)', () => {
   let consoleErrorSpy: jest.SpyInstance
