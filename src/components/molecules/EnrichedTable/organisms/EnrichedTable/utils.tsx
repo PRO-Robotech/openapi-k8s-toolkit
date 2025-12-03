@@ -9,7 +9,7 @@ import {
   TAdditionalPrinterColumnsTrimLengths,
   TAdditionalPrinterColumnsUndefinedValues,
   TAdditionalPrinterColumnsKeyTypeProps,
-  TAdditionalPrinterColumnsDisableSortersAndFilters,
+  TAdditionalPrinterColumnsCustomSortersAndFilters,
 } from 'localTypes/richTable'
 import { TJSON } from 'localTypes/JSON'
 import { isFlatObject } from 'utils/isFlatObject'
@@ -116,7 +116,7 @@ export const getEnrichedColumns = ({
   additionalPrinterColumnsTrimLengths,
   additionalPrinterColumnsColWidths,
   additionalPrinterColumnsKeyTypeProps,
-  additionalPrinterColumnsDisableSortersAndFilters,
+  additionalPrinterColumnsCustomSortersAndFilters,
   theme,
   getRowKey, // for factory search
 }: {
@@ -125,7 +125,7 @@ export const getEnrichedColumns = ({
   additionalPrinterColumnsTrimLengths?: TAdditionalPrinterColumnsTrimLengths
   additionalPrinterColumnsColWidths?: TAdditionalPrinterColumnsColWidths
   additionalPrinterColumnsKeyTypeProps?: TAdditionalPrinterColumnsKeyTypeProps
-  additionalPrinterColumnsDisableSortersAndFilters?: TAdditionalPrinterColumnsDisableSortersAndFilters
+  additionalPrinterColumnsCustomSortersAndFilters?: TAdditionalPrinterColumnsCustomSortersAndFilters
   theme: 'dark' | 'light'
   getRowKey: (record: any) => React.Key // for factory search
 }): TableProps['columns'] | undefined => {
@@ -136,7 +136,9 @@ export const getEnrichedColumns = ({
   // for factory search
   // return columns.map(el => {
   return columns.map((el, colIndex) => {
-    const isSortersAndFitlersDisabled = additionalPrinterColumnsDisableSortersAndFilters?.some(key => key === el.key)
+    const possibleAdditionalPrinterColumnsCustomSortersAndFiltersType =
+      additionalPrinterColumnsCustomSortersAndFilters?.find(({ key }) => key === el.key)?.type
+    const isSortersAndFitlersDisabled = possibleAdditionalPrinterColumnsCustomSortersAndFiltersType === 'disabled'
     const possibleUndefinedValue = additionalPrinterColumnsUndefinedValues?.find(({ key }) => key === el.key)?.value
     const possibleTrimLength = additionalPrinterColumnsTrimLengths?.find(({ key }) => key === el.key)?.value
     const possibleColWidth = additionalPrinterColumnsColWidths?.find(({ key }) => key === el.key)?.value
