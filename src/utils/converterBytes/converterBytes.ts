@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 // bytes -> requested unit (SI or IEC) with friendly aliases.
-import { TCanonicalUnit, TUnitInput, TConvertOptions } from './types'
+import { TCanonicalUnit, TUnitInput, TConvertOptions } from 'localTypes/factories/converterBytes'
 
 const UNIT_FACTORS: Readonly<Record<TCanonicalUnit, number>> = {
   B: 1,

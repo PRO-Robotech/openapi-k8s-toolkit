@@ -1,7 +1,7 @@
 /* eslint-disable max-lines-per-function */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { convertBytes, formatBytesAuto, toBytes, convertStorage, parseValueWithUnit } from './utils'
-import { TUnitInput } from './types'
+import { TUnitInput } from 'localTypes/factories/converterBytes'
+import { convertBytes, formatBytesAuto, toBytes, convertStorage, parseValueWithUnit } from './converterBytes'
 
 describe('byte utils', () => {
   let consoleErrorSpy: jest.SpyInstance

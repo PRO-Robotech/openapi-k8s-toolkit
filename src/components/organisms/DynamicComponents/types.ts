@@ -4,8 +4,8 @@ import type { TextProps } from 'antd/es/typography/Text'
 import type { LinkProps } from 'antd/es/typography/Link'
 import type { TContentCardProps, TSpacerProps } from 'components/atoms'
 import type { TManageableSidebarProviderProps, TEnrichedTableProviderProps } from 'components/molecules'
-import type { TUnitInput } from './molecules/ConverterBytes/types'
-import type { TCoreUnitInput } from './molecules/ConverterCores/types'
+import type { TUnitInput } from 'localTypes/factories/converterBytes'
+import type { TCoreUnitInput } from 'localTypes/factories/converterCores'
 
 export type TDynamicComponentsAppTypeMap = {
   DefaultDiv: { id: number | string } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>

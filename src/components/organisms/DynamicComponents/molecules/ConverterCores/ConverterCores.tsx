@@ -2,12 +2,12 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable react/no-array-index-key */
 import React, { FC } from 'react'
+import { TCoreUnitInput } from 'localTypes/factories/converterCores'
+import { convertCores, formatCoresAuto, toCores, parseCoresWithUnit } from 'utils/converterCores'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
-import { TCoreUnitInput } from './types'
 import { parseAll } from '../utils'
-import { convertCores, formatCoresAuto, toCores, parseCoresWithUnit } from './utils'
 
 /**
  * Idea (extended for arrays):

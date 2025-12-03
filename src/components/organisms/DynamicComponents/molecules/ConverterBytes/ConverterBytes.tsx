@@ -1,12 +1,12 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable react/no-array-index-key */
 import React, { FC } from 'react'
+import { TUnitInput } from 'localTypes/factories/converterBytes'
+import { convertBytes, formatBytesAuto, toBytes, parseValueWithUnit } from 'utils/converterBytes'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
-import { TUnitInput } from './types'
 import { parseAll } from '../utils'
-import { convertBytes, formatBytesAuto, toBytes, parseValueWithUnit } from './utils'
 
 /**
  * Idea (extended for arrays):

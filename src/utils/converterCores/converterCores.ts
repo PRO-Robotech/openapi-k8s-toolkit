@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import type { TCoreCanonicalUnit, TCoreUnitInput, TCoreConvertOptions } from './types'
+import type { TCoreCanonicalUnit, TCoreUnitInput, TCoreConvertOptions } from 'localTypes/factories/converterCores'
 
 /**
  * Canonical unit factors relative to 1 "core".

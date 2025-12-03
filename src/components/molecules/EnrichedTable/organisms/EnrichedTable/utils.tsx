@@ -9,10 +9,12 @@ import {
   TAdditionalPrinterColumnsTrimLengths,
   TAdditionalPrinterColumnsUndefinedValues,
   TAdditionalPrinterColumnsKeyTypeProps,
-  TAdditionalPrinterColumnsDisableSortersAndFilters,
+  TAdditionalPrinterColumnsCustomSortersAndFilters,
 } from 'localTypes/richTable'
 import { TJSON } from 'localTypes/JSON'
 import { isFlatObject } from 'utils/isFlatObject'
+import { parseValueWithUnit, toBytes } from 'utils/converterBytes'
+import { parseCoresWithUnit, toCores } from 'utils/converterCores'
 import { TableFactory } from '../../molecules'
 import { ShortenedTextWithTooltip, FilterDropdown, TrimmedTags, TextAlignContainer, TinyButton } from './atoms'
 import { TInternalDataForControls } from './types'
@@ -116,7 +118,7 @@ export const getEnrichedColumns = ({
   additionalPrinterColumnsTrimLengths,
   additionalPrinterColumnsColWidths,
   additionalPrinterColumnsKeyTypeProps,
-  additionalPrinterColumnsDisableSortersAndFilters,
+  additionalPrinterColumnsCustomSortersAndFilters,
   theme,
   getRowKey, // for factory search
 }: {
@@ -125,7 +127,7 @@ export const getEnrichedColumns = ({
   additionalPrinterColumnsTrimLengths?: TAdditionalPrinterColumnsTrimLengths
   additionalPrinterColumnsColWidths?: TAdditionalPrinterColumnsColWidths
   additionalPrinterColumnsKeyTypeProps?: TAdditionalPrinterColumnsKeyTypeProps
-  additionalPrinterColumnsDisableSortersAndFilters?: TAdditionalPrinterColumnsDisableSortersAndFilters
+  additionalPrinterColumnsCustomSortersAndFilters?: TAdditionalPrinterColumnsCustomSortersAndFilters
   theme: 'dark' | 'light'
   getRowKey: (record: any) => React.Key // for factory search
 }): TableProps['columns'] | undefined => {
@@ -136,7 +138,11 @@ export const getEnrichedColumns = ({
   // for factory search
   // return columns.map(el => {
   return columns.map((el, colIndex) => {
-    const isSortersAndFitlersDisabled = additionalPrinterColumnsDisableSortersAndFilters?.some(key => key === el.key)
+    const possibleAdditionalPrinterColumnsCustomSortersAndFiltersType =
+      additionalPrinterColumnsCustomSortersAndFilters?.find(({ key }) => key === el.key)?.type
+    const isSortersAndFitlersDisabled = possibleAdditionalPrinterColumnsCustomSortersAndFiltersType === 'disabled'
+    const isSortersAndFitlersCPU = possibleAdditionalPrinterColumnsCustomSortersAndFiltersType === 'cpu'
+    const isSortersAndFitlersMemory = possibleAdditionalPrinterColumnsCustomSortersAndFiltersType === 'memory'
     const possibleUndefinedValue = additionalPrinterColumnsUndefinedValues?.find(({ key }) => key === el.key)?.value
     const possibleTrimLength = additionalPrinterColumnsTrimLengths?.find(({ key }) => key === el.key)?.value
     const possibleColWidth = additionalPrinterColumnsColWidths?.find(({ key }) => key === el.key)?.value
@@ -164,6 +170,61 @@ export const getEnrichedColumns = ({
       return (cell.innerText || cell.textContent || '').trim().toLowerCase()
     }
 
+    // helper to get data entry by dataIndex
+    const getEntry = (record: any) => {
+      const { dataIndex } = el as { dataIndex: string | string[] } & unknown
+      return Array.isArray(dataIndex) ? get(record, dataIndex) : record[dataIndex]
+    }
+
+    // shared helper: prefer DOM text if using factory search,
+    // otherwise fall back to the raw data entry
+    const getTextForNumericUnitSort = (record: any): string | null => {
+      if (useFactorySearch) {
+        const textFromDom = getCellTextFromDOM(record)
+        if (textFromDom) return textFromDom
+      }
+      const raw = getEntry(record)
+      if (raw == null) return null
+      return String(raw)
+    }
+
+    const getMemoryInBytes = (record: any): number => {
+      const text = getTextForNumericUnitSort(record)
+      if (!text) return NaN
+
+      const parsed = parseValueWithUnit(text)
+      if (!parsed) return NaN
+
+      if (parsed.unit) {
+        return toBytes(parsed.value, parsed.unit)
+      }
+      // no unit -> treat as already bytes
+      return parsed.value
+    }
+
+    const getCpuInCores = (record: any): number => {
+      const text = getTextForNumericUnitSort(record)
+      if (!text) return NaN
+
+      const parsed = parseCoresWithUnit(text)
+      if (!parsed) return NaN
+
+      if (parsed.unit) {
+        return toCores(parsed.value, parsed.unit)
+      }
+      // no unit -> treat as plain cores
+      return parsed.value
+    }
+
+    const safeNumericCompare = (a: number, b: number): number => {
+      const aNaN = Number.isNaN(a)
+      const bNaN = Number.isNaN(b)
+      if (aNaN && bNaN) return 0
+      if (aNaN) return 1 // push invalid values to the bottom
+      if (bNaN) return -1
+      return a - b
+    }
+
     return {
       ...el,
       render: (value: TJSON, record: unknown) =>
@@ -186,7 +247,7 @@ export const getEnrichedColumns = ({
         } as React.TdHTMLAttributes<HTMLTableCellElement>
       },
       filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => {
-        if (isSortersAndFitlersDisabled) {
+        if (isSortersAndFitlersDisabled || isSortersAndFitlersMemory || isSortersAndFitlersCPU) {
           return null
         }
         return (
@@ -200,13 +261,13 @@ export const getEnrichedColumns = ({
         )
       },
       filterIcon: (filtered: boolean) => {
-        if (isSortersAndFitlersDisabled) {
+        if (isSortersAndFitlersDisabled || isSortersAndFitlersMemory || isSortersAndFitlersCPU) {
           return null
         }
         return <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />
       },
       onFilter: (value, record) => {
-        if (isSortersAndFitlersDisabled) {
+        if (isSortersAndFitlersDisabled || isSortersAndFitlersMemory || isSortersAndFitlersCPU) {
           return false
         }
         // for factory search
@@ -245,6 +306,18 @@ export const getEnrichedColumns = ({
               const aText = getCellTextFromDOM(a)
               const bText = getCellTextFromDOM(b)
               return aText.localeCompare(bText)
+            }
+
+            if (isSortersAndFitlersMemory) {
+              const aBytes = getMemoryInBytes(a)
+              const bBytes = getMemoryInBytes(b)
+              return safeNumericCompare(aBytes, bBytes)
+            }
+
+            if (isSortersAndFitlersCPU) {
+              const aCores = getCpuInCores(a)
+              const bCores = getCpuInCores(b)
+              return safeNumericCompare(aCores, bCores)
             }
 
             const { dataIndex } = el as { dataIndex: string | string[] } & unknown
