@@ -140,9 +140,9 @@ export const getEnrichedColumns = ({
   return columns.map((el, colIndex) => {
     const possibleAdditionalPrinterColumnsCustomSortersAndFiltersType =
       additionalPrinterColumnsCustomSortersAndFilters?.find(({ key }) => key === el.key)?.type
-    const isSortersAndFitlersDisabled = possibleAdditionalPrinterColumnsCustomSortersAndFiltersType === 'disabled'
-    const isSortersAndFitlersCPU = possibleAdditionalPrinterColumnsCustomSortersAndFiltersType === 'cpu'
-    const isSortersAndFitlersMemory = possibleAdditionalPrinterColumnsCustomSortersAndFiltersType === 'memory'
+    const isSortersAndFiltersDisabled = possibleAdditionalPrinterColumnsCustomSortersAndFiltersType === 'disabled'
+    const isSortersAndFiltersCPU = possibleAdditionalPrinterColumnsCustomSortersAndFiltersType === 'cpu'
+    const isSortersAndFiltersMemory = possibleAdditionalPrinterColumnsCustomSortersAndFiltersType === 'memory'
     const possibleUndefinedValue = additionalPrinterColumnsUndefinedValues?.find(({ key }) => key === el.key)?.value
     const possibleTrimLength = additionalPrinterColumnsTrimLengths?.find(({ key }) => key === el.key)?.value
     const possibleColWidth = additionalPrinterColumnsColWidths?.find(({ key }) => key === el.key)?.value
@@ -170,49 +170,37 @@ export const getEnrichedColumns = ({
       return (cell.innerText || cell.textContent || '').trim().toLowerCase()
     }
 
-    // helper to get data entry by dataIndex
-    const getEntry = (record: any) => {
-      const { dataIndex } = el as { dataIndex: string | string[] } & unknown
-      return Array.isArray(dataIndex) ? get(record, dataIndex) : record[dataIndex]
-    }
-
-    // shared helper: prefer DOM text if using factory search,
-    // otherwise fall back to the raw data entry
-    const getTextForNumericUnitSort = (record: any): string | null => {
-      if (useFactorySearch) {
-        const textFromDom = getCellTextFromDOM(record)
-        if (textFromDom) return textFromDom
-      }
-      const raw = getEntry(record)
-      if (raw == null) return null
-      return String(raw)
-    }
-
+    // ---- MEMORY: parse DOM text like "782.02 MB" → bytes; no DOM → 0 ----
     const getMemoryInBytes = (record: any): number => {
-      const text = getTextForNumericUnitSort(record)
-      if (!text) return NaN
+      const text = getCellTextFromDOM(record)
+      if (!text) return 0
 
       const parsed = parseValueWithUnit(text)
-      if (!parsed) return NaN
+      if (!parsed) return 0
 
       if (parsed.unit) {
-        return toBytes(parsed.value, parsed.unit)
+        const bytes = toBytes(parsed.value, parsed.unit)
+        return bytes >= 0 ? bytes : 0
       }
-      // no unit -> treat as already bytes
+
+      // no unit → treat as raw bytes
       return parsed.value
     }
 
+    // ---- CPU: parse DOM text like "3.69 mcore" → cores; no DOM → 0 ----
     const getCpuInCores = (record: any): number => {
-      const text = getTextForNumericUnitSort(record)
-      if (!text) return NaN
+      const text = getCellTextFromDOM(record)
+      if (!text) return 0
 
       const parsed = parseCoresWithUnit(text)
-      if (!parsed) return NaN
+      if (!parsed) return 0
 
       if (parsed.unit) {
-        return toCores(parsed.value, parsed.unit)
+        const cores = toCores(parsed.value, parsed.unit)
+        return cores >= 0 ? cores : 0
       }
-      // no unit -> treat as plain cores
+
+      // no unit → treat as plain cores
       return parsed.value
     }
 
@@ -247,7 +235,7 @@ export const getEnrichedColumns = ({
         } as React.TdHTMLAttributes<HTMLTableCellElement>
       },
       filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => {
-        if (isSortersAndFitlersDisabled || isSortersAndFitlersMemory || isSortersAndFitlersCPU) {
+        if (isSortersAndFiltersDisabled || isSortersAndFiltersMemory || isSortersAndFiltersCPU) {
           return null
         }
         return (
@@ -261,13 +249,13 @@ export const getEnrichedColumns = ({
         )
       },
       filterIcon: (filtered: boolean) => {
-        if (isSortersAndFitlersDisabled || isSortersAndFitlersMemory || isSortersAndFitlersCPU) {
+        if (isSortersAndFiltersDisabled || isSortersAndFiltersMemory || isSortersAndFiltersCPU) {
           return null
         }
         return <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />
       },
       onFilter: (value, record) => {
-        if (isSortersAndFitlersDisabled || isSortersAndFitlersMemory || isSortersAndFitlersCPU) {
+        if (isSortersAndFiltersDisabled || isSortersAndFiltersMemory || isSortersAndFiltersCPU) {
           return false
         }
         // for factory search
@@ -298,26 +286,26 @@ export const getEnrichedColumns = ({
         }
         return false
       },
-      sorter: isSortersAndFitlersDisabled
+      sorter: isSortersAndFiltersDisabled
         ? false
         : (a, b) => {
-            // for factory search
-            if (useFactorySearch) {
-              const aText = getCellTextFromDOM(a)
-              const bText = getCellTextFromDOM(b)
-              return aText.localeCompare(bText)
-            }
-
-            if (isSortersAndFitlersMemory) {
+            if (isSortersAndFiltersMemory) {
               const aBytes = getMemoryInBytes(a)
               const bBytes = getMemoryInBytes(b)
               return safeNumericCompare(aBytes, bBytes)
             }
 
-            if (isSortersAndFitlersCPU) {
+            if (isSortersAndFiltersCPU) {
               const aCores = getCpuInCores(a)
               const bCores = getCpuInCores(b)
               return safeNumericCompare(aCores, bCores)
+            }
+
+            // for factory search
+            if (useFactorySearch) {
+              const aText = getCellTextFromDOM(a)
+              const bText = getCellTextFromDOM(b)
+              return aText.localeCompare(bText)
             }
 
             const { dataIndex } = el as { dataIndex: string | string[] } & unknown
