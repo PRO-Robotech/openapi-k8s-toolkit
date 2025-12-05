@@ -89,6 +89,7 @@ export type TUseListWatchReturn = {
   setUrl: (next: string) => void
   /** Update the list/watch query (will reconnect if enabled) */
   setQuery: (q: TUseListWatchQuery) => void
+  debugTick?: number
 }
 
 // ------------------ RV helpers ------------------
@@ -149,6 +150,8 @@ export const useListWatch = ({
     query.fieldSelector ?? ''
   }|${query.labelSelector ?? ''}`
   const resIdRef = useRef(resId)
+
+  const [debugTick, bumpTick] = useReducer((x: number) => x + 1, 0)
 
   // ------------------ state ------------------
   const [state, dispatch] = useReducer(reducer, { order: [], byKey: {} })
@@ -481,6 +484,7 @@ export const useListWatch = ({
       // Initial snapshot (with optional paging token) establishes base state
       if (frame.type === 'INITIAL') {
         dispatch({ type: 'RESET', items: frame.items })
+        bumpTick()
         setContToken(frame.continue)
         setHasMore(Boolean(frame.continue))
         setErrorSafe(undefined)
@@ -502,6 +506,7 @@ export const useListWatch = ({
       // Next page of snapshot data (still before live watch)
       if (frame.type === 'PAGE') {
         dispatch({ type: 'APPEND_PAGE', items: frame.items })
+        bumpTick()
         setContToken(frame.continue)
         setHasMore(Boolean(frame.continue))
         fetchingRef.current = false
@@ -532,9 +537,11 @@ export const useListWatch = ({
       // Apply live updates unless paused, with optional delete suppression
       if (!pausedRef.current) {
         if (frame.type === 'ADDED' || frame.type === 'MODIFIED') {
+          bumpTick()
           dispatch({ type: 'UPSERT', item: frame.item })
         }
         if (!ignoreRemoveRef.current && frame.type === 'DELETED') {
+          bumpTick()
           dispatch({ type: 'REMOVE', key: eventKey(frame.item) })
         }
       }
@@ -708,5 +715,6 @@ export const useListWatch = ({
     reconnect,
     setUrl,
     setQuery,
+    debugTick,
   }
 }
