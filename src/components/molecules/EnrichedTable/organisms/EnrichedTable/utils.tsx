@@ -143,6 +143,7 @@ export const getEnrichedColumns = ({
     const isSortersAndFiltersDisabled = possibleAdditionalPrinterColumnsCustomSortersAndFiltersType === 'disabled'
     const isSortersAndFiltersCPU = possibleAdditionalPrinterColumnsCustomSortersAndFiltersType === 'cpu'
     const isSortersAndFiltersMemory = possibleAdditionalPrinterColumnsCustomSortersAndFiltersType === 'memory'
+    console.log(`key: ${el.key}, isSortersAndFiltersMemory: ${isSortersAndFiltersMemory}`)
     const possibleUndefinedValue = additionalPrinterColumnsUndefinedValues?.find(({ key }) => key === el.key)?.value
     const possibleTrimLength = additionalPrinterColumnsTrimLengths?.find(({ key }) => key === el.key)?.value
     const possibleColWidth = additionalPrinterColumnsColWidths?.find(({ key }) => key === el.key)?.value
@@ -173,6 +174,7 @@ export const getEnrichedColumns = ({
     // ---- MEMORY: parse DOM text like "782.02 MB" → bytes; no DOM → 0 ----
     const getMemoryInBytes = (record: any): number => {
       const text = getCellTextFromDOM(record)
+      console.log(`text from cell ${text}`)
       if (!text) return 0
 
       const parsed = parseValueWithUnit(text)
@@ -292,6 +294,7 @@ export const getEnrichedColumns = ({
             if (isSortersAndFiltersMemory) {
               const aBytes = getMemoryInBytes(a)
               const bBytes = getMemoryInBytes(b)
+              console.log(`isSortersAndFiltersMemory ${aBytes}/${bBytes}`)
               return safeNumericCompare(aBytes, bBytes)
             }
 
