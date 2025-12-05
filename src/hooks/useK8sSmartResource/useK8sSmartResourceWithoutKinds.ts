@@ -66,6 +66,7 @@ type SmartResult<T> = {
   isError: boolean
   error: AxiosError | Error | string | undefined
   _meta?: { used: 'list' | 'watch' | 'disabled' | 'verbs-loading' | 'verbs-error' }
+  debugTick?: number
 }
 
 export const useK8sSmartResourceWithoutKinds = <T>({
@@ -138,7 +139,7 @@ export const useK8sSmartResourceWithoutKinds = <T>({
     cluster && cluster.length > 0 && isEnabled && canList && canWatch && !verbsLoading && !verbsIsError,
   )
 
-  const { state, status, hasInitial, lastError } = useListWatch({
+  const { state, status, hasInitial, lastError, debugTick } = useListWatch({
     wsUrl: `/api/clusters/${cluster}/openapi-bff-ws/listThenWatch/listWatchWs`,
     paused: false,
     ignoreRemove: false,
@@ -195,5 +196,5 @@ export const useK8sSmartResourceWithoutKinds = <T>({
 
   const data: T | undefined = used === 'watch' ? watchData : used === 'list' ? restData : undefined
 
-  return { data, isLoading, isError, error, _meta: { used } }
+  return { data, isLoading, isError, error, _meta: { used }, debugTick }
 }

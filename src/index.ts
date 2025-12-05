@@ -41,6 +41,7 @@ export type {
 } from './hooks/useListThenWatch'
 export { useK8sVerbs } from './hooks/useK8sVerbs'
 export { useK8sSmartResource, useManyK8sSmartResource, useSmartResourceParams } from './hooks/useK8sSmartResource'
+export { useResourceScope } from './hooks/useResourceScope'
 
 /* types */
 export type { TRequestError } from './localTypes/api'

@@ -43,7 +43,8 @@ const normalizeCoreUnit = (u: TCoreUnitInput): TCoreCanonicalUnit => {
   const key = String(u).trim().toLowerCase()
   const canon = CORE_ALIASES[key]
   if (!canon) {
-    console.error(`Unknown core unit: "${u}"`)
+    // console spams, to unstable data
+    // console.error(`Unknown core unit: "${u}"`)
     return 'core'
   }
   return canon

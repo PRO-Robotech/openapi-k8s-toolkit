@@ -1,0 +1,1 @@
+export { useResourceScope } from './useResourceScope'
