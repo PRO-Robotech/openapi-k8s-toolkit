@@ -255,6 +255,9 @@ describe('byte utils', () => {
   // ---------------------------------------------------------------------------
   // parseValueWithUnit
   // ---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // parseValueWithUnit
+  // ---------------------------------------------------------------------------
   describe('parseValueWithUnit', () => {
     it('parses plain number without unit', () => {
       const res = parseValueWithUnit('1000')
@@ -270,11 +273,67 @@ describe('byte utils', () => {
       expect(res!.unit).toBe('Ki')
     })
 
-    it('parses number with inline unit with space (e.g. "12.5 GiB")', () => {
+    it('parses number with inline unit with space (dot decimal)', () => {
       const res = parseValueWithUnit('  12.5 GiB ')
       expect(res).not.toBeNull()
       expect(res!.value).toBeCloseTo(12.5, 6)
       expect(res!.unit).toBe('GiB')
+    })
+
+    it('parses number with inline unit with space (comma decimal)', () => {
+      const res = parseValueWithUnit('  12,5 GiB ')
+      expect(res).not.toBeNull()
+      expect(res!.value).toBeCloseTo(12.5, 6)
+      expect(res!.unit).toBe('GiB')
+    })
+
+    it('parses thousands with en-style grouping "1,234.56 MB"', () => {
+      const res = parseValueWithUnit('1,234.56 MB')
+      expect(res).not.toBeNull()
+      expect(res!.value).toBeCloseTo(1234.56, 6)
+      expect(res!.unit).toBe('MB')
+    })
+
+    it('parses thousands with eu-style grouping "1.234,56 MB"', () => {
+      const res = parseValueWithUnit('1.234,56 MB')
+      expect(res).not.toBeNull()
+      expect(res!.value).toBeCloseTo(1234.56, 6)
+      expect(res!.unit).toBe('MB')
+    })
+
+    it('parses space-grouped numbers "1 234,56 MB"', () => {
+      const res = parseValueWithUnit('1 234,56 MB')
+      expect(res).not.toBeNull()
+      expect(res!.value).toBeCloseTo(1234.56, 6)
+      expect(res!.unit).toBe('MB')
+    })
+
+    it('parses underscore-grouped numbers "1_234,56 MB"', () => {
+      const res = parseValueWithUnit('1_234,56 MB')
+      expect(res).not.toBeNull()
+      expect(res!.value).toBeCloseTo(1234.56, 6)
+      expect(res!.unit).toBe('MB')
+    })
+
+    it('parses apostrophe-grouped numbers "1\'234,56 MB"', () => {
+      const res = parseValueWithUnit("1'234,56 MB")
+      expect(res).not.toBeNull()
+      expect(res!.value).toBeCloseTo(1234.56, 6)
+      expect(res!.unit).toBe('MB')
+    })
+
+    it('treats "1,234" as grouping (not decimal)', () => {
+      const res = parseValueWithUnit('1,234 GB')
+      expect(res).not.toBeNull()
+      expect(res!.value).toBe(1234)
+      expect(res!.unit).toBe('GB')
+    })
+
+    it('treats "1.234" as grouping (not decimal)', () => {
+      const res = parseValueWithUnit('1.234 GB')
+      expect(res).not.toBeNull()
+      expect(res!.value).toBe(1234)
+      expect(res!.unit).toBe('GB')
     })
 
     it('supports sign (+/-) in the numeric part', () => {
@@ -298,11 +357,10 @@ describe('byte utils', () => {
     it('returns null when the string does not match the pattern', () => {
       expect(parseValueWithUnit('abc')).toBeNull()
       expect(parseValueWithUnit('123.abc')).toBeNull()
-      expect(parseValueWithUnit('12,34GB')).toBeNull() // comma breaks the regex
+      expect(parseValueWithUnit('++12GB')).toBeNull()
     })
 
     it('returns null when numeric part cannot be converted to a finite number', () => {
-      // This is a bit contrived but tests the Number.isFinite guard
       const res = parseValueWithUnit('NaNGB')
       expect(res).toBeNull()
     })

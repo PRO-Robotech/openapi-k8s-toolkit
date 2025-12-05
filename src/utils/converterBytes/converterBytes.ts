@@ -158,20 +158,101 @@ export const convertStorage: (
 }
 
 /**
+ * Autodetect & normalize a human-formatted number to JS number string.
+ * Handles:
+ *  - "1.2", "1,2"
+ *  - "1,234.56" (comma group, dot decimal)
+ *  - "1.234,56" (dot group, comma decimal)
+ *  - "1 234,56" / "1 234,56" (space group)
+ *  - "1'234.56" (apostrophe group)
+ *  - underscores as groupers: "1_234,56"
+ */
+const normalizeAutoNumber = (raw: string): string => {
+  let s = raw.trim()
+
+  // Remove spaces (incl. NBSP and narrow NBSP) and underscores often used as grouping
+  s = s.replace(/[\s\u00A0\u202F_]/g, '')
+  // Remove apostrophe grouping
+  s = s.replace(/'/g, '')
+
+  const hasDot = s.includes('.')
+  const hasComma = s.includes(',')
+
+  // If both are present, the LAST one is most likely the decimal separator.
+  if (hasDot && hasComma) {
+    const lastDot = s.lastIndexOf('.')
+    const lastComma = s.lastIndexOf(',')
+    const decimal = lastDot > lastComma ? '.' : ','
+    const group = decimal === '.' ? ',' : '.'
+
+    // remove grouping
+    s = s.split(group).join('')
+    // normalize decimal to '.'
+    if (decimal === ',') s = s.replace(/,/g, '.')
+    return s
+  }
+
+  // Only comma present
+  if (hasComma && !hasDot) {
+    const parts = s.split(',')
+    if (parts.length > 2) {
+      // many commas -> assume grouping, remove all
+      return parts.join('')
+    }
+    const [intPart, fracPart = ''] = parts
+
+    // Heuristic:
+    // - If exactly 3 digits after comma and intPart length <= 3? could be "1,234" group.
+    //   More robust: if fracPart.length === 3 and intPart.length >= 1 => treat as grouping.
+    // - Else treat as decimal.
+    if (fracPart.length === 3 && intPart.length >= 1) {
+      return intPart + fracPart
+    }
+    return intPart + (fracPart ? '.' + fracPart : '')
+  }
+
+  // Only dot present
+  if (hasDot && !hasComma) {
+    const parts = s.split('.')
+    if (parts.length > 2) {
+      // many dots -> assume grouping, remove all
+      return parts.join('')
+    }
+    const [intPart, fracPart = ''] = parts
+
+    // Same heuristic as above for "1.234"
+    if (fracPart.length === 3 && intPart.length >= 1) {
+      return intPart + fracPart
+    }
+    return intPart + (fracPart ? '.' + fracPart : '')
+  }
+
+  // No separators
+  return s
+}
+
+/**
  * Try to parse a string like:
  *   "12312312Ki"
  *   "  12.5 GiB"
+ *   "  12,5 GiB"
+ *   "1,234.56 MB"
+ *   "1.234,56 MB"
  *   "1000"        (no unit -> unit undefined)
  */
 export const parseValueWithUnit = (input: string): { value: number; unit?: TUnitInput } | null => {
   const trimmed = input.trim()
   if (!trimmed) return null
 
-  const match = trimmed.match(/^([+-]?\d+(?:\.\d+)?)(?:\s*([a-zA-Z]+))?$/)
+  // More permissive number matcher:
+  // starts with digit/sign, then digits and possible separators/spaces/apostrophes/underscores
+  const match = trimmed.match(/^([+-]?\d(?:[\d\s\u00A0\u202F.,'_]*\d)?)(?:\s*([a-zA-Z]+))?$/)
   if (!match) return null
 
-  const [, numPart, unitPart] = match
-  const value = Number(numPart)
+  const [, numPartRaw, unitPart] = match
+
+  const normalized = normalizeAutoNumber(numPartRaw)
+  const value = Number(normalized)
   if (!Number.isFinite(value)) return null
 
   if (unitPart) {

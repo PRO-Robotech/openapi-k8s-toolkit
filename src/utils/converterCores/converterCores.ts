@@ -158,6 +158,101 @@ export const convertCompute: (
   return convertCores(cores, to, opts)
 }
 
+const isDigits = (s: string) => /^\d+$/.test(s)
+
+/**
+ * Validate multi-group numbers:
+ *  - "1.234.567" => ok
+ *  - "12.345.678" => ok
+ *  - "1.2.3" => NOT ok
+ */
+const isValidThousandGrouping = (parts: string[]) => {
+  if (parts.length < 3) return false
+  if (parts.some(p => p.length === 0)) return false
+  if (!parts.every(isDigits)) return false
+
+  // first group can be 1-3 digits
+  if (parts[0].length < 1 || parts[0].length > 3) return false
+
+  // subsequent groups must be 3 digits
+  for (let i = 1; i < parts.length; i++) {
+    if (parts[i].length !== 3) return false
+  }
+  return true
+}
+
+const normalizeAutoNumber = (raw: string): string | null => {
+  let s = raw.trim()
+
+  // Remove spaces (incl NBSP & narrow NBSP) and underscores
+  s = s.replace(/[\s\u00A0\u202F_]/g, '')
+  // Remove apostrophe grouping
+  s = s.replace(/'/g, '')
+
+  const hasDot = s.includes('.')
+  const hasComma = s.includes(',')
+
+  // Both separators present -> last one is decimal.
+  if (hasDot && hasComma) {
+    const lastDot = s.lastIndexOf('.')
+    const lastComma = s.lastIndexOf(',')
+    const decimal = lastDot > lastComma ? '.' : ','
+    const group = decimal === '.' ? ',' : '.'
+
+    s = s.split(group).join('')
+    if (decimal === ',') s = s.replace(/,/g, '.')
+    return s
+  }
+
+  // Only comma
+  if (hasComma && !hasDot) {
+    const parts = s.split(',')
+
+    if (parts.length > 2) {
+      // treat as grouping only if valid thousand grouping
+      if (!isValidThousandGrouping(parts)) return null
+      return parts.join('')
+    }
+
+    const [intPart, fracPart = ''] = parts
+    if (!isDigits(intPart || '0') || (fracPart && !isDigits(fracPart))) return null
+
+    // "1,234" -> likely grouping
+    if (fracPart.length === 3 && intPart.length >= 1) {
+      return intPart + fracPart
+    }
+
+    // decimal
+    return intPart + (fracPart ? '.' + fracPart : '')
+  }
+
+  // Only dot
+  if (hasDot && !hasComma) {
+    const parts = s.split('.')
+
+    if (parts.length > 2) {
+      // treat as grouping only if valid thousand grouping
+      if (!isValidThousandGrouping(parts)) return null
+      return parts.join('')
+    }
+
+    const [intPart, fracPart = ''] = parts
+    if (!isDigits(intPart || '0') || (fracPart && !isDigits(fracPart))) return null
+
+    // "1.234" -> likely grouping
+    if (fracPart.length === 3 && intPart.length >= 1) {
+      return intPart + fracPart
+    }
+
+    // decimal
+    return intPart + (fracPart ? '.' + fracPart : '')
+  }
+
+  // No separators
+  if (!isDigits(s.replace(/^[+-]/, ''))) return null
+  return s
+}
+
 /**
  * Try to parse a string like:
  *   "500m"
@@ -170,17 +265,19 @@ export const parseCoresWithUnit = (input: string): { value: number; unit?: TCore
   const trimmed = input.trim()
   if (!trimmed) return null
 
-  const match = trimmed.match(/^([+-]?\d+(?:\.\d+)?)(?:\s*([a-zA-Zµ]+))?$/)
+  // permissive numeric part, but MUST end with a digit
+  const match = trimmed.match(/^([+-]?\d(?:[\d\s\u00A0\u202F.,'_]*\d)?)(?:\s*([a-zA-Zµ]+))?$/)
   if (!match) return null
 
-  const [, numPart, unitPart] = match
-  const value = Number(numPart)
+  const [, numPartRaw, unitPart] = match
+
+  const normalized = normalizeAutoNumber(numPartRaw)
+  if (!normalized) return null
+
+  const value = Number(normalized)
   if (!Number.isFinite(value)) return null
 
-  if (unitPart) {
-    return { value, unit: unitPart as TCoreUnitInput }
-  }
-  return { value }
+  return unitPart ? { value, unit: unitPart as TCoreUnitInput } : { value }
 }
 
 // ---- Examples ----

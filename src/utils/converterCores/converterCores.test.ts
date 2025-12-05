@@ -185,8 +185,46 @@ describe('core-units helpers (core/mcore/ucore/ncore)', () => {
       expect(parseCoresWithUnit('10µ')).toEqual({ value: 10, unit: 'µ' }) // micro sign
     })
 
+    it('parses comma decimal with unit', () => {
+      expect(parseCoresWithUnit('0,5 core')).toEqual({ value: 0.5, unit: 'core' })
+      expect(parseCoresWithUnit('1,5 mcore')).toEqual({ value: 1.5, unit: 'mcore' })
+    })
+
+    it('parses thousands with en-style grouping', () => {
+      const res = parseCoresWithUnit('1,234.56 mcore')
+      expect(res).not.toBeNull()
+      expect(res!.value).toBeCloseTo(1234.56, 6)
+      expect(res!.unit).toBe('mcore')
+    })
+
+    it('parses thousands with eu-style grouping', () => {
+      const res = parseCoresWithUnit('1.234,56 mcore')
+      expect(res).not.toBeNull()
+      expect(res!.value).toBeCloseTo(1234.56, 6)
+      expect(res!.unit).toBe('mcore')
+    })
+
+    it('parses space/underscore/apostrophe grouping', () => {
+      const a = parseCoresWithUnit('1 234,56 ucore')
+      const b = parseCoresWithUnit('1_234,56 ucore')
+      const c = parseCoresWithUnit("1'234,56 ucore")
+
+      expect(a).not.toBeNull()
+      expect(b).not.toBeNull()
+      expect(c).not.toBeNull()
+
+      expect(a!.value).toBeCloseTo(1234.56, 6)
+      expect(b!.value).toBeCloseTo(1234.56, 6)
+      expect(c!.value).toBeCloseTo(1234.56, 6)
+
+      expect(a!.unit).toBe('ucore')
+      expect(b!.unit).toBe('ucore')
+      expect(c!.unit).toBe('ucore')
+    })
+
     it('parses value without unit', () => {
       expect(parseCoresWithUnit('1.5')).toEqual({ value: 1.5 })
+      expect(parseCoresWithUnit('1,5')).toEqual({ value: 1.5 })
     })
 
     it('returns null for empty or whitespace-only input', () => {
@@ -196,10 +234,13 @@ describe('core-units helpers (core/mcore/ucore/ncore)', () => {
 
     it('returns null for non-matching patterns', () => {
       expect(parseCoresWithUnit('abc')).toBeNull()
+      expect(parseCoresWithUnit('++12m')).toBeNull()
+      expect(parseCoresWithUnit('12, m')).toBeNull() // trailing separator before unit
       expect(parseCoresWithUnit('1.2.3 core')).toBeNull()
     })
 
     it('returns null for non-finite numeric part', () => {
+      // these won't match the numeric regex at all
       expect(parseCoresWithUnit('NaN core')).toBeNull()
       expect(parseCoresWithUnit('Infinity core')).toBeNull()
     })
