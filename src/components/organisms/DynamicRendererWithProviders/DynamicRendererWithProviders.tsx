@@ -5,11 +5,11 @@ import { CursorDefaultDiv } from 'components/atoms'
 import { prepareUrlsToFetchForDynamicRenderer } from 'utils/prepareUrlsToFetchForDynamicRenderer'
 import { TUseK8sSmartResourceParams } from 'hooks/useK8sSmartResource'
 import { DynamicRenderer, TDynamicRendererProps } from '../DynamicRenderer'
-import { ThemeProvider } from './themeContext'
-import { FactoryConfigContextProvider } from './factoryConfigProvider'
-import { PartsOfUrlProvider } from './partsOfUrlContext'
+import { ThemeProvider } from './providers/themeContext'
+import { FactoryConfigContextProvider } from './providers/factoryConfigProvider'
+import { PartsOfUrlProvider } from './providers/partsOfUrlContext'
 // import { MultiQueryProvider } from './multiQueryProvider'
-import { MultiQueryProvider } from './hybridDataProvider'
+import { MultiQueryProvider } from './providers/hybridDataProvider'
 
 const STRING_KEYS = [
   'cluster',

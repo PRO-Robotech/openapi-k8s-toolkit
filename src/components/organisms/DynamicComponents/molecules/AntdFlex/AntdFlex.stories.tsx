@@ -1,4 +1,3 @@
-// src/components/organisms/DynamicComponents/molecules/AntdFlex/AntdFlex.stories.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Meta, StoryObj } from '@storybook/react'

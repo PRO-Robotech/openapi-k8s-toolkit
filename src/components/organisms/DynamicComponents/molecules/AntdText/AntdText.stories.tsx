@@ -1,5 +1,3 @@
-// src/components/organisms/DynamicComponents/molecules/AntdText/AntdText.stories.tsx
-
 import type { Meta, StoryObj } from '@storybook/react'
 import React from 'react'
 import Editor from '@monaco-editor/react'

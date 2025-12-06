@@ -1,4 +1,3 @@
-// src/components/organisms/DynamicComponents/molecules/Events/Events.stories.tsx
 /* eslint-disable max-lines */
 import type { Meta, StoryObj } from '@storybook/react'
 import React from 'react'

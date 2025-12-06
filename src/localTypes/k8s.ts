@@ -51,6 +51,7 @@ export type TSingleResource = unknown & {
     uid?: string
     namespace?: string
     managedFields?: any
+    resourceVersion?: number
   }
   spec?: TJSON
   status?: any

@@ -1,4 +1,4 @@
-import type { StorybookConfig } from '@storybook/react-vite' // change to your renderer
+import type { StorybookConfig } from '@storybook/react-vite'
 import { mergeConfig } from 'vite'
 import dotenv from 'dotenv'
 import path from 'path'
@@ -22,19 +22,22 @@ const config: StorybookConfig = {
           '@': path.resolve(__dirname, '../src'),
 
           // 👇 Add our Storybook-only mocks for the hooks
-          '../../../DynamicRendererWithProviders/multiQueryProvider': path.resolve(
+          '../../../DynamicRendererWithProviders/providers/multiQueryProvider': path.resolve(
             __dirname,
             './mocks/multiQueryProvider.tsx',
           ),
-          '../../../DynamicRendererWithProviders/partsOfUrlContext': path.resolve(
+          '../../../DynamicRendererWithProviders/providers/partsOfUrlContext': path.resolve(
             __dirname,
             './mocks/partsOfUrlContext.tsx',
           ),
-          '../../../DynamicRendererWithProviders/hybridDataProvider': path.resolve(
+          '../../../DynamicRendererWithProviders/providers/hybridDataProvider': path.resolve(
             __dirname,
             './mocks/hybridDataProvider.tsx',
           ),
-          '../../../DynamicRendererWithProviders/themeContext': path.resolve(__dirname, './mocks/themeContext.tsx'),
+          '../../../DynamicRendererWithProviders/providers/themeContext': path.resolve(
+            __dirname,
+            './mocks/themeContext.tsx',
+          ),
         },
       },
       server: {

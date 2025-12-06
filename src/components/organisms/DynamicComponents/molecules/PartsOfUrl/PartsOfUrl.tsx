@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
 import { prepareTemplate } from 'utils/prepareTemplate'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
+import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 
 export const PartsOfUrl: FC<{ data: TDynamicComponentsAppTypeMap['partsOfUrl'] }> = ({ data }) => {
   const partsOfUrl = usePartsOfUrl()

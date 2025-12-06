@@ -1,5 +1,3 @@
-// src/components/organisms/DynamicComponents/molecules/AntdButton/AntdButton.stories.tsx
-
 import type { Meta, StoryObj } from '@storybook/react'
 import React from 'react'
 

@@ -2,9 +2,9 @@
 import React, { FC } from 'react'
 import { NodeTerminal as Terminal } from 'components'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
-import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
-import { useFactoryConfig } from '../../../DynamicRendererWithProviders/factoryConfigProvider'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
+import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
+import { useFactoryConfig } from '../../../DynamicRendererWithProviders/providers/factoryConfigProvider'
 import { parseAll } from '../utils'
 
 export const NodeTerminal: FC<{ data: TDynamicComponentsAppTypeMap['NodeTerminal']; children?: any }> = ({

@@ -1,5 +1,3 @@
-// src/components/organisms/DynamicComponents/molecules/Taints/Taints.stories.tsx
-// src/components/organisms/DynamicComponents/molecules/Taints/Taints.stories.tsx
 import type { Meta, StoryObj } from '@storybook/react'
 import React from 'react'
 import Editor from '@monaco-editor/react'
@@ -201,7 +199,7 @@ export const Default: Story = {
   args: {
     id: 'example-taints',
     reqIndex: '0',
-    jsonPathToArray: ".spec['tolerations_like_taints']", // adjust to your real path
+    jsonPathToArray: ".spec['tolerations_like_taints']",
     text: 'Taints (~counter~)',
     errorText: 'No taints information',
     style: { color: 'red' },

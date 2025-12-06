@@ -106,7 +106,6 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
 
   const [form] = Form.useForm()
 
-  // onValuesChange do not work properly
   const allValues = Form.useWatch([], form)
   const namespaceFromFormData = Form.useWatch<string>(['metadata', 'namespace'], form)
 

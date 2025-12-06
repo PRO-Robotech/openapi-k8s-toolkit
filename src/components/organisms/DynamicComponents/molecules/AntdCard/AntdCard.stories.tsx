@@ -1,4 +1,3 @@
-// src/components/organisms/DynamicComponents/molecules/AntdCard/AntdCard.stories.tsx
 import type { Meta, StoryObj } from '@storybook/react'
 import React from 'react'
 

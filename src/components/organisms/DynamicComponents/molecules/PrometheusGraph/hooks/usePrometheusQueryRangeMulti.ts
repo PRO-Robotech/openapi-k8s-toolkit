@@ -1,4 +1,3 @@
-// src/.../PrometheusGraph/hooks/usePrometheusQueryRange.ts
 import { useQuery } from '@tanstack/react-query'
 import { buildPrometheusRangeParams } from '../utils/prometheus'
 import { prometheusToRechartsMulti, PrometheusRangeResponse, RechartsSeries } from '../utils/prometheusAdapter'

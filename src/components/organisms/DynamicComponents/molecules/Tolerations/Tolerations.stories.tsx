@@ -1,4 +1,3 @@
-// src/components/organisms/DynamicComponents/molecules/Tolerations/Tolerations.stories.tsx
 import type { Meta, StoryObj } from '@storybook/react'
 import React from 'react'
 import Editor from '@monaco-editor/react'
@@ -187,7 +186,7 @@ export const Default: Story = {
     endpoint: '/api/example/tolerations',
     pathToValue: '/spec/template/spec/tolerations',
     editModalWidth: 720,
-    cols: [6, 6, 4, 4, 4], // example AntD grid spans, adjust to your layout
+    cols: [6, 6, 4, 4, 4], // example AntD grid spans
 
     // providers
     isLoading: false,

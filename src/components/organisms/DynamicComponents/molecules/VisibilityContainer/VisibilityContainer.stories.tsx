@@ -1,4 +1,3 @@
-// src/components/organisms/DynamicComponents/molecules/VisibilityContainer/VisibilityContainer.stories.tsx
 import type { Meta, StoryObj } from '@storybook/react'
 import React from 'react'
 import Editor from '@monaco-editor/react'

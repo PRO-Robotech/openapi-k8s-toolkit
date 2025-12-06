@@ -19,6 +19,7 @@ const config: Config = {
     '^store/(.*)$': '<rootDir>/src/store/$1',
     '^templates/(.*)$': '<rootDir>/src/templates/$1',
     '^utils/(.*)$': '<rootDir>/src/utils/$1',
+    '^hooks/(.*)$': '<rootDir>/src/hooks/$1',
   },
 }
 

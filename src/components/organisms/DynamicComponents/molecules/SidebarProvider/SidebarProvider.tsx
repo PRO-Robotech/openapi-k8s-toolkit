@@ -2,7 +2,7 @@
 import React, { FC } from 'react'
 import { ManageableSidebarProvider } from 'components/molecules'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
+import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 
 export const SidebarProvider: FC<{ data: TDynamicComponentsAppTypeMap['SidebarProvider']; children?: any }> = ({
   data,

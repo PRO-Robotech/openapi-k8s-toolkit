@@ -3,7 +3,7 @@
 import React, { FC } from 'react'
 import jp from 'jsonpath'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { unknownToString, parseArrayOfAny } from './utils'
 
 export const ArrayOfObjectsToKeyValues: FC<{

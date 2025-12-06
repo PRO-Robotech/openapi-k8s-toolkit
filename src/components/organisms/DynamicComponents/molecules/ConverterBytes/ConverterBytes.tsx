@@ -4,8 +4,8 @@ import React, { FC } from 'react'
 import { TUnitInput } from 'localTypes/factories/converterBytes'
 import { convertBytes, formatBytesAuto, toBytes, parseValueWithUnit } from 'utils/converterBytes'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
-import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
+import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
 
 /**

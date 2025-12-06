@@ -1,5 +1,5 @@
 // ========================= Types ============================
-// Messages are intentionally permissive (no k8s deps). Adjust to your API as needed.
+// Messages are intentionally permissive (no k8s deps).
 
 type TWatchPhase = 'ADDED' | 'MODIFIED' | 'DELETED' | 'BOOKMARK'
 
