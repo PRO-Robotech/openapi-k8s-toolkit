@@ -40,6 +40,7 @@ import {
   OwnerRefs,
   Toggler,
   TogglerSegmented,
+  VMVNC,
 } from './molecules'
 import { TDynamicComponentsAppTypeMap } from './types'
 
@@ -84,4 +85,5 @@ export const DynamicComponents: TRendererComponents<TDynamicComponentsAppTypeMap
   OwnerRefs,
   Toggler,
   TogglerSegmented,
+  VMVNC,
 }
