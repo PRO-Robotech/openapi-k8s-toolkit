@@ -52,7 +52,7 @@ const FullWidthDiv = styled.div<TFullWidthDivProps>`
   align-items: center;
   flex: 1;
   overflow: hidden;
-  background-color: #000;
+  background-color: black;
   min-width: 0; /* Allow flex item to shrink */
   transition: margin-right 0.3s ease;
 `
