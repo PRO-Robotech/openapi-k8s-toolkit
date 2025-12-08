@@ -52,7 +52,7 @@ const FullWidthDiv = styled.div<TFullWidthDivProps>`
   align-items: center;
   flex: 1;
   overflow: hidden;
-  background-color: #000000;
+  background-color: #000;
   min-width: 0; /* Allow flex item to shrink */
   transition: margin-right 0.3s ease;
 `
@@ -63,7 +63,7 @@ const LoadingContainer = styled.div`
   align-items: center;
   justify-content: center;
   padding: 40px;
-  color: #ffffff;
+  color: white;
 `
 
 const ErrorContainer = styled.div`
@@ -72,7 +72,7 @@ const ErrorContainer = styled.div`
   align-items: center;
   justify-content: center;
   padding: 40px;
-  color: #ffffff;
+  color: white;
 `
 
 export const Styled = {

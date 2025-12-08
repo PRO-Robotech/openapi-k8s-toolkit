@@ -17,7 +17,7 @@ const ScalingModeTitle = styled.div`
 
 const StatusBar = styled.div`
   background-color: #2d2d2d;
-  color: #ffffff;
+  color: white;
   padding: 8px 16px;
   font-size: 12px;
   border-bottom: 1px solid #3d3d3d;
@@ -31,7 +31,7 @@ const StatusBar = styled.div`
 `
 
 const StatusDivider = styled.span`
-  color: #666666;
+  color: #666;
   margin: 0 8px;
   user-select: none;
 `
