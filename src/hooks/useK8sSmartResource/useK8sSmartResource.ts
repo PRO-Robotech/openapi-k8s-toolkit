@@ -52,7 +52,7 @@ export const useK8sSmartResource = <T>(params: TUseK8sSmartResourceParams<T>) =>
         if (cancelled) {
           return
         }
-        setKindsWithVersion(getSortedKindsAll(data))
+        setKindsWithVersion(getSortedKindsAll(data.data))
       })
       .catch(() => {
         // if kinds fail, we just won't enrich; base data still returned

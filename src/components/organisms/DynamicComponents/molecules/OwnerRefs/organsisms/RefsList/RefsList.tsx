@@ -1,10 +1,7 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC } from 'react'
 import { Flex, FlexProps } from 'antd'
-import { getKinds } from 'api/bff/search/getKinds'
-import { getSortedKindsAll } from 'utils/getSortedKindsAll'
 import { pluralByKind } from 'utils/pluralByKind'
-import { TKindIndex } from 'localTypes/bff/search'
-import { TKindWithVersion } from 'localTypes/search'
+import { useKinds } from 'hooks/useKinds'
 import { TNavigationResource } from 'localTypes/navigations'
 import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
 import { TOwnerReference } from '../../types'
@@ -51,26 +48,8 @@ export const RefsList: FC<TRefsListProps> = ({
   // const [error, setError] = useState<TRequestError | undefined>()
   // const [isLoading, setIsLoading] = useState<boolean>(false)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [kindIndex, setKindIndex] = useState<TKindIndex>()
-  const [kindsWithVersion, setKindWithVersion] = useState<TKindWithVersion[]>()
 
-  useEffect(() => {
-    // setIsLoading(true)
-    // setError(undefined)
-    getKinds({ cluster })
-      .then(data => {
-        setKindIndex(data)
-        setKindWithVersion(getSortedKindsAll(data))
-        // setIsLoading(false)
-        // setError(undefined)
-      })
-      .catch(error => {
-        // setIsLoading(false)
-        // setError(error)
-        // eslint-disable-next-line no-console
-        console.error(error)
-      })
-  }, [cluster])
+  const { data: kindsData } = useKinds({ cluster })
 
   const { data: navigationDataArr } = useK8sSmartResource<{
     items: TNavigationResource[]
@@ -82,7 +61,7 @@ export const RefsList: FC<TRefsListProps> = ({
     fieldSelector: `metadata.name=${baseNavigationName}`,
   })
 
-  const getPlural = kindsWithVersion ? pluralByKind(kindsWithVersion) : undefined
+  const getPlural = kindsData?.kindsWithVersion ? pluralByKind(kindsData?.kindsWithVersion) : undefined
 
   const baseFactoriesMapping =
     navigationDataArr && navigationDataArr.items && navigationDataArr.items.length > 0
