@@ -3,10 +3,10 @@ import React from 'react'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
 
-import { MemoryChart } from './MemoryChart'
+import { MatrixToLineMulti } from './MatrixToLineMulti'
 
 // Storybook-only mocks (aliased in .storybook/main.ts via viteFinal)
-import { SmartProvider } from '../../../../../../.storybook/mocks/SmartProvider'
+import { SmartProvider } from '../../../../../../../../../.storybook/mocks/SmartProvider'
 
 type TInner = {
   range?: string
@@ -24,10 +24,10 @@ type TProviderArgs = {
 type TArgs = TInner & TProviderArgs
 
 const meta: Meta<TArgs> = {
-  title: 'Factory/Prometheus/MemoryChart (PoW; not exported)',
-  component: MemoryChart as any,
+  title: 'Factory/Prometheus/Matrix/ToLine/Multi (PoW; not exported)',
+  component: MatrixToLineMulti as any,
   argTypes: {
-    // MemoryChart props
+    // MatrixToLineMulti props
     range: {
       control: 'text',
       description: 'Time range string passed to Prometheus query_range, e.g. "1h", "6h", "24h"',
@@ -79,7 +79,7 @@ const meta: Meta<TArgs> = {
           theme={args.theme}
         >
           <div style={{ padding: 16 }}>
-            <MemoryChart range={data.range} />
+            <MatrixToLineMulti range={data.range} />
           </div>
         </SmartProvider>
 

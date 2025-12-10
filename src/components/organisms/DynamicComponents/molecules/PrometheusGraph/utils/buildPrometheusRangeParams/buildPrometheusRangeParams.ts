@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-export type PrometheusRangeParams = {
+export type TPrometheusRangeParams = {
   start: string
   end: string
   step: string
@@ -9,7 +9,7 @@ export type PrometheusRangeParams = {
  * Converts a duration string like "30m", "2h", "7d" into start/end ISO timestamps
  * and a safe step value to ensure < 11k data points for Prometheus query_range.
  */
-export const buildPrometheusRangeParams = (range: string = '1h'): PrometheusRangeParams => {
+export const buildPrometheusRangeParams = (range: string = '1h'): TPrometheusRangeParams => {
   const now = new Date()
   const end = now.toISOString()
 

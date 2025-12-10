@@ -1,9 +1,9 @@
 /* eslint-disable no-nested-ternary */
 import { FC } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
-import { usePrometheusQueryRange } from './hooks/usePrometheusQueryRange'
+import { usePromMatrixToLineSingle } from '../../../hooks/queryRangeMatrix/single/usePromMatrixToLineSingle'
 
-type MemoryChartProps = {
+type TMatrixToLineSingleProps = {
   range?: string
 }
 
@@ -46,12 +46,12 @@ const formatTimestamp = (raw: unknown): string => {
   return new Date(ts).toLocaleString()
 }
 
-export const MemoryChart: FC<MemoryChartProps> = ({ range = '1h' }) => {
+export const MatrixToLineSingle: FC<TMatrixToLineSingleProps> = ({ range = '1h' }) => {
   const {
     data = [],
     isLoading,
     error,
-  } = usePrometheusQueryRange({
+  } = usePromMatrixToLineSingle({
     query: 'container_memory_usage_bytes',
     range,
   })

@@ -1,13 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  prometheusToRechartsSingle,
-  prometheusToRechartsMulti,
-  type PrometheusRangeResponse,
-} from './prometheusAdapter'
+import { matrixToLineSingle, matrixToLineMulti, type TPrometheusRangeResponse } from './matrixToLineAdapter'
 
 describe('prometheusToRechartsSingle', () => {
   test('returns empty array when status is error', () => {
-    const resp: PrometheusRangeResponse = {
+    const resp: TPrometheusRangeResponse = {
       status: 'error',
       data: {
         resultType: 'matrix',
@@ -15,11 +11,11 @@ describe('prometheusToRechartsSingle', () => {
       },
     }
 
-    expect(prometheusToRechartsSingle(resp)).toEqual([])
+    expect(matrixToLineSingle(resp)).toEqual([])
   })
 
   test('returns empty array when result is empty', () => {
-    const resp: PrometheusRangeResponse = {
+    const resp: TPrometheusRangeResponse = {
       status: 'success',
       data: {
         resultType: 'matrix',
@@ -27,11 +23,11 @@ describe('prometheusToRechartsSingle', () => {
       },
     }
 
-    expect(prometheusToRechartsSingle(resp)).toEqual([])
+    expect(matrixToLineSingle(resp)).toEqual([])
   })
 
   test('maps only the first series values to ChartPoint[]', () => {
-    const resp: PrometheusRangeResponse = {
+    const resp: TPrometheusRangeResponse = {
       status: 'success',
       data: {
         resultType: 'matrix',
@@ -54,21 +50,21 @@ describe('prometheusToRechartsSingle', () => {
       },
     }
 
-    expect(prometheusToRechartsSingle(resp)).toEqual([
+    expect(matrixToLineSingle(resp)).toEqual([
       { timestamp: 100 * 1000, value: 1.5 },
       { timestamp: 101 * 1000, value: 2 },
     ])
   })
 
   test('gracefully handles undefined-ish input shape at runtime', () => {
-    expect(prometheusToRechartsSingle(undefined as any)).toEqual([])
-    expect(prometheusToRechartsSingle({} as any)).toEqual([])
+    expect(matrixToLineSingle(undefined as any)).toEqual([])
+    expect(matrixToLineSingle({} as any)).toEqual([])
   })
 })
 
 describe('prometheusToRechartsMulti', () => {
   test('returns empty array when status is error', () => {
-    const resp: PrometheusRangeResponse = {
+    const resp: TPrometheusRangeResponse = {
       status: 'error',
       data: {
         resultType: 'matrix',
@@ -76,7 +72,7 @@ describe('prometheusToRechartsMulti', () => {
       },
     }
 
-    expect(prometheusToRechartsMulti(resp)).toEqual([])
+    expect(matrixToLineMulti(resp)).toEqual([])
   })
 
   test('returns empty array when result is missing', () => {
@@ -85,11 +81,11 @@ describe('prometheusToRechartsMulti', () => {
       data: { resultType: 'matrix' },
     } as any
 
-    expect(prometheusToRechartsMulti(resp)).toEqual([])
+    expect(matrixToLineMulti(resp)).toEqual([])
   })
 
   test('maps all series with ids derived from metric preference order', () => {
-    const resp: PrometheusRangeResponse = {
+    const resp: TPrometheusRangeResponse = {
       status: 'success',
       data: {
         resultType: 'matrix',
@@ -121,7 +117,7 @@ describe('prometheusToRechartsMulti', () => {
       },
     }
 
-    expect(prometheusToRechartsMulti(resp)).toEqual([
+    expect(matrixToLineMulti(resp)).toEqual([
       {
         id: 'c1',
         metric: { container: 'c1', pod: 'p-ignored' },
@@ -154,7 +150,7 @@ describe('prometheusToRechartsMulti', () => {
   })
 
   test('uses empty object for missing metric', () => {
-    const resp: PrometheusRangeResponse = {
+    const resp: TPrometheusRangeResponse = {
       status: 'success',
       data: {
         resultType: 'matrix',
@@ -167,7 +163,7 @@ describe('prometheusToRechartsMulti', () => {
       },
     }
 
-    expect(prometheusToRechartsMulti(resp)).toEqual([
+    expect(matrixToLineMulti(resp)).toEqual([
       {
         id: 'series_0',
         metric: {},
