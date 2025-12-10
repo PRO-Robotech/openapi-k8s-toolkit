@@ -3,11 +3,10 @@ import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { buildPrometheusRangeParams } from '../../../utils/buildPrometheusRangeParams'
+import { usePromMatrixToLineMulti } from './usePromMatrixToLineMulti'
 
-import { usePrometheusQueryRange } from './usePrometheusQueryRange'
-import { buildPrometheusRangeParams } from '../utils/prometheus'
-
-jest.mock('../utils/prometheus', () => ({
+jest.mock('../../../utils/buildPrometheusRangeParams', () => ({
   buildPrometheusRangeParams: jest.fn(),
 }))
 
@@ -18,7 +17,7 @@ const makeClient = () =>
     defaultOptions: {
       queries: {
         retry: false,
-        gcTime: 0, // ✅ v5 replacement for cacheTime
+        gcTime: 0, // TanStack Query v5
         staleTime: 0,
       },
     },
@@ -51,7 +50,7 @@ const Consumer = ({
   enabled?: boolean
   refetchInterval?: number | false
 }) => {
-  const qRes = usePrometheusQueryRange({ query, range, enabled, refetchInterval })
+  const qRes = usePromMatrixToLineMulti({ query, range, enabled, refetchInterval })
 
   return (
     <div>
@@ -63,7 +62,7 @@ const Consumer = ({
   )
 }
 
-describe('usePrometheusQueryRange', () => {
+describe('usePrometheusQueryRangeMulti', () => {
   const originalFetch = globalThis.fetch
 
   beforeEach(() => {
@@ -82,7 +81,7 @@ describe('usePrometheusQueryRange', () => {
     globalThis.fetch = originalFetch
   })
 
-  test('fetches query_range and maps to ChartPoint[]', async () => {
+  test('fetches query_range and maps to RechartsSeries[]', async () => {
     ;(globalThis.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       status: 200,
@@ -92,28 +91,44 @@ describe('usePrometheusQueryRange', () => {
           resultType: 'matrix',
           result: [
             {
-              metric: { pod: 'p1' },
+              metric: { container: 'c1', pod: 'p-ignored' },
               values: [
-                [100, '1.5'],
+                [100, '1'],
                 [101, '2'],
               ],
+            },
+            {
+              metric: { pod: 'p2' },
+              values: [[100, '3']],
             },
           ],
         },
       }),
     })
 
-    renderWithClient(<Consumer query="sum(rate(http_requests_total[5m]))" range="1h" />)
+    renderWithClient(<Consumer query="rate(container_cpu_usage_seconds_total[5m])" range="1h" />)
 
     await waitFor(() => {
       expect(screen.getByTestId('isLoading')).toHaveTextContent('false')
     })
 
     expect(screen.getByTestId('isError')).toHaveTextContent('false')
+
     expect(screen.getByTestId('data-json')).toHaveTextContent(
       JSON.stringify([
-        { timestamp: 100 * 1000, value: 1.5 },
-        { timestamp: 101 * 1000, value: 2 },
+        {
+          id: 'c1',
+          metric: { container: 'c1', pod: 'p-ignored' },
+          data: [
+            { timestamp: 100 * 1000, value: 1 },
+            { timestamp: 101 * 1000, value: 2 },
+          ],
+        },
+        {
+          id: 'p2',
+          metric: { pod: 'p2' },
+          data: [{ timestamp: 100 * 1000, value: 3 }],
+        },
       ]),
     )
 
@@ -121,13 +136,13 @@ describe('usePrometheusQueryRange', () => {
     const calledUrl = (globalThis.fetch as jest.Mock).mock.calls[0][0] as string
 
     expect(calledUrl).toContain('http://localhost:9090/api/v1/query_range?query=')
-    expect(calledUrl).toContain(encodeURIComponent('sum(rate(http_requests_total[5m]))'))
+    expect(calledUrl).toContain(encodeURIComponent('rate(container_cpu_usage_seconds_total[5m])'))
     expect(calledUrl).toContain('&start=100')
     expect(calledUrl).toContain('&end=200')
     expect(calledUrl).toContain('&step=5')
   })
 
-  test('returns empty data when Prometheus responds with success but no series', async () => {
+  test('returns empty array when Prometheus responds with success but no series', async () => {
     ;(globalThis.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       status: 200,

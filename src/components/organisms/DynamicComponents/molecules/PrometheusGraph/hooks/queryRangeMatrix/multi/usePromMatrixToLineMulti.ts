@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import { buildPrometheusRangeParams } from '../utils/prometheus'
-import { prometheusToRechartsMulti, PrometheusRangeResponse, RechartsSeries } from '../utils/prometheusAdapter'
+import { buildPrometheusRangeParams } from '../../../utils/buildPrometheusRangeParams'
+import { matrixToLineMulti, TPrometheusRangeResponse, TRechartsSeries } from '../../../utils/matrixAdapater/toLine'
 
-export const usePrometheusQueryRangeMulti = ({
+export const usePromMatrixToLineMulti = ({
   query,
   range = '1h',
   refetchInterval = 30000,
@@ -13,8 +13,8 @@ export const usePrometheusQueryRangeMulti = ({
   refetchInterval?: number | false
   enabled?: boolean
 }) =>
-  useQuery<RechartsSeries[], Error>({
-    queryKey: ['prometheus', query, range],
+  useQuery<TRechartsSeries[], Error>({
+    queryKey: ['prometheus', 'multi', query, range],
     queryFn: async () => {
       const { start, end, step } = buildPrometheusRangeParams(range)
 
@@ -26,9 +26,9 @@ export const usePrometheusQueryRangeMulti = ({
 
       if (!res.ok) throw new Error(`Prometheus request failed: ${res.status}`)
 
-      const json: PrometheusRangeResponse = await res.json()
+      const json: TPrometheusRangeResponse = await res.json()
 
-      return prometheusToRechartsMulti(json)
+      return matrixToLineMulti(json)
     },
     enabled,
     refetchInterval,

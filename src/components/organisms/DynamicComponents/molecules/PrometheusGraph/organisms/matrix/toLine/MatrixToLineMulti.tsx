@@ -1,9 +1,9 @@
 import { FC, useMemo } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
 
-import { usePrometheusQueryRangeMulti } from './hooks/usePrometheusQueryRangeMulti'
+import { usePromMatrixToLineMulti } from '../../../hooks/queryRangeMatrix/multi/usePromMatrixToLineMulti'
 
-type MemoryChartProps = {
+type TMatrixToLineMultiProps = {
   range?: string
 }
 
@@ -24,12 +24,12 @@ const formatTimestamp = (value: unknown): string => {
 }
 
 // ---------- Component ----------
-export const MemoryChartMulti: FC<MemoryChartProps> = ({ range = '1h' }) => {
+export const MatrixToLineMulti: FC<TMatrixToLineMultiProps> = ({ range = '1h' }) => {
   const {
-    data: series = [],
+    data: series,
     isLoading,
     error,
-  } = usePrometheusQueryRangeMulti({
+  } = usePromMatrixToLineMulti({
     query: 'container_memory_usage_bytes',
     range,
   })
@@ -39,8 +39,8 @@ export const MemoryChartMulti: FC<MemoryChartProps> = ({ range = '1h' }) => {
   const chartData = useMemo(() => {
     const result: Record<number, Record<string, number | string>> = {}
 
-    series.forEach(s => {
-      s.data.forEach(point => {
+    series?.forEach(s => {
+      s.data?.forEach(point => {
         const ts = point.timestamp
         const v = point.value
 
@@ -73,7 +73,7 @@ export const MemoryChartMulti: FC<MemoryChartProps> = ({ range = '1h' }) => {
 
           <Tooltip formatter={v => formatBytes(v)} labelFormatter={v => formatTimestamp(v)} />
 
-          {series.map((s, i) => (
+          {series?.map((s, i) => (
             <Line
               key={s.id}
               type="monotone"
