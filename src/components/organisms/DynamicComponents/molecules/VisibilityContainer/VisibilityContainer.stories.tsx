@@ -31,6 +31,16 @@ const meta: Meta<TArgs> = {
       description:
         "data.value – template resolved via parseWithoutPartsOfUrl (e.g. \"{reqsJsonPath[0]['.data.flag']['-']}\")",
     },
+    criteria: {
+      control: { type: 'radio' },
+      options: ['equals', 'notEquals', null],
+      mapping: { equals: 'equals', notEquals: 'notEquals', null: undefined },
+      description: 'data.criteria – optional comparison operator (equals / notEquals)',
+    },
+    valueToCompare: {
+      control: 'object',
+      description: 'data.valueToCompare – string or array of strings to compare with resolved value',
+    },
 
     // provider knobs
     isLoading: {
@@ -56,6 +66,8 @@ const meta: Meta<TArgs> = {
     const data: TInner = {
       id: args.id,
       value: args.value,
+      criteria: args.criteria as TInner['criteria'],
+      valueToCompare: args.valueToCompare as TInner['valueToCompare'],
     }
 
     return (
@@ -76,8 +88,15 @@ const meta: Meta<TArgs> = {
                   fontSize: 13,
                 }}
               >
-                I am only visible when <code>value</code> resolves to something other than{' '}
-                <code>~undefined-value~</code>.
+                I am visible when:
+                <ul style={{ marginTop: 6 }}>
+                  <li>
+                    <code>value</code> resolves (not <code>~undefined-value~</code>)
+                  </li>
+                  <li>
+                    If <code>criteria</code> is set, the comparison passes against <code>valueToCompare</code>
+                  </li>
+                </ul>
               </div>
             </VisibilityContainer>
           </div>
@@ -115,6 +134,8 @@ export const Default: Story = {
     id: 'example-visibility-container',
     // typical template used by parseWithoutPartsOfUrl
     value: "{reqsJsonPath[0]['.data.flag']['-']}",
+    criteria: undefined,
+    valueToCompare: undefined,
 
     // providers
     isLoading: false,
@@ -150,5 +171,73 @@ export const LoadingMultiQuery: Story = {
   args: {
     ...Default.args,
     isLoading: true,
+  },
+}
+
+export const CriteriaEqualsPasses: Story = {
+  args: {
+    ...Default.args,
+    id: 'visibility-criteria-equals-passes',
+    criteria: 'equals',
+    valueToCompare: ['show'],
+    value: "{reqsJsonPath[0]['.data.flag']['-']}",
+    multiQueryData: {
+      req0: {
+        data: {
+          flag: 'show',
+        },
+      },
+    },
+  },
+}
+
+export const CriteriaEqualsFails: Story = {
+  args: {
+    ...Default.args,
+    id: 'visibility-criteria-equals-fails',
+    criteria: 'equals',
+    valueToCompare: ['Role'],
+    value: "{reqsJsonPath[0]['.data.flag']['-']}",
+    multiQueryData: {
+      req0: {
+        data: {
+          flag: 'ClusterRole',
+        },
+      },
+    },
+  },
+}
+
+export const CriteriaNotEqualsPasses: Story = {
+  args: {
+    ...Default.args,
+    id: 'visibility-criteria-not-equals-passes',
+    criteria: 'notEquals',
+    valueToCompare: ['Role'],
+    value: "{reqsJsonPath[0]['.data.flag']['-']}",
+    multiQueryData: {
+      req0: {
+        data: {
+          flag: 'ClusterRole',
+        },
+      },
+    },
+  },
+}
+
+export const CriteriaNotEqualsFails: Story = {
+  args: {
+    ...Default.args,
+    id: 'visibility-criteria-not-equals-fails',
+    criteria: 'notEquals',
+    valueToCompare: ['Role'],
+    value: "{reqsJsonPath[0]['.data.flag']['-']}",
+    multiQueryData: {
+      req0: {
+        data: {
+          flag: 'Role',
+        },
+      },
+    },
   },
 }

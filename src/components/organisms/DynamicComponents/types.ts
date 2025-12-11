@@ -132,6 +132,8 @@ export type TDynamicComponentsAppTypeMap = {
   VisibilityContainer: {
     id: number | string
     value: string
+    criteria?: 'equals' | 'notEquals'
+    valueToCompare?: string | string[]
   }
   ArrayOfObjectsToKeyValues: {
     id: number | string
