@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import { buildPrometheusRangeParams } from '../utils/prometheus'
-import { prometheusToRechartsSingle, PrometheusRangeResponse, ChartPoint } from '../utils/prometheusAdapter'
+import { buildPrometheusRangeParams } from '../../../utils/buildPrometheusRangeParams'
+import { matrixToLineSingle, TPrometheusRangeResponse, TChartPoint } from '../../../utils/matrixAdapater/toLine'
 
-export const usePrometheusQueryRange = ({
+export const usePromMatrixToLineSingle = ({
   query,
   range = '1h',
   refetchInterval = 30000,
@@ -13,8 +13,8 @@ export const usePrometheusQueryRange = ({
   refetchInterval?: number | false
   enabled?: boolean
 }) =>
-  useQuery<ChartPoint[], Error>({
-    queryKey: ['prometheus', query, range],
+  useQuery<TChartPoint[], Error>({
+    queryKey: ['prometheus', 'single', query, range],
     queryFn: async () => {
       const { start, end, step } = buildPrometheusRangeParams(range)
 
@@ -26,10 +26,10 @@ export const usePrometheusQueryRange = ({
 
       if (!res.ok) throw new Error(`Prometheus request failed: ${res.status}`)
 
-      const json: PrometheusRangeResponse = await res.json()
+      const json: TPrometheusRangeResponse = await res.json()
 
-      return prometheusToRechartsSingle(json)
+      return matrixToLineSingle(json)
     },
-    refetchInterval,
     enabled,
+    refetchInterval,
   })

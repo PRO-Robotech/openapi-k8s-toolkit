@@ -1,9 +1,9 @@
 import { FC, useMemo } from 'react'
-import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
+import { usePromMatrixToLineMulti } from '../../../hooks/queryRangeMatrix/multi/usePromMatrixToLineMulti'
+import { seriesToStackedAreaData } from '../../../utils/matrixAdapater/toAreaStacked/matrixToAreaStackedAdapter'
 
-import { usePrometheusQueryRangeMulti } from './hooks/usePrometheusQueryRangeMulti'
-
-type MemoryChartProps = {
+type TMatrixToAreaStackedProps = {
   range?: string
 }
 
@@ -24,47 +24,27 @@ const formatTimestamp = (value: unknown): string => {
 }
 
 // ---------- Component ----------
-export const MemoryChartMulti: FC<MemoryChartProps> = ({ range = '1h' }) => {
+export const MatrixToAreaStacked: FC<TMatrixToAreaStackedProps> = ({ range = '1h' }) => {
   const {
     data: series = [],
     isLoading,
     error,
-  } = usePrometheusQueryRangeMulti({
+  } = usePromMatrixToLineMulti({
     query: 'container_memory_usage_bytes',
     range,
   })
 
-  // series: RechartsSeries[] (выведено из хука)
-
-  const chartData = useMemo(() => {
-    const result: Record<number, Record<string, number | string>> = {}
-
-    series.forEach(s => {
-      s.data.forEach(point => {
-        const ts = point.timestamp
-        const v = point.value
-
-        if (!Number.isFinite(ts) || !Number.isFinite(v)) return
-
-        if (!result[ts]) {
-          result[ts] = { timestamp: ts }
-        }
-        result[ts][s.id] = v
-      })
-    })
-
-    return Object.values(result).sort((a, b) => Number(a.timestamp) - Number(b.timestamp))
-  }, [series])
+  const chartData = useMemo(() => seriesToStackedAreaData(series), [series])
 
   if (isLoading) return <div>⏳ Loading...</div>
   if (error) return <div>❌ Error: {error.message}</div>
 
   return (
     <div style={{ width: '100%', height: 350 }}>
-      <h3>Multi-Series Memory Usage ({range})</h3>
+      <h3>Multi-Series Memory Usage (stacked) ({range})</h3>
 
       <ResponsiveContainer>
-        <LineChart data={chartData}>
+        <AreaChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
 
           <XAxis dataKey="timestamp" tickFormatter={formatTimestamp} />
@@ -74,17 +54,20 @@ export const MemoryChartMulti: FC<MemoryChartProps> = ({ range = '1h' }) => {
           <Tooltip formatter={v => formatBytes(v)} labelFormatter={v => formatTimestamp(v)} />
 
           {series.map((s, i) => (
-            <Line
+            <Area
               key={s.id}
               type="monotone"
               dataKey={s.id}
               name={s.id}
-              dot={false}
+              stackId="1"
               strokeWidth={2}
+              dot={false}
               stroke={`hsl(${(i * 60) % 360}, 70%, 55%)`}
+              fill={`hsl(${(i * 60) % 360}, 70%, 55%)`}
+              fillOpacity={0.35}
             />
           ))}
-        </LineChart>
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   )

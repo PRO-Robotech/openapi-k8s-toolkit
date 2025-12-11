@@ -11,11 +11,8 @@
 
 import React, { FC, useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import { theme as antdtheme, Flex, Tooltip, Empty } from 'antd'
-import { getKinds } from 'api/bff/search/getKinds'
-import { getSortedKindsAll } from 'utils/getSortedKindsAll'
 import { pluralByKind } from 'utils/pluralByKind'
-import { TKindIndex } from 'localTypes/bff/search'
-import { TKindWithVersion } from 'localTypes/search'
+import { useKinds } from 'hooks/useKinds'
 import { ResumeCircleIcon, PauseCircleIcon, LockedIcon, UnlockedIcon } from 'components/atoms'
 import { TNavigationResource } from 'localTypes/navigations'
 import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
@@ -58,29 +55,7 @@ export const Events: FC<TEventsProps> = ({
 }) => {
   const { token } = antdtheme.useToken()
 
-  // const [error, setError] = useState<TRequestError | undefined>()
-  // const [isLoading, setIsLoading] = useState<boolean>(false)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [kindIndex, setKindIndex] = useState<TKindIndex>()
-  const [kindsWithVersion, setKindWithVersion] = useState<TKindWithVersion[]>()
-
-  useEffect(() => {
-    // setIsLoading(true)
-    // setError(undefined)
-    getKinds({ cluster })
-      .then(data => {
-        setKindIndex(data)
-        setKindWithVersion(getSortedKindsAll(data))
-        // setIsLoading(false)
-        // setError(undefined)
-      })
-      .catch(error => {
-        // setIsLoading(false)
-        // setError(error)
-        // eslint-disable-next-line no-console
-        console.error(error)
-      })
-  }, [cluster])
+  const { data: kindsData } = useKinds({ cluster })
 
   const { data: navigationDataArr } = useK8sSmartResource<{
     items: TNavigationResource[]
@@ -379,7 +354,7 @@ export const Events: FC<TEventsProps> = ({
 
   const total = state.order.length
 
-  const getPlural = kindsWithVersion ? pluralByKind(kindsWithVersion) : undefined
+  const getPlural = kindsData?.kindsWithVersion ? pluralByKind(kindsData?.kindsWithVersion) : undefined
 
   const baseFactoriesMapping =
     navigationDataArr && navigationDataArr.items && navigationDataArr.items.length > 0

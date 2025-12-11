@@ -3,13 +3,14 @@ import React from 'react'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
 
-import { MemoryChart } from './MemoryChart'
+import { MatrixToReducedBar } from './MatrixToReducedBar'
 
 // Storybook-only mocks (aliased in .storybook/main.ts via viteFinal)
-import { SmartProvider } from '../../../../../../.storybook/mocks/SmartProvider'
+import { SmartProvider } from '../../../../../../../../../.storybook/mocks/SmartProvider'
 
 type TInner = {
   range?: string
+  mode?: 'last' | 'avg' | 'sum' | 'max' | 'min'
 }
 
 type TProviderArgs = {
@@ -24,13 +25,18 @@ type TProviderArgs = {
 type TArgs = TInner & TProviderArgs
 
 const meta: Meta<TArgs> = {
-  title: 'Factory/Prometheus/MemoryChart (PoW; not exported)',
-  component: MemoryChart as any,
+  title: 'Factory/Prometheus/Matrix/ToReduced/Bar (PoW; not exported)',
+  component: MatrixToReducedBar as any,
   argTypes: {
-    // MemoryChart props
+    // MatrixToReducedBar props
     range: {
       control: 'text',
       description: 'Time range string passed to Prometheus query_range, e.g. "1h", "6h", "24h"',
+    },
+    mode: {
+      control: 'radio',
+      options: ['last', 'avg', 'sum', 'max', 'min'],
+      description: 'Aggregation mode used when reducing matrix to a single value per series',
     },
 
     // provider knobs (для соответствия стилю Toggler.stories)
@@ -64,6 +70,7 @@ const meta: Meta<TArgs> = {
   render: args => {
     const data: TInner = {
       range: args.range,
+      mode: args.mode,
     }
 
     return (
@@ -79,7 +86,7 @@ const meta: Meta<TArgs> = {
           theme={args.theme}
         >
           <div style={{ padding: 16 }}>
-            <MemoryChart range={data.range} />
+            <MatrixToReducedBar range={data.range} mode={data.mode} />
           </div>
         </SmartProvider>
 
@@ -115,6 +122,7 @@ type Story = StoryObj<TArgs>
 export const Default: Story = {
   args: {
     range: '1h',
+    mode: 'avg',
 
     // SmartProvider mocks (ничего не ломают, просто для консистентности)
     isLoading: false,
@@ -128,17 +136,24 @@ export const Default: Story = {
   },
 }
 
-export const SixHours: Story = {
+export const LastValue: Story = {
   args: {
     ...Default.args,
-    range: '6h',
+    mode: 'last',
   },
 }
 
-export const OneDay: Story = {
+export const Sum: Story = {
   args: {
     ...Default.args,
-    range: '24h',
+    mode: 'sum',
+  },
+}
+
+export const Max: Story = {
+  args: {
+    ...Default.args,
+    mode: 'max',
   },
 }
 

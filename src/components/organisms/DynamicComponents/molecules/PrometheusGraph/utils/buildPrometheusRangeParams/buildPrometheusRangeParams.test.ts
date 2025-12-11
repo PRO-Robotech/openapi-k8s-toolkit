@@ -1,4 +1,4 @@
-import { buildPrometheusRangeParams, PrometheusRangeParams } from '../utils/prometheus'
+import { buildPrometheusRangeParams, TPrometheusRangeParams } from './buildPrometheusRangeParams'
 
 describe('buildPrometheusRangeParams', () => {
   let nowSpy: jest.SpyInstance
@@ -16,7 +16,7 @@ describe('buildPrometheusRangeParams', () => {
     !Number.isNaN(Date.parse(value)) && value.includes('T') && value.endsWith('Z')
 
   it('returns valid structure with default (1h)', () => {
-    const result: PrometheusRangeParams = buildPrometheusRangeParams()
+    const result: TPrometheusRangeParams = buildPrometheusRangeParams()
 
     expect(result).toHaveProperty('start')
     expect(result).toHaveProperty('end')

@@ -1,4 +1,4 @@
-export type PrometheusRangeResponse = {
+export type TPrometheusRangeResponse = {
   status: 'success' | 'error'
   data: {
     resultType: 'matrix'
@@ -9,12 +9,12 @@ export type PrometheusRangeResponse = {
   }
 }
 
-export type ChartPoint = {
+export type TChartPoint = {
   timestamp: number
   value: number
 }
 
-export const prometheusToRechartsSingle = (resp: PrometheusRangeResponse): ChartPoint[] =>
+export const matrixToLineSingle = (resp: TPrometheusRangeResponse): TChartPoint[] =>
   resp?.status === 'success' && resp.data?.result?.length > 0
     ? resp.data.result[0].values.map(([ts, v]) => ({
         timestamp: ts * 1000,
@@ -22,13 +22,13 @@ export const prometheusToRechartsSingle = (resp: PrometheusRangeResponse): Chart
       }))
     : []
 
-export type RechartsSeries = {
+export type TRechartsSeries = {
   id: string
   metric: Record<string, string>
-  data: ChartPoint[]
+  data?: TChartPoint[]
 }
 
-export const prometheusToRechartsMulti = (resp: PrometheusRangeResponse): RechartsSeries[] => {
+export const matrixToLineMulti = (resp: TPrometheusRangeResponse): TRechartsSeries[] => {
   if (resp.status !== 'success' || !resp.data?.result) return []
 
   return resp.data.result.map((series, idx) => {
@@ -36,7 +36,7 @@ export const prometheusToRechartsMulti = (resp: PrometheusRangeResponse): Rechar
 
     const id = metric.container || metric.pod || metric.instance || metric.job || `series_${idx}`
 
-    const data: ChartPoint[] = series.values.map(([ts, v]) => ({
+    const data: TChartPoint[] = series.values.map(([ts, v]) => ({
       timestamp: ts * 1000, // prom timestamp -> ms
       value: Number(v),
     }))
