@@ -24,3 +24,7 @@ yarn-error.log*
 storybook-static
 
 .env.options
+
+.yalc
+yalc.lock
+.yalc/**
