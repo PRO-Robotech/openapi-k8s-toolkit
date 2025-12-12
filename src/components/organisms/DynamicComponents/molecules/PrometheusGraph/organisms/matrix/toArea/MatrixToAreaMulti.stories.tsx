@@ -2,149 +2,156 @@ import type { Meta, StoryObj } from '@storybook/react'
 import React from 'react'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
+import { http, HttpResponse, delay } from 'msw'
 
 import { MatrixToAreaMulti } from './MatrixToAreaMulti'
-
-// Storybook-only mocks (aliased in .storybook/main.ts via viteFinal)
 import { SmartProvider } from '../../../../../../../../../.storybook/mocks/SmartProvider'
+
+/* -------------------------------- types -------------------------------- */
 
 type TInner = {
   range?: string
 }
 
-type TProviderArgs = {
-  isLoading: boolean
-  isError: boolean
-  errors: { message: string }[]
-  multiQueryData: Record<string, unknown> | null
-  partsOfUrl: string[]
-  theme: 'dark' | 'light'
+type TArgs = TInner & {
+  theme: 'light' | 'dark'
+  state: 'success' | 'loading' | 'error'
 }
 
-type TArgs = TInner & TProviderArgs
+/* ----------------------------- MSW helpers ------------------------------- */
+
+const parseTimeToSec = (s: string | null, fallback: number) => {
+  if (!s) return fallback
+  const n = Number(s)
+  if (Number.isFinite(n)) return n
+  const ms = Date.parse(s)
+  return Number.isFinite(ms) ? Math.floor(ms / 1000) : fallback
+}
+
+const parseStepToSec = (s: string | null, fallback: number) => {
+  if (!s) return fallback
+  const m = s.match(/^(\d+)([smhd])?$/)
+  if (!m) return fallback
+
+  const n = Number(m[1])
+  const unit = m[2] ?? 's'
+  const mult = unit === 'm' ? 60 : unit === 'h' ? 3600 : unit === 'd' ? 86400 : 1
+  return Math.max(1, n * mult)
+}
+
+const mkSeries = (pod: string, base: number, start: number, end: number, step: number) => {
+  const count = Math.floor((end - start) / step) + 1
+  const values: [number, string][] = []
+
+  for (let i = 0; i < count; i++) {
+    const ts = start + i * step
+    const wave = Math.sin((i / count) * Math.PI * 6)
+    const v = base + wave * 300_000_000 + (i % 17) * 20_000_000
+    values.push([ts, String(Math.max(0, Math.round(v)))])
+  }
+
+  return {
+    metric: { __name__: 'container_memory_usage_bytes', pod },
+    values,
+  }
+}
+
+/* ------------------------------ MSW handlers ----------------------------- */
+
+const successHandler = http.get('http://localhost:9090/api/v1/query_range', ({ request }) => {
+  const url = new URL(request.url)
+  const now = Math.floor(Date.now() / 1000)
+
+  const start = parseTimeToSec(url.searchParams.get('start'), now - 3600)
+  const end = parseTimeToSec(url.searchParams.get('end'), now)
+  const step = parseStepToSec(url.searchParams.get('step'), 60)
+
+  return HttpResponse.json({
+    status: 'success',
+    data: {
+      resultType: 'matrix',
+      result: [
+        mkSeries('pod-a', 400_000_000, start, end, step),
+        mkSeries('pod-b', 900_000_000, start, end, step),
+        mkSeries('pod-c', 1_500_000_000, start, end, step),
+      ],
+    },
+  })
+})
+
+/* -------------------------------- meta --------------------------------- */
 
 const meta: Meta<TArgs> = {
-  title: 'Factory/Prometheus/Matrix/ToArea/Multi (PoW; not exported)',
+  title: 'Factory/Prometheus Internal/Matrix/ToArea/Multi',
   component: MatrixToAreaMulti as any,
   argTypes: {
-    // MatrixToAreaMulti props
-    range: {
-      control: 'text',
-      description: 'Time range string passed to Prometheus query_range, e.g. "1h", "6h", "24h"',
-    },
-
-    // provider knobs (для соответствия стилю Toggler.stories)
-    isLoading: {
-      control: 'boolean',
-      description: 'useMultiQuery.isLoading (simulated, for SmartProvider only)',
-    },
-    isError: {
-      control: 'boolean',
-      description: 'useMultiQuery.isError (simulated, for SmartProvider only)',
-    },
-    errors: {
-      control: 'object',
-      description: 'useMultiQuery.errors (simulated, for SmartProvider only)',
-    },
-    multiQueryData: {
-      control: 'object',
-      description: 'mock multiQuery data (object with req{index} keys, passed to SmartProvider)',
-    },
-    partsOfUrl: {
-      control: 'object',
-      description: 'mocked partsOfUrl.partsOfUrl array (passed to SmartProvider)',
-    },
-    theme: {
-      control: 'radio',
-      options: ['light', 'dark'],
-      description: 'Mock UI Theme context (passed to SmartProvider)',
-    },
+    range: { control: 'text' },
+    theme: { control: 'radio', options: ['light', 'dark'] },
+    state: { control: 'radio', options: ['success', 'loading', 'error'] },
   },
 
   render: args => {
-    const data: TInner = {
-      range: args.range,
-    }
-
     return (
       <>
         <SmartProvider
-          multiQueryValue={{
-            data: args.multiQueryData,
-            isLoading: args.isLoading,
-            isError: args.isError,
-            errors: args.errors,
-          }}
-          partsOfUrl={args.partsOfUrl}
           theme={args.theme}
+          partsOfUrl={[]}
+          multiQueryValue={{
+            data: null,
+            isLoading: false,
+            isError: false,
+            errors: [],
+          }}
         >
           <div style={{ padding: 16 }}>
-            <MatrixToAreaMulti range={data.range} />
+            <MatrixToAreaMulti range={args.range} />
           </div>
         </SmartProvider>
 
-        <div style={{ marginTop: '150px' }}>
+        <div style={{ marginTop: 150 }}>
           <Editor
             defaultLanguage="yaml"
             width="100%"
             height={260}
+            theme="vs-dark"
+            options={{ readOnly: true }}
             value={yaml.stringify({
               type: 'PrometheusGraph',
-              data,
+              data: { range: args.range },
             })}
-            theme="vs-dark"
-            options={{
-              theme: 'vs-dark',
-              readOnly: true,
-            }}
           />
         </div>
       </>
     )
   },
-
-  parameters: {
-    controls: { expanded: true },
-  },
 }
 
 export default meta
 
-type Story = StoryObj<TArgs>
+type TStory = StoryObj<TArgs>
 
-export const Default: Story = {
+/* -------------------------------- stories ------------------------------- */
+
+export const Default: TStory = {
   args: {
     range: '1h',
-
-    // SmartProvider mocks (ничего не ломают, просто для консистентности)
-    isLoading: false,
-    isError: false,
-    errors: [],
-    multiQueryData: {
-      // можно что-то положить, если SmartProvider что-то рисует
-    },
-    partsOfUrl: [],
     theme: 'light',
+    state: 'success',
   },
+  parameters: { msw: { handlers: [successHandler] } },
 }
 
-export const SixHours: Story = {
-  args: {
-    ...Default.args,
-    range: '6h',
-  },
+export const SixHours: TStory = {
+  args: { ...Default.args, range: '6h' },
+  parameters: { msw: { handlers: [successHandler] } },
 }
 
-export const OneDay: Story = {
-  args: {
-    ...Default.args,
-    range: '24h',
-  },
+export const OneDay: TStory = {
+  args: { ...Default.args, range: '24h' },
+  parameters: { msw: { handlers: [successHandler] } },
 }
 
-export const DarkTheme: Story = {
-  args: {
-    ...Default.args,
-    theme: 'dark',
-  },
+export const DarkTheme: TStory = {
+  args: { ...Default.args, theme: 'dark' },
+  parameters: { msw: { handlers: [successHandler] } },
 }

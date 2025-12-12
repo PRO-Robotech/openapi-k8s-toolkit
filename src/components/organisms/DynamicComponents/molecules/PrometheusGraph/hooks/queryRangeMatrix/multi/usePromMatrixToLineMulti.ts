@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { buildPrometheusRangeParams } from '../../../utils/buildPrometheusRangeParams'
-import { matrixToLineMulti, TPrometheusRangeResponse, TRechartsSeries } from '../../../utils/matrixAdapater/toLine'
+import { TPrometheusRangeResponse } from '../../../utils/matrixAdapater'
+import { matrixToLineMulti, TRechartsSeries } from '../../../utils/matrixAdapater/toLine'
 
 export const usePromMatrixToLineMulti = ({
   query,

@@ -1,5 +1,6 @@
+/* eslint-disable react/no-array-index-key */
 import { FC, useMemo } from 'react'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Cell } from 'recharts'
 import { usePromMatrixToLineMulti } from '../../../hooks/queryRangeMatrix/multi/usePromMatrixToLineMulti'
 import { seriesToReducedVector } from '../../../utils/matrixAdapater/toReducedVector/matrixToReducedVectorAdapter'
 
@@ -32,14 +33,15 @@ export const MatrixToReducedBar: FC<TMatrixToReducedBarProps> = ({ range = '1h',
       <ResponsiveContainer>
         <BarChart data={reduced}>
           <CartesianGrid strokeDasharray="3 3" />
-
           <XAxis dataKey="id" />
-
           <YAxis />
-
           <Tooltip formatter={value => `${value} bytes`} labelFormatter={label => `Series: ${label}`} />
 
-          <Bar dataKey="value" />
+          <Bar dataKey="value">
+            {reduced.map((_, i) => (
+              <Cell key={`cell-${i}`} fill={`hsl(${(i * 35) % 360}, 70%, 55%)`} />
+            ))}
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </div>

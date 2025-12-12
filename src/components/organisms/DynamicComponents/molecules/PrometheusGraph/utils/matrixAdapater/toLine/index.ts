@@ -1,2 +1,2 @@
 export { matrixToLineSingle, matrixToLineMulti } from './matrixToLineAdapter'
-export type { TPrometheusRangeResponse, TChartPoint, TRechartsSeries } from './matrixToLineAdapter'
+export type { TChartPoint, TRechartsSeries } from './matrixToLineAdapter'

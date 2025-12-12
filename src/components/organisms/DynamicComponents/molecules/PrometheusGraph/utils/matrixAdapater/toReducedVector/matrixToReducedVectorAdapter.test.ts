@@ -1,5 +1,3 @@
-// toReducedVector.test.ts
-
 import type { TRechartsSeries } from '../toLine'
 import { seriesToReducedVector } from './matrixToReducedVectorAdapter'
 

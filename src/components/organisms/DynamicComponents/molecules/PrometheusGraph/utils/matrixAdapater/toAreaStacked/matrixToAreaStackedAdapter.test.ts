@@ -1,4 +1,3 @@
-// seriesToStackedAreaData.test.ts
 import { seriesToStackedAreaData } from './matrixToAreaStackedAdapter'
 import type { TRechartsSeries } from '../toLine'
 

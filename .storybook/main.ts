@@ -6,7 +6,9 @@ import path from 'path'
 const { parsed: options } = dotenv.config({ path: './.env.options' })
 
 const config: StorybookConfig = {
+  staticDirs: ['../public'], // ✅ serve /mockServiceWorker.js
   stories: ['./docs/**/*.tsx', '../src/**/*.mdx', '../src/**/*.stories.@(ts|tsx|js|jsx)'],
+  addons: ['msw-storybook-addon'],
   // addons: ['@storybook/addon-essentials', '@storybook/addon-interactions', '@storybook/addon-a11y'],
   framework: {
     name: '@storybook/react-vite',
