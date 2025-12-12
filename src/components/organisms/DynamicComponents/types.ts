@@ -132,7 +132,7 @@ export type TDynamicComponentsAppTypeMap = {
   VisibilityContainer: {
     id: number | string
     value: string
-    criteria?: 'equals' | 'notEquals'
+    criteria?: 'equals' | 'notEquals' | 'exists' | 'notExists'
     valueToCompare?: string | string[]
   }
   ArrayOfObjectsToKeyValues: {
