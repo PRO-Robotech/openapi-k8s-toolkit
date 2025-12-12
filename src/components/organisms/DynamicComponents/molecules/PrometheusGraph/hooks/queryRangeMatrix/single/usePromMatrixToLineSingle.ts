@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { buildPrometheusRangeParams } from '../../../utils/buildPrometheusRangeParams'
-import { matrixToLineSingle, TPrometheusRangeResponse, TChartPoint } from '../../../utils/matrixAdapater/toLine'
+import { TPrometheusRangeResponse } from '../../../utils/matrixAdapater'
+import { matrixToLineSingle, TChartPoint } from '../../../utils/matrixAdapater/toLine'
 
 export const usePromMatrixToLineSingle = ({
   query,

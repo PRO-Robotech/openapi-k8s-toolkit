@@ -1,25 +1,10 @@
 import { FC, useMemo } from 'react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
 import { usePromMatrixToLineMulti } from '../../../hooks/queryRangeMatrix/multi/usePromMatrixToLineMulti'
+import { formatBytes, formatTimestamp } from '../../../utils/formatters'
 
 type TMatrixToAreaMultiProps = {
   range?: string
-}
-
-// ---------- Formatters ----------
-const formatBytes = (value: unknown): string => {
-  const num = Number(value)
-  if (!Number.isFinite(num)) return ''
-
-  if (num > 1e9) return `${(num / 1e9).toFixed(2)} GB`
-  if (num > 1e6) return `${(num / 1e6).toFixed(2)} MB`
-  if (num > 1e3) return `${(num / 1e3).toFixed(2)} KB`
-  return `${num} B`
-}
-
-const formatTimestamp = (value: unknown): string => {
-  const num = Number(value)
-  return Number.isFinite(num) ? new Date(num).toLocaleString() : ''
 }
 
 // ---------- Component ----------

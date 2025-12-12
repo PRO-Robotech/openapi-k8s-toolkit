@@ -1,4 +1,7 @@
 import type { Preview } from '@storybook/react'
+import { initialize, mswLoader } from 'msw-storybook-addon'
+
+initialize()
 
 const preview: Preview = {
   parameters: {
@@ -8,13 +11,12 @@ const preview: Preview = {
     layout: 'padded',
     options: {
       storySort: {
-        order: ['Welcome', ['overview']], // ensure it appears first
+        order: ['Welcome', ['overview']],
       },
     },
-    docs: {
-      autodocs: true,
-    },
+    docs: { autodocs: true },
   },
+  loaders: [mswLoader],
 }
 
 export default preview

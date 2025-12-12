@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { matrixToLineSingle, matrixToLineMulti, type TPrometheusRangeResponse } from './matrixToLineAdapter'
+import type { TPrometheusRangeResponse } from '../types'
+import { matrixToLineSingle, matrixToLineMulti } from './matrixToLineAdapter'
 
 describe('prometheusToRechartsSingle', () => {
   test('returns empty array when status is error', () => {
