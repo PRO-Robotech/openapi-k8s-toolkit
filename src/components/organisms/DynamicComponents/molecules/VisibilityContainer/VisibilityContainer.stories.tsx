@@ -31,6 +31,22 @@ const meta: Meta<TArgs> = {
       description:
         "data.value – template resolved via parseWithoutPartsOfUrl (e.g. \"{reqsJsonPath[0]['.data.flag']['-']}\")",
     },
+    criteria: {
+      control: { type: 'radio' },
+      options: ['equals', 'notEquals', 'exists', 'notExists', null],
+      mapping: {
+        equals: 'equals',
+        notEquals: 'notEquals',
+        exists: 'exists',
+        notExists: 'notExists',
+        null: undefined,
+      },
+      description: 'data.criteria – optional comparison operator (equals / notEquals / exists / notExists)',
+    },
+    valueToCompare: {
+      control: 'object',
+      description: 'data.valueToCompare – string or array of strings to compare with resolved value',
+    },
 
     // provider knobs
     isLoading: {
@@ -56,6 +72,8 @@ const meta: Meta<TArgs> = {
     const data: TInner = {
       id: args.id,
       value: args.value,
+      criteria: args.criteria as TInner['criteria'],
+      valueToCompare: args.valueToCompare as TInner['valueToCompare'],
     }
 
     return (
@@ -76,8 +94,15 @@ const meta: Meta<TArgs> = {
                   fontSize: 13,
                 }}
               >
-                I am only visible when <code>value</code> resolves to something other than{' '}
-                <code>~undefined-value~</code>.
+                I am visible when:
+                <ul style={{ marginTop: 6 }}>
+                  <li>
+                    <code>value</code> resolves (not <code>~undefined-value~</code>)
+                  </li>
+                  <li>
+                    If <code>criteria</code> is set, the comparison passes against <code>valueToCompare</code>
+                  </li>
+                </ul>
               </div>
             </VisibilityContainer>
           </div>
@@ -115,6 +140,8 @@ export const Default: Story = {
     id: 'example-visibility-container',
     // typical template used by parseWithoutPartsOfUrl
     value: "{reqsJsonPath[0]['.data.flag']['-']}",
+    criteria: undefined,
+    valueToCompare: undefined,
 
     // providers
     isLoading: false,
@@ -150,5 +177,221 @@ export const LoadingMultiQuery: Story = {
   args: {
     ...Default.args,
     isLoading: true,
+  },
+}
+
+export const CriteriaEqualsPasses: Story = {
+  args: {
+    ...Default.args,
+    id: 'visibility-criteria-equals-passes',
+    criteria: 'equals',
+    valueToCompare: ['show'],
+    value: "{reqsJsonPath[0]['.data.flag']['-']}",
+    multiQueryData: {
+      req0: {
+        data: {
+          flag: 'show',
+        },
+      },
+    },
+  },
+}
+
+export const CriteriaEqualsFails: Story = {
+  args: {
+    ...Default.args,
+    id: 'visibility-criteria-equals-fails',
+    criteria: 'equals',
+    valueToCompare: ['Role'],
+    value: "{reqsJsonPath[0]['.data.flag']['-']}",
+    multiQueryData: {
+      req0: {
+        data: {
+          flag: 'ClusterRole',
+        },
+      },
+    },
+  },
+}
+
+export const CriteriaNotEqualsPasses: Story = {
+  args: {
+    ...Default.args,
+    id: 'visibility-criteria-not-equals-passes',
+    criteria: 'notEquals',
+    valueToCompare: ['Role'],
+    value: "{reqsJsonPath[0]['.data.flag']['-']}",
+    multiQueryData: {
+      req0: {
+        data: {
+          flag: 'ClusterRole',
+        },
+      },
+    },
+  },
+}
+
+export const CriteriaNotEqualsFails: Story = {
+  args: {
+    ...Default.args,
+    id: 'visibility-criteria-not-equals-fails',
+    criteria: 'notEquals',
+    valueToCompare: ['Role'],
+    value: "{reqsJsonPath[0]['.data.flag']['-']}",
+    multiQueryData: {
+      req0: {
+        data: {
+          flag: 'Role',
+        },
+      },
+    },
+  },
+}
+
+// ========== NEW: EXISTS / NOT EXISTS CRITERIA ==========
+
+export const CriteriaExistsPasses: Story = {
+  args: {
+    ...Default.args,
+    id: 'visibility-criteria-exists-passes',
+    criteria: 'exists',
+    value: "{reqsJsonPath[0]['.data.flag']['-']}",
+    multiQueryData: {
+      req0: {
+        data: {
+          flag: 'some-value',
+        },
+      },
+    },
+  },
+}
+
+export const CriteriaExistsFails: Story = {
+  args: {
+    ...Default.args,
+    id: 'visibility-criteria-exists-fails',
+    criteria: 'exists',
+    value: "{reqsJsonPath[0]['.data.missing']['-']}",
+    multiQueryData: {
+      req0: {
+        data: {
+          flag: 'show',
+        },
+      },
+    },
+  },
+}
+
+export const CriteriaNotExistsPasses: Story = {
+  args: {
+    ...Default.args,
+    id: 'visibility-criteria-not-exists-passes',
+    criteria: 'notExists',
+    value: "{reqsJsonPath[0]['.data.missing']['-']}",
+    multiQueryData: {
+      req0: {
+        data: {
+          flag: 'show',
+        },
+      },
+    },
+  },
+}
+
+export const CriteriaNotExistsFails: Story = {
+  args: {
+    ...Default.args,
+    id: 'visibility-criteria-not-exists-fails',
+    criteria: 'notExists',
+    value: "{reqsJsonPath[0]['.data.flag']['-']}",
+    multiQueryData: {
+      req0: {
+        data: {
+          flag: 'some-value',
+        },
+      },
+    },
+  },
+}
+
+// ========== NEW: DYNAMIC valueToCompare WITH parseAll ==========
+
+export const DynamicValueToCompare: Story = {
+  args: {
+    ...Default.args,
+    id: 'visibility-dynamic-value-to-compare',
+    criteria: 'equals',
+    value: "{reqsJsonPath[0]['.status.phase']['-']}",
+    // valueToCompare uses dynamic template from another request
+    valueToCompare: ["{reqsJsonPath[1]['.data.expectedPhase']['-']}"],
+    multiQueryData: {
+      req0: {
+        status: {
+          phase: 'Running',
+        },
+      },
+      req1: {
+        data: {
+          expectedPhase: 'Running',
+        },
+      },
+    },
+  },
+}
+
+export const DynamicValueToCompareWithPartsOfUrl: Story = {
+  args: {
+    ...Default.args,
+    id: 'visibility-dynamic-value-to-compare-parts-of-url',
+    criteria: 'equals',
+    value: "{reqsJsonPath[0]['.metadata.namespace']['-']}",
+    // valueToCompare uses URL part (e.g., {2} = cluster name from URL)
+    valueToCompare: ['{2}'],
+    partsOfUrl: ['', '', 'default', 'pods', 'my-pod'],
+    multiQueryData: {
+      req0: {
+        metadata: {
+          namespace: 'default',
+        },
+      },
+    },
+  },
+}
+
+// ========== NEW: CHECKING AGAINST ~undefined-value~ ==========
+
+export const CheckAgainstUndefinedValue: Story = {
+  args: {
+    ...Default.args,
+    id: 'visibility-check-undefined-value',
+    criteria: 'equals',
+    value: "{reqsJsonPath[0]['.metadata.deletionTimestamp']['-']}",
+    valueToCompare: ['~undefined-value~'],
+    multiQueryData: {
+      req0: {
+        metadata: {
+          name: 'my-resource',
+          // deletionTimestamp is missing (undefined)
+        },
+      },
+    },
+  },
+}
+
+export const CheckNotUndefinedValue: Story = {
+  args: {
+    ...Default.args,
+    id: 'visibility-check-not-undefined-value',
+    criteria: 'notEquals',
+    value: "{reqsJsonPath[0]['.metadata.deletionTimestamp']['-']}",
+    valueToCompare: ['~undefined-value~'],
+    multiQueryData: {
+      req0: {
+        metadata: {
+          name: 'my-resource',
+          deletionTimestamp: '2024-01-01T00:00:00Z',
+        },
+      },
+    },
   },
 }
