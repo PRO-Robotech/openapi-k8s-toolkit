@@ -1,7 +1,8 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable no-continue */
 import { FC, useMemo } from 'react'
-import { Table, Tag, Typography } from 'antd'
+// import { Table, Tag, Typography } from 'antd'
+import { Table, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { usePromMatrixToLineMulti } from '../../../hooks/queryRangeMatrix/multi/usePromMatrixToLineMulti'
 import { formatBytes, formatTimestamp } from '../../../utils/formatters'
@@ -78,11 +79,11 @@ export const MatrixToTableRows: FC<TMatrixToTableRowsProps> = ({
         fixed: 'left',
         width: 240,
         render: (_, row) => {
-          const labels = Object.entries(row.metric).slice(0, 3)
+          // const labels = Object.entries(row.metric).slice(0, 3)
           return (
             <div>
               <Typography.Text strong>{row.id}</Typography.Text>
-              {labels.length > 0 && (
+              {/* {labels.length > 0 && (
                 <div style={{ marginTop: 6 }}>
                   {labels.map(([k, v]) => (
                     <Tag key={`${k}:${v}`} style={{ marginBottom: 4 }}>
@@ -90,7 +91,7 @@ export const MatrixToTableRows: FC<TMatrixToTableRowsProps> = ({
                     </Tag>
                   ))}
                 </div>
-              )}
+              )} */}
             </div>
           )
         },
@@ -145,12 +146,12 @@ export const MatrixToTableRows: FC<TMatrixToTableRowsProps> = ({
       </Typography.Title>
 
       <Table<TRow>
-        size="middle"
+        size="small"
         loading={isLoading}
         columns={columns}
         dataSource={dataSource}
         pagination={{ pageSize: 10, showSizeChanger: true }}
-        scroll={{ x: 900 }}
+        scroll={{ x: true }}
       />
     </div>
   )

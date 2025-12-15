@@ -70,12 +70,12 @@ export const VectorToTableRows: FC<TVectorToTableRowsProps> = ({
       </Typography.Title>
 
       <Table<TRow>
-        size="middle"
+        size="small"
         loading={isLoading}
         columns={columns}
         dataSource={dataSource}
         pagination={{ pageSize: 10, showSizeChanger: true }}
-        scroll={{ x: 700 }}
+        scroll={{ x: true }}
       />
     </div>
   )
