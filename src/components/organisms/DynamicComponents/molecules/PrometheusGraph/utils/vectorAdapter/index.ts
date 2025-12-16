@@ -1,4 +1,3 @@
-export type { TPrometheusVectorResponse } from './types'
 export { vectorToBarVertical, vectorToBarHorizontal } from './toBar'
 export type { TBarItem } from './toBar'
 export { vectorToBarGauge } from './toBarGauge'

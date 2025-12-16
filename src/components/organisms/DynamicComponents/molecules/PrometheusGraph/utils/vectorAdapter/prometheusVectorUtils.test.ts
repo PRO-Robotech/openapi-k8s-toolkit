@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-underscore-dangle */
-import type { TPrometheusVectorResponse } from './types'
+import type { TPrometheusVectorResponse } from '../../types'
 import { pickSeriesId } from './helpers'
 import { vectorToBarVertical, vectorToBarHorizontal } from './toBar/vectorToBarAdapter'
 import { vectorToPie } from './toPie/vectorToPieAdapter'

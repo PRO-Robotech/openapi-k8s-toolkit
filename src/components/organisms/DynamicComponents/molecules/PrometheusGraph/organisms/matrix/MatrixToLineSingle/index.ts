@@ -1,0 +1,1 @@
+export { MatrixToLineSingle } from './MatrixToLineSingle'

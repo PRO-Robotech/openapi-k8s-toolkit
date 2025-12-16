@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
-import { TPrometheusScalarResponse } from '../../utils/scalarAdapter'
+import { TPrometheusScalarResponse } from '../../types'
 
 export const usePromScalar = ({
+  baseUrl = 'http://localhost:9090/api/v1/',
   query,
   refetchInterval = 30000,
   enabled = true,
 }: {
+  baseUrl?: string
   query: string
   refetchInterval?: number | false
   enabled?: boolean
@@ -13,7 +15,7 @@ export const usePromScalar = ({
   useQuery<TPrometheusScalarResponse, Error>({
     queryKey: ['prometheus', 'scalar', query],
     queryFn: async () => {
-      const url = `http://localhost:9090/api/v1/query?query=${encodeURIComponent(query)}`
+      const url = `${baseUrl}query?query=${encodeURIComponent(query)}`
       const res = await fetch(url)
       if (!res.ok) throw new Error(`Prometheus request failed: ${res.status}`)
       const json = (await res.json()) as TPrometheusScalarResponse

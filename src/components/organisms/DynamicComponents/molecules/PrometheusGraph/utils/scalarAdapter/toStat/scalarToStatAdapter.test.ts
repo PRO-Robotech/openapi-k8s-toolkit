@@ -1,4 +1,4 @@
-import { TPrometheusScalarResponse } from '../types'
+import { TPrometheusScalarResponse } from '../../../types'
 import { scalarToStat } from './scalarToStatAdapter'
 
 describe('scalarToStat', () => {

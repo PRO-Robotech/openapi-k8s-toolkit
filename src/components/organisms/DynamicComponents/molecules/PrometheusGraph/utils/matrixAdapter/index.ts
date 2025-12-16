@@ -1,0 +1,8 @@
+export { matrixToLineSingle, matrixToLineMulti } from './toLine'
+export type { TChartPoint, TRechartsSeries } from './toLine'
+export { matrixToStackedAreaData } from './toAreaStacked'
+export type { TStackedAreaPoint } from './toAreaStacked'
+export { matrixToReducedVector } from './toReducedVector'
+export type { TReducedVectorItem, TAggregationMode } from './toReducedVector'
+export { matrixToTableMinMaxCurrent } from './toTableRows'
+export type { TSeriesStatsRow } from './toTableRows'

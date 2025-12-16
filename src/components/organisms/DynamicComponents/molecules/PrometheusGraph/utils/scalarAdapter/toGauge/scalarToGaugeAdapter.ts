@@ -1,4 +1,4 @@
-import { TPrometheusScalarResponse } from '../types'
+import { TPrometheusScalarResponse } from '../../../types'
 
 export type TGaugeItem = {
   id: string

@@ -1,0 +1,1 @@
+export { MatrixToAreaMulti } from './MatrixToAreaMulti'

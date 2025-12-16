@@ -1,0 +1,1 @@
+export { MatrixToAreaStacked } from './MatrixToAreaStacked'

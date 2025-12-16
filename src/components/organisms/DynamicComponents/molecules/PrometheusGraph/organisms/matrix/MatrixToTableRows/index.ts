@@ -1,0 +1,1 @@
+export { MatrixToTableRows } from './MatrixToTableRows'
