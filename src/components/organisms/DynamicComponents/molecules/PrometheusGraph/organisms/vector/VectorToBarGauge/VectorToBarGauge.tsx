@@ -5,12 +5,15 @@ import { usePromVector } from '../../../hooks/queryVector/usePromVector'
 import { vectorToBarGauge } from '../../../utils/vectorAdapter/toBarGauge'
 import { formatBytes } from '../../../utils/formatters'
 import { TVectorToBarGaugeProps } from '../../../types'
+import { WidthHeightDiv } from '../../../atoms'
 
 export const VectorToBarGauge: FC<TVectorToBarGaugeProps> = ({
   baseUrl,
   query = 'container_memory_usage_bytes',
   refetchInterval,
   topN = 10,
+  width,
+  height,
 }) => {
   const { data, isLoading, error } = usePromVector({ baseUrl, query, refetchInterval })
 
@@ -28,7 +31,7 @@ export const VectorToBarGauge: FC<TVectorToBarGaugeProps> = ({
   }
 
   return (
-    <div style={{ width: '100%', height: 350 }}>
+    <WidthHeightDiv $width={width} $height={height}>
       <ResponsiveContainer>
         <BarChart data={items} layout="vertical">
           <CartesianGrid strokeDasharray="3 3" />
@@ -43,6 +46,6 @@ export const VectorToBarGauge: FC<TVectorToBarGaugeProps> = ({
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </WidthHeightDiv>
   )
 }

@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContaine
 import { usePromMatrixToLineMulti } from '../../../hooks/queryRangeMatrix/multi/usePromMatrixToLineMulti'
 import { matrixToReducedVector } from '../../../utils/matrixAdapter/toReducedVector/matrixToReducedVectorAdapter'
 import { TMatrixToReducedBarProps } from '../../../types'
+import { WidthHeightDiv } from '../../../atoms'
 
 export const MatrixToReducedBar: FC<TMatrixToReducedBarProps> = ({
   baseUrl,
@@ -11,6 +12,8 @@ export const MatrixToReducedBar: FC<TMatrixToReducedBarProps> = ({
   range = '1h',
   refetchInterval,
   mode = 'avg',
+  width,
+  height,
 }) => {
   const {
     data: series = [],
@@ -34,7 +37,7 @@ export const MatrixToReducedBar: FC<TMatrixToReducedBarProps> = ({
   }
 
   return (
-    <div style={{ width: '100%', height: 350 }}>
+    <WidthHeightDiv $width={width} $height={height}>
       <ResponsiveContainer>
         <BarChart data={reduced}>
           <CartesianGrid strokeDasharray="3 3" />
@@ -49,6 +52,6 @@ export const MatrixToReducedBar: FC<TMatrixToReducedBarProps> = ({
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </WidthHeightDiv>
   )
 }

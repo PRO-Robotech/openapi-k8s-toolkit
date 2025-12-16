@@ -3,12 +3,15 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContai
 import { usePromMatrixToLineMulti } from '../../../hooks/queryRangeMatrix/multi/usePromMatrixToLineMulti'
 import { formatBytes, formatTimestamp } from '../../../utils/formatters'
 import { TMatrixToLineMultiProps } from '../../../types'
+import { WidthHeightDiv } from '../../../atoms'
 
 export const MatrixToLineMulti: FC<TMatrixToLineMultiProps> = ({
   baseUrl,
   query = 'container_memory_usage_bytes',
   range = '1h',
   refetchInterval,
+  width,
+  height,
 }) => {
   const {
     data: series,
@@ -20,8 +23,6 @@ export const MatrixToLineMulti: FC<TMatrixToLineMultiProps> = ({
     range,
     refetchInterval,
   })
-
-  // series: RechartsSeries[]
 
   const chartData = useMemo(() => {
     const result: Record<number, Record<string, number | string>> = {}
@@ -54,7 +55,7 @@ export const MatrixToLineMulti: FC<TMatrixToLineMultiProps> = ({
   }
 
   return (
-    <div style={{ width: '100%', height: 350 }}>
+    <WidthHeightDiv $width={width} $height={height}>
       <ResponsiveContainer>
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
@@ -78,6 +79,6 @@ export const MatrixToLineMulti: FC<TMatrixToLineMultiProps> = ({
           ))}
         </LineChart>
       </ResponsiveContainer>
-    </div>
+    </WidthHeightDiv>
   )
 }

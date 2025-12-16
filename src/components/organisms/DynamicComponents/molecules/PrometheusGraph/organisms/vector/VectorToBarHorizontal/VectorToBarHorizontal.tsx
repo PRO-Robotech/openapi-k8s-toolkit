@@ -5,11 +5,14 @@ import { usePromVector } from '../../../hooks/queryVector/usePromVector'
 import { vectorToBarHorizontal } from '../../../utils/vectorAdapter/toBar'
 import { formatBytes } from '../../../utils/formatters'
 import { TVectorToBarHorizontalProps } from '../../../types'
+import { WidthHeightDiv } from '../../../atoms'
 
 export const VectorToBarHorizontal: FC<TVectorToBarHorizontalProps> = ({
   baseUrl,
   query = 'container_memory_usage_bytes',
   refetchInterval,
+  width,
+  height,
 }) => {
   const { data, isLoading, error } = usePromVector({ baseUrl, query, refetchInterval })
 
@@ -24,7 +27,7 @@ export const VectorToBarHorizontal: FC<TVectorToBarHorizontalProps> = ({
   }
 
   return (
-    <div style={{ width: '100%', height: 350 }}>
+    <WidthHeightDiv $width={width} $height={height}>
       <ResponsiveContainer>
         <BarChart data={items} layout="vertical">
           <CartesianGrid strokeDasharray="3 3" />
@@ -39,6 +42,6 @@ export const VectorToBarHorizontal: FC<TVectorToBarHorizontalProps> = ({
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </WidthHeightDiv>
   )
 }

@@ -7,7 +7,7 @@ import { TScalarToStatProps } from '../../../types'
 
 export const ScalarToStat: FC<TScalarToStatProps> = ({
   baseUrl,
-  query,
+  query = 'scalar(42.42)',
   refetchInterval,
   title = 'Stat',
   formatValue,

@@ -4,12 +4,15 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContai
 import { usePromMatrixToLineSingle } from '../../../hooks/queryRangeMatrix/single/usePromMatrixToLineSingle'
 import { formatBytes, formatTimestamp } from '../../../utils/formatters'
 import { TMatrixToAreaSingleProps } from '../../../types'
+import { WidthHeightDiv } from '../../../atoms'
 
 export const MatrixToAreaSingle: FC<TMatrixToAreaSingleProps> = ({
   baseUrl,
   query = 'container_memory_usage_bytes',
   range = '1h',
   refetchInterval,
+  width,
+  height,
 }) => {
   const { data = [], isLoading, error } = usePromMatrixToLineSingle({ baseUrl, query, range, refetchInterval })
 
@@ -22,7 +25,7 @@ export const MatrixToAreaSingle: FC<TMatrixToAreaSingleProps> = ({
   }
 
   return (
-    <div style={{ width: '100%', height: 350 }}>
+    <WidthHeightDiv $width={width} $height={height}>
       <ResponsiveContainer>
         <AreaChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
@@ -58,6 +61,6 @@ export const MatrixToAreaSingle: FC<TMatrixToAreaSingleProps> = ({
           />
         </AreaChart>
       </ResponsiveContainer>
-    </div>
+    </WidthHeightDiv>
   )
 }

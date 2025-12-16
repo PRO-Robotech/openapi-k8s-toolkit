@@ -4,12 +4,15 @@ import { usePromMatrixToLineMulti } from '../../../hooks/queryRangeMatrix/multi/
 import { matrixToStackedAreaData } from '../../../utils/matrixAdapter/toAreaStacked/matrixToAreaStackedAdapter'
 import { formatBytes, formatTimestamp } from '../../../utils/formatters'
 import { TMatrixToAreaStackedProps } from '../../../types'
+import { WidthHeightDiv } from '../../../atoms'
 
 export const MatrixToAreaStacked: FC<TMatrixToAreaStackedProps> = ({
   baseUrl,
   query = 'container_memory_usage_bytes',
   range = '1h',
   refetchInterval,
+  width,
+  height,
 }) => {
   const { data: series = [], isLoading, error } = usePromMatrixToLineMulti({ baseUrl, query, range, refetchInterval })
 
@@ -23,7 +26,7 @@ export const MatrixToAreaStacked: FC<TMatrixToAreaStackedProps> = ({
   }
 
   return (
-    <div style={{ width: '100%', height: 350 }}>
+    <WidthHeightDiv $width={width} $height={height}>
       <ResponsiveContainer>
         <AreaChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
@@ -50,6 +53,6 @@ export const MatrixToAreaStacked: FC<TMatrixToAreaStackedProps> = ({
           ))}
         </AreaChart>
       </ResponsiveContainer>
-    </div>
+    </WidthHeightDiv>
   )
 }

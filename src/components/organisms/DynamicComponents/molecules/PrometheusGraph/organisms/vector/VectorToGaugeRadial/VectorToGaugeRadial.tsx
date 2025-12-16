@@ -1,8 +1,10 @@
 import { FC, useMemo } from 'react'
 import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { Spacer } from 'components/atoms'
 import { usePromVector } from '../../../hooks/queryVector/usePromVector'
 import { vectorToGaugeRadial } from '../../../utils/vectorAdapter/toGaugeRadial'
 import { TVectorToGaugeRadialProps } from '../../../types'
+import { WidthHeightDiv } from '../../../atoms'
 
 export const VectorToGaugeRadial: FC<TVectorToGaugeRadialProps> = ({
   baseUrl,
@@ -10,6 +12,8 @@ export const VectorToGaugeRadial: FC<TVectorToGaugeRadialProps> = ({
   refetchInterval,
   min = 0,
   max = 1,
+  width,
+  height,
 }) => {
   const { data, isLoading, error } = usePromVector({ baseUrl, query, refetchInterval })
 
@@ -38,10 +42,11 @@ export const VectorToGaugeRadial: FC<TVectorToGaugeRadialProps> = ({
   }
 
   return (
-    <div style={{ width: '100%', height: 300 }}>
-      <div style={{ marginBottom: 8 }}>
+    <WidthHeightDiv $width={width} $height={height}>
+      <div>
         <strong>{gauge?.id ?? 'value'}:</strong> {String(value)}
       </div>
+      <Spacer $space={8} $samespace />
       <ResponsiveContainer>
         <PieChart>
           <Pie
@@ -58,6 +63,6 @@ export const VectorToGaugeRadial: FC<TVectorToGaugeRadialProps> = ({
           </Pie>
         </PieChart>
       </ResponsiveContainer>
-    </div>
+    </WidthHeightDiv>
   )
 }

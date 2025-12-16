@@ -4,12 +4,15 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContai
 import { usePromMatrixToLineSingle } from '../../../hooks/queryRangeMatrix/single/usePromMatrixToLineSingle'
 import { formatBytes, formatTimestamp } from '../../../utils/formatters'
 import { TMatrixToLineSingleProps } from '../../../types'
+import { WidthHeightDiv } from '../../../atoms'
 
 export const MatrixToLineSingle: FC<TMatrixToLineSingleProps> = ({
   baseUrl,
   query = 'container_memory_usage_bytes',
   range = '1h',
   refetchInterval,
+  width,
+  height,
 }) => {
   const {
     data = [],
@@ -31,7 +34,7 @@ export const MatrixToLineSingle: FC<TMatrixToLineSingleProps> = ({
   }
 
   return (
-    <div style={{ width: '100%', height: 350 }}>
+    <WidthHeightDiv $width={width} $height={height}>
       <ResponsiveContainer>
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
@@ -66,6 +69,6 @@ export const MatrixToLineSingle: FC<TMatrixToLineSingleProps> = ({
           />
         </LineChart>
       </ResponsiveContainer>
-    </div>
+    </WidthHeightDiv>
   )
 }

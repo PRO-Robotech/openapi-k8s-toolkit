@@ -3,12 +3,15 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContai
 import { usePromMatrixToLineMulti } from '../../../hooks/queryRangeMatrix/multi/usePromMatrixToLineMulti'
 import { formatBytes, formatTimestamp } from '../../../utils/formatters'
 import { TMatrixToAreaMultiProps } from '../../../types'
+import { WidthHeightDiv } from '../../../atoms'
 
 export const MatrixToAreaMulti: FC<TMatrixToAreaMultiProps> = ({
   baseUrl,
   query = 'container_memory_usage_bytes',
   range = '1h',
   refetchInterval,
+  width,
+  height,
 }) => {
   const {
     data: series,
@@ -20,8 +23,6 @@ export const MatrixToAreaMulti: FC<TMatrixToAreaMultiProps> = ({
     range,
     refetchInterval,
   })
-
-  // series: RechartsSeries[]
 
   const chartData = useMemo(() => {
     const result: Record<number, Record<string, number | string>> = {}
@@ -54,7 +55,7 @@ export const MatrixToAreaMulti: FC<TMatrixToAreaMultiProps> = ({
   }
 
   return (
-    <div style={{ width: '100%', height: 350 }}>
+    <WidthHeightDiv $width={width} $height={height}>
       <ResponsiveContainer>
         <AreaChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
@@ -81,6 +82,6 @@ export const MatrixToAreaMulti: FC<TMatrixToAreaMultiProps> = ({
           ))}
         </AreaChart>
       </ResponsiveContainer>
-    </div>
+    </WidthHeightDiv>
   )
 }

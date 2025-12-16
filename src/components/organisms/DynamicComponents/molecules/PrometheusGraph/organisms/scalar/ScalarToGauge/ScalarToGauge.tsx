@@ -10,7 +10,7 @@ const clamp01 = (x: number) => Math.min(1, Math.max(0, x))
 
 export const ScalarToGauge: FC<TScalarToGaugeProps> = ({
   baseUrl,
-  query,
+  query = 'scalar(55)',
   refetchInterval,
   title = 'Gauge',
   min = 0,

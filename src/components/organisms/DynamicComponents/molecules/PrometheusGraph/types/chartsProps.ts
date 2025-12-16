@@ -1,3 +1,10 @@
+import { CSSProperties } from 'react'
+
+type TBaseContainerSizeProps = {
+  width?: CSSProperties['width']
+  height?: CSSProperties['height']
+}
+
 type TBasePromQueryProps = {
   baseUrl?: string
   query?: string
@@ -12,53 +19,53 @@ type TBaseTitleProps = {
   title?: string
 }
 
+type TBaseMinMaxProps = {
+  min?: number
+  max?: number
+}
+
+type TBaseModeProps = {
+  mode?: 'last' | 'avg' | 'sum' | 'max' | 'min'
+}
+
+type TBaseTopNProps = {
+  topN?: number
+}
+
+type TBaseFormatterProps = {
+  /** optional formatter for value */
+  formatValue?: (v: number) => string | number
+}
+
+export type TMatrixToLineSingleProps = TBaseContainerSizeProps & TBasePromQueryProps & TBaseRangeProps
+
+export type TMatrixToLineMultiProps = TBaseContainerSizeProps & TBasePromQueryProps & TBaseRangeProps
+
+export type TMatrixToAreaSingleProps = TBaseContainerSizeProps & TBasePromQueryProps & TBaseRangeProps
+
+export type TMatrixToAreaMultiProps = TBaseContainerSizeProps & TBasePromQueryProps & TBaseRangeProps
+
+export type TMatrixToAreaStackedProps = TBaseContainerSizeProps & TBasePromQueryProps & TBaseRangeProps
+
+export type TMatrixToReducedBarProps = TBaseContainerSizeProps & TBasePromQueryProps & TBaseRangeProps & TBaseModeProps
+
 export type TMatrixToTableRowsProps = TBasePromQueryProps & TBaseRangeProps & TBaseTitleProps
 
-export type TMatrixToReducedBarProps = TBasePromQueryProps &
-  TBaseRangeProps & {
-    mode?: 'last' | 'avg' | 'sum' | 'max' | 'min'
-  }
+export type TVectorToBarVerticalProps = TBaseContainerSizeProps & TBasePromQueryProps
 
-export type TMatrixToLineSingleProps = TBasePromQueryProps & TBaseRangeProps
+export type TVectorToBarHorizontalProps = TBaseContainerSizeProps & TBasePromQueryProps
 
-export type TMatrixToLineMultiProps = TBasePromQueryProps & TBaseRangeProps
-
-export type TMatrixToAreaStackedProps = TBasePromQueryProps & TBaseRangeProps
-
-export type TMatrixToAreaSingleProps = TBasePromQueryProps & TBaseRangeProps
-
-export type TMatrixToAreaMultiProps = TBasePromQueryProps & TBaseRangeProps
+export type TVectorToPieProps = TBaseContainerSizeProps & TBasePromQueryProps
 
 export type TVectorToTableRowsProps = TBasePromQueryProps & TBaseTitleProps
 
-export type TVectorToPieProps = TBasePromQueryProps
+export type TVectorToBarGaugeProps = TBaseContainerSizeProps & TBasePromQueryProps & TBaseTitleProps & TBaseTopNProps
 
-export type TVectorToGaugeRadialProps = TBasePromQueryProps &
-  TBaseTitleProps & {
-    min?: number
-    max?: number
-  }
+export type TVectorToGaugeRadialProps = TBaseContainerSizeProps &
+  TBasePromQueryProps &
+  TBaseTitleProps &
+  TBaseMinMaxProps
 
-export type TVectorToBarVerticalProps = TBasePromQueryProps
+export type TScalarToStatProps = TBasePromQueryProps & TBaseTitleProps & TBaseFormatterProps
 
-export type TVectorToBarHorizontalProps = TBasePromQueryProps
-
-export type TVectorToBarGaugeProps = TBasePromQueryProps &
-  TBaseTitleProps & {
-    topN?: number
-  }
-
-export type TScalarToGaugeProps = TBasePromQueryProps &
-  TBaseTitleProps & {
-    min?: number
-    max?: number
-    /** optional label formatter under the bar */
-    formatValue?: (v: number) => string
-  }
-
-export type TScalarToStatProps = TBasePromQueryProps &
-  TBaseTitleProps & {
-    title?: string
-    /** optional formatter for value */
-    formatValue?: (v: number) => string | number
-  }
+export type TScalarToGaugeProps = TBasePromQueryProps & TBaseTitleProps & TBaseMinMaxProps & TBaseFormatterProps

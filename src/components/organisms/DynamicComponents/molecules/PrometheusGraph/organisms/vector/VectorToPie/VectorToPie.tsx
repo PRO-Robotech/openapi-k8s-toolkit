@@ -5,11 +5,14 @@ import { usePromVector } from '../../../hooks/queryVector/usePromVector'
 import { vectorToPie } from '../../../utils/vectorAdapter/toPie'
 import { formatBytes } from '../../../utils/formatters'
 import { TVectorToPieProps } from '../../../types'
+import { WidthHeightDiv } from '../../../atoms'
 
 export const VectorToPie: FC<TVectorToPieProps> = ({
   baseUrl,
   query = 'container_memory_usage_bytes',
   refetchInterval,
+  width,
+  height,
 }) => {
   const { data, isLoading, error } = usePromVector({ baseUrl, query, refetchInterval })
 
@@ -24,7 +27,7 @@ export const VectorToPie: FC<TVectorToPieProps> = ({
   }
 
   return (
-    <div style={{ width: '100%', height: 350 }}>
+    <WidthHeightDiv $width={width} $height={height}>
       <ResponsiveContainer>
         <PieChart>
           <Tooltip formatter={v => formatBytes(v)} />
@@ -35,6 +38,6 @@ export const VectorToPie: FC<TVectorToPieProps> = ({
           </Pie>
         </PieChart>
       </ResponsiveContainer>
-    </div>
+    </WidthHeightDiv>
   )
 }
