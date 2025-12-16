@@ -1,4 +1,4 @@
-import { TPrometheusVectorResponse } from '../types'
+import { TPrometheusVectorResponse } from '../../../types'
 import { pickSeriesId } from '../helpers'
 
 // Generic "bar item" (works for both vertical & horizontal;

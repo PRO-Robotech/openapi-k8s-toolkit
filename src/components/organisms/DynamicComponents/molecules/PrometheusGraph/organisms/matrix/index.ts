@@ -1,0 +1,7 @@
+export { MatrixToAreaMulti } from './MatrixToAreaMulti'
+export { MatrixToAreaSingle } from './MatrixToAreaSingle'
+export { MatrixToAreaStacked } from './MatrixToAreaStacked'
+export { MatrixToLineMulti } from './MatrixToLineMulti'
+export { MatrixToLineSingle } from './MatrixToLineSingle'
+export { MatrixToReducedBar } from './MatrixToReducedBar'
+export { MatrixToTableRows } from './MatrixToTableRows'

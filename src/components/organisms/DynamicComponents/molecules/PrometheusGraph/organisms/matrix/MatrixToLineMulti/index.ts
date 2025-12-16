@@ -1,0 +1,1 @@
+export { MatrixToLineMulti } from './MatrixToLineMulti'
