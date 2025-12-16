@@ -7,6 +7,6 @@ type TWidthHeightDivProps = {
 }
 
 export const WidthHeightDiv = styled.div<TWidthHeightDivProps>`
-  width: ${({ $width = 'auto' }) => $width};
-  height: ${({ $height = 'auto' }) => $height};
+  width: ${({ $width = '100%' }) => $width};
+  height: ${({ $height = '350px' }) => $height};
 `

@@ -46,21 +46,20 @@ const meta: Meta<typeof VectorToBarHorizontal> = {
   component: VectorToBarHorizontal,
   argTypes: {
     query: { control: 'text' },
-    title: { control: 'text' },
 
     // 👇 extra arg not in component props
     theme: { control: 'radio', options: ['light', 'dark'] },
   } as any,
 
   render: (args: any) => {
-    const { theme, query, title } = args as TExtraArgs & { query?: string; title?: string }
-    const data = { query, title }
+    const { theme, query } = args as TExtraArgs & { query?: string }
+    const data = { query }
 
     return (
       <>
         <SmartProvider multiQueryValue={EMPTY_MULTI_QUERY_VALUE} theme={theme} partsOfUrl={[]}>
           <div style={{ padding: 16 }}>
-            <VectorToBarHorizontal query={query} title={title} />
+            <VectorToBarHorizontal query={query} />
           </div>
         </SmartProvider>
 
@@ -90,7 +89,6 @@ type TStory = StoryObj<typeof VectorToBarHorizontal & ((p: any) => any)>
 export const Success: TStory = {
   args: {
     query: 'container_memory_usage_bytes_success',
-    title: 'Vector → Bar (Horizontal)',
     theme: 'light',
   },
   parameters: { msw: { handlers: [successHandler] } },
@@ -99,7 +97,6 @@ export const Success: TStory = {
 export const Loading: TStory = {
   args: {
     query: 'container_memory_usage_bytes_loading',
-    title: 'Vector → Bar (Horizontal)',
     theme: 'light',
   },
   parameters: { msw: { handlers: [loadingHandler] } },
@@ -108,7 +105,6 @@ export const Loading: TStory = {
 export const Error: TStory = {
   args: {
     query: 'container_memory_usage_bytes_error',
-    title: 'Vector → Bar (Horizontal)',
     theme: 'light',
   },
   parameters: { msw: { handlers: [errorHandler] } },
@@ -117,7 +113,6 @@ export const Error: TStory = {
 export const DarkTheme: TStory = {
   args: {
     query: 'container_memory_usage_bytes_dark',
-    title: 'Vector → Bar (Horizontal)',
     theme: 'dark',
   },
   parameters: { msw: { handlers: [successHandler] } },

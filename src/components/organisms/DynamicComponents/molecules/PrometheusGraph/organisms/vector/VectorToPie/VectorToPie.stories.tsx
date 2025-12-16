@@ -56,7 +56,6 @@ const meta: Meta<typeof VectorToPie> = {
   component: VectorToPie,
   argTypes: {
     query: { control: 'text' },
-    title: { control: 'text' },
 
     // extra args (used only by render/SmartProvider)
     theme: { control: 'radio', options: ['light', 'dark'] },
@@ -64,15 +63,15 @@ const meta: Meta<typeof VectorToPie> = {
   } as any,
 
   render: (args: any) => {
-    const { query, title, theme } = args as TExtraArgs & { query?: string; title?: string }
+    const { query, theme } = args as TExtraArgs & { query?: string }
 
-    const data = { query, title }
+    const data = { query }
 
     return (
       <>
         <SmartProvider multiQueryValue={EMPTY_MULTI_QUERY_VALUE} theme={theme} partsOfUrl={[]}>
           <div style={{ padding: 16 }}>
-            <VectorToPie query={query} title={title} />
+            <VectorToPie query={query} />
           </div>
         </SmartProvider>
 
@@ -102,7 +101,6 @@ type TStory = StoryObj<any>
 export const Success: TStory = {
   args: {
     query: 'some_distribution_metric_success',
-    title: 'Vector → Pie',
     theme: 'light',
     state: 'success',
   },
@@ -112,7 +110,6 @@ export const Success: TStory = {
 export const Loading: TStory = {
   args: {
     query: 'some_distribution_metric_loading',
-    title: 'Vector → Pie',
     theme: 'light',
     state: 'loading',
   },
@@ -122,7 +119,6 @@ export const Loading: TStory = {
 export const Error: TStory = {
   args: {
     query: 'some_distribution_metric_error',
-    title: 'Vector → Pie',
     theme: 'light',
     state: 'error',
   },
@@ -132,7 +128,6 @@ export const Error: TStory = {
 export const DarkTheme: TStory = {
   args: {
     query: 'some_distribution_metric_dark',
-    title: 'Vector → Pie',
     theme: 'dark',
     state: 'success',
   },
