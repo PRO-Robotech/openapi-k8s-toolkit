@@ -41,6 +41,7 @@ import {
   Toggler,
   TogglerSegmented,
   VMVNC,
+  PrometheusGraph,
 } from './molecules'
 import { TDynamicComponentsAppTypeMap } from './types'
 
@@ -86,4 +87,5 @@ export const DynamicComponents: TRendererComponents<TDynamicComponentsAppTypeMap
   Toggler,
   TogglerSegmented,
   VMVNC,
+  PrometheusGraph,
 }

@@ -413,4 +413,34 @@ export type TDynamicComponentsAppTypeMap = {
     forcedFullWsPath?: string
     substractHeight?: number
   }
+  PrometheusGraph: {
+    id: number | string
+    type:
+      | 'MatrixToAreaMulti'
+      | 'MatrixToAreaSingle'
+      | 'MatrixToAreaStacked'
+      | 'MatrixToLineMulti'
+      | 'MatrixToLineSingle'
+      | 'MatrixToReducedBar'
+      | 'MatrixToTableRows'
+      | 'VectorToBarGauge'
+      | 'VectorToBarHorizontal'
+      | 'VectorToBarVertical'
+      | 'VectorToGaugeRadial'
+      | 'VectorToPie'
+      | 'VectorToTableRows'
+      | 'ScalarToGauge'
+      | 'ScalarToStat'
+    width?: CSSProperties['width']
+    height?: CSSProperties['height']
+    baseUrl?: string
+    query?: string
+    refetchInterval?: number | false
+    range?: string
+    title?: string
+    min?: number
+    max?: number
+    mode?: 'last' | 'avg' | 'sum' | 'max' | 'min'
+    topN?: number
+  }
 }
