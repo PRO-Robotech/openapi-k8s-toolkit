@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { prepare } from './utils'
@@ -214,5 +215,158 @@ describe('prepare (rich table data/columns)', () => {
     const row = (dataSource as any[])[0]
     expect(row._flatMapLabels_Key).toBeNull()
     expect(row._flatMapLabels_Value).toBeNull()
+  })
+
+  //
+  // NEW TESTS for pathToKey
+  //
+
+  test('uses pathToKey to build key when additionalPrinterColumns + dataForControls are provided', () => {
+    const onDeleteHandle = jest.fn()
+
+    const dataForControls = {
+      cluster: 'c1',
+      syntheticProject: 'sp1',
+      pathPrefix: 'pp',
+      apiVersion: 'apps/v1',
+      plural: 'deployments',
+      backlink: 'back',
+      deletePathPrefix: '/delete',
+      onDeleteHandle,
+      permissions: { canUpdate: true, canDelete: true },
+    }
+
+    const additionalPrinterColumns = [{ name: 'Name', jsonPath: '.metadata.name' }] as any
+
+    const dataItems = [
+      {
+        metadata: { name: 'n1', namespace: 'ns1', uid: 'uid-123' },
+        spec: { x: 1 },
+      },
+    ] as any
+
+    const { dataSource } = prepare({
+      dataItems,
+      additionalPrinterColumns,
+      dataForControls,
+      pathToKey: '.metadata.uid',
+    })
+
+    expect(dataSource).toHaveLength(1)
+    const row = (dataSource as any[])[0]
+
+    // key should come from the jsonpath applied to the whole object
+    expect(row.key).toBe('uid-123')
+
+    // rest of internalDataForControls is still correct
+    expect(row.internalDataForControls).toEqual(
+      expect.objectContaining({
+        cluster: 'c1',
+        syntheticProject: 'sp1',
+        pathPrefix: 'pp',
+        apiGroupAndVersion: 'apps/v1',
+        plural: 'deployments',
+        name: 'n1',
+        namespace: 'ns1',
+      }),
+    )
+  })
+
+  test('uses pathToKey to build key when no additionalPrinterColumns (spec branch)', () => {
+    const onDeleteHandle = jest.fn()
+
+    const dataForControls = {
+      cluster: 'c1',
+      syntheticProject: 'sp1',
+      pathPrefix: 'pp',
+      apiVersion: 'apps/v1',
+      plural: 'deployments',
+      backlink: 'back',
+      deletePathPrefix: '/delete',
+      onDeleteHandle,
+      permissions: { canUpdate: true, canDelete: true },
+    }
+
+    const dataItems = [
+      {
+        metadata: { name: 'n1', namespace: 'ns1', uid: 'uid-999' },
+        spec: { a: 'x' },
+      },
+    ] as any
+
+    const { dataSource } = prepare({
+      dataItems,
+      dataForControls,
+      pathToKey: '.metadata.uid',
+    })
+
+    expect(dataSource).toHaveLength(1)
+    const row = (dataSource as any[])[0]
+
+    // key should come from the jsonpath applied to the whole object
+    expect(row.key).toBe('uid-999')
+
+    // data should still come from spec
+    expect(row.a).toBe('x')
+
+    // NOTE: implementation uses `synthetichProject` (with h) in this branch
+    expect(row.internalDataForControls).toEqual(
+      expect.objectContaining({
+        cluster: 'c1',
+        synthetichProject: 'sp1',
+        pathPrefix: 'pp',
+        apiGroupAndVersion: 'apps/v1',
+        plural: 'deployments',
+        name: 'n1',
+        namespace: 'ns1',
+      }),
+    )
+  })
+
+  test('uses pathToKey to build key when additionalPrinterColumns is present but dataForControls is missing', () => {
+    const additionalPrinterColumns = [{ name: 'Name', jsonPath: '.metadata.name' }] as any
+
+    const dataItems = [
+      {
+        metadata: { name: 'n1', namespace: 'ns1', uid: 'uid-extra' },
+        spec: { a: 'x' },
+      },
+    ] as any
+
+    const { dataSource } = prepare({
+      dataItems,
+      additionalPrinterColumns,
+      pathToKey: '.metadata.uid',
+    })
+
+    expect(dataSource).toHaveLength(1)
+    const row = (dataSource as any[])[0]
+
+    // In this branch, we spread the whole object and compute key from pathToKey
+    expect(row.key).toBe('uid-extra')
+    expect(row.metadata.name).toBe('n1')
+    expect(row.metadata.namespace).toBe('ns1')
+  })
+
+  test('uses pathToKey to build key in spec branch when dataForControls is missing', () => {
+    const dataItems = [
+      {
+        metadata: { name: 'n1', namespace: 'ns1', uid: 'uid-spec-only' },
+        spec: { a: 'x' },
+      },
+    ] as any
+
+    const { dataSource } = prepare({
+      dataItems,
+      pathToKey: '.metadata.uid',
+    })
+
+    expect(dataSource).toHaveLength(1)
+    const row = (dataSource as any[])[0]
+
+    // key should come from jsonpath
+    expect(row.key).toBe('uid-spec-only')
+    // we still only expose spec fields in this branch
+    expect(row.a).toBe('x')
   })
 })

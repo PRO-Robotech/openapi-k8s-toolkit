@@ -52,6 +52,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     k8sResource,
     dataForControls,
     baseprefix,
+    pathToKey,
     ...props
   } = data
 
@@ -288,6 +289,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
         dataForControls={dataForControlsPrepared}
         withoutControls={!dataForControlsPrepared}
         baseprefix={baseprefix}
+        pathToKey={pathToKey}
         {...props}
       />
       {dataForControlsPrepared && (
