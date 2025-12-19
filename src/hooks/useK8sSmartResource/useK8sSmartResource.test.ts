@@ -3,22 +3,19 @@
 /** @jest-environment jsdom */
 
 import { renderHook, waitFor } from '@testing-library/react'
-import { getKinds } from 'api/bff/search/getKinds'
 import { kindByGvr } from 'utils/kindByGvr'
-import { getSortedKindsAll } from 'utils/getSortedKindsAll'
 import { useK8sSmartResource } from './useK8sSmartResource'
 // deps
 import { useK8sSmartResourceWithoutKinds } from './useK8sSmartResourceWithoutKinds'
+import { useKinds } from '../useKinds'
 
 jest.mock('./useK8sSmartResourceWithoutKinds')
-jest.mock('api/bff/search/getKinds')
+jest.mock('../useKinds')
 jest.mock('utils/kindByGvr')
-jest.mock('utils/getSortedKindsAll')
 
 const mockBase = useK8sSmartResourceWithoutKinds as unknown as jest.Mock
-const mockGetKinds = getKinds as unknown as jest.Mock
+const mockUseKinds = useKinds as unknown as jest.Mock
 const mockKindByGvr = kindByGvr as unknown as jest.Mock
-const mockGetSortedKindsAll = getSortedKindsAll as unknown as jest.Mock
 
 const baseReturn = (over?: Partial<any>) => ({
   data: undefined,
@@ -40,15 +37,12 @@ beforeEach(() => {
   jest.clearAllMocks()
   mockBase.mockReturnValue(baseReturn())
 
-  /**
-   * ✅ IMPORTANT:
-   * Default to a never-resolving promise so tests that don't care about kinds
-   * won't trigger async state updates after assertions (avoids act warnings).
-   * Tests that *do* care override this with mockResolvedValue/mockRejectedValue.
-   */
-  mockGetKinds.mockImplementation(() => new Promise(() => {}))
+  // By default, no kinds data available
+  mockUseKinds.mockReturnValue({
+    data: undefined,
+  })
 
-  mockGetSortedKindsAll.mockImplementation(x => x)
+  // By default, resolver that always returns undefined
   mockKindByGvr.mockReturnValue(() => undefined)
 })
 
@@ -96,8 +90,13 @@ describe('useK8sSmartResource', () => {
     const rawKinds = [{ kind: 'Deployment', apiVersion: 'apps/v1' }]
     const sortedKinds = [{ kind: 'Deployment', apiVersion: 'apps/v1' }]
 
-    mockGetKinds.mockResolvedValue(rawKinds)
-    mockGetSortedKindsAll.mockReturnValue(sortedKinds)
+    // useKinds will provide kindsWithVersion to the hook
+    mockUseKinds.mockReturnValue({
+      data: {
+        kindIndex: rawKinds,
+        kindsWithVersion: sortedKinds,
+      },
+    })
 
     const resolver = jest.fn((gvr: string) => (gvr === 'apps~v1~deployments' ? 'Deployment' : undefined))
     mockKindByGvr.mockReturnValue(resolver)
@@ -124,7 +123,12 @@ describe('useK8sSmartResource', () => {
     expect(items[1].kind).toBe('Existing')
     expect(items[1].apiVersion).toBe('custom/v9')
 
-    expect(mockGetKinds).toHaveBeenCalledWith({ cluster: 'c1' })
+    // useKinds is called with cluster, isEnabled, refetchInterval=false
+    expect(mockUseKinds).toHaveBeenCalledWith({
+      cluster: 'c1',
+      isEnabled: true,
+      refetchInterval: false,
+    })
     expect(mockKindByGvr).toHaveBeenCalledWith(sortedKinds)
     expect(resolver).toHaveBeenCalled()
   })
@@ -133,7 +137,12 @@ describe('useK8sSmartResource', () => {
     const a = mkItem('a')
     mockBase.mockReturnValue(baseReturn({ data: { items: [a] }, _meta: { used: 'list' } }))
 
-    mockGetKinds.mockResolvedValue([]) // allow effect to resolve safely here
+    mockUseKinds.mockReturnValue({
+      data: {
+        kindIndex: [],
+        kindsWithVersion: [],
+      },
+    })
     mockKindByGvr.mockReturnValue(() => undefined)
 
     const { result } = renderHook(() =>
@@ -155,7 +164,7 @@ describe('useK8sSmartResource', () => {
     expect(item0.apiVersion).toBe('v1')
   })
 
-  test('cluster empty: does not call getKinds; still adds apiVersion to items', () => {
+  test('cluster empty: still calls useKinds with isEnabled=false and adds apiVersion to items', () => {
     const a = mkItem('a')
     mockBase.mockReturnValue(baseReturn({ data: { items: [a] } }))
 
@@ -167,18 +176,28 @@ describe('useK8sSmartResource', () => {
       }),
     )
 
-    expect(mockGetKinds).not.toHaveBeenCalled()
+    expect(mockUseKinds).toHaveBeenCalledWith({
+      cluster: '',
+      isEnabled: false,
+      refetchInterval: false,
+    })
 
     const item0 = (result.current.data as any).items[0]
     expect(item0.apiVersion).toBe('v1')
     expect(item0.kind).toBeUndefined()
   })
 
-  test('getKinds failure: keeps base data and enriches apiVersion without kind', async () => {
+  test('no kinds (e.g. getKinds failure upstream): keeps base data and enriches apiVersion without kind', async () => {
     const a = mkItem('a')
     mockBase.mockReturnValue(baseReturn({ data: { items: [a] }, _meta: { used: 'watch' } }))
 
-    mockGetKinds.mockRejectedValue(new Error('boom'))
+    // Simulate "failure" by having no data; error is not used by this hook,
+    // but we can include it to mirror React Query shape.
+    mockUseKinds.mockReturnValue({
+      data: undefined,
+      error: new Error('boom'),
+      isError: true,
+    })
     mockKindByGvr.mockReturnValue(() => undefined)
 
     const { result } = renderHook(() =>

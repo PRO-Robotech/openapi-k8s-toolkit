@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+// import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import type { TKindWithVersion } from 'localTypes/search'
-import { getKinds } from 'api/bff/search/getKinds'
+// import { getKinds } from 'api/bff/search/getKinds'
 import { kindByGvr } from 'utils/kindByGvr'
-import { getSortedKindsAll } from 'utils/getSortedKindsAll'
+// import { getSortedKindsAll } from 'utils/getSortedKindsAll'
+import { useKinds } from '../useKinds'
 import { useK8sSmartResourceWithoutKinds, type TUseK8sSmartResourceParams } from './useK8sSmartResourceWithoutKinds'
 
 /**
@@ -36,35 +38,45 @@ export const useK8sSmartResource = <T>(params: TUseK8sSmartResourceParams<T>) =>
   // 1️⃣ Base hook (verbs + list/watch)
   const base = useK8sSmartResourceWithoutKinds<T>(params)
 
-  // 2️⃣ Load kinds for this cluster (once, cached by React state)
-  const [kindsWithVersion, setKindsWithVersion] = useState<readonly TKindWithVersion[] | undefined>(undefined)
+  // 2️⃣ Get kinds via React Query
+  const { data: kindsData } = useKinds({
+    cluster,
+    isEnabled: !!cluster,
+    // you can choose whether to poll or not here; maybe false for this use
+    refetchInterval: false,
+  })
 
-  useEffect(() => {
-    let cancelled = false
+  const kindsWithVersion: readonly TKindWithVersion[] | undefined = kindsData?.kindsWithVersion
 
-    if (!cluster) {
-      setKindsWithVersion(undefined)
-      return undefined
-    }
+  // // 2️⃣ Load kinds for this cluster (once, cached by React state)
+  // const [kindsWithVersion, setKindsWithVersion] = useState<readonly TKindWithVersion[] | undefined>(undefined)
 
-    getKinds({ cluster })
-      .then(data => {
-        if (cancelled) {
-          return
-        }
-        setKindsWithVersion(getSortedKindsAll(data.data))
-      })
-      .catch(() => {
-        // if kinds fail, we just won't enrich; base data still returned
-        if (!cancelled) {
-          setKindsWithVersion(undefined)
-        }
-      })
+  // useEffect(() => {
+  //   let cancelled = false
 
-    return () => {
-      cancelled = true
-    }
-  }, [cluster])
+  //   if (!cluster) {
+  //     setKindsWithVersion(undefined)
+  //     return undefined
+  //   }
+
+  //   getKinds({ cluster })
+  //     .then(data => {
+  //       if (cancelled) {
+  //         return
+  //       }
+  //       setKindsWithVersion(getSortedKindsAll(data.data))
+  //     })
+  //     .catch(() => {
+  //       // if kinds fail, we just won't enrich; base data still returned
+  //       if (!cancelled) {
+  //         setKindsWithVersion(undefined)
+  //       }
+  //     })
+
+  //   return () => {
+  //     cancelled = true
+  //   }
+  // }, [cluster])
 
   // 3️⃣ Build resolver "gvr -> kind" when kinds are available
   const resolveKindByGvr = useMemo(
