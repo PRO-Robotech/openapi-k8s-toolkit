@@ -42,8 +42,6 @@ export const useK8sSmartResource = <T>(params: TUseK8sSmartResourceParams<T>) =>
   const { data: kindsData } = useKinds({
     cluster,
     isEnabled: !!cluster,
-    // you can choose whether to poll or not here; maybe false for this use
-    refetchInterval: false,
   })
 
   const kindsWithVersion: readonly TKindWithVersion[] | undefined = kindsData?.kindsWithVersion
