@@ -123,11 +123,10 @@ describe('useK8sSmartResource', () => {
     expect(items[1].kind).toBe('Existing')
     expect(items[1].apiVersion).toBe('custom/v9')
 
-    // useKinds is called with cluster, isEnabled, refetchInterval=false
+    // useKinds is called with cluster and isEnabled
     expect(mockUseKinds).toHaveBeenCalledWith({
       cluster: 'c1',
       isEnabled: true,
-      refetchInterval: false,
     })
     expect(mockKindByGvr).toHaveBeenCalledWith(sortedKinds)
     expect(resolver).toHaveBeenCalled()
@@ -179,7 +178,6 @@ describe('useK8sSmartResource', () => {
     expect(mockUseKinds).toHaveBeenCalledWith({
       cluster: '',
       isEnabled: false,
-      refetchInterval: false,
     })
 
     const item0 = (result.current.data as any).items[0]
