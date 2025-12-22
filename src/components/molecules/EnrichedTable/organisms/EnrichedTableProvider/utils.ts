@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { TableProps } from 'antd'
 import jp from 'jsonpath'
@@ -6,11 +7,13 @@ import { TAdditionalPrinterColumns } from 'localTypes/richTable'
 
 export const prepare = ({
   dataItems,
+  pathToKey,
   resourceSchema,
   dataForControls,
   additionalPrinterColumns,
 }: {
   dataItems: TJSON[]
+  pathToKey?: string
   resourceSchema?: TJSON
   dataForControls?: {
     cluster: string
@@ -123,13 +126,18 @@ export const prepare = ({
             onDeleteHandle: dataForControls.onDeleteHandle,
             permissions: dataForControls.permissions,
           }
+          const key = pathToKey
+            ? jp.query(el, `$${pathToKey}`)[0]
+            : `${el.metadata.name}${el.metadata.namespace ? `-${el.metadata.namespace}` : ''}`
           return {
-            key: `${el.metadata.name}${el.metadata.namespace ? `-${el.metadata.namespace}` : ''}`,
+            key,
             ...el,
             internalDataForControls,
           }
         }
-        return { key: JSON.stringify(el), ...el }
+
+        const key = pathToKey ? jp.query(el, `$${pathToKey}`)[0] : JSON.stringify(el)
+        return { key, ...el }
       }
       // impossible in k8s
       return {}
@@ -229,13 +237,17 @@ export const prepare = ({
             onDeleteHandle: dataForControls.onDeleteHandle,
             permissions: dataForControls.permissions,
           }
+          const key = pathToKey
+            ? jp.query(el, `$${pathToKey}`)[0]
+            : `${el.metadata.name}${el.metadata.namespace ? `-${el.metadata.namespace}` : ''}`
           return {
-            key: `${el.metadata.name}${el.metadata.namespace ? `-${el.metadata.namespace}` : ''}`,
+            key,
             ...el.spec,
             internalDataForControls,
           }
         }
-        return { key: JSON.stringify(el.spec), ...el.spec }
+        const key = pathToKey ? jp.query(el, `$${pathToKey}`)[0] : JSON.stringify(el.spec)
+        return { key, ...el.spec }
       }
       // impossible in k8s
       return {}

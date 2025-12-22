@@ -85,6 +85,7 @@ export type TDynamicComponentsAppTypeMap = {
       pathToLabels: string | string[] // jsonpath or keys as string[]
     }
     fieldSelector?: Record<string, string>
+    pathToKey?: string // jsonpath for each row
   } & Omit<
     TEnrichedTableProviderProps,
     | 'tableMappingsReplaceValues'
