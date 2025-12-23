@@ -1,5 +1,4 @@
-/* eslint-disable no-console */
-import React, { FC, useEffect, useMemo, useState } from 'react'
+import React, { FC, useMemo, useState } from 'react'
 import { Select } from 'antd'
 import { filterSelectOptions } from 'utils/filterSelectOptions'
 import { Spacer } from 'components/atoms'
@@ -22,11 +21,13 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({
   nodeName,
   substractHeight,
   defaultProfile,
-  listPodTemplatesNs = 'incloud-web',
+  listPodTemplatesNs,
 }) => {
   const [currentProfile, setCurrentProfile] = useState<string>(defaultProfile || 'general')
 
   const endpoint = `/api/clusters/${cluster}/openapi-bff-ws/terminal/terminalNode/terminalNode`
+
+  const isUsingPodTemplates = Boolean(listPodTemplatesNs && listPodTemplatesNs.length > 0)
 
   const podTemplatesWsUrl = `/api/clusters/${cluster}/openapi-bff-ws/listThenWatch/listWatchWs`
   const podTemplates = useListWatch({
@@ -36,8 +37,7 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({
       plural: 'podtemplates',
       namespace: listPodTemplatesNs,
     },
-    preserveStateOnUrlChange: false,
-    isEnabled: Boolean(listPodTemplatesNs && listPodTemplatesNs.length > 0),
+    isEnabled: isUsingPodTemplates,
   })
 
   const podTemplateNames = useMemo(() => {
@@ -49,6 +49,9 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({
   }, [podTemplates.state.byKey])
 
   const hasPodTemplates = podTemplateNames.length > 0
+
+  const isPredefinedProfile = PREDEFINED_PROFILES.some(p => p === currentProfile)
+  const isCustomTemplate = isUsingPodTemplates && hasPodTemplates && !isPredefinedProfile
 
   const selectOptions = useMemo(() => {
     const predefinedOptions = PREDEFINED_PROFILES.map(profile => ({
@@ -72,9 +75,6 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({
     ]
   }, [hasPodTemplates, podTemplateNames])
 
-  const isPredefinedProfile = PREDEFINED_PROFILES.includes(currentProfile as typeof PREDEFINED_PROFILES[number])
-  const selectedPodTemplateName = hasPodTemplates && !isPredefinedProfile ? currentProfile : undefined
-
   return (
     <>
       <Styled.CustomSelect>
@@ -93,7 +93,8 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({
           endpoint={endpoint}
           nodeName={nodeName}
           profile={currentProfile}
-          podTemplateName={selectedPodTemplateName}
+          isCustomTemplate={isCustomTemplate}
+          podTemplateNamespace={isCustomTemplate ? listPodTemplatesNs : undefined}
           substractHeight={substractHeight}
           key={`${cluster}-${nodeName}-${listPodTemplatesNs}-${currentProfile}`}
         />
