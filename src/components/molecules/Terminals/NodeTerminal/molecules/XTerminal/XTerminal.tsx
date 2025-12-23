@@ -13,6 +13,7 @@ type TXTerminalProps = {
   profile: string
   isCustomTemplate?: boolean
   podTemplateNamespace?: string
+  containerName?: string
   substractHeight: number
 }
 
@@ -22,6 +23,7 @@ export const XTerminal: FC<TXTerminalProps> = ({
   profile,
   isCustomTemplate,
   podTemplateNamespace,
+  containerName,
   substractHeight,
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true)
@@ -90,6 +92,7 @@ export const XTerminal: FC<TXTerminalProps> = ({
       if (isCustomTemplate) {
         payload.podTemplateName = profile
         payload.podTemplateNamespace = podTemplateNamespace
+        payload.containerName = containerName
       }
       socket.send(JSON.stringify({ type: 'init', payload }))
       console.log(`[${nodeName}/${profile}]: WebSocket Client Connected`)
@@ -183,7 +186,7 @@ export const XTerminal: FC<TXTerminalProps> = ({
         socket.close()
       }
     }
-  }, [terminal, endpoint, nodeName, profile, isCustomTemplate, podTemplateNamespace])
+  }, [terminal, endpoint, nodeName, profile, isCustomTemplate, podTemplateNamespace, containerName])
 
   return (
     <>
