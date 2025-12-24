@@ -59,8 +59,18 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({
 
   const hasPodTemplates = podTemplateNames.length > 0
 
-  const isPredefinedProfile = PREDEFINED_PROFILES.some(p => p === currentProfile)
-  const isCustomTemplate = isUsingPodTemplates && hasPodTemplates && !isPredefinedProfile
+  const isCustomTemplate = isUsingPodTemplates && hasPodTemplates
+
+  useEffect(() => {
+    if (hasPodTemplates && !podTemplateNames.includes(currentProfile)) {
+      setCurrentProfile(podTemplateNames[0])
+    } else if (
+      !hasPodTemplates &&
+      !PREDEFINED_PROFILES.includes(currentProfile as (typeof PREDEFINED_PROFILES)[number])
+    ) {
+      setCurrentProfile(defaultProfile || 'general')
+    }
+  }, [hasPodTemplates, podTemplateNames, currentProfile, defaultProfile])
 
   const containerNames = useMemo(() => {
     if (!isCustomTemplate) return []
@@ -84,25 +94,14 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({
   }, [isCustomTemplate, containerNames])
 
   const selectOptions = useMemo(() => {
-    const predefinedOptions = PREDEFINED_PROFILES.map(profile => ({
+    if (hasPodTemplates) {
+      return podTemplateNames.map(name => ({ value: name, label: name }))
+    }
+
+    return PREDEFINED_PROFILES.map(profile => ({
       value: profile,
       label: profile,
     }))
-
-    if (!hasPodTemplates) {
-      return predefinedOptions
-    }
-
-    return [
-      {
-        label: 'Predefined Profiles',
-        options: predefinedOptions,
-      },
-      {
-        label: 'Custom PodTemplates',
-        options: podTemplateNames.map(name => ({ value: name, label: name })),
-      },
-    ]
   }, [hasPodTemplates, podTemplateNames])
 
   const canShowTerminal = currentProfile && (!isCustomTemplate || currentContainer)

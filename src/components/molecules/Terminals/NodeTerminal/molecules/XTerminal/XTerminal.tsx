@@ -17,6 +17,14 @@ type TXTerminalProps = {
   substractHeight: number
 }
 
+type TNodeTerminalPayload = {
+  nodeName: string
+  profile: string
+  podTemplateName?: string
+  podTemplateNamespace?: string
+  containerName?: string
+}
+
 export const XTerminal: FC<TXTerminalProps> = ({
   endpoint,
   nodeName,
@@ -88,7 +96,7 @@ export const XTerminal: FC<TXTerminalProps> = ({
     socketRef.current = socket
 
     socket.onopen = () => {
-      const payload: Record<string, unknown> = { nodeName, profile }
+      const payload: TNodeTerminalPayload = { nodeName, profile }
       if (isCustomTemplate) {
         payload.podTemplateName = profile
         payload.podTemplateNamespace = podTemplateNamespace
