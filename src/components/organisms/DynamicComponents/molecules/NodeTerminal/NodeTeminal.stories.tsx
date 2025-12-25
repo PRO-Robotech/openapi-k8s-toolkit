@@ -48,6 +48,10 @@ const meta: Meta<TArgs> = {
       description:
         'data.nodeName – name of the node to open the terminal on; can contain placeholders resolved via parseAll',
     },
+    listPodTemplatesNs: {
+      control: 'text',
+      description: 'Optional: data.listPodTemplatesNs – namespace to fetch v1/PodTemplates for profiles',
+    },
     substractHeight: {
       control: 'number',
       description:
@@ -61,6 +65,7 @@ const meta: Meta<TArgs> = {
       id: args.id,
       cluster: args.cluster,
       nodeName: args.nodeName,
+      listPodTemplatesNs: args.listPodTemplatesNs,
       substractHeight: args.substractHeight,
     }
 

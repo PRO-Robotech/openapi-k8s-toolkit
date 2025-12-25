@@ -5,16 +5,28 @@ import { Terminal as XTerm } from '@xterm/xterm'
 import themes from 'xterm-theme'
 import { FitAddon } from '@xterm/addon-fit'
 import '@xterm/xterm/css/xterm.css'
+import { TNodeTerminalPayload } from './types'
 import { Styled } from './styled'
 
 type TXTerminalProps = {
   endpoint: string
   nodeName: string
   profile: string
+  isCustomTemplate?: boolean
+  podTemplateNamespace?: string
+  containerName?: string
   substractHeight: number
 }
 
-export const XTerminal: FC<TXTerminalProps> = ({ endpoint, nodeName, profile, substractHeight }) => {
+export const XTerminal: FC<TXTerminalProps> = ({
+  endpoint,
+  nodeName,
+  profile,
+  isCustomTemplate,
+  podTemplateNamespace,
+  containerName,
+  substractHeight,
+}) => {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<Event>()
 
@@ -77,12 +89,13 @@ export const XTerminal: FC<TXTerminalProps> = ({ endpoint, nodeName, profile, su
     socketRef.current = socket
 
     socket.onopen = () => {
-      socket.send(
-        JSON.stringify({
-          type: 'init',
-          payload: { nodeName, profile },
-        }),
-      )
+      const payload: TNodeTerminalPayload = { nodeName, profile }
+      if (isCustomTemplate) {
+        payload.podTemplateName = profile
+        payload.podTemplateNamespace = podTemplateNamespace
+        payload.containerName = containerName
+      }
+      socket.send(JSON.stringify({ type: 'init', payload }))
       console.log(`[${nodeName}/${profile}]: WebSocket Client Connected`)
       setIsLoading(false)
     }
@@ -174,7 +187,7 @@ export const XTerminal: FC<TXTerminalProps> = ({ endpoint, nodeName, profile, su
         socket.close()
       }
     }
-  }, [terminal, endpoint, nodeName, profile])
+  }, [terminal, endpoint, nodeName, profile, isCustomTemplate, podTemplateNamespace, containerName])
 
   return (
     <>
