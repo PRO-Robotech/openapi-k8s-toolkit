@@ -20,6 +20,7 @@ export const NodeTerminal: FC<{ data: TDynamicComponentsAppTypeMap['NodeTerminal
     cluster,
     nodeName,
     substractHeight,
+    listPodTemplatesNs,
     ...props
   } = data
 
@@ -32,6 +33,10 @@ export const NodeTerminal: FC<{ data: TDynamicComponentsAppTypeMap['NodeTerminal
   }, {})
 
   const clusterPrepared = parseAll({ text: cluster, replaceValues, multiQueryData })
+
+  const listPodTemplatesNsPrepared = listPodTemplatesNs
+    ? parseAll({ text: listPodTemplatesNs, replaceValues, multiQueryData })
+    : undefined
 
   const nodeNamePrepared = parseAll({ text: nodeName, replaceValues, multiQueryData })
 
@@ -46,6 +51,7 @@ export const NodeTerminal: FC<{ data: TDynamicComponentsAppTypeMap['NodeTerminal
         nodeName={nodeNamePrepared}
         substractHeight={substractHeight || 340}
         defaultProfile={nodeTerminalDefaultProfile}
+        listPodTemplatesNs={listPodTemplatesNsPrepared}
         {...props}
       />
       {children}
