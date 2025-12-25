@@ -4,18 +4,10 @@ import { filterSelectOptions } from 'utils/filterSelectOptions'
 import { Spacer } from 'components/atoms'
 import { useListWatch } from 'hooks/useListThenWatch'
 import { XTerminal } from './molecules'
+import { TPodTemplateData } from './types'
 import { Styled } from './styled'
 
 const PREDEFINED_PROFILES = ['legacy', 'general', 'baseline', 'netadmin', 'restricted', 'sysadmin'] as const
-
-type TPodTemplateData = {
-  metadata?: { name?: string }
-  template?: {
-    spec?: {
-      containers?: Array<{ name?: string }>
-    }
-  }
-}
 
 export type TNodeTerminalProps = {
   cluster: string
