@@ -5,6 +5,7 @@ import { Terminal as XTerm } from '@xterm/xterm'
 import themes from 'xterm-theme'
 import { FitAddon } from '@xterm/addon-fit'
 import '@xterm/xterm/css/xterm.css'
+import { TNodeTerminalPayload } from './types'
 import { Styled } from './styled'
 
 type TXTerminalProps = {
@@ -15,14 +16,6 @@ type TXTerminalProps = {
   podTemplateNamespace?: string
   containerName?: string
   substractHeight: number
-}
-
-type TNodeTerminalPayload = {
-  nodeName: string
-  profile: string
-  podTemplateName?: string
-  podTemplateNamespace?: string
-  containerName?: string
 }
 
 export const XTerminal: FC<TXTerminalProps> = ({
