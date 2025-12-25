@@ -51,7 +51,7 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({
 
   const hasPodTemplates = podTemplateNames.length > 0
 
-  const isCustomTemplate = isUsingPodTemplates && hasPodTemplates
+  const isPodTemplatesExist = isUsingPodTemplates && hasPodTemplates
 
   useEffect(() => {
     if (hasPodTemplates && !podTemplateNames.includes(currentProfile)) {
@@ -65,7 +65,9 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({
   }, [hasPodTemplates, podTemplateNames, currentProfile, defaultProfile])
 
   const containerNames = useMemo(() => {
-    if (!isCustomTemplate) return []
+    if (!isPodTemplatesExist) {
+      return []
+    }
 
     const selectedTemplate = Object.values(podTemplates.state.byKey ?? {}).find(
       it => (it as TPodTemplateData)?.metadata?.name === currentProfile,
@@ -73,17 +75,17 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({
 
     const containers = selectedTemplate?.template?.spec?.containers ?? []
     return containers.map(c => c.name).filter((name): name is string => Boolean(name))
-  }, [isCustomTemplate, podTemplates.state.byKey, currentProfile])
+  }, [isPodTemplatesExist, podTemplates.state.byKey, currentProfile])
 
   const hasMultipleContainers = containerNames.length > 1
 
   useEffect(() => {
-    if (isCustomTemplate && containerNames.length > 0) {
+    if (isPodTemplatesExist && containerNames.length > 0) {
       setCurrentContainer(containerNames[0])
     } else {
       setCurrentContainer(undefined)
     }
-  }, [isCustomTemplate, containerNames])
+  }, [isPodTemplatesExist, containerNames])
 
   const selectOptions = useMemo(() => {
     if (hasPodTemplates) {
@@ -96,7 +98,7 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({
     }))
   }, [hasPodTemplates, podTemplateNames])
 
-  const canShowTerminal = currentProfile && (!isCustomTemplate || currentContainer)
+  const canShowTerminal = currentProfile && (!isPodTemplatesExist || currentContainer)
 
   return (
     <>
@@ -114,7 +116,7 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({
             }}
           />
         </Styled.CustomSelect>
-        {isCustomTemplate && hasMultipleContainers && (
+        {isPodTemplatesExist && hasMultipleContainers && (
           <Styled.CustomSelect>
             <Select
               placeholder="Select container"
@@ -133,9 +135,9 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({
           endpoint={endpoint}
           nodeName={nodeName}
           profile={currentProfile}
-          isCustomTemplate={isCustomTemplate}
-          podTemplateNamespace={isCustomTemplate ? listPodTemplatesNs : undefined}
-          containerName={isCustomTemplate ? currentContainer : undefined}
+          isCustomTemplate={isPodTemplatesExist}
+          podTemplateNamespace={isPodTemplatesExist ? listPodTemplatesNs : undefined}
+          containerName={isPodTemplatesExist ? currentContainer : undefined}
           substractHeight={substractHeight}
           key={`${cluster}-${nodeName}-${listPodTemplatesNs}-${currentProfile}-${currentContainer}`}
         />
