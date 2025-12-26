@@ -14,6 +14,7 @@ export const MatrixToReducedBar: FC<TMatrixToReducedBarProps> = ({
   mode = 'avg',
   width,
   height,
+  formatValue,
 }) => {
   const {
     data: series = [],
@@ -42,8 +43,11 @@ export const MatrixToReducedBar: FC<TMatrixToReducedBarProps> = ({
         <BarChart data={reduced}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="id" />
-          <YAxis />
-          <Tooltip formatter={value => `${value} bytes`} labelFormatter={label => `Series: ${label}`} />
+          <YAxis tickFormatter={formatValue} />
+          <Tooltip
+            formatter={value => (formatValue ? formatValue(Number(value)) : `${value} bytes`)}
+            labelFormatter={label => `Series: ${label}`}
+          />
 
           <Bar dataKey="value">
             {reduced.map((_, i) => (

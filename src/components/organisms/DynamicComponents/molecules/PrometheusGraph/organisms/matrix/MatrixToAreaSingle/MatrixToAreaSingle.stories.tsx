@@ -3,12 +3,15 @@ import React from 'react'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
 import { http, HttpResponse, delay } from 'msw'
+import { formatBytesAuto } from '../../../../../../../../utils/converterBytes'
+import { formatCoresAuto } from '../../../../../../../../utils/converterCores'
 
 import { MatrixToAreaSingle } from './MatrixToAreaSingle'
 import { SmartProvider } from '../../../../../../../../../.storybook/mocks/SmartProvider'
 
 type TInner = {
   range?: string
+  formatter?: 'bytes' | 'cores'
 }
 
 type TProviderArgs = {
@@ -22,6 +25,24 @@ type TProviderArgs = {
 }
 
 type TArgs = TInner & TProviderArgs
+
+const buildFormatValue = (formatter?: TInner['formatter']) => {
+  if (formatter === 'bytes') {
+    return (value: unknown) => {
+      const num = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+      return Number.isFinite(num) ? formatBytesAuto(num) : value != null ? String(value) : ''
+    }
+  }
+
+  if (formatter === 'cores') {
+    return (value: unknown) => {
+      const num = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+      return Number.isFinite(num) ? formatCoresAuto(num) : value != null ? String(value) : ''
+    }
+  }
+
+  return undefined
+}
 
 /* ----------------------------- MSW helpers ------------------------------- */
 
@@ -91,6 +112,7 @@ const meta: Meta<TArgs> = {
   component: MatrixToAreaSingle as any,
   argTypes: {
     range: { control: 'text' },
+    formatter: { control: 'radio', options: ['bytes', 'cores'] },
 
     isLoading: { control: 'boolean' },
     isError: { control: 'boolean' },
@@ -102,7 +124,7 @@ const meta: Meta<TArgs> = {
   },
 
   render: args => {
-    const data: TInner = { range: args.range }
+    const data: TInner = { range: args.range, ...(args.formatter ? { formatter: args.formatter } : {}) }
 
     return (
       <>
@@ -117,7 +139,7 @@ const meta: Meta<TArgs> = {
           theme={args.theme}
         >
           <div style={{ padding: 16 }}>
-            <MatrixToAreaSingle range={data.range} />
+            <MatrixToAreaSingle range={data.range} formatValue={buildFormatValue(args.formatter)} />
           </div>
         </SmartProvider>
 
@@ -147,6 +169,7 @@ type TStory = StoryObj<TArgs>
 export const Default: TStory = {
   args: {
     range: '1h',
+    formatter: 'bytes',
     state: 'success',
     isLoading: false,
     isError: false,

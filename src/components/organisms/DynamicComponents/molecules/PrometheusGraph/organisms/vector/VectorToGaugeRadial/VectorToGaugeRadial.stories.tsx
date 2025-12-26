@@ -3,6 +3,8 @@ import React from 'react'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
 import { http, HttpResponse, delay } from 'msw'
+import { formatBytesAuto } from '../../../../../../../../utils/converterBytes'
+import { formatCoresAuto } from '../../../../../../../../utils/converterCores'
 
 import { VectorToGaugeRadial } from './VectorToGaugeRadial'
 import { SmartProvider } from '../../../../../../../../../.storybook/mocks/SmartProvider'
@@ -11,6 +13,25 @@ type TExtraArgs = {
   theme: 'dark' | 'light'
   state: 'success' | 'loading' | 'error'
   valueMode: '0.3' | '0.7' | '1.2'
+  formatter?: 'bytes' | 'cores'
+}
+
+const buildFormatValue = (formatter?: TExtraArgs['formatter']) => {
+  if (formatter === 'bytes') {
+    return (value: unknown) => {
+      const num = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+      return Number.isFinite(num) ? formatBytesAuto(num) : value != null ? String(value) : ''
+    }
+  }
+
+  if (formatter === 'cores') {
+    return (value: unknown) => {
+      const num = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+      return Number.isFinite(num) ? formatCoresAuto(num) : value != null ? String(value) : ''
+    }
+  }
+
+  return undefined
 }
 
 const EMPTY_MULTI_QUERY_VALUE = {
@@ -59,23 +80,30 @@ const meta: Meta<typeof VectorToGaugeRadial> = {
     theme: { control: 'radio', options: ['light', 'dark'] },
     state: { control: 'radio', options: ['success', 'loading', 'error'] },
     valueMode: { control: 'radio', options: ['0.3', '0.7', '1.2'] },
+    formatter: { control: 'radio', options: ['bytes', 'cores'] },
   } as any,
 
   render: (args: any) => {
-    const { query, title, min, max, theme } = args as TExtraArgs & {
+    const { query, title, min, max, theme, formatter } = args as TExtraArgs & {
       query?: string
       title?: string
       min?: number
       max?: number
     }
 
-    const data = { query, title, min, max }
+    const data = { query, title, min, max, ...(formatter ? { formatter } : {}) }
 
     return (
       <>
         <SmartProvider multiQueryValue={EMPTY_MULTI_QUERY_VALUE} theme={theme} partsOfUrl={[]}>
           <div style={{ padding: 16 }}>
-            <VectorToGaugeRadial query={query} title={title} min={min} max={max} />
+            <VectorToGaugeRadial
+              query={query}
+              title={title}
+              min={min}
+              max={max}
+              formatValue={buildFormatValue(formatter)}
+            />
           </div>
         </SmartProvider>
 

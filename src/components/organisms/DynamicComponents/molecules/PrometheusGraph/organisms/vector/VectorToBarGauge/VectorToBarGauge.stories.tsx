@@ -3,6 +3,8 @@ import React from 'react'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
 import { http, HttpResponse, delay } from 'msw'
+import { formatBytesAuto } from '../../../../../../../../utils/converterBytes'
+import { formatCoresAuto } from '../../../../../../../../utils/converterCores'
 
 import { VectorToBarGauge } from './VectorToBarGauge'
 import { SmartProvider } from '../../../../../../../../../.storybook/mocks/SmartProvider'
@@ -10,6 +12,25 @@ import { SmartProvider } from '../../../../../../../../../.storybook/mocks/Smart
 type TExtraArgs = {
   theme: 'dark' | 'light'
   state: 'success' | 'loading' | 'error'
+  formatter?: 'bytes' | 'cores'
+}
+
+const buildFormatValue = (formatter?: TExtraArgs['formatter']) => {
+  if (formatter === 'bytes') {
+    return (value: unknown) => {
+      const num = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+      return Number.isFinite(num) ? formatBytesAuto(num) : value != null ? String(value) : ''
+    }
+  }
+
+  if (formatter === 'cores') {
+    return (value: unknown) => {
+      const num = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+      return Number.isFinite(num) ? formatCoresAuto(num) : value != null ? String(value) : ''
+    }
+  }
+
+  return undefined
 }
 
 const EMPTY_MULTI_QUERY_VALUE = {
@@ -52,22 +73,23 @@ const meta: Meta<typeof VectorToBarGauge> = {
     // extra args (used only by render/SmartProvider)
     theme: { control: 'radio', options: ['light', 'dark'] },
     state: { control: 'radio', options: ['success', 'loading', 'error'] },
+    formatter: { control: 'radio', options: ['bytes', 'cores'] },
   } as any,
 
   render: (args: any) => {
-    const { query, title, topN, theme } = args as TExtraArgs & {
+    const { query, title, topN, theme, formatter } = args as TExtraArgs & {
       query?: string
       title?: string
       topN?: number
     }
 
-    const data = { query, title, topN }
+    const data = { query, title, topN, ...(formatter ? { formatter } : {}) }
 
     return (
       <>
         <SmartProvider multiQueryValue={EMPTY_MULTI_QUERY_VALUE} theme={theme} partsOfUrl={[]}>
           <div style={{ padding: 16 }}>
-            <VectorToBarGauge query={query} title={title} topN={topN} />
+            <VectorToBarGauge query={query} title={title} topN={topN} formatValue={buildFormatValue(formatter)} />
           </div>
         </SmartProvider>
 
@@ -98,6 +120,7 @@ export const Success: TStory = {
     query: 'container_memory_usage_bytes_success',
     title: 'Vector → Bar Gauge',
     topN: 10,
+    formatter: 'bytes',
     theme: 'light',
     state: 'success',
   },
@@ -109,6 +132,7 @@ export const Top5: TStory = {
     query: 'container_memory_usage_bytes_success_top5',
     title: 'Vector → Bar Gauge',
     topN: 5,
+    formatter: 'bytes',
     theme: 'light',
     state: 'success',
   },
@@ -120,6 +144,7 @@ export const Loading: TStory = {
     query: 'container_memory_usage_bytes_loading',
     title: 'Vector → Bar Gauge',
     topN: 10,
+    formatter: 'bytes',
     theme: 'light',
     state: 'loading',
   },
@@ -131,6 +156,7 @@ export const Error: TStory = {
     query: 'container_memory_usage_bytes_error',
     title: 'Vector → Bar Gauge',
     topN: 10,
+    formatter: 'bytes',
     theme: 'light',
     state: 'error',
   },
@@ -142,6 +168,7 @@ export const DarkTheme: TStory = {
     query: 'container_memory_usage_bytes_dark',
     title: 'Vector → Bar Gauge',
     topN: 10,
+    formatter: 'bytes',
     theme: 'dark',
     state: 'success',
   },

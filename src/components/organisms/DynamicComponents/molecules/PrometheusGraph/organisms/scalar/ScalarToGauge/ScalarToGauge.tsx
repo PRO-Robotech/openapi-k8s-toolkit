@@ -27,13 +27,16 @@ export const ScalarToGauge: FC<TScalarToGaugeProps> = ({
 
   const v = gauge?.value
   const safeV = v == null || !Number.isFinite(v) ? null : v
+  const valueFormatter = formatValue ?? ((val: number) => String(val))
 
   // percent based on min/max
   const denom = max - min
   const percent =
     safeV == null || !Number.isFinite(denom) || denom === 0 ? 0 : Math.round(clamp01((safeV - min) / denom) * 100)
 
-  const label = safeV == null ? '—' : formatValue ? formatValue(safeV) : String(safeV)
+  const label = safeV == null ? '-' : valueFormatter(safeV)
+  const minLabel = valueFormatter(min)
+  const maxLabel = valueFormatter(max)
 
   return (
     <Card size="small">
@@ -47,7 +50,7 @@ export const ScalarToGauge: FC<TScalarToGaugeProps> = ({
         <Typography.Text>
           {label}{' '}
           <Typography.Text type="secondary">
-            ({min} → {max})
+            ({minLabel} - {maxLabel})
           </Typography.Text>
         </Typography.Text>
       </div>

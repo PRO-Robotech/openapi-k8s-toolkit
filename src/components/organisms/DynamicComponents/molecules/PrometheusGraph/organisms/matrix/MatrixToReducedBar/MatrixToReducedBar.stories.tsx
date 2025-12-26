@@ -4,6 +4,8 @@ import React from 'react'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
 import { http, HttpResponse } from 'msw'
+import { formatBytesAuto } from '../../../../../../../../utils/converterBytes'
+import { formatCoresAuto } from '../../../../../../../../utils/converterCores'
 
 import { MatrixToReducedBar } from './MatrixToReducedBar'
 import { SmartProvider } from '../../../../../../../../../.storybook/mocks/SmartProvider'
@@ -11,11 +13,30 @@ import { SmartProvider } from '../../../../../../../../../.storybook/mocks/Smart
 type TInner = {
   range?: string
   mode?: 'last' | 'avg' | 'sum' | 'max' | 'min'
+  formatter?: 'bytes' | 'cores'
 }
 
 type TArgs = TInner & {
   theme: 'dark' | 'light'
   state: 'success' | 'loading' | 'error'
+}
+
+const buildFormatValue = (formatter?: TInner['formatter']) => {
+  if (formatter === 'bytes') {
+    return (value: unknown) => {
+      const num = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+      return Number.isFinite(num) ? formatBytesAuto(num) : value != null ? String(value) : ''
+    }
+  }
+
+  if (formatter === 'cores') {
+    return (value: unknown) => {
+      const num = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+      return Number.isFinite(num) ? formatCoresAuto(num) : value != null ? String(value) : ''
+    }
+  }
+
+  return undefined
 }
 
 /* ----------------------------- MSW helpers ------------------------------- */
@@ -86,12 +107,17 @@ const meta: Meta<TArgs> = {
   argTypes: {
     range: { control: 'text' },
     mode: { control: 'radio', options: ['last', 'avg', 'sum', 'max', 'min'] },
+    formatter: { control: 'radio', options: ['bytes', 'cores'] },
     theme: { control: 'radio', options: ['light', 'dark'] },
     state: { control: 'radio', options: ['success', 'loading', 'error'] },
   },
 
   render: args => {
-    const data: TInner = { range: args.range, mode: args.mode }
+    const data: TInner = {
+      range: args.range,
+      mode: args.mode,
+      ...(args.formatter ? { formatter: args.formatter } : {}),
+    }
 
     return (
       <>
@@ -106,7 +132,7 @@ const meta: Meta<TArgs> = {
           }}
         >
           <div style={{ padding: 16 }}>
-            <MatrixToReducedBar range={data.range} mode={data.mode} />
+            <MatrixToReducedBar range={data.range} mode={data.mode} formatValue={buildFormatValue(args.formatter)} />
           </div>
         </SmartProvider>
 
@@ -134,7 +160,7 @@ type TStory = StoryObj<TArgs>
 /* -------------------------------- stories ------------------------------- */
 
 export const Default: TStory = {
-  args: { range: '1h', mode: 'avg', theme: 'light', state: 'success' },
+  args: { range: '1h', mode: 'avg', formatter: 'bytes', theme: 'light', state: 'success' },
   parameters: { msw: { handlers: [successHandler] } },
 }
 

@@ -13,6 +13,7 @@ export const VectorToBarVertical: FC<TVectorToBarVerticalProps> = ({
   refetchInterval,
   width,
   height,
+  formatValue,
 }) => {
   const { data, isLoading, error } = usePromVector({ baseUrl, query, refetchInterval })
 
@@ -25,14 +26,16 @@ export const VectorToBarVertical: FC<TVectorToBarVerticalProps> = ({
     return <div>❌ Error: {error.message}</div>
   }
 
+  const valueFormatter = formatValue ?? formatBytes
+
   return (
     <WidthHeightDiv $width={width} $height={height}>
       <ResponsiveContainer>
         <BarChart data={items}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="id" />
-          <YAxis tickFormatter={formatBytes} />
-          <Tooltip formatter={v => formatBytes(v)} />
+          <YAxis tickFormatter={valueFormatter} />
+          <Tooltip formatter={v => valueFormatter(v)} />
 
           <Bar dataKey="value">
             {items.map((_, i) => (

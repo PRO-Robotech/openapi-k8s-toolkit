@@ -19,7 +19,8 @@ export const ScalarToStat: FC<TScalarToStatProps> = ({
   if (error) return <div>❌ Error: {error.message ?? String(error)}</div>
 
   const value = stat?.value
-  const display = value == null || !Number.isFinite(value) ? '—' : formatValue ? formatValue(value) : value
+  const valueFormatter = formatValue ?? ((v: number) => v)
+  const display = value == null || !Number.isFinite(value) ? '-' : valueFormatter(value)
 
   return (
     <Card size="small">

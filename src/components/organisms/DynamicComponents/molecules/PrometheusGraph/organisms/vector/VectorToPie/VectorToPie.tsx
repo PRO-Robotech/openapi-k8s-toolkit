@@ -13,6 +13,7 @@ export const VectorToPie: FC<TVectorToPieProps> = ({
   refetchInterval,
   width,
   height,
+  formatValue,
 }) => {
   const { data, isLoading, error } = usePromVector({ baseUrl, query, refetchInterval })
 
@@ -26,11 +27,13 @@ export const VectorToPie: FC<TVectorToPieProps> = ({
     return <div>❌ Error: {error.message}</div>
   }
 
+  const valueFormatter = formatValue ?? formatBytes
+
   return (
     <WidthHeightDiv $width={width} $height={height}>
       <ResponsiveContainer>
         <PieChart>
-          <Tooltip formatter={v => formatBytes(v)} />
+          <Tooltip formatter={v => valueFormatter(v)} />
           <Pie data={slices} dataKey="value" nameKey="id" label>
             {slices.map((_, i) => (
               <Cell key={`cell-${i}`} fill={`hsl(${(i * 60) % 360}, 70%, 55%)`} />

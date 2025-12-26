@@ -13,6 +13,7 @@ export const MatrixToAreaSingle: FC<TMatrixToAreaSingleProps> = ({
   refetchInterval,
   width,
   height,
+  formatValue,
 }) => {
   const { data = [], isLoading, error } = usePromMatrixToLineSingle({ baseUrl, query, range, refetchInterval })
 
@@ -23,6 +24,8 @@ export const MatrixToAreaSingle: FC<TMatrixToAreaSingleProps> = ({
   if (error) {
     return <div>❌ Failed to load data: {error.message}</div>
   }
+
+  const valueFormatter = formatValue ?? formatBytes
 
   return (
     <WidthHeightDiv $width={width} $height={height}>
@@ -45,9 +48,9 @@ export const MatrixToAreaSingle: FC<TMatrixToAreaSingleProps> = ({
             }}
           />
 
-          <YAxis tickFormatter={value => formatBytes(value)} />
+          <YAxis tickFormatter={value => valueFormatter(value)} />
 
-          <Tooltip formatter={value => formatBytes(value)} labelFormatter={value => formatTimestamp(value)} />
+          <Tooltip formatter={value => valueFormatter(value)} labelFormatter={value => formatTimestamp(value)} />
 
           <Area
             type="monotone"

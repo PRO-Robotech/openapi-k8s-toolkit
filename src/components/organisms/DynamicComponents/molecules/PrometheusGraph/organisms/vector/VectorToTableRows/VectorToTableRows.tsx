@@ -17,6 +17,7 @@ export const VectorToTableRows: FC<TVectorToTableRowsProps> = ({
   baseUrl,
   query = 'container_memory_usage_bytes',
   refetchInterval,
+  formatValue,
   title = 'Vector → Table',
 }) => {
   const { data, isLoading, error } = usePromVector({ baseUrl, query, refetchInterval })
@@ -25,6 +26,8 @@ export const VectorToTableRows: FC<TVectorToTableRowsProps> = ({
     const rows = data ? vectorToTableRows(data) : []
     return rows.map(r => ({ key: r.id, ...r }))
   }, [data])
+
+  const valueFormatter = formatValue ?? formatBytes
 
   const columns: ColumnsType<TRow> = useMemo(
     () => [
@@ -41,7 +44,7 @@ export const VectorToTableRows: FC<TVectorToTableRowsProps> = ({
         dataIndex: 'value',
         key: 'value',
         align: 'right',
-        render: (v: number) => formatBytes(v),
+        render: (v: number) => valueFormatter(v),
         sorter: (a, b) => a.value - b.value,
         defaultSortOrder: 'descend',
         width: 160,
@@ -55,7 +58,7 @@ export const VectorToTableRows: FC<TVectorToTableRowsProps> = ({
         width: 220,
       },
     ],
-    [],
+    [valueFormatter],
   )
 
   if (error) {

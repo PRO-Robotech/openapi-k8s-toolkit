@@ -13,6 +13,7 @@ export const MatrixToAreaStacked: FC<TMatrixToAreaStackedProps> = ({
   refetchInterval,
   width,
   height,
+  formatValue,
 }) => {
   const { data: series = [], isLoading, error } = usePromMatrixToLineMulti({ baseUrl, query, range, refetchInterval })
 
@@ -25,6 +26,8 @@ export const MatrixToAreaStacked: FC<TMatrixToAreaStackedProps> = ({
     return <div>❌ Error: {error.message}</div>
   }
 
+  const valueFormatter = formatValue ?? formatBytes
+
   return (
     <WidthHeightDiv $width={width} $height={height}>
       <ResponsiveContainer>
@@ -33,9 +36,9 @@ export const MatrixToAreaStacked: FC<TMatrixToAreaStackedProps> = ({
 
           <XAxis dataKey="timestamp" tickFormatter={formatTimestamp} />
 
-          <YAxis tickFormatter={formatBytes} />
+          <YAxis tickFormatter={valueFormatter} />
 
-          <Tooltip formatter={v => formatBytes(v)} labelFormatter={v => formatTimestamp(v)} />
+          <Tooltip formatter={v => valueFormatter(v)} labelFormatter={v => formatTimestamp(v)} />
 
           {series.map((s, i) => (
             <Area

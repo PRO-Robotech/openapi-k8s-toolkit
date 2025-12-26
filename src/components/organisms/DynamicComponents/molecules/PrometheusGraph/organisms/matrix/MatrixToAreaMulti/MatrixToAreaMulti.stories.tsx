@@ -3,6 +3,8 @@ import React from 'react'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
 import { http, HttpResponse, delay } from 'msw'
+import { formatBytesAuto } from '../../../../../../../../utils/converterBytes'
+import { formatCoresAuto } from '../../../../../../../../utils/converterCores'
 
 import { MatrixToAreaMulti } from './MatrixToAreaMulti'
 import { SmartProvider } from '../../../../../../../../../.storybook/mocks/SmartProvider'
@@ -11,11 +13,30 @@ import { SmartProvider } from '../../../../../../../../../.storybook/mocks/Smart
 
 type TInner = {
   range?: string
+  formatter?: 'bytes' | 'cores'
 }
 
 type TArgs = TInner & {
   theme: 'light' | 'dark'
   state: 'success' | 'loading' | 'error'
+}
+
+const buildFormatValue = (formatter?: TInner['formatter']) => {
+  if (formatter === 'bytes') {
+    return (value: unknown) => {
+      const num = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+      return Number.isFinite(num) ? formatBytesAuto(num) : value != null ? String(value) : ''
+    }
+  }
+
+  if (formatter === 'cores') {
+    return (value: unknown) => {
+      const num = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+      return Number.isFinite(num) ? formatCoresAuto(num) : value != null ? String(value) : ''
+    }
+  }
+
+  return undefined
 }
 
 /* ----------------------------- MSW helpers ------------------------------- */
@@ -86,6 +107,7 @@ const meta: Meta<TArgs> = {
   component: MatrixToAreaMulti as any,
   argTypes: {
     range: { control: 'text' },
+    formatter: { control: 'radio', options: ['bytes', 'cores'] },
     theme: { control: 'radio', options: ['light', 'dark'] },
     state: { control: 'radio', options: ['success', 'loading', 'error'] },
   },
@@ -104,7 +126,7 @@ const meta: Meta<TArgs> = {
           }}
         >
           <div style={{ padding: 16 }}>
-            <MatrixToAreaMulti range={args.range} />
+            <MatrixToAreaMulti range={args.range} formatValue={buildFormatValue(args.formatter)} />
           </div>
         </SmartProvider>
 
@@ -117,7 +139,10 @@ const meta: Meta<TArgs> = {
             options={{ readOnly: true }}
             value={yaml.stringify({
               type: 'PrometheusGraph',
-              data: { range: args.range },
+              data: {
+                range: args.range,
+                ...(args.formatter ? { formatter: args.formatter } : {}),
+              },
             })}
           />
         </div>
@@ -135,6 +160,7 @@ type TStory = StoryObj<TArgs>
 export const Default: TStory = {
   args: {
     range: '1h',
+    formatter: 'bytes',
     theme: 'light',
     state: 'success',
   },

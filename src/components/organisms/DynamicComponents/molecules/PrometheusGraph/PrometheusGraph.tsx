@@ -1,5 +1,8 @@
+/* eslint-disable no-nested-ternary */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { FC } from 'react'
+import { formatBytesAuto } from 'utils/converterBytes'
+import { formatCoresAuto } from 'utils/converterCores'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
@@ -74,6 +77,7 @@ export const PrometheusGraph: FC<{ data: TDynamicComponentsAppTypeMap['Prometheu
     min,
     max,
     topN,
+    formatter,
     ...props
   } = data
 
@@ -91,7 +95,20 @@ export const PrometheusGraph: FC<{ data: TDynamicComponentsAppTypeMap['Prometheu
     ]),
   )
 
-  const preparedProps = { width, height, refetchInterval, min, max, topN, ...parsedProps }
+  const formatValue =
+    formatter === 'bytes'
+      ? (value: unknown) => {
+          const num = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+          return Number.isFinite(num) ? formatBytesAuto(num) : value != null ? String(value) : ''
+        }
+      : formatter === 'cores'
+      ? (value: unknown) => {
+          const num = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+          return Number.isFinite(num) ? formatCoresAuto(num) : value != null ? String(value) : ''
+        }
+      : undefined
+
+  const preparedProps = { width, height, refetchInterval, min, max, topN, formatValue, ...parsedProps }
 
   if (isMultiqueryLoading) {
     return <div>Loading multiquery</div>
