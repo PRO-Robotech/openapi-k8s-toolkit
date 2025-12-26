@@ -3,12 +3,33 @@ import React from 'react'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
 import { http, HttpResponse, delay } from 'msw'
+import { formatBytesAuto } from '../../../../../../../../utils/converterBytes'
+import { formatCoresAuto } from '../../../../../../../../utils/converterCores'
 
 import { VectorToBarHorizontal } from './VectorToBarHorizontal'
 import { SmartProvider } from '../../../../../../../../../.storybook/mocks/SmartProvider'
 
 type TExtraArgs = {
   theme: 'dark' | 'light'
+  formatter?: 'bytes' | 'cores'
+}
+
+const buildFormatValue = (formatter?: TExtraArgs['formatter']) => {
+  if (formatter === 'bytes') {
+    return (value: unknown) => {
+      const num = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+      return Number.isFinite(num) ? formatBytesAuto(num) : value != null ? String(value) : ''
+    }
+  }
+
+  if (formatter === 'cores') {
+    return (value: unknown) => {
+      const num = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+      return Number.isFinite(num) ? formatCoresAuto(num) : value != null ? String(value) : ''
+    }
+  }
+
+  return undefined
 }
 
 const EMPTY_MULTI_QUERY_VALUE = {
@@ -49,17 +70,18 @@ const meta: Meta<typeof VectorToBarHorizontal> = {
 
     // 👇 extra arg not in component props
     theme: { control: 'radio', options: ['light', 'dark'] },
+    formatter: { control: 'radio', options: ['bytes', 'cores'] },
   } as any,
 
   render: (args: any) => {
-    const { theme, query } = args as TExtraArgs & { query?: string }
-    const data = { query }
+    const { theme, query, formatter } = args as TExtraArgs & { query?: string }
+    const data = { query, ...(formatter ? { formatter } : {}) }
 
     return (
       <>
         <SmartProvider multiQueryValue={EMPTY_MULTI_QUERY_VALUE} theme={theme} partsOfUrl={[]}>
           <div style={{ padding: 16 }}>
-            <VectorToBarHorizontal query={query} />
+            <VectorToBarHorizontal query={query} formatValue={buildFormatValue(formatter)} />
           </div>
         </SmartProvider>
 
@@ -89,6 +111,7 @@ type TStory = StoryObj<typeof VectorToBarHorizontal & ((p: any) => any)>
 export const Success: TStory = {
   args: {
     query: 'container_memory_usage_bytes_success',
+    formatter: 'bytes',
     theme: 'light',
   },
   parameters: { msw: { handlers: [successHandler] } },
@@ -97,6 +120,7 @@ export const Success: TStory = {
 export const Loading: TStory = {
   args: {
     query: 'container_memory_usage_bytes_loading',
+    formatter: 'bytes',
     theme: 'light',
   },
   parameters: { msw: { handlers: [loadingHandler] } },
@@ -105,6 +129,7 @@ export const Loading: TStory = {
 export const Error: TStory = {
   args: {
     query: 'container_memory_usage_bytes_error',
+    formatter: 'bytes',
     theme: 'light',
   },
   parameters: { msw: { handlers: [errorHandler] } },
@@ -113,6 +138,7 @@ export const Error: TStory = {
 export const DarkTheme: TStory = {
   args: {
     query: 'container_memory_usage_bytes_dark',
+    formatter: 'bytes',
     theme: 'dark',
   },
   parameters: { msw: { handlers: [successHandler] } },

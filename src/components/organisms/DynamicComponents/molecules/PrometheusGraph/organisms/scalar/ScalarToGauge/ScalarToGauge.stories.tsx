@@ -3,6 +3,8 @@ import React from 'react'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
 import { http, HttpResponse, delay } from 'msw'
+import { formatBytesAuto } from '../../../../../../../../utils/converterBytes'
+import { formatCoresAuto } from '../../../../../../../../utils/converterCores'
 
 import { ScalarToGauge } from './ScalarToGauge'
 import { SmartProvider } from '../../../../../../../../../.storybook/mocks/SmartProvider'
@@ -12,11 +14,30 @@ type TInner = {
   title?: string
   min?: number
   max?: number
+  formatter?: 'bytes' | 'cores'
 }
 
 type TArgs = TInner & {
   theme: 'dark' | 'light'
   state: 'success' | 'loading' | 'error'
+}
+
+const buildFormatValue = (formatter?: TInner['formatter']) => {
+  if (formatter === 'bytes') {
+    return (value: unknown) => {
+      const num = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+      return Number.isFinite(num) ? formatBytesAuto(num) : value != null ? String(value) : ''
+    }
+  }
+
+  if (formatter === 'cores') {
+    return (value: unknown) => {
+      const num = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+      return Number.isFinite(num) ? formatCoresAuto(num) : value != null ? String(value) : ''
+    }
+  }
+
+  return undefined
 }
 
 /* ------------------------------ MSW handlers ----------------------------- */
@@ -53,12 +74,19 @@ const meta: Meta<TArgs> = {
     title: { control: 'text' },
     min: { control: 'number' },
     max: { control: 'number' },
+    formatter: { control: 'radio', options: ['bytes', 'cores'] },
     theme: { control: 'radio', options: ['light', 'dark'] },
     state: { control: 'radio', options: ['success', 'loading', 'error'] },
   },
 
   render: args => {
-    const data: TInner = { query: args.query, title: args.title, min: args.min, max: args.max }
+    const data: TInner = {
+      query: args.query,
+      title: args.title,
+      min: args.min,
+      max: args.max,
+      ...(args.formatter ? { formatter: args.formatter } : {}),
+    }
 
     return (
       <>
@@ -78,6 +106,7 @@ const meta: Meta<TArgs> = {
               title={data.title ?? 'Gauge'}
               min={data.min ?? 0}
               max={data.max ?? 100}
+              formatValue={buildFormatValue(args.formatter)}
             />
           </div>
         </SmartProvider>
@@ -89,7 +118,12 @@ const meta: Meta<TArgs> = {
             height={260}
             value={yaml.stringify({
               type: 'PrometheusGauge',
-              data: { query: data.query ?? 'scalar(55)', min: data.min ?? 0, max: data.max ?? 100 },
+              data: {
+                query: data.query ?? 'scalar(55)',
+                min: data.min ?? 0,
+                max: data.max ?? 100,
+                ...(data.formatter ? { formatter: data.formatter } : {}),
+              },
             })}
             theme="vs-dark"
             options={{ theme: 'vs-dark', readOnly: true }}

@@ -14,6 +14,7 @@ export const VectorToGaugeRadial: FC<TVectorToGaugeRadialProps> = ({
   max = 1,
   width,
   height,
+  formatValue,
 }) => {
   const { data, isLoading, error } = usePromVector({ baseUrl, query, refetchInterval })
 
@@ -24,6 +25,7 @@ export const VectorToGaugeRadial: FC<TVectorToGaugeRadialProps> = ({
   const filled = clamped - min
   const total = max - min
   const rest = Math.max(0, total - filled)
+  const displayValue = formatValue ? formatValue(value) : String(value)
 
   const chartData = useMemo(
     () => [
@@ -44,7 +46,7 @@ export const VectorToGaugeRadial: FC<TVectorToGaugeRadialProps> = ({
   return (
     <WidthHeightDiv $width={width} $height={height}>
       <div>
-        <strong>{gauge?.id ?? 'value'}:</strong> {String(value)}
+        <strong>{gauge?.id ?? 'value'}:</strong> {displayValue}
       </div>
       <Spacer $space={8} $samespace />
       <ResponsiveContainer>

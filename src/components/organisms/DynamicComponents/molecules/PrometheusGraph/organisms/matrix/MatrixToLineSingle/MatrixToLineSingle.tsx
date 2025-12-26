@@ -13,6 +13,7 @@ export const MatrixToLineSingle: FC<TMatrixToLineSingleProps> = ({
   refetchInterval,
   width,
   height,
+  formatValue,
 }) => {
   const {
     data = [],
@@ -32,6 +33,8 @@ export const MatrixToLineSingle: FC<TMatrixToLineSingleProps> = ({
   if (error) {
     return <div>❌ Failed to load data: {error.message}</div>
   }
+
+  const valueFormatter = formatValue ?? formatBytes
 
   return (
     <WidthHeightDiv $width={width} $height={height}>
@@ -55,9 +58,9 @@ export const MatrixToLineSingle: FC<TMatrixToLineSingleProps> = ({
             }}
           />
 
-          <YAxis tickFormatter={value => formatBytes(value)} />
+          <YAxis tickFormatter={value => valueFormatter(value)} />
 
-          <Tooltip formatter={value => formatBytes(value)} labelFormatter={value => formatTimestamp(value)} />
+          <Tooltip formatter={value => valueFormatter(value)} labelFormatter={value => formatTimestamp(value)} />
 
           <Line
             type="monotone"

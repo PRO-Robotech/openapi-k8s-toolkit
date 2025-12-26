@@ -14,6 +14,7 @@ export const VectorToBarGauge: FC<TVectorToBarGaugeProps> = ({
   topN = 10,
   width,
   height,
+  formatValue,
 }) => {
   const { data, isLoading, error } = usePromVector({ baseUrl, query, refetchInterval })
 
@@ -30,14 +31,16 @@ export const VectorToBarGauge: FC<TVectorToBarGaugeProps> = ({
     return <div>❌ Error: {error.message}</div>
   }
 
+  const valueFormatter = formatValue ?? formatBytes
+
   return (
     <WidthHeightDiv $width={width} $height={height}>
       <ResponsiveContainer>
         <BarChart data={items} layout="vertical">
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis type="number" tickFormatter={formatBytes} />
+          <XAxis type="number" tickFormatter={valueFormatter} />
           <YAxis type="category" dataKey="id" width={160} />
-          <Tooltip formatter={v => formatBytes(v)} />
+          <Tooltip formatter={v => valueFormatter(v)} />
 
           <Bar dataKey="value">
             {items.map((_, i) => (

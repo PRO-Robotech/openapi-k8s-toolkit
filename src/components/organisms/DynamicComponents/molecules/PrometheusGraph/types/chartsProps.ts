@@ -34,37 +34,61 @@ type TBaseTopNProps = {
 
 type TBaseFormatterProps = {
   /** optional formatter for value */
-  formatValue?: (v: number) => string | number
+  formatValue?: (v: unknown) => string
 }
 
-export type TMatrixToLineSingleProps = TBaseContainerSizeProps & TBasePromQueryProps & TBaseRangeProps
+export type TMatrixToLineSingleProps = TBaseContainerSizeProps &
+  TBasePromQueryProps &
+  TBaseRangeProps &
+  TBaseFormatterProps
 
-export type TMatrixToLineMultiProps = TBaseContainerSizeProps & TBasePromQueryProps & TBaseRangeProps
+export type TMatrixToLineMultiProps = TBaseContainerSizeProps &
+  TBasePromQueryProps &
+  TBaseRangeProps &
+  TBaseFormatterProps
 
-export type TMatrixToAreaSingleProps = TBaseContainerSizeProps & TBasePromQueryProps & TBaseRangeProps
+export type TMatrixToAreaSingleProps = TBaseContainerSizeProps &
+  TBasePromQueryProps &
+  TBaseRangeProps &
+  TBaseFormatterProps
 
-export type TMatrixToAreaMultiProps = TBaseContainerSizeProps & TBasePromQueryProps & TBaseRangeProps
+export type TMatrixToAreaMultiProps = TBaseContainerSizeProps &
+  TBasePromQueryProps &
+  TBaseRangeProps &
+  TBaseFormatterProps
 
-export type TMatrixToAreaStackedProps = TBaseContainerSizeProps & TBasePromQueryProps & TBaseRangeProps
+export type TMatrixToAreaStackedProps = TBaseContainerSizeProps &
+  TBasePromQueryProps &
+  TBaseRangeProps &
+  TBaseFormatterProps
 
-export type TMatrixToReducedBarProps = TBaseContainerSizeProps & TBasePromQueryProps & TBaseRangeProps & TBaseModeProps
+export type TMatrixToReducedBarProps = TBaseContainerSizeProps &
+  TBasePromQueryProps &
+  TBaseRangeProps &
+  TBaseModeProps &
+  TBaseFormatterProps
 
-export type TMatrixToTableRowsProps = TBasePromQueryProps & TBaseRangeProps & TBaseTitleProps
+export type TMatrixToTableRowsProps = TBasePromQueryProps & TBaseRangeProps & TBaseTitleProps & TBaseFormatterProps
 
-export type TVectorToBarVerticalProps = TBaseContainerSizeProps & TBasePromQueryProps
+export type TVectorToBarVerticalProps = TBaseContainerSizeProps & TBasePromQueryProps & TBaseFormatterProps
 
-export type TVectorToBarHorizontalProps = TBaseContainerSizeProps & TBasePromQueryProps
+export type TVectorToBarHorizontalProps = TBaseContainerSizeProps & TBasePromQueryProps & TBaseFormatterProps
 
-export type TVectorToPieProps = TBaseContainerSizeProps & TBasePromQueryProps
+export type TVectorToPieProps = TBaseContainerSizeProps & TBasePromQueryProps & TBaseFormatterProps
 
-export type TVectorToTableRowsProps = TBasePromQueryProps & TBaseTitleProps
+export type TVectorToTableRowsProps = TBasePromQueryProps & TBaseTitleProps & TBaseFormatterProps
 
-export type TVectorToBarGaugeProps = TBaseContainerSizeProps & TBasePromQueryProps & TBaseTitleProps & TBaseTopNProps
+export type TVectorToBarGaugeProps = TBaseContainerSizeProps &
+  TBasePromQueryProps &
+  TBaseTitleProps &
+  TBaseTopNProps &
+  TBaseFormatterProps
 
 export type TVectorToGaugeRadialProps = TBaseContainerSizeProps &
   TBasePromQueryProps &
   TBaseTitleProps &
-  TBaseMinMaxProps
+  TBaseMinMaxProps &
+  TBaseFormatterProps
 
 export type TScalarToStatProps = TBasePromQueryProps & TBaseTitleProps & TBaseFormatterProps
 

@@ -12,6 +12,7 @@ export const MatrixToLineMulti: FC<TMatrixToLineMultiProps> = ({
   refetchInterval,
   width,
   height,
+  formatValue,
 }) => {
   const {
     data: series,
@@ -54,6 +55,8 @@ export const MatrixToLineMulti: FC<TMatrixToLineMultiProps> = ({
     return <div>❌ Error: {error.message}</div>
   }
 
+  const valueFormatter = formatValue ?? formatBytes
+
   return (
     <WidthHeightDiv $width={width} $height={height}>
       <ResponsiveContainer>
@@ -62,9 +65,9 @@ export const MatrixToLineMulti: FC<TMatrixToLineMultiProps> = ({
 
           <XAxis dataKey="timestamp" tickFormatter={formatTimestamp} />
 
-          <YAxis tickFormatter={formatBytes} />
+          <YAxis tickFormatter={valueFormatter} />
 
-          <Tooltip formatter={v => formatBytes(v)} labelFormatter={v => formatTimestamp(v)} />
+          <Tooltip formatter={v => valueFormatter(v)} labelFormatter={v => formatTimestamp(v)} />
 
           {series?.map((s, i) => (
             <Line

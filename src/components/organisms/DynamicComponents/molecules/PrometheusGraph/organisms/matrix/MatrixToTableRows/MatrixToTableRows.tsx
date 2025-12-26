@@ -24,6 +24,7 @@ export const MatrixToTableRows: FC<TMatrixToTableRowsProps> = ({
   range = '1h',
   refetchInterval,
   title = 'Memory usage (min / max / current)',
+  formatValue,
 }) => {
   const {
     data: series = [],
@@ -71,6 +72,8 @@ export const MatrixToTableRows: FC<TMatrixToTableRowsProps> = ({
     })
   }, [series])
 
+  const valueFormatter = formatValue ?? formatBytes
+
   const columns: ColumnsType<TRow> = useMemo(
     () => [
       {
@@ -103,7 +106,7 @@ export const MatrixToTableRows: FC<TMatrixToTableRowsProps> = ({
         dataIndex: 'min',
         key: 'min',
         align: 'right',
-        render: (v: number | null) => (v == null ? '—' : formatBytes(v)),
+        render: (v: number | null) => (v == null ? '-' : valueFormatter(v)),
         sorter: (a, b) => (a.min ?? -Infinity) - (b.min ?? -Infinity),
         defaultSortOrder: undefined,
       },
@@ -112,7 +115,7 @@ export const MatrixToTableRows: FC<TMatrixToTableRowsProps> = ({
         dataIndex: 'max',
         key: 'max',
         align: 'right',
-        render: (v: number | null) => (v == null ? '—' : formatBytes(v)),
+        render: (v: number | null) => (v == null ? '-' : valueFormatter(v)),
         sorter: (a, b) => (a.max ?? -Infinity) - (b.max ?? -Infinity),
       },
       {
@@ -120,7 +123,7 @@ export const MatrixToTableRows: FC<TMatrixToTableRowsProps> = ({
         dataIndex: 'current',
         key: 'current',
         align: 'right',
-        render: (v: number | null) => (v == null ? '—' : formatBytes(v)),
+        render: (v: number | null) => (v == null ? '-' : valueFormatter(v)),
         sorter: (a, b) => (a.current ?? -Infinity) - (b.current ?? -Infinity),
         defaultSortOrder: 'descend',
       },
@@ -133,7 +136,7 @@ export const MatrixToTableRows: FC<TMatrixToTableRowsProps> = ({
         sorter: (a, b) => (a.currentTs ?? -Infinity) - (b.currentTs ?? -Infinity),
       },
     ],
-    [],
+    [valueFormatter],
   )
 
   if (error) {

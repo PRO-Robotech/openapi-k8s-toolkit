@@ -99,6 +99,11 @@ const meta: Meta<TArgs> = {
       description: "Optional: data.mode (how to reduce values: 'last' | 'avg' | 'sum' | 'max' | 'min')",
     },
     topN: { control: 'number', description: 'Optional: data.topN (limit to top-N series/items)' },
+    formatter: {
+      control: { type: 'select' },
+      options: ['bytes', 'cores'],
+      description: 'Optional: data.formatter (value formatter applied to y-axis and table values)',
+    },
   },
 
   render: args => {
@@ -117,6 +122,7 @@ const meta: Meta<TArgs> = {
       max: args.max,
       mode: args.mode,
       topN: args.topN,
+      formatter: args.formatter,
     }
 
     return (
@@ -168,6 +174,7 @@ export const Default: Story = {
     refetchInterval: 30_000,
     range: '1h',
     title: 'CPU usage (cores)',
+    formatter: 'cores',
     min: 0,
     max: undefined,
     mode: 'avg',

@@ -3,6 +3,8 @@ import React from 'react'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
 import { http, HttpResponse, delay } from 'msw'
+import { formatBytesAuto } from '../../../../../../../../utils/converterBytes'
+import { formatCoresAuto } from '../../../../../../../../utils/converterCores'
 
 import { ScalarToStat } from './ScalarToStat'
 import { SmartProvider } from '../../../../../../../../../.storybook/mocks/SmartProvider'
@@ -10,11 +12,30 @@ import { SmartProvider } from '../../../../../../../../../.storybook/mocks/Smart
 type TInner = {
   query?: string
   title?: string
+  formatter?: 'bytes' | 'cores'
 }
 
 type TArgs = TInner & {
   theme: 'dark' | 'light'
   state: 'success' | 'loading' | 'error'
+}
+
+const buildFormatValue = (formatter?: TInner['formatter']) => {
+  if (formatter === 'bytes') {
+    return (value: unknown) => {
+      const num = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+      return Number.isFinite(num) ? formatBytesAuto(num) : value != null ? String(value) : ''
+    }
+  }
+
+  if (formatter === 'cores') {
+    return (value: unknown) => {
+      const num = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+      return Number.isFinite(num) ? formatCoresAuto(num) : value != null ? String(value) : ''
+    }
+  }
+
+  return undefined
 }
 
 /* ------------------------------ MSW handlers ----------------------------- */
@@ -48,12 +69,17 @@ const meta: Meta<TArgs> = {
   argTypes: {
     query: { control: 'text' },
     title: { control: 'text' },
+    formatter: { control: 'radio', options: ['bytes', 'cores'] },
     theme: { control: 'radio', options: ['light', 'dark'] },
     state: { control: 'radio', options: ['success', 'loading', 'error'] },
   },
 
   render: args => {
-    const data: TInner = { query: args.query, title: args.title }
+    const data: TInner = {
+      query: args.query,
+      title: args.title,
+      ...(args.formatter ? { formatter: args.formatter } : {}),
+    }
 
     return (
       <>
@@ -68,7 +94,11 @@ const meta: Meta<TArgs> = {
           }}
         >
           <div style={{ padding: 16, maxWidth: 420 }}>
-            <ScalarToStat query={data.query ?? 'scalar(42.42)'} title={data.title ?? 'Stat'} />
+            <ScalarToStat
+              query={data.query ?? 'scalar(42.42)'}
+              title={data.title ?? 'Stat'}
+              formatValue={buildFormatValue(args.formatter)}
+            />
           </div>
         </SmartProvider>
 
@@ -77,7 +107,10 @@ const meta: Meta<TArgs> = {
             defaultLanguage="yaml"
             width="100%"
             height={260}
-            value={yaml.stringify({ type: 'PrometheusScalar', data: { query: data.query ?? 'scalar(42.42)' } })}
+            value={yaml.stringify({
+              type: 'PrometheusScalar',
+              data: { query: data.query ?? 'scalar(42.42)', ...(data.formatter ? { formatter: data.formatter } : {}) },
+            })}
             theme="vs-dark"
             options={{ theme: 'vs-dark', readOnly: true }}
           />

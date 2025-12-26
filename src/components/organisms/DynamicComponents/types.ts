@@ -444,5 +444,6 @@ export type TDynamicComponentsAppTypeMap = {
     max?: number
     mode?: 'last' | 'avg' | 'sum' | 'max' | 'min'
     topN?: number
+    formatter?: 'bytes' | 'cores'
   }
 }
