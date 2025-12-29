@@ -135,12 +135,8 @@ export const XTerminal: FC<TXTerminalProps> = ({
         ) : (
           <>
             <Progress type="circle" percent={progressPercent} />
-            {warmupMessage && (
-              <Typography.Text type="secondary">{warmupMessage}</Typography.Text>
-            )}
-            {containerWaitingMessage && (
-              <Typography.Text type="warning">{containerWaitingMessage}</Typography.Text>
-            )}
+            {warmupMessage && <Typography.Text type="secondary">{warmupMessage}</Typography.Text>}
+            {containerWaitingMessage && <Typography.Text type="warning">{containerWaitingMessage}</Typography.Text>}
           </>
         )}
       </Styled.ProgressContainer>

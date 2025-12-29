@@ -22,12 +22,7 @@ export type TNodeTerminalProps = {
   listPodTemplatesNs: string // Required - namespace where PodTemplates are stored
 }
 
-export const NodeTerminal: FC<TNodeTerminalProps> = ({
-  cluster,
-  nodeName,
-  substractHeight,
-  listPodTemplatesNs,
-}) => {
+export const NodeTerminal: FC<TNodeTerminalProps> = ({ cluster, nodeName, substractHeight, listPodTemplatesNs }) => {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
   const [selectedContainer, setSelectedContainer] = useState<string | null>(null)
 
@@ -79,10 +74,7 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({
     [podTemplateNames],
   )
 
-  const containerOptions = useMemo(
-    () => containerNames.map(name => ({ value: name, label: name })),
-    [containerNames],
-  )
+  const containerOptions = useMemo(() => containerNames.map(name => ({ value: name, label: name })), [containerNames])
 
   const hasMultipleContainers = containerNames.length > 1
   const canShowTerminal = selectedTemplate && selectedContainer
@@ -93,12 +85,8 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({
   if (podTemplateNames.length === 0 && !isLoading) {
     return (
       <Styled.EmptyState>
-        <Typography.Text type="secondary">
-          No PodTemplates found in namespace "{listPodTemplatesNs}".
-        </Typography.Text>
-        <Typography.Text type="secondary">
-          Create a PodTemplate to use the node terminal.
-        </Typography.Text>
+        <Typography.Text type="secondary">No PodTemplates found in namespace "{listPodTemplatesNs}".</Typography.Text>
+        <Typography.Text type="secondary">Create a PodTemplate to use the node terminal.</Typography.Text>
       </Styled.EmptyState>
     )
   }
