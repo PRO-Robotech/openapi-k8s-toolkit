@@ -31,12 +31,10 @@ export const XTerminal: FC<TXTerminalProps> = ({
   const [containerWaitingMessage, setContainerWaitingMessage] = useState<string | null>(null)
   const [progressPercent, setProgressPercent] = useState<number>(0)
 
-  // Pod info from podReady message
   const [podInfo, setPodInfo] = useState<TPodReadyPayload | null>(null)
 
   const lifecycleSocketRef = useRef<WebSocket | null>(null)
 
-  // Connect to lifecycle WebSocket
   const connectLifecycle = useCallback(() => {
     const socket = new WebSocket(lifecycleEndpoint)
     lifecycleSocketRef.current = socket
@@ -110,12 +108,10 @@ export const XTerminal: FC<TXTerminalProps> = ({
     }
   }, [connectLifecycle])
 
-  // Render error state
   if (error) {
     return <Result status="error" title="Error" subTitle={error} />
   }
 
-  // Render loading/warmup state
   if (!podInfo) {
     return (
       <Styled.ProgressContainer $substractHeight={substractHeight}>
@@ -132,7 +128,6 @@ export const XTerminal: FC<TXTerminalProps> = ({
     )
   }
 
-  // Pod is ready - render container terminal
   return (
     <XTerminalContainer
       key={`${podInfo.namespace}-${podInfo.podName}-${selectedContainer}`}

@@ -11,7 +11,7 @@ export type TNodeTerminalProps = {
   cluster: string
   nodeName: string
   substractHeight: number
-  listPodTemplatesNs: string // Required - namespace where PodTemplates are stored
+  listPodTemplatesNs: string
 }
 
 export const NodeTerminal: FC<TNodeTerminalProps> = ({ cluster, nodeName, substractHeight, listPodTemplatesNs }) => {
@@ -21,7 +21,6 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({ cluster, nodeName, substr
   const lifecycleEndpoint = `/api/clusters/${cluster}/openapi-bff-ws/terminal/terminalNode/terminalNode`
   const containerEndpoint = `/api/clusters/${cluster}/openapi-bff-ws/terminal/terminalPod/terminalPod`
 
-  // Fetch pod templates
   const podTemplatesWsUrl = `/api/clusters/${cluster}/openapi-bff-ws/listThenWatch/listWatchWs`
   const podTemplates = useListWatch({
     wsUrl: podTemplatesWsUrl,
@@ -40,7 +39,6 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({ cluster, nodeName, substr
     return Array.from(new Set(values)).sort((a, b) => a.localeCompare(b))
   }, [podTemplates.state.byKey])
 
-  // Get containers for selected template
   const containerNames = useMemo(() => {
     if (!selectedTemplate) return []
 
@@ -52,7 +50,6 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({ cluster, nodeName, substr
     return containers.map(c => c.name).filter((name): name is string => Boolean(name))
   }, [podTemplates.state.byKey, selectedTemplate])
 
-  // Auto-select first container when template is selected
   useEffect(() => {
     if (containerNames.length > 0) {
       setSelectedContainer(containerNames[0])
@@ -73,7 +70,6 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({ cluster, nodeName, substr
 
   const isLoading = podTemplates.status === 'connecting'
 
-  // Show message if no pod templates
   if (podTemplateNames.length === 0 && !isLoading) {
     return (
       <Styled.EmptyState>
@@ -86,7 +82,6 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({ cluster, nodeName, substr
   return (
     <>
       <Flex gap={16}>
-        {/* Template selector */}
         <Styled.CustomSelect>
           <Select
             placeholder="Select pod template"
@@ -102,7 +97,6 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({ cluster, nodeName, substr
           />
         </Styled.CustomSelect>
 
-        {/* Container selector - visible but disabled until template selected */}
         <Styled.CustomSelect>
           <Select
             placeholder="Select container"

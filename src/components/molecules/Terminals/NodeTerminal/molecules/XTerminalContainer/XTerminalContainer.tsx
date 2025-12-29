@@ -36,7 +36,6 @@ export const XTerminalContainer: FC<TXTerminalContainerProps> = ({
       return
     }
 
-    // Create terminal
     const terminal = new XTerm({
       cursorBlink: false,
       cursorStyle: 'block',
@@ -49,7 +48,6 @@ export const XTerminalContainer: FC<TXTerminalContainerProps> = ({
     terminalInstance.current = terminal
     fitAddon.current.fit()
 
-    // Create WebSocket connection
     const socket = new WebSocket(endpoint)
     socketRef.current = socket
 
@@ -96,7 +94,6 @@ export const XTerminalContainer: FC<TXTerminalContainerProps> = ({
     })
   }, [endpoint, namespace, podName, containerName])
 
-  // Initialize on mount
   useEffect(() => {
     connect()
 
