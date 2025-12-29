@@ -1,0 +1,1 @@
+export { formatDateAuto } from './converterDates'
