@@ -5,15 +5,7 @@ import { Spacer } from 'components/atoms'
 import { useListWatch } from 'hooks/useListThenWatch'
 import { XTerminal } from './molecules'
 import { Styled } from './styled'
-
-type TPodTemplateData = {
-  metadata?: { name?: string }
-  template?: {
-    spec?: {
-      containers?: Array<{ name?: string }>
-    }
-  }
-}
+import { TPodTemplateData } from './types'
 
 export type TNodeTerminalProps = {
   cluster: string

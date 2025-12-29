@@ -6,6 +6,7 @@ import themes from 'xterm-theme'
 import { FitAddon } from '@xterm/addon-fit'
 import '@xterm/xterm/css/xterm.css'
 import { Styled } from '../XTerminal/styled'
+import { TPodTerminalPayload } from '../XTerminal/types'
 
 type TXTerminalContainerProps = {
   endpoint: string
@@ -13,12 +14,6 @@ type TXTerminalContainerProps = {
   podName: string
   containerName: string
   substractHeight: number
-}
-
-type TPodTerminalPayload = {
-  namespace: string
-  podName: string
-  container: string
 }
 
 export const XTerminalContainer: FC<TXTerminalContainerProps> = ({
@@ -134,4 +129,3 @@ export const XTerminalContainer: FC<TXTerminalContainerProps> = ({
     </Styled.CustomCard>
   )
 }
-

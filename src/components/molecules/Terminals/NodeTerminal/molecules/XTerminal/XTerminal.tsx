@@ -4,6 +4,7 @@ import { Result, Spin, Progress, Typography } from 'antd'
 import '@xterm/xterm/css/xterm.css'
 import { Styled } from './styled'
 import { XTerminalContainer } from '../XTerminalContainer'
+import { TNodeTerminalPayload, TPodReadyPayload } from './types'
 
 type TXTerminalProps = {
   lifecycleEndpoint: string
@@ -13,18 +14,6 @@ type TXTerminalProps = {
   podTemplateNamespace: string
   selectedContainer: string
   substractHeight: number
-}
-
-type TNodeTerminalPayload = {
-  nodeName: string
-  podTemplateName: string
-  podTemplateNamespace: string
-}
-
-type TPodReadyPayload = {
-  namespace: string
-  podName: string
-  containers: string[]
 }
 export const XTerminal: FC<TXTerminalProps> = ({
   lifecycleEndpoint,
