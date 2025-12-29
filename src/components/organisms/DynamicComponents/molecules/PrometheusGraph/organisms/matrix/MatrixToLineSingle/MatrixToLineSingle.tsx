@@ -2,7 +2,7 @@
 import { FC } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
 import { usePromMatrixToLineSingle } from '../../../hooks/queryRangeMatrix/single/usePromMatrixToLineSingle'
-import { formatBytes, formatTimestamp } from '../../../utils/formatters'
+import { formatBytes, formatTimestamp as formatTimestampDefault } from '../../../utils/formatters'
 import { TMatrixToLineSingleProps } from '../../../types'
 import { WidthHeightDiv } from '../../../atoms'
 
@@ -14,6 +14,7 @@ export const MatrixToLineSingle: FC<TMatrixToLineSingleProps> = ({
   width,
   height,
   formatValue,
+  formatTimestamp,
 }) => {
   const {
     data = [],
@@ -35,6 +36,19 @@ export const MatrixToLineSingle: FC<TMatrixToLineSingleProps> = ({
   }
 
   const valueFormatter = formatValue ?? formatBytes
+  const xAxisFormatter =
+    formatTimestamp ??
+    ((value: unknown) => {
+      // ????? value: unknown / ValueType - ???????? ?????????
+      const ts = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+
+      if (!Number.isFinite(ts)) {
+        return ''
+      }
+
+      return new Date(ts).toLocaleTimeString()
+    })
+  const tooltipTimestampFormatter = formatTimestamp ?? formatTimestampDefault
 
   return (
     <WidthHeightDiv $width={width} $height={height}>
@@ -42,25 +56,14 @@ export const MatrixToLineSingle: FC<TMatrixToLineSingleProps> = ({
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
 
-          <XAxis
-            dataKey="timestamp"
-            type="number"
-            domain={['auto', 'auto']}
-            tickFormatter={value => {
-              // здесь value: unknown / ValueType — приводим безопасно
-              const ts = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
-
-              if (!Number.isFinite(ts)) {
-                return ''
-              }
-
-              return new Date(ts).toLocaleTimeString()
-            }}
-          />
+          <XAxis dataKey="timestamp" type="number" domain={['auto', 'auto']} tickFormatter={xAxisFormatter} />
 
           <YAxis tickFormatter={value => valueFormatter(value)} />
 
-          <Tooltip formatter={value => valueFormatter(value)} labelFormatter={value => formatTimestamp(value)} />
+          <Tooltip
+            formatter={value => valueFormatter(value)}
+            labelFormatter={value => tooltipTimestampFormatter(value)}
+          />
 
           <Line
             type="monotone"

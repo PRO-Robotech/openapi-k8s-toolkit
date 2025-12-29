@@ -21,7 +21,7 @@ import {
   ScalarToGauge,
   ScalarToStat,
 } from './organisms'
-import { createValueFormatter } from './helpers'
+import { createDateFormatter, createValueFormatter } from './helpers'
 
 type TGraphType =
   | 'MatrixToAreaMulti'
@@ -77,6 +77,7 @@ export const PrometheusGraph: FC<{ data: TDynamicComponentsAppTypeMap['Prometheu
     topN,
     formatter,
     unit,
+    dateFormatter,
     ...props
   } = data
 
@@ -95,8 +96,9 @@ export const PrometheusGraph: FC<{ data: TDynamicComponentsAppTypeMap['Prometheu
   )
 
   const formatValue = createValueFormatter({ formatter, unit })
+  const formatTimestamp = createDateFormatter(dateFormatter)
 
-  const preparedProps = { width, height, refetchInterval, min, max, topN, formatValue, ...parsedProps }
+  const preparedProps = { width, height, refetchInterval, min, max, topN, formatValue, formatTimestamp, ...parsedProps }
 
   if (isMultiqueryLoading) {
     return <div>Loading multiquery</div>

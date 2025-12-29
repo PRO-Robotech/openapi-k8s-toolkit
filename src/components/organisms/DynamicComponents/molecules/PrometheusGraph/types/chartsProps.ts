@@ -35,6 +35,8 @@ type TBaseTopNProps = {
 type TBaseFormatterProps = {
   /** optional formatter for value */
   formatValue?: (v: unknown) => string
+  /** optional formatter for timestamp / date values */
+  formatTimestamp?: (v: unknown) => string
 }
 
 export type TMatrixToLineSingleProps = TBaseContainerSizeProps &

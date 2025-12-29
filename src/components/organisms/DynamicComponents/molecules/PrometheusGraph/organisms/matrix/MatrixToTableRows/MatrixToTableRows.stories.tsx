@@ -6,6 +6,7 @@ import * as yaml from 'yaml'
 import { http, HttpResponse, delay } from 'msw'
 import { formatBytesAuto } from '../../../../../../../../utils/converterBytes'
 import { formatCoresAuto } from '../../../../../../../../utils/converterCores'
+import { formatDateAuto, type TDateFormatOptions } from '../../../../../../../../utils/converterDates'
 
 import { MatrixToTableRows } from './MatrixToTableRows'
 import { SmartProvider } from '../../../../../../../../../.storybook/mocks/SmartProvider'
@@ -14,6 +15,7 @@ type TInner = {
   range?: string
   title?: string
   formatter?: 'bytes' | 'cores'
+  dateFormatter?: TDateFormatOptions
 }
 
 type TArgs = TInner & {
@@ -37,6 +39,30 @@ const buildFormatValue = (formatter?: TInner['formatter']) => {
   }
 
   return undefined
+}
+
+const buildFormatTimestamp = (options?: TDateFormatOptions) => {
+  if (!options) return undefined
+
+  return (value: unknown) => {
+    if (value == null) return ''
+
+    let input: string | number | Date | null = null
+
+    if (value instanceof Date) {
+      input = value
+    } else if (typeof value === 'number') {
+      input = value
+    } else if (typeof value === 'string') {
+      const num = Number(value)
+      input = Number.isFinite(num) ? num : value
+    }
+
+    if (input == null) return ''
+
+    const formatted = formatDateAuto(input, options)
+    return formatted === 'Invalid date' ? '' : formatted
+  }
 }
 
 /* ----------------------------- MSW helpers ------------------------------- */
@@ -117,6 +143,7 @@ const meta: Meta<TArgs> = {
     range: { control: 'text' },
     title: { control: 'text' },
     formatter: { control: 'radio', options: ['bytes', 'cores'] },
+    dateFormatter: { control: 'object' },
     theme: { control: 'radio', options: ['light', 'dark'] },
     state: { control: 'radio', options: ['success', 'loading', 'error'] },
   },
@@ -126,6 +153,7 @@ const meta: Meta<TArgs> = {
       range: args.range,
       title: args.title,
       ...(args.formatter ? { formatter: args.formatter } : {}),
+      ...(args.dateFormatter ? { dateFormatter: args.dateFormatter } : {}),
     }
 
     return (
@@ -141,7 +169,12 @@ const meta: Meta<TArgs> = {
           }}
         >
           <div style={{ padding: 16 }}>
-            <MatrixToTableRows range={data.range} title={data.title} formatValue={buildFormatValue(args.formatter)} />
+            <MatrixToTableRows
+              range={data.range}
+              title={data.title}
+              formatValue={buildFormatValue(args.formatter)}
+              formatTimestamp={buildFormatTimestamp(args.dateFormatter)}
+            />
           </div>
         </SmartProvider>
 
@@ -173,6 +206,7 @@ export const Default: TStory = {
     range: '1h',
     title: 'Memory usage (min / max / current)',
     formatter: 'bytes',
+    dateFormatter: { style: 'time', seconds: true },
     theme: 'light',
     state: 'success',
   },

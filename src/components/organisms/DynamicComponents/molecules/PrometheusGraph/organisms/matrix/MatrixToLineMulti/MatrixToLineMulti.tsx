@@ -1,7 +1,7 @@
 import { FC, useMemo } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
 import { usePromMatrixToLineMulti } from '../../../hooks/queryRangeMatrix/multi/usePromMatrixToLineMulti'
-import { formatBytes, formatTimestamp } from '../../../utils/formatters'
+import { formatBytes, formatTimestamp as formatTimestampDefault } from '../../../utils/formatters'
 import { TMatrixToLineMultiProps } from '../../../types'
 import { WidthHeightDiv } from '../../../atoms'
 
@@ -13,6 +13,7 @@ export const MatrixToLineMulti: FC<TMatrixToLineMultiProps> = ({
   width,
   height,
   formatValue,
+  formatTimestamp,
 }) => {
   const {
     data: series,
@@ -56,6 +57,7 @@ export const MatrixToLineMulti: FC<TMatrixToLineMultiProps> = ({
   }
 
   const valueFormatter = formatValue ?? formatBytes
+  const timestampFormatter = formatTimestamp ?? formatTimestampDefault
 
   return (
     <WidthHeightDiv $width={width} $height={height}>
@@ -63,11 +65,11 @@ export const MatrixToLineMulti: FC<TMatrixToLineMultiProps> = ({
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
 
-          <XAxis dataKey="timestamp" tickFormatter={formatTimestamp} />
+          <XAxis dataKey="timestamp" tickFormatter={timestampFormatter} />
 
           <YAxis tickFormatter={valueFormatter} />
 
-          <Tooltip formatter={v => valueFormatter(v)} labelFormatter={v => formatTimestamp(v)} />
+          <Tooltip formatter={v => valueFormatter(v)} labelFormatter={v => timestampFormatter(v)} />
 
           {series?.map((s, i) => (
             <Line

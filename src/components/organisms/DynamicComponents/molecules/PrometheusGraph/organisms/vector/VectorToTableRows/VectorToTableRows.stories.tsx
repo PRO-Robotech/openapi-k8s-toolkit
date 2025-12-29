@@ -5,6 +5,7 @@ import * as yaml from 'yaml'
 import { http, HttpResponse, delay } from 'msw'
 import { formatBytesAuto } from '../../../../../../../../utils/converterBytes'
 import { formatCoresAuto } from '../../../../../../../../utils/converterCores'
+import { formatDateAuto, type TDateFormatOptions } from '../../../../../../../../utils/converterDates'
 
 import { VectorToTableRows } from './VectorToTableRows'
 import { SmartProvider } from '../../../../../../../../../.storybook/mocks/SmartProvider'
@@ -13,6 +14,7 @@ type TExtraArgs = {
   theme: 'dark' | 'light'
   state: 'success' | 'loading' | 'error'
   formatter?: 'bytes' | 'cores'
+  dateFormatter?: TDateFormatOptions
 }
 
 const buildFormatValue = (formatter?: TExtraArgs['formatter']) => {
@@ -31,6 +33,30 @@ const buildFormatValue = (formatter?: TExtraArgs['formatter']) => {
   }
 
   return undefined
+}
+
+const buildFormatTimestamp = (options?: TDateFormatOptions) => {
+  if (!options) return undefined
+
+  return (value: unknown) => {
+    if (value == null) return ''
+
+    let input: string | number | Date | null = null
+
+    if (value instanceof Date) {
+      input = value
+    } else if (typeof value === 'number') {
+      input = value
+    } else if (typeof value === 'string') {
+      const num = Number(value)
+      input = Number.isFinite(num) ? num : value
+    }
+
+    if (input == null) return ''
+
+    const formatted = formatDateAuto(input, options)
+    return formatted === 'Invalid date' ? '' : formatted
+  }
 }
 
 const EMPTY_MULTI_QUERY_VALUE = {
@@ -74,18 +100,29 @@ const meta: Meta<typeof VectorToTableRows> = {
     theme: { control: 'radio', options: ['light', 'dark'] },
     state: { control: 'radio', options: ['success', 'loading', 'error'] },
     formatter: { control: 'radio', options: ['bytes', 'cores'] },
+    dateFormatter: { control: 'object' },
   } as any,
 
   render: (args: any) => {
-    const { query, title, theme, formatter } = args as TExtraArgs & { query?: string; title?: string }
+    const { query, title, theme, formatter, dateFormatter } = args as TExtraArgs & { query?: string; title?: string }
 
-    const data = { query, title, ...(formatter ? { formatter } : {}) }
+    const data = {
+      query,
+      title,
+      ...(formatter ? { formatter } : {}),
+      ...(dateFormatter ? { dateFormatter } : {}),
+    }
 
     return (
       <>
         <SmartProvider multiQueryValue={EMPTY_MULTI_QUERY_VALUE} theme={theme} partsOfUrl={[]}>
           <div style={{ padding: 16 }}>
-            <VectorToTableRows query={query} title={title} formatValue={buildFormatValue(formatter)} />
+            <VectorToTableRows
+              query={query}
+              title={title}
+              formatValue={buildFormatValue(formatter)}
+              formatTimestamp={buildFormatTimestamp(dateFormatter)}
+            />
           </div>
         </SmartProvider>
 
@@ -116,6 +153,7 @@ export const Success: TStory = {
   args: {
     query: 'container_memory_usage_bytes_success',
     formatter: 'bytes',
+    dateFormatter: { style: 'time', seconds: true },
     title: 'Vector → Table',
     theme: 'light',
     state: 'success',

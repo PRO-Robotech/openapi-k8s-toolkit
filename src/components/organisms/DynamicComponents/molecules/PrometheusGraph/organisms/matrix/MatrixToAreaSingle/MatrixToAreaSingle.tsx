@@ -2,7 +2,7 @@
 import { FC } from 'react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
 import { usePromMatrixToLineSingle } from '../../../hooks/queryRangeMatrix/single/usePromMatrixToLineSingle'
-import { formatBytes, formatTimestamp } from '../../../utils/formatters'
+import { formatBytes, formatTimestamp as formatTimestampDefault } from '../../../utils/formatters'
 import { TMatrixToAreaSingleProps } from '../../../types'
 import { WidthHeightDiv } from '../../../atoms'
 
@@ -14,6 +14,7 @@ export const MatrixToAreaSingle: FC<TMatrixToAreaSingleProps> = ({
   width,
   height,
   formatValue,
+  formatTimestamp,
 }) => {
   const { data = [], isLoading, error } = usePromMatrixToLineSingle({ baseUrl, query, range, refetchInterval })
 
@@ -26,6 +27,18 @@ export const MatrixToAreaSingle: FC<TMatrixToAreaSingleProps> = ({
   }
 
   const valueFormatter = formatValue ?? formatBytes
+  const xAxisFormatter =
+    formatTimestamp ??
+    ((value: unknown) => {
+      const ts = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+
+      if (!Number.isFinite(ts)) {
+        return ''
+      }
+
+      return new Date(ts).toLocaleTimeString()
+    })
+  const tooltipTimestampFormatter = formatTimestamp ?? formatTimestampDefault
 
   return (
     <WidthHeightDiv $width={width} $height={height}>
@@ -33,24 +46,14 @@ export const MatrixToAreaSingle: FC<TMatrixToAreaSingleProps> = ({
         <AreaChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
 
-          <XAxis
-            dataKey="timestamp"
-            type="number"
-            domain={['auto', 'auto']}
-            tickFormatter={value => {
-              const ts = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
-
-              if (!Number.isFinite(ts)) {
-                return ''
-              }
-
-              return new Date(ts).toLocaleTimeString()
-            }}
-          />
+          <XAxis dataKey="timestamp" type="number" domain={['auto', 'auto']} tickFormatter={xAxisFormatter} />
 
           <YAxis tickFormatter={value => valueFormatter(value)} />
 
-          <Tooltip formatter={value => valueFormatter(value)} labelFormatter={value => formatTimestamp(value)} />
+          <Tooltip
+            formatter={value => valueFormatter(value)}
+            labelFormatter={value => tooltipTimestampFormatter(value)}
+          />
 
           <Area
             type="monotone"
