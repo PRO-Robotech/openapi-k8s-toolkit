@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 import React, { FC, useEffect, useState, useRef, useCallback } from 'react'
 import { Result, Spin, Progress, Typography } from 'antd'
-import '@xterm/xterm/css/xterm.css'
 import { Styled } from './styled'
 import { XTerminalContainer } from '../XTerminalContainer'
 import { TNodeTerminalPayload, TPodReadyPayload } from './types'
