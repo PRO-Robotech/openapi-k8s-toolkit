@@ -15,7 +15,8 @@ export const TableFactory: FC<TTableFactoryProps> = ({ record, customProps, them
 
   return (
     <DynamicRendererWithProviders
-      urlsToFetch={[]}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      urlsToFetch={(customProps as any).urlsToFetch || []}
       dataToApplyToContext={record}
       theme={theme}
       // nodeTerminalDefaultProfile={}

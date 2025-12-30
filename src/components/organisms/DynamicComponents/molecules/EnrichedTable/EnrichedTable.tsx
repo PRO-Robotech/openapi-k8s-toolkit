@@ -13,9 +13,9 @@ import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
 import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
 import { getLinkToForm } from 'utils/tableLocations'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
-import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
-import { useTheme } from '../../../DynamicRendererWithProviders/themeContext'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
+import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
+import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
 import { parseAll } from '../utils'
 import { serializeLabelsWithNoEncoding } from './utils'
 
@@ -43,6 +43,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     fetchUrl,
     k8sResourceToFetch,
     pathToItems,
+    additionalReqsDataToEachItem,
     cluster,
     labelSelector,
     labelSelectorFull,
@@ -51,6 +52,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     k8sResource,
     dataForControls,
     baseprefix,
+    pathToKey,
     ...props
   } = data
 
@@ -227,6 +229,19 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
 
   const itemsAlwaysArr = Array.isArray(items) ? items : []
 
+  let additionalReqsData: any[] | undefined = []
+  if (additionalReqsDataToEachItem) {
+    additionalReqsDataToEachItem.forEach(item => {
+      additionalReqsData?.push(multiQueryData[`req${item}`])
+    })
+  }
+  additionalReqsData = additionalReqsData.length > 0 ? additionalReqsData : undefined
+
+  const itemsAlwaysArrWithAdditionalData = itemsAlwaysArr.map(el => ({
+    ...el,
+    ...(additionalReqsData ? { additionalReqsData } : {}),
+  }))
+
   // if (!items) {
   //   return <div>No data on this path {JSON.stringify(pathToItems)}</div>
   // }
@@ -249,7 +264,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
         cluster={clusterPrepared}
         namespace={namespacePrepared}
         theme={theme}
-        dataItems={itemsAlwaysArr}
+        dataItems={itemsAlwaysArrWithAdditionalData}
         tableProps={{
           borderless: true,
           paginationPosition: ['bottomRight'],
@@ -274,6 +289,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
         dataForControls={dataForControlsPrepared}
         withoutControls={!dataForControlsPrepared}
         baseprefix={baseprefix}
+        pathToKey={pathToKey}
         {...props}
       />
       {dataForControlsPrepared && (

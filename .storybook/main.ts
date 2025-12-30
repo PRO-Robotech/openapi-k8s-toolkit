@@ -1,4 +1,4 @@
-import type { StorybookConfig } from '@storybook/react-vite' // change to your renderer
+import type { StorybookConfig } from '@storybook/react-vite'
 import { mergeConfig } from 'vite'
 import dotenv from 'dotenv'
 import path from 'path'
@@ -6,8 +6,10 @@ import path from 'path'
 const { parsed: options } = dotenv.config({ path: './.env.options' })
 
 const config: StorybookConfig = {
-  stories: ['../src/**/*.mdx', '../src/**/*.stories.@(ts|tsx|js|jsx)'],
-  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions', '@storybook/addon-a11y'],
+  staticDirs: ['../public'], // ✅ serve /mockServiceWorker.js
+  stories: ['./docs/**/*.tsx', '../src/**/*.mdx', '../src/**/*.stories.@(ts|tsx|js|jsx)'],
+  addons: ['msw-storybook-addon'],
+  // addons: ['@storybook/addon-essentials', '@storybook/addon-interactions', '@storybook/addon-a11y'],
   framework: {
     name: '@storybook/react-vite',
     options: {},
@@ -22,15 +24,22 @@ const config: StorybookConfig = {
           '@': path.resolve(__dirname, '../src'),
 
           // 👇 Add our Storybook-only mocks for the hooks
-          '../../../DynamicRendererWithProviders/multiQueryProvider': path.resolve(
+          '../../../DynamicRendererWithProviders/providers/multiQueryProvider': path.resolve(
             __dirname,
             './mocks/multiQueryProvider.tsx',
           ),
-          '../../../DynamicRendererWithProviders/partsOfUrlContext': path.resolve(
+          '../../../DynamicRendererWithProviders/providers/partsOfUrlContext': path.resolve(
             __dirname,
             './mocks/partsOfUrlContext.tsx',
           ),
-          '../../../DynamicRendererWithProviders/themeContext': path.resolve(__dirname, './mocks/themeContext.tsx'),
+          '../../../DynamicRendererWithProviders/providers/hybridDataProvider': path.resolve(
+            __dirname,
+            './mocks/hybridDataProvider.tsx',
+          ),
+          '../../../DynamicRendererWithProviders/providers/themeContext': path.resolve(
+            __dirname,
+            './mocks/themeContext.tsx',
+          ),
         },
       },
       server: {

@@ -35,8 +35,14 @@ export { ProjectInfoCard } from './ProjectInfoCard'
 export type { TProjectInfoCardProps } from './ProjectInfoCard'
 
 /* Terminals */
-export { PodTerminal, NodeTerminal, PodLogs, PodLogsMonaco } from './Terminals'
-export type { TPodTerminalProps, TNodeTerminalProps, TPodLogsProps, TPodLogsMonacoProps } from './Terminals'
+export { PodTerminal, NodeTerminal, PodLogs, PodLogsMonaco, VMVNC } from './Terminals'
+export type {
+  TPodTerminalProps,
+  TNodeTerminalProps,
+  TPodLogsProps,
+  TPodLogsMonacoProps,
+  TVMVNCProps,
+} from './Terminals'
 
 /* Search */
 export { Search } from './Search'

@@ -1,0 +1,1 @@
+export { VectorToBarGauge } from './VectorToBarGauge'

@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  storybook:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: toolkit-storybook
+    ports:
+      - "8888:80"
+    restart: unless-stopped

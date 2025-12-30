@@ -33,12 +33,15 @@ import {
   Tolerations,
   Annotations,
   ConverterBytes,
+  ConverterCores,
   SecretBase64Plain,
   ResourceBadge,
   Events,
   OwnerRefs,
   Toggler,
   TogglerSegmented,
+  VMVNC,
+  PrometheusGraph,
 } from './molecules'
 import { TDynamicComponentsAppTypeMap } from './types'
 
@@ -76,10 +79,13 @@ export const DynamicComponents: TRendererComponents<TDynamicComponentsAppTypeMap
   Tolerations,
   Annotations,
   ConverterBytes,
+  ConverterCores,
   SecretBase64Plain,
   ResourceBadge,
   Events,
   OwnerRefs,
   Toggler,
   TogglerSegmented,
+  VMVNC,
+  PrometheusGraph,
 }

@@ -1,0 +1,1 @@
+export { usePromScalar } from './usePromScalar'

@@ -7,8 +7,8 @@ import { AxiosError } from 'axios'
 import { notification, Switch } from 'antd'
 import { patchEntryWithReplaceOp, patchEntryWithDeleteOp } from 'api/forms'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
-import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
+import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
 
 export const Toggler: FC<{ data: TDynamicComponentsAppTypeMap['Toggler']; children?: any }> = ({ data, children }) => {

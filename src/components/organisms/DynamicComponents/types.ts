@@ -4,7 +4,9 @@ import type { TextProps } from 'antd/es/typography/Text'
 import type { LinkProps } from 'antd/es/typography/Link'
 import type { TContentCardProps, TSpacerProps } from 'components/atoms'
 import type { TManageableSidebarProviderProps, TEnrichedTableProviderProps } from 'components/molecules'
-import type { TUnitInput } from './molecules/ConverterBytes/types'
+import type { TUnitInput } from 'localTypes/factories/converterBytes'
+import type { TCoreUnitInput } from 'localTypes/factories/converterCores'
+import type { TDateFormatOptions } from 'utils/converterDates'
 
 export type TDynamicComponentsAppTypeMap = {
   DefaultDiv: { id: number | string } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
@@ -76,6 +78,7 @@ export type TDynamicComponentsAppTypeMap = {
       namespace?: string
     }
     pathToItems: string | string[] // jsonpath or keys as string[]
+    additionalReqsDataToEachItem?: number[]
     cluster: string
     labelSelector?: Record<string, string>
     labelSelectorFull?: {
@@ -83,6 +86,7 @@ export type TDynamicComponentsAppTypeMap = {
       pathToLabels: string | string[] // jsonpath or keys as string[]
     }
     fieldSelector?: Record<string, string>
+    pathToKey?: string // jsonpath for each row
   } & Omit<
     TEnrichedTableProviderProps,
     | 'tableMappingsReplaceValues'
@@ -105,6 +109,7 @@ export type TDynamicComponentsAppTypeMap = {
     cluster: string
     nodeName: string
     substractHeight?: number
+    listPodTemplatesNs?: string
   }
   PodLogs: {
     id: number | string
@@ -130,6 +135,8 @@ export type TDynamicComponentsAppTypeMap = {
   VisibilityContainer: {
     id: number | string
     value: string
+    criteria?: 'equals' | 'notEquals' | 'exists' | 'notExists'
+    valueToCompare?: string | string[]
   }
   ArrayOfObjectsToKeyValues: {
     id: number | string
@@ -256,7 +263,7 @@ export type TDynamicComponentsAppTypeMap = {
   }
   ConverterBytes: {
     id: number | string
-    bytesValue: string // reqs
+    bytesValue: string | string[] // reqs
     unit?: TUnitInput // do not enter if wanna auto format
     /** If true, returns "12.3 GiB" instead of just 12.3 */
     format?: boolean
@@ -267,6 +274,31 @@ export type TDynamicComponentsAppTypeMap = {
     standard?: 'si' | 'iec'
     notANumberText?: string
     style?: CSSProperties
+    /** If provided, value is in this unit instead of raw bytes */
+    fromUnit?: TUnitInput
+    /** If provided, convert to this explicit unit */
+    toUnit?: TUnitInput // do not enter if wanna auto format
+    /** If omitted and toUnit is missing, use auto-scaling */
+  }
+  ConverterCores: {
+    id: number | string
+    /** Raw text that may contain a number or number+unit like "0.5", "500m", "2 vcpu" */
+    coresValue: string | string[]
+    /** Target unit; omit to auto format (core vs mcore) */
+    unit?: TCoreUnitInput
+    /** If true, returns "500 mcore" instead of just 500 */
+    format?: boolean
+    /** Max fraction digits when formatting (default 2) */
+    precision?: number
+    /** Locale for number formatting (default: undefined => user agent) */
+    locale?: string
+    notANumberText?: string
+    style?: CSSProperties
+    /** If provided, value is in this unit instead of raw "cores" */
+    fromUnit?: TCoreUnitInput
+    /** If provided, convert to this explicit unit; omit for auto-format */
+    toUnit?: TCoreUnitInput
+    /** If omitted and toUnit is missing, use auto-scaling (core vs mcore) */
   }
   SecretBase64Plain: {
     id: number | string
@@ -375,5 +407,46 @@ export type TDynamicComponentsAppTypeMap = {
       value: any
       renderedValue: string | number
     }[]
+  }
+  VMVNC: {
+    id: number | string
+    cluster?: string
+    namespace?: string
+    vmName?: string
+    forcedFullWsPath?: string
+    substractHeight?: number
+  }
+  PrometheusGraph: {
+    id: number | string
+    type:
+      | 'MatrixToAreaMulti'
+      | 'MatrixToAreaSingle'
+      | 'MatrixToAreaStacked'
+      | 'MatrixToLineMulti'
+      | 'MatrixToLineSingle'
+      | 'MatrixToReducedBar'
+      | 'MatrixToTableRows'
+      | 'VectorToBarGauge'
+      | 'VectorToBarHorizontal'
+      | 'VectorToBarVertical'
+      | 'VectorToGaugeRadial'
+      | 'VectorToPie'
+      | 'VectorToTableRows'
+      | 'ScalarToGauge'
+      | 'ScalarToStat'
+    width?: CSSProperties['width']
+    height?: CSSProperties['height']
+    baseUrl?: string
+    query?: string
+    refetchInterval?: number | false
+    range?: string
+    title?: string
+    min?: number
+    max?: number
+    mode?: 'last' | 'avg' | 'sum' | 'max' | 'min'
+    topN?: number
+    formatter: 'bytes' | 'cores' | 'unit' | 'none'
+    unit?: string
+    dateFormatter?: TDateFormatOptions
   }
 }

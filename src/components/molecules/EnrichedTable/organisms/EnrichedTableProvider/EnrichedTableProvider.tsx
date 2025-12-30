@@ -57,6 +57,9 @@ export type TEnrichedTableProviderProps = {
     disablePagination?: boolean
   }
   withoutControls?: boolean
+
+  /* primary key */
+  pathToKey?: string
 }
 
 export const EnrichedTableProvider: FC<TEnrichedTableProviderProps> = ({
@@ -77,6 +80,7 @@ export const EnrichedTableProvider: FC<TEnrichedTableProviderProps> = ({
   selectData,
   tableProps,
   withoutControls,
+  pathToKey,
 }) => {
   const location = useLocation()
 
@@ -168,6 +172,7 @@ export const EnrichedTableProvider: FC<TEnrichedTableProviderProps> = ({
 
   const { dataSource, columns } = prepare({
     dataItems,
+    pathToKey,
     resourceSchema,
     dataForControls: dataForControls
       ? {
@@ -210,6 +215,7 @@ export const EnrichedTableProvider: FC<TEnrichedTableProviderProps> = ({
       additionalPrinterColumnsTrimLengths={preparedProps.additionalPrinterColumnsTrimLengths}
       additionalPrinterColumnsColWidths={preparedProps.additionalPrinterColumnsColWidths}
       additionalPrinterColumnsKeyTypeProps={preparedProps.additionalPrinterColumnsKeyTypeProps}
+      additionalPrinterColumnsCustomSortersAndFilters={preparedProps.additionalPrinterColumnsCustomSortersAndFilters}
       selectData={selectData}
       tableProps={tableProps}
       withoutControls={withoutControls}

@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { FC, useState, useEffect } from 'react'
-import { YamlEditorSingleton as Editor } from 'components'
+import { YamlEditorSingleton as Editor } from 'components/molecules/YamlEditorSingleton'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
-import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
-import { useTheme } from '../../../DynamicRendererWithProviders/themeContext'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
+import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
+import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
 import { parseAll } from '../utils'
 import { getDataByPath, getPrefillValuesWithForces } from './utils'
 

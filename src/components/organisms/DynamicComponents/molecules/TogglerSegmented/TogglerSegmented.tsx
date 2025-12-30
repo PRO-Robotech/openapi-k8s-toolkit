@@ -7,8 +7,8 @@ import { AxiosError } from 'axios'
 import { notification, Segmented } from 'antd'
 import { patchEntryWithReplaceOp } from 'api/forms'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
-import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
+import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
 
 export const TogglerSegmented: FC<{ data: TDynamicComponentsAppTypeMap['TogglerSegmented']; children?: any }> = ({

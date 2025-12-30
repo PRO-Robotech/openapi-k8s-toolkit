@@ -1,0 +1,1 @@
+export { usePromMatrixToLineSingle } from './usePromMatrixToLineSingle'

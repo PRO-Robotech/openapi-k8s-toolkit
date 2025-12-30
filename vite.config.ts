@@ -27,6 +27,7 @@ export default defineConfig({
         'antd',
         '@ant-design/icons',
         'styled-components',
+        'novnc-next',
       ],
       output: {
         globals: {
@@ -38,6 +39,7 @@ export default defineConfig({
           antd: 'antd',
           '@ant-design/icons': 'antdIcons',
           'styled-components': 'styled',
+          'novnc-next': 'NoVNC',
         },
       },
     },

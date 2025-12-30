@@ -1,5 +1,5 @@
 // ========================= Types ============================
-// Messages are intentionally permissive (no k8s deps). Adjust to your API as needed.
+// Messages are intentionally permissive (no k8s deps).
 import { TSingleResource } from 'localTypes/k8s'
 
 type TWatchPhase = 'ADDED' | 'MODIFIED' | 'DELETED' | 'BOOKMARK'

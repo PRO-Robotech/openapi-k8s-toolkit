@@ -100,7 +100,7 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
         }
         if (data.result === 'error') {
           setIsError(data.error)
-          console.log(data.error)
+          console.warn(data.error)
           fallbackToManualMode()
         } else {
           setPreparedData({
@@ -147,15 +147,16 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
     )
   }
 
+  if (isError) {
+    return <Alert message={isError} type="error" />
+  }
+
   if (!preparedData?.properties && !isError) {
     return null
   }
+
   if (!preparedData?.properties) {
     return null
-  }
-
-  if (isError) {
-    return <Alert message={isError} type="error" />
   }
 
   return (

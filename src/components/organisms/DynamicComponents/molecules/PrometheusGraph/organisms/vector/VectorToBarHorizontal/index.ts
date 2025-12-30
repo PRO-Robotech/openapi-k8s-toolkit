@@ -1,0 +1,1 @@
+export { VectorToBarHorizontal } from './VectorToBarHorizontal'

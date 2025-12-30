@@ -3,8 +3,8 @@
 import React, { FC } from 'react'
 import { MarketPlace as Card } from 'components/molecules'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
-import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/partsOfUrlContext'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
+import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
 
 export const MarketplaceCard: FC<{ data: TDynamicComponentsAppTypeMap['MarketplaceCard']; children?: any }> = ({

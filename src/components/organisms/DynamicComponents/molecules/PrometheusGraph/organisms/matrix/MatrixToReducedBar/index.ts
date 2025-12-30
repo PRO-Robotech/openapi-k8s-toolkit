@@ -1,0 +1,1 @@
+export { MatrixToReducedBar } from './MatrixToReducedBar'

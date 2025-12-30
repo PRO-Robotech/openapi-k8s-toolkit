@@ -1,0 +1,1 @@
+export { usePromVector } from './usePromVector'

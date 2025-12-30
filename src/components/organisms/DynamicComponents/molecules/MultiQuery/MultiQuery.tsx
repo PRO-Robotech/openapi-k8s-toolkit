@@ -1,7 +1,7 @@
 /* eslint-disable react/no-array-index-key */
 import React, { FC } from 'react'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { useMultiQuery } from '../../../DynamicRendererWithProviders/hybridDataProvider'
+import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { parseMutliqueryText } from '../utils'
 
 export const MultiQuery: FC<{ data: TDynamicComponentsAppTypeMap['multiQuery'] }> = ({ data }) => {

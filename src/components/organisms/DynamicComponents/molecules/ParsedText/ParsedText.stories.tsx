@@ -1,22 +1,17 @@
-// src/components/ParsedText/ParsedText.stories.tsx
 import type { Meta, StoryObj } from '@storybook/react'
 import React from 'react'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
+
 import { ParsedText } from './ParsedText'
+import { TDynamicComponentsAppTypeMap } from '../../types'
 
 // Storybook-only mocks (aliased in .storybook/main.ts via viteFinal)
-import { MultiQueryMockProvider } from '../../../../../../.storybook/mocks/multiQueryProvider'
-import { PartsOfUrlMockProvider } from '../../../../../../.storybook/mocks/partsOfUrlContext'
+import { SmartProvider } from '../../../../../../.storybook/mocks/SmartProvider'
 
-type ParsedTextInner = {
-  id: number | string
-  text: string
-  formatter?: 'timestamp'
-  style?: React.CSSProperties
-}
+type TInner = TDynamicComponentsAppTypeMap['parsedText']
 
-type ProviderArgs = {
+type TProviderArgs = {
   isLoading: boolean
   isError: boolean
   errors: { message: string }[]
@@ -24,9 +19,9 @@ type ProviderArgs = {
   partsOfUrl: string[]
 }
 
-type Args = ParsedTextInner & ProviderArgs
+type TArgs = TInner & TProviderArgs
 
-const meta: Meta<Args> = {
+const meta: Meta<TArgs> = {
   title: 'Factory/ParsedText',
   component: ParsedText as any,
   // Expose *inner* fields as top-level controls
@@ -51,27 +46,27 @@ const meta: Meta<Args> = {
   // Map flat args -> component's { data } prop
   render: args => (
     <>
-      <MultiQueryMockProvider
-        value={{
+      <SmartProvider
+        multiQueryValue={{
           isLoading: args.isLoading,
           isError: args.isError,
           errors: args.errors,
           data: args.multiQueryData,
         }}
+        partsOfUrl={args.partsOfUrl}
       >
-        <PartsOfUrlMockProvider value={{ partsOfUrl: args.partsOfUrl }}>
-          <div style={{ padding: 16 }}>
-            <ParsedText
-              data={{
-                id: args.id,
-                text: args.text,
-                formatter: args.formatter,
-                style: args.style,
-              }}
-            />
-          </div>
-        </PartsOfUrlMockProvider>
-      </MultiQueryMockProvider>
+        <div style={{ padding: 16 }}>
+          <ParsedText
+            data={{
+              id: args.id,
+              text: args.text,
+              formatter: args.formatter,
+              style: args.style,
+            }}
+          />
+        </div>
+      </SmartProvider>
+
       <Editor
         defaultLanguage="yaml"
         width="100%"
@@ -95,7 +90,7 @@ const meta: Meta<Args> = {
 }
 export default meta
 
-type Story = StoryObj<Args>
+type Story = StoryObj<TArgs>
 
 export const Default: Story = {
   args: {

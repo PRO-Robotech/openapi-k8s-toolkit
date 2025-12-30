@@ -28,3 +28,6 @@ export { getLinkToBuiltinForm, getLinkToApiForm, getLinkToForm } from './tableLo
 export { isMultilineString, isMultilineFromYaml } from './isMultilineString'
 export { includesArray } from './nestedStringsArrayInclude'
 export { getResourceLink, getNamespaceLink } from './getResourceLink'
+export { convertBytes, formatBytesAuto, toBytes, convertStorage, parseValueWithUnit } from './converterBytes'
+export { convertCores, formatCoresAuto, toCores, convertCompute, parseCoresWithUnit } from './converterCores'
+export { formatDateAuto } from './converterDates'

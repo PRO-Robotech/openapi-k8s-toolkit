@@ -27,3 +27,8 @@ export type TAdditionalPrinterColumnsKeyTypeProps = Record<
     customProps?: unknown
   }
 >
+
+export type TAdditionalPrinterColumnsCustomSortersAndFilters = {
+  key: string
+  type: string
+}[]
