@@ -2,7 +2,7 @@ import { FC, useMemo } from 'react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
 import { usePromMatrixToLineMulti } from '../../../hooks/queryRangeMatrix/multi/usePromMatrixToLineMulti'
 import { matrixToStackedAreaData } from '../../../utils/matrixAdapter/toAreaStacked/matrixToAreaStackedAdapter'
-import { formatBytes, formatTimestamp } from '../../../utils/formatters'
+import { formatBytes, formatTimestamp as formatTimestampDefault } from '../../../utils/formatters'
 import { TMatrixToAreaStackedProps } from '../../../types'
 import { WidthHeightDiv } from '../../../atoms'
 
@@ -14,6 +14,7 @@ export const MatrixToAreaStacked: FC<TMatrixToAreaStackedProps> = ({
   width,
   height,
   formatValue,
+  formatTimestamp,
 }) => {
   const { data: series = [], isLoading, error } = usePromMatrixToLineMulti({ baseUrl, query, range, refetchInterval })
 
@@ -27,6 +28,7 @@ export const MatrixToAreaStacked: FC<TMatrixToAreaStackedProps> = ({
   }
 
   const valueFormatter = formatValue ?? formatBytes
+  const timestampFormatter = formatTimestamp ?? formatTimestampDefault
 
   return (
     <WidthHeightDiv $width={width} $height={height}>
@@ -34,11 +36,11 @@ export const MatrixToAreaStacked: FC<TMatrixToAreaStackedProps> = ({
         <AreaChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
 
-          <XAxis dataKey="timestamp" tickFormatter={formatTimestamp} />
+          <XAxis dataKey="timestamp" tickFormatter={timestampFormatter} />
 
           <YAxis tickFormatter={valueFormatter} />
 
-          <Tooltip formatter={v => valueFormatter(v)} labelFormatter={v => formatTimestamp(v)} />
+          <Tooltip formatter={v => valueFormatter(v)} labelFormatter={v => timestampFormatter(v)} />
 
           {series.map((s, i) => (
             <Area

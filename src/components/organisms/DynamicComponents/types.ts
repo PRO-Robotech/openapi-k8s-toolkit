@@ -6,6 +6,7 @@ import type { TContentCardProps, TSpacerProps } from 'components/atoms'
 import type { TManageableSidebarProviderProps, TEnrichedTableProviderProps } from 'components/molecules'
 import type { TUnitInput } from 'localTypes/factories/converterBytes'
 import type { TCoreUnitInput } from 'localTypes/factories/converterCores'
+import type { TDateFormatOptions } from 'utils/converterDates'
 
 export type TDynamicComponentsAppTypeMap = {
   DefaultDiv: { id: number | string } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
@@ -446,5 +447,6 @@ export type TDynamicComponentsAppTypeMap = {
     topN?: number
     formatter: 'bytes' | 'cores' | 'unit' | 'none'
     unit?: string
+    dateFormatter?: TDateFormatOptions
   }
 }

@@ -6,6 +6,7 @@ import * as yaml from 'yaml'
 import { http, HttpResponse } from 'msw'
 import { formatBytesAuto } from '../../../../../../../../utils/converterBytes'
 import { formatCoresAuto } from '../../../../../../../../utils/converterCores'
+import { formatDateAuto, type TDateFormatOptions } from '../../../../../../../../utils/converterDates'
 
 import { MatrixToLineSingle } from './MatrixToLineSingle'
 import { SmartProvider } from '../../../../../../../../../.storybook/mocks/SmartProvider'
@@ -13,6 +14,7 @@ import { SmartProvider } from '../../../../../../../../../.storybook/mocks/Smart
 type TInner = {
   range?: string
   formatter?: 'bytes' | 'cores'
+  dateFormatter?: TDateFormatOptions
 }
 
 type TArgs = TInner & {
@@ -36,6 +38,30 @@ const buildFormatValue = (formatter?: TInner['formatter']) => {
   }
 
   return undefined
+}
+
+const buildFormatTimestamp = (options?: TDateFormatOptions) => {
+  if (!options) return undefined
+
+  return (value: unknown) => {
+    if (value == null) return ''
+
+    let input: string | number | Date | null = null
+
+    if (value instanceof Date) {
+      input = value
+    } else if (typeof value === 'number') {
+      input = value
+    } else if (typeof value === 'string') {
+      const num = Number(value)
+      input = Number.isFinite(num) ? num : value
+    }
+
+    if (input == null) return ''
+
+    const formatted = formatDateAuto(input, options)
+    return formatted === 'Invalid date' ? '' : formatted
+  }
 }
 
 /* ----------------------------- MSW helpers ------------------------------- */
@@ -106,12 +132,17 @@ const meta: Meta<TArgs> = {
   argTypes: {
     range: { control: 'text' },
     formatter: { control: 'radio', options: ['bytes', 'cores'] },
+    dateFormatter: { control: 'object' },
     theme: { control: 'radio', options: ['light', 'dark'] },
     state: { control: 'radio', options: ['success', 'loading', 'error'] },
   },
 
   render: args => {
-    const data: TInner = { range: args.range, ...(args.formatter ? { formatter: args.formatter } : {}) }
+    const data: TInner = {
+      range: args.range,
+      ...(args.formatter ? { formatter: args.formatter } : {}),
+      ...(args.dateFormatter ? { dateFormatter: args.dateFormatter } : {}),
+    }
 
     return (
       <>
@@ -126,7 +157,11 @@ const meta: Meta<TArgs> = {
           }}
         >
           <div style={{ padding: 16 }}>
-            <MatrixToLineSingle range={data.range} formatValue={buildFormatValue(args.formatter)} />
+            <MatrixToLineSingle
+              range={data.range}
+              formatValue={buildFormatValue(args.formatter)}
+              formatTimestamp={buildFormatTimestamp(args.dateFormatter)}
+            />
           </div>
         </SmartProvider>
 
@@ -156,7 +191,13 @@ type TStory = StoryObj<TArgs>
 /* -------------------------------- stories ------------------------------- */
 
 export const Default: TStory = {
-  args: { range: '1h', formatter: 'bytes', theme: 'light', state: 'success' },
+  args: {
+    range: '1h',
+    formatter: 'bytes',
+    dateFormatter: { style: 'time', seconds: true },
+    theme: 'light',
+    state: 'success',
+  },
   parameters: { msw: { handlers: [successHandler] } },
 }
 

@@ -3,7 +3,7 @@ import { Table, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { usePromVector } from '../../../hooks/queryVector/usePromVector'
 import { vectorToTableRows } from '../../../utils/vectorAdapter/toTableRows'
-import { formatBytes, formatTimestamp } from '../../../utils/formatters'
+import { formatBytes, formatTimestamp as formatTimestampDefault } from '../../../utils/formatters'
 import { TVectorToTableRowsProps } from '../../../types'
 
 type TRow = {
@@ -18,6 +18,7 @@ export const VectorToTableRows: FC<TVectorToTableRowsProps> = ({
   query = 'container_memory_usage_bytes',
   refetchInterval,
   formatValue,
+  formatTimestamp,
   title = 'Vector → Table',
 }) => {
   const { data, isLoading, error } = usePromVector({ baseUrl, query, refetchInterval })
@@ -28,6 +29,7 @@ export const VectorToTableRows: FC<TVectorToTableRowsProps> = ({
   }, [data])
 
   const valueFormatter = formatValue ?? formatBytes
+  const timestampFormatter = formatTimestamp ?? formatTimestampDefault
 
   const columns: ColumnsType<TRow> = useMemo(
     () => [
@@ -53,12 +55,12 @@ export const VectorToTableRows: FC<TVectorToTableRowsProps> = ({
         title: 'timestamp',
         dataIndex: 'timestamp',
         key: 'timestamp',
-        render: (ts: number) => formatTimestamp?.(ts) ?? new Date(ts).toLocaleString(),
+        render: (ts: number) => timestampFormatter(ts),
         sorter: (a, b) => a.timestamp - b.timestamp,
         width: 220,
       },
     ],
-    [valueFormatter],
+    [valueFormatter, timestampFormatter],
   )
 
   if (error) {

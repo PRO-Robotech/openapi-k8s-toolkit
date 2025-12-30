@@ -104,6 +104,10 @@ const meta: Meta<TArgs> = {
       options: ['bytes', 'cores'],
       description: 'Optional: data.formatter (value formatter applied to y-axis and table values)',
     },
+    dateFormatter: {
+      control: 'object',
+      description: 'Optional: data.dateFormatter (timestamp formatter for x-axis/table dates)',
+    },
   },
 
   render: args => {
@@ -123,6 +127,7 @@ const meta: Meta<TArgs> = {
       mode: args.mode,
       topN: args.topN,
       formatter: args.formatter,
+      dateFormatter: args.dateFormatter,
     }
 
     return (

@@ -5,7 +5,7 @@ import { FC, useMemo } from 'react'
 import { Table, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { usePromMatrixToLineMulti } from '../../../hooks/queryRangeMatrix/multi/usePromMatrixToLineMulti'
-import { formatBytes, formatTimestamp } from '../../../utils/formatters'
+import { formatBytes, formatTimestamp as formatTimestampDefault } from '../../../utils/formatters'
 import { TMatrixToTableRowsProps } from '../../../types'
 
 type TRow = {
@@ -25,6 +25,7 @@ export const MatrixToTableRows: FC<TMatrixToTableRowsProps> = ({
   refetchInterval,
   title = 'Memory usage (min / max / current)',
   formatValue,
+  formatTimestamp,
 }) => {
   const {
     data: series = [],
@@ -73,6 +74,7 @@ export const MatrixToTableRows: FC<TMatrixToTableRowsProps> = ({
   }, [series])
 
   const valueFormatter = formatValue ?? formatBytes
+  const timestampFormatter = formatTimestamp ?? formatTimestampDefault
 
   const columns: ColumnsType<TRow> = useMemo(
     () => [
@@ -132,11 +134,11 @@ export const MatrixToTableRows: FC<TMatrixToTableRowsProps> = ({
         dataIndex: 'currentTs',
         key: 'currentTs',
         width: 180,
-        render: (ts: number | null) => (ts == null ? '—' : formatTimestamp(ts)),
+        render: (ts: number | null) => (ts == null ? '-' : timestampFormatter(ts)),
         sorter: (a, b) => (a.currentTs ?? -Infinity) - (b.currentTs ?? -Infinity),
       },
     ],
-    [valueFormatter],
+    [valueFormatter, timestampFormatter],
   )
 
   if (error) {

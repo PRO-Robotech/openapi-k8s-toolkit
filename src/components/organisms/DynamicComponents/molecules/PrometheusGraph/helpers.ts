@@ -1,6 +1,7 @@
 /* eslint-disable no-nested-ternary */
 import { formatBytesAuto } from 'utils/converterBytes'
 import { formatCoresAuto } from 'utils/converterCores'
+import { formatDateAuto, type TDateFormatOptions } from 'utils/converterDates'
 
 export const createValueFormatter = ({
   formatter,
@@ -40,4 +41,34 @@ export const createValueFormatter = ({
   }
 
   return undefined
+}
+
+export const createDateFormatter = (options?: TDateFormatOptions): ((value: unknown) => string) | undefined => {
+  if (!options) {
+    return undefined
+  }
+
+  return (value: unknown) => {
+    if (value == null) {
+      return ''
+    }
+
+    let input: string | number | Date | null = null
+
+    if (value instanceof Date) {
+      input = value
+    } else if (typeof value === 'number') {
+      input = value
+    } else if (typeof value === 'string') {
+      const num = Number(value)
+      input = Number.isFinite(num) ? num : value
+    }
+
+    if (input == null) {
+      return ''
+    }
+
+    const formatted = formatDateAuto(input, options)
+    return formatted === 'Invalid date' ? '' : formatted
+  }
 }
