@@ -73,7 +73,9 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({ cluster, nodeName, substr
   if (podTemplateNames.length === 0 && !isLoading) {
     return (
       <Styled.EmptyState>
-        <Typography.Text type="secondary">No PodTemplates found in namespace "{listPodTemplatesNs}".</Typography.Text>
+        <Typography.Text type="secondary">
+          No PodTemplates found in namespace &ldquo;{listPodTemplatesNs}&rdquo;.
+        </Typography.Text>
         <Typography.Text type="secondary">Create a PodTemplate to use the node terminal.</Typography.Text>
       </Styled.EmptyState>
     )
