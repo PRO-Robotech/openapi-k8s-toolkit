@@ -27,7 +27,7 @@ export const XTerminal: FC<TXTerminalProps> = ({
   const [error, setError] = useState<string | null>(null)
 
   const [warmupMessage, setWarmupMessage] = useState<string | null>(null)
-  const [containerWaitingMessage, setContainerWaitingMessage] = useState<string | null>(null)
+  const [podWaitingMessage, setPodWaitingMessage] = useState<string | null>(null)
   const [progressPercent, setProgressPercent] = useState<number>(0)
 
   const [podInfo, setPodInfo] = useState<TPodReadyPayload | null>(null)
@@ -60,18 +60,18 @@ export const XTerminal: FC<TXTerminalProps> = ({
         else if (msg === 'Namespace created') setProgressPercent(30)
         else if (msg === 'Pod creating') setProgressPercent(45)
         else if (msg === 'Pod created') setProgressPercent(60)
-        else if (msg === 'Container waiting ready') setProgressPercent(75)
-        else if (msg === 'Container ready') setProgressPercent(100)
-        else if (msg === 'Container never ready' || msg.includes('error')) {
+        else if (msg === 'Pod waiting ready') setProgressPercent(75)
+        else if (msg === 'Pod ready') setProgressPercent(100)
+        else if (msg === 'Pod never ready' || msg.includes('error')) {
           setError(msg)
         }
       }
 
-      if (data.type === 'containerWaiting') {
-        if (data.payload?.includes('Container is ready')) {
-          setContainerWaitingMessage(null)
+      if (data.type === 'podWaiting') {
+        if (data.payload?.includes('Pod is running')) {
+          setPodWaitingMessage(null)
         } else {
-          setContainerWaitingMessage(data.payload)
+          setPodWaitingMessage(data.payload)
         }
       }
 
@@ -79,7 +79,7 @@ export const XTerminal: FC<TXTerminalProps> = ({
         console.log(`[${nodeName}/${podTemplateName}]: Pod ready`, data.payload)
         setPodInfo(data.payload)
         setWarmupMessage(null)
-        setContainerWaitingMessage(null)
+        setPodWaitingMessage(null)
       }
 
       if (data.type === 'shutdown') {
@@ -120,7 +120,7 @@ export const XTerminal: FC<TXTerminalProps> = ({
           <>
             <Progress type="circle" percent={progressPercent} />
             {warmupMessage && <Typography.Text type="secondary">{warmupMessage}</Typography.Text>}
-            {containerWaitingMessage && <Typography.Text type="warning">{containerWaitingMessage}</Typography.Text>}
+            {podWaitingMessage && <Typography.Text type="warning">{podWaitingMessage}</Typography.Text>}
           </>
         )}
       </Styled.ProgressContainer>

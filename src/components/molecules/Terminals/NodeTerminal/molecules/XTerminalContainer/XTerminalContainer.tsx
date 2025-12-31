@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import React, { FC, useEffect, useState, useRef, useCallback } from 'react'
-import { Result } from 'antd'
+import { Result, Spin, Typography } from 'antd'
 import { Terminal as XTerm } from '@xterm/xterm'
 import themes from 'xterm-theme'
 import { FitAddon } from '@xterm/addon-fit'
@@ -119,10 +119,18 @@ export const XTerminalContainer: FC<TXTerminalContainerProps> = ({
   }
 
   return (
-    <Styled.CustomCard $isVisible={isConnected} $substractHeight={substractHeight}>
-      <Styled.FullWidthDiv $substractHeight={substractHeight}>
-        <div ref={terminalRef} style={{ width: '100%', height: '100%' }} />
-      </Styled.FullWidthDiv>
-    </Styled.CustomCard>
+    <>
+      {!isConnected && (
+        <Styled.ProgressContainer $substractHeight={substractHeight}>
+          <Spin size="large" />
+          <Typography.Text type="secondary">Connecting to terminal...</Typography.Text>
+        </Styled.ProgressContainer>
+      )}
+      <Styled.CustomCard $isVisible={isConnected} $substractHeight={substractHeight}>
+        <Styled.FullWidthDiv $substractHeight={substractHeight}>
+          <div ref={terminalRef} style={{ width: '100%', height: '100%' }} />
+        </Styled.FullWidthDiv>
+      </Styled.CustomCard>
+    </>
   )
 }
