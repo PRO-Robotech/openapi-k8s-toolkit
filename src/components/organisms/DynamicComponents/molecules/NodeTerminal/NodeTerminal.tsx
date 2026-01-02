@@ -4,7 +4,6 @@ import { NodeTerminal as Terminal } from 'components'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
-import { useFactoryConfig } from '../../../DynamicRendererWithProviders/providers/factoryConfigProvider'
 import { parseAll } from '../utils'
 
 export const NodeTerminal: FC<{ data: TDynamicComponentsAppTypeMap['NodeTerminal']; children?: any }> = ({
@@ -21,10 +20,8 @@ export const NodeTerminal: FC<{ data: TDynamicComponentsAppTypeMap['NodeTerminal
     nodeName,
     substractHeight,
     listPodTemplatesNs,
-    ...props
   } = data
 
-  const { nodeTerminalDefaultProfile } = useFactoryConfig()
   const partsOfUrl = usePartsOfUrl()
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
@@ -33,12 +30,8 @@ export const NodeTerminal: FC<{ data: TDynamicComponentsAppTypeMap['NodeTerminal
   }, {})
 
   const clusterPrepared = parseAll({ text: cluster, replaceValues, multiQueryData })
-
-  const listPodTemplatesNsPrepared = listPodTemplatesNs
-    ? parseAll({ text: listPodTemplatesNs, replaceValues, multiQueryData })
-    : undefined
-
   const nodeNamePrepared = parseAll({ text: nodeName, replaceValues, multiQueryData })
+  const listPodTemplatesNsPrepared = parseAll({ text: listPodTemplatesNs, replaceValues, multiQueryData })
 
   if (isMultiqueryLoading) {
     return <div>Loading multiquery</div>
@@ -50,9 +43,7 @@ export const NodeTerminal: FC<{ data: TDynamicComponentsAppTypeMap['NodeTerminal
         cluster={clusterPrepared}
         nodeName={nodeNamePrepared}
         substractHeight={substractHeight || 340}
-        defaultProfile={nodeTerminalDefaultProfile}
         listPodTemplatesNs={listPodTemplatesNsPrepared}
-        {...props}
       />
       {children}
     </>

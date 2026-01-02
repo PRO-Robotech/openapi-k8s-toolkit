@@ -109,7 +109,7 @@ export type TDynamicComponentsAppTypeMap = {
     cluster: string
     nodeName: string
     substractHeight?: number
-    listPodTemplatesNs?: string
+    listPodTemplatesNs: string // Required - namespace where PodTemplates are stored
   }
   PodLogs: {
     id: number | string

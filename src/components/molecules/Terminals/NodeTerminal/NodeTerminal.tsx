@@ -1,35 +1,25 @@
 import React, { FC, useEffect, useMemo, useState } from 'react'
-import { Flex, Select } from 'antd'
+import { Flex, Select, Typography } from 'antd'
 import { filterSelectOptions } from 'utils/filterSelectOptions'
 import { Spacer } from 'components/atoms'
 import { useListWatch } from 'hooks/useListThenWatch'
 import { XTerminal } from './molecules'
-import { TPodTemplateData } from './types'
 import { Styled } from './styled'
-
-const PREDEFINED_PROFILES = ['legacy', 'general', 'baseline', 'netadmin', 'restricted', 'sysadmin'] as const
+import { TPodTemplateData } from './types'
 
 export type TNodeTerminalProps = {
   cluster: string
   nodeName: string
   substractHeight: number
-  defaultProfile?: string
-  listPodTemplatesNs?: string
+  listPodTemplatesNs: string
 }
 
-export const NodeTerminal: FC<TNodeTerminalProps> = ({
-  cluster,
-  nodeName,
-  substractHeight,
-  defaultProfile,
-  listPodTemplatesNs,
-}) => {
-  const [currentProfile, setCurrentProfile] = useState<string>(defaultProfile || 'general')
-  const [currentContainer, setCurrentContainer] = useState<string | undefined>()
+export const NodeTerminal: FC<TNodeTerminalProps> = ({ cluster, nodeName, substractHeight, listPodTemplatesNs }) => {
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
+  const [selectedContainer, setSelectedContainer] = useState<string | null>(null)
 
-  const endpoint = `/api/clusters/${cluster}/openapi-bff-ws/terminal/terminalNode/terminalNode`
-
-  const isUsingPodTemplates = Boolean(listPodTemplatesNs && listPodTemplatesNs.length > 0)
+  const lifecycleEndpoint = `/api/clusters/${cluster}/openapi-bff-ws/terminal/terminalNode/terminalNode`
+  const containerEndpoint = `/api/clusters/${cluster}/openapi-bff-ws/terminal/terminalPod/terminalPod`
 
   const podTemplatesWsUrl = `/api/clusters/${cluster}/openapi-bff-ws/listThenWatch/listWatchWs`
   const podTemplates = useListWatch({
@@ -39,7 +29,7 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({
       plural: 'podtemplates',
       namespace: listPodTemplatesNs,
     },
-    isEnabled: isUsingPodTemplates,
+    isEnabled: Boolean(listPodTemplatesNs),
   })
 
   const podTemplateNames = useMemo(() => {
@@ -49,97 +39,91 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({
     return Array.from(new Set(values)).sort((a, b) => a.localeCompare(b))
   }, [podTemplates.state.byKey])
 
-  const hasPodTemplates = podTemplateNames.length > 0
-
-  const isPodTemplatesExist = isUsingPodTemplates && hasPodTemplates
-
-  useEffect(() => {
-    if (hasPodTemplates && !podTemplateNames.includes(currentProfile)) {
-      setCurrentProfile(podTemplateNames[0])
-    } else if (
-      !hasPodTemplates &&
-      !PREDEFINED_PROFILES.includes(currentProfile as (typeof PREDEFINED_PROFILES)[number])
-    ) {
-      setCurrentProfile(defaultProfile || 'general')
-    }
-  }, [hasPodTemplates, podTemplateNames, currentProfile, defaultProfile])
-
   const containerNames = useMemo(() => {
-    if (!isPodTemplatesExist) {
-      return []
-    }
+    if (!selectedTemplate) return []
 
-    const selectedTemplate = Object.values(podTemplates.state.byKey ?? {}).find(
-      it => (it as TPodTemplateData)?.metadata?.name === currentProfile,
+    const template = Object.values(podTemplates.state.byKey ?? {}).find(
+      it => (it as TPodTemplateData)?.metadata?.name === selectedTemplate,
     ) as TPodTemplateData | undefined
 
-    const containers = selectedTemplate?.template?.spec?.containers ?? []
+    const containers = template?.template?.spec?.containers ?? []
     return containers.map(c => c.name).filter((name): name is string => Boolean(name))
-  }, [isPodTemplatesExist, podTemplates.state.byKey, currentProfile])
-
-  const hasMultipleContainers = containerNames.length > 1
+  }, [podTemplates.state.byKey, selectedTemplate])
 
   useEffect(() => {
-    if (isPodTemplatesExist && containerNames.length > 0) {
-      setCurrentContainer(containerNames[0])
+    if (containerNames.length > 0) {
+      setSelectedContainer(containerNames[0])
     } else {
-      setCurrentContainer(undefined)
+      setSelectedContainer(null)
     }
-  }, [isPodTemplatesExist, containerNames])
+  }, [containerNames])
 
-  const selectOptions = useMemo(() => {
-    if (hasPodTemplates) {
-      return podTemplateNames.map(name => ({ value: name, label: name }))
-    }
+  const templateOptions = useMemo(
+    () => podTemplateNames.map(name => ({ value: name, label: name })),
+    [podTemplateNames],
+  )
 
-    return PREDEFINED_PROFILES.map(profile => ({
-      value: profile,
-      label: profile,
-    }))
-  }, [hasPodTemplates, podTemplateNames])
+  const containerOptions = useMemo(() => containerNames.map(name => ({ value: name, label: name })), [containerNames])
 
-  const canShowTerminal = currentProfile && (!isPodTemplatesExist || currentContainer)
+  const hasMultipleContainers = containerNames.length > 1
+  const canShowTerminal = selectedTemplate && selectedContainer
+
+  const isLoading = podTemplates.status === 'connecting'
+
+  if (podTemplateNames.length === 0 && !isLoading) {
+    return (
+      <Styled.EmptyState>
+        <Typography.Text type="secondary">
+          No PodTemplates found in namespace &ldquo;{listPodTemplatesNs}&rdquo;.
+        </Typography.Text>
+        <Typography.Text type="secondary">Create a PodTemplate to use the node terminal.</Typography.Text>
+      </Styled.EmptyState>
+    )
+  }
 
   return (
     <>
       <Flex gap={16}>
         <Styled.CustomSelect>
           <Select
-            placeholder="Select profile"
-            options={selectOptions}
+            placeholder="Select pod template"
+            options={templateOptions}
             filterOption={filterSelectOptions}
             showSearch
-            value={currentProfile}
+            value={selectedTemplate}
             onChange={value => {
-              setCurrentProfile(value)
-              setCurrentContainer(undefined)
+              setSelectedTemplate(value)
+              setSelectedContainer(null)
             }}
+            loading={isLoading}
           />
         </Styled.CustomSelect>
-        {isPodTemplatesExist && hasMultipleContainers && (
-          <Styled.CustomSelect>
-            <Select
-              placeholder="Select container"
-              options={containerNames.map(name => ({ value: name, label: name }))}
-              filterOption={filterSelectOptions}
-              showSearch
-              value={currentContainer}
-              onChange={value => setCurrentContainer(value)}
-            />
-          </Styled.CustomSelect>
-        )}
+
+        <Styled.CustomSelect>
+          <Select
+            placeholder="Select container"
+            options={containerOptions}
+            filterOption={filterSelectOptions}
+            showSearch
+            value={selectedContainer}
+            onChange={value => setSelectedContainer(value)}
+            disabled={!selectedTemplate || !hasMultipleContainers}
+          />
+        </Styled.CustomSelect>
       </Flex>
+
       <Spacer $space={16} $samespace />
+
       {canShowTerminal && (
         <XTerminal
-          endpoint={endpoint}
+          key={`${cluster}-${nodeName}-${listPodTemplatesNs}-${selectedTemplate}`}
+          lifecycleEndpoint={lifecycleEndpoint}
+          containerEndpoint={containerEndpoint}
           nodeName={nodeName}
-          profile={currentProfile}
-          isCustomTemplate={isPodTemplatesExist}
-          podTemplateNamespace={isPodTemplatesExist ? listPodTemplatesNs : undefined}
-          containerName={isPodTemplatesExist ? currentContainer : undefined}
+          podTemplateName={selectedTemplate}
+          podTemplateNamespace={listPodTemplatesNs}
+          selectedContainer={selectedContainer}
           substractHeight={substractHeight}
-          key={`${cluster}-${nodeName}-${listPodTemplatesNs}-${currentProfile}-${currentContainer}`}
         />
       )}
     </>
