@@ -17,7 +17,7 @@ type TXTerminalProps = {
 
 export const XTerminal: FC<TXTerminalProps> = ({ endpoint, namespace, podName, container, substractHeight }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [error, setError] = useState<Event>()
+  const [error, setError] = useState<string | null>(null)
 
   const [terminal, setTerminal] = useState<XTerm>()
   const terminalInstance = useRef<XTerm | null>(null)
@@ -79,6 +79,10 @@ export const XTerminal: FC<TXTerminalProps> = ({ endpoint, namespace, podName, c
 
     socket.onmessage = event => {
       const data = JSON.parse(event.data)
+      if (data.type === 'error') {
+        setError(data.payload)
+        return
+      }
       if (data.type === 'output') {
         if (data.payload.type === 'Buffer' && Array.isArray(data.payload.data)) {
           const text = Buffer.from(data.payload.data)
@@ -93,9 +97,9 @@ export const XTerminal: FC<TXTerminalProps> = ({ endpoint, namespace, podName, c
       console.log(`[${namespace}/${podName}]: WebSocket Client Closed`)
     }
 
-    socket.onerror = error => {
-      console.error('WebSocket Error:', error)
-      setError(error)
+    socket.onerror = () => {
+      console.error('WebSocket Error')
+      setError('Failed to connect to terminal')
     }
 
     terminal.onData(data => {
@@ -123,7 +127,7 @@ export const XTerminal: FC<TXTerminalProps> = ({ endpoint, namespace, podName, c
         </Styled.FullWidthDiv>
       </Styled.CustomCard>
       {isLoading && !error && <Spin />}
-      {error && <Result status="error" title="Error" subTitle={JSON.stringify(error)} />}
+      {error && <Result status="error" title="Error" subTitle={error} />}
     </>
   )
 }
