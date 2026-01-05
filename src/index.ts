@@ -43,6 +43,7 @@ export { useK8sVerbs } from './hooks/useK8sVerbs'
 export { useK8sSmartResource, useManyK8sSmartResource, useSmartResourceParams } from './hooks/useK8sSmartResource'
 export { useResourceScope } from './hooks/useResourceScope'
 export { useKinds } from './hooks/useKinds'
+export { usePluginManifest } from './hooks/usePlugins'
 
 /* types */
 export type { TRequestError } from './localTypes/api'
@@ -88,6 +89,7 @@ export type {
   TFilterIfBuiltInInstanceNamespaceScopedRes,
 } from './localTypes/bff/scopes'
 export type { TVersionEntry, TKindItem, TKindIndex } from './localTypes/bff/search'
+export type { TPluginManifestEntry, TPluginManifest } from './localTypes/bff/plugins'
 export type { TGetDerefedSwaggerRes } from './localTypes/bff/swagger'
 export type { TKindWithVersion } from './localTypes/search'
 export type { TNavigationResource } from './localTypes/navigations'
