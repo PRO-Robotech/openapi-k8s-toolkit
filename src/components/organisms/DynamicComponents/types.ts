@@ -449,4 +449,8 @@ export type TDynamicComponentsAppTypeMap = {
     unit?: string
     dateFormatter?: TDateFormatOptions
   }
+  DefaultIframe: { id: number | string } & React.DetailedHTMLProps<
+    React.IframeHTMLAttributes<HTMLIFrameElement>,
+    HTMLIFrameElement
+  >
 }
