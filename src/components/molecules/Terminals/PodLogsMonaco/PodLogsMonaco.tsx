@@ -19,6 +19,7 @@ export type TPodLogsMonacoProps = {
       containerStatuses: { name: string; state?: unknown & { running?: unknown }; restartCount?: number }[]
     }
   }
+  tailLines?: number
 }
 
 export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
@@ -30,6 +31,7 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
   theme,
   substractHeight,
   rawPodInfo,
+  tailLines,
 }) => {
   const [currentContainer, setCurrentContainer] = useState<string | undefined>(containers[0] || undefined)
   const [previous, setPrevious] = useState<boolean>(false)
@@ -120,6 +122,7 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
           theme={theme}
           substractHeight={substractHeight}
           previous={previous}
+          tailLines={tailLines}
           key={`${cluster}-${namespace}-${podName}-${currentContainer}-${previous}`}
         />
       )}

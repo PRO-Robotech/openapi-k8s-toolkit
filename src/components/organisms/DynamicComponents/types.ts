@@ -117,6 +117,7 @@ export type TDynamicComponentsAppTypeMap = {
     namespace: string
     podName: string
     substractHeight?: number
+    tailLines?: number
   }
   YamlEditorSingleton: {
     id: number | string

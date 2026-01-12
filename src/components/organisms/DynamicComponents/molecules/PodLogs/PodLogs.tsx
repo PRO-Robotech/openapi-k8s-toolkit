@@ -26,6 +26,7 @@ export const PodLogs: FC<{ data: TDynamicComponentsAppTypeMap['PodLogs']; childr
     namespace,
     podName,
     substractHeight,
+    tailLines,
     ...props
   } = data
 
@@ -115,6 +116,7 @@ export const PodLogs: FC<{ data: TDynamicComponentsAppTypeMap['PodLogs']; childr
         theme={theme}
         substractHeight={substractHeight || 340 + 35 + 8}
         rawPodInfo={podInfo}
+        tailLines={tailLines}
         {...props}
       />
       {children}
