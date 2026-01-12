@@ -122,7 +122,7 @@ export const TogglerSegmented: FC<{ data: TDynamicComponentsAppTypeMap['TogglerS
   const onChange = (renderedValue: string | number) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const valueFromMap = valuesMap?.find(el => el.renderedValue === renderedValue)?.value
-    const valueToSend = valueFromMap || renderedValue
+    const valueToSend = valueFromMap ?? renderedValue
     patchEntryWithReplaceOp({
       endpoint: endpointPrepared,
       pathToValue: pathToValuePrepared,
