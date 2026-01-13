@@ -46,6 +46,19 @@ const toDate = (input: TDateInput): Date | null => {
 }
 
 /**
+ * Validates if a string is in RFC3339 format (e.g., "2024-01-01T00:00:00Z" or "2024-01-01T00:00:00+02:00")
+ * Used by Kubernetes API for timestamp parameters like sinceTime.
+ */
+export const isValidRFC3339 = (dateString: string): boolean => {
+  const rfc3339Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/
+  if (!rfc3339Regex.test(dateString)) {
+    return false
+  }
+  const date = new Date(dateString)
+  return !Number.isNaN(date.getTime())
+}
+
+/**
  * Human-ish relative time (e.g., "in 2 hours", "3 days ago")
  * Uses Intl.RelativeTimeFormat and picks a unit automatically unless forced.
  */

@@ -4,29 +4,11 @@ import { Flex, Select, InputNumber, Radio, DatePicker, Button, theme as antdthem
 import type { RadioChangeEvent } from 'antd'
 import type { Dayjs } from 'dayjs'
 import { filterSelectOptions } from 'utils/filterSelectOptions'
+import { isValidRFC3339 } from 'utils/converterDates'
 import { Spacer } from 'components/atoms'
 import { MonacoEditor } from './molecules'
 import { Styled } from './styled'
-
-const isValidRFC3339 = (dateString: string): boolean => {
-  const rfc3339Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/
-  if (!rfc3339Regex.test(dateString)) {
-    return false
-  }
-  const date = new Date(dateString)
-  return !Number.isNaN(date.getTime())
-}
-
-const SINCE_PRESETS = [
-  { label: '5 min', value: 300 },
-  { label: '15 min', value: 900 },
-  { label: '30 min', value: 1800 },
-  { label: '1 hour', value: 3600 },
-  { label: '2 hours', value: 7200 },
-  { label: '6 hours', value: 21600 },
-  { label: '12 hours', value: 43200 },
-  { label: '24 hours', value: 86400 },
-]
+import { SINCE_PRESETS } from './constants'
 
 export type TPodLogsMonacoProps = {
   cluster: string
