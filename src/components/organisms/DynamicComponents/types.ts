@@ -118,6 +118,9 @@ export type TDynamicComponentsAppTypeMap = {
     podName: string
     substractHeight?: number
     tailLines?: number
+    sinceSeconds?: number
+    sinceTime?: string // RFC3339 timestamp (e.g., "2024-01-01T00:00:00Z")
+    limitBytes?: number
   }
   YamlEditorSingleton: {
     id: number | string

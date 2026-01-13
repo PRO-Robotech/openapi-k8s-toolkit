@@ -20,6 +20,9 @@ export type TPodLogsMonacoProps = {
     }
   }
   tailLines?: number
+  sinceSeconds?: number
+  sinceTime?: string
+  limitBytes?: number
 }
 
 export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
@@ -32,6 +35,9 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
   substractHeight,
   rawPodInfo,
   tailLines,
+  sinceSeconds,
+  sinceTime,
+  limitBytes,
 }) => {
   const [currentContainer, setCurrentContainer] = useState<string | undefined>(containers[0] || undefined)
   const [previous, setPrevious] = useState<boolean>(false)
@@ -123,6 +129,9 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
           substractHeight={substractHeight}
           previous={previous}
           tailLines={tailLines}
+          sinceSeconds={sinceSeconds}
+          sinceTime={sinceTime}
+          limitBytes={limitBytes}
           key={`${cluster}-${namespace}-${podName}-${currentContainer}-${previous}`}
         />
       )}

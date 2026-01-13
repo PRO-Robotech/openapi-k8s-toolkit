@@ -16,6 +16,9 @@ type TMonacoEditorProps = {
   substractHeight: number
   previous: boolean
   tailLines?: number
+  sinceSeconds?: number
+  sinceTime?: string
+  limitBytes?: number
 }
 
 export const MonacoEditor: FC<TMonacoEditorProps> = ({
@@ -27,6 +30,9 @@ export const MonacoEditor: FC<TMonacoEditorProps> = ({
   substractHeight,
   previous,
   tailLines,
+  sinceSeconds,
+  sinceTime,
+  limitBytes,
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<Event>()
@@ -72,7 +78,7 @@ export const MonacoEditor: FC<TMonacoEditorProps> = ({
       socket.send(
         JSON.stringify({
           type: 'init',
-          payload: { namespace, podName, container, previous, tailLines },
+          payload: { namespace, podName, container, previous, tailLines, sinceSeconds, sinceTime, limitBytes },
         }),
       )
       console.log(`[${namespace}/${podName}]: WebSocket Client Connected`)
@@ -105,7 +111,7 @@ export const MonacoEditor: FC<TMonacoEditorProps> = ({
         socket.close()
       }
     }
-  }, [endpoint, namespace, podName, container, previous, tailLines, editorReady])
+  }, [endpoint, namespace, podName, container, previous, tailLines, sinceSeconds, sinceTime, limitBytes, editorReady])
 
   return (
     <>
