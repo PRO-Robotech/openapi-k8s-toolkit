@@ -25,7 +25,6 @@ type TVisibilityContainerProps = {
 
 const VisibilityContainer = styled.div<TVisibilityContainerProps>`
   visibility: ${({ $isVisible }) => ($isVisible ? 'visible' : 'hidden')};
-  margin-top: -51px;
 `
 
 export const CursorPointerDiv = styled.div`
