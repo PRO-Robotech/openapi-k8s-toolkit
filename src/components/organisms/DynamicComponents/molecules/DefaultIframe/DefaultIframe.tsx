@@ -4,6 +4,7 @@ import React, { FC } from 'react'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
+import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
 import { parseAll } from '../utils'
 
 export const DefaultIframe: FC<{
@@ -17,6 +18,8 @@ export const DefaultIframe: FC<{
     title,
     ...props
   } = data
+
+  const theme = useTheme()
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
@@ -39,9 +42,13 @@ export const DefaultIframe: FC<{
     return acc
   }, {})
 
-  const srcPrepared = src ? parseAll({ text: src, replaceValues, multiQueryData }) : undefined
+  const replaceValuesWithTheme = { ...replaceValues, theme }
 
-  const titlePrepared = title ? parseAll({ text: title, replaceValues, multiQueryData }) : undefined
+  const srcPrepared = src ? parseAll({ text: src, replaceValues: replaceValuesWithTheme, multiQueryData }) : undefined
+
+  const titlePrepared = title
+    ? parseAll({ text: title, replaceValues: replaceValuesWithTheme, multiQueryData })
+    : undefined
 
   return (
     <>
