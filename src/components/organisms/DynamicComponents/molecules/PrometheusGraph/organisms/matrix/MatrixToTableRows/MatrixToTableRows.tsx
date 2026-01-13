@@ -14,6 +14,7 @@ type TRow = {
   metric: Record<string, string>
   min: number | null
   max: number | null
+  mean: number | null
   current: number | null
   currentTs: number | null
 }
@@ -26,6 +27,7 @@ export const MatrixToTableRows: FC<TMatrixToTableRowsProps> = ({
   title = 'Memory usage (min / max / current)',
   formatValue,
   formatTimestamp,
+  tableColumns,
 }) => {
   const {
     data: series = [],
@@ -44,12 +46,16 @@ export const MatrixToTableRows: FC<TMatrixToTableRowsProps> = ({
 
       let min: number | null = null
       let max: number | null = null
+      let sum = 0
+      let count = 0
       let current: number | null = null
       let currentTs: number | null = null
 
       for (const p of pts) {
         const v = Number(p.value)
         if (!Number.isFinite(v)) continue
+        sum += v
+        count += 1
 
         if (min == null || v < min) min = v
         if (max == null || v > max) max = v
@@ -67,6 +73,7 @@ export const MatrixToTableRows: FC<TMatrixToTableRowsProps> = ({
         metric: s.metric ?? {},
         min,
         max,
+        mean: count > 0 ? sum / count : null,
         current,
         currentTs,
       }
@@ -76,9 +83,18 @@ export const MatrixToTableRows: FC<TMatrixToTableRowsProps> = ({
   const valueFormatter = formatValue ?? formatBytes
   const timestampFormatter = formatTimestamp ?? formatTimestampDefault
 
-  const columns: ColumnsType<TRow> = useMemo(
-    () => [
-      {
+  const showSeries = tableColumns?.series !== false
+  const showMin = tableColumns?.min !== false
+  const showMax = tableColumns?.max !== false
+  const showMean = tableColumns?.mean === true
+  const showCurrent = tableColumns?.current !== false
+  const showCurrentTs = tableColumns?.currentTs !== false
+
+  const columns: ColumnsType<TRow> = useMemo(() => {
+    const cols: ColumnsType<TRow> = []
+
+    if (showSeries) {
+      cols.push({
         title: 'Series',
         dataIndex: 'id',
         key: 'id',
@@ -90,20 +106,23 @@ export const MatrixToTableRows: FC<TMatrixToTableRowsProps> = ({
             <div>
               <Typography.Text strong>{row.id}</Typography.Text>
               {/* {labels.length > 0 && (
-                <div style={{ marginTop: 6 }}>
-                  {labels.map(([k, v]) => (
-                    <Tag key={`${k}:${v}`} style={{ marginBottom: 4 }}>
-                      {k}={v}
-                    </Tag>
-                  ))}
-                </div>
-              )} */}
+                  <div style={{ marginTop: 6 }}>
+                    {labels.map(([k, v]) => (
+                      <Tag key={`${k}:${v}`} style={{ marginBottom: 4 }}>
+                        {k}={v}
+                      </Tag>
+                    ))}
+                  </div>
+                )} */}
             </div>
           )
         },
         sorter: (a, b) => a.id.localeCompare(b.id),
-      },
-      {
+      })
+    }
+
+    if (showMin) {
+      cols.push({
         title: 'Min',
         dataIndex: 'min',
         key: 'min',
@@ -111,16 +130,33 @@ export const MatrixToTableRows: FC<TMatrixToTableRowsProps> = ({
         render: (v: number | null) => (v == null ? '-' : valueFormatter(v)),
         sorter: (a, b) => (a.min ?? -Infinity) - (b.min ?? -Infinity),
         defaultSortOrder: undefined,
-      },
-      {
+      })
+    }
+
+    if (showMax) {
+      cols.push({
         title: 'Max',
         dataIndex: 'max',
         key: 'max',
         align: 'right',
         render: (v: number | null) => (v == null ? '-' : valueFormatter(v)),
         sorter: (a, b) => (a.max ?? -Infinity) - (b.max ?? -Infinity),
-      },
-      {
+      })
+    }
+
+    if (showMean) {
+      cols.push({
+        title: 'Mean',
+        dataIndex: 'mean',
+        key: 'mean',
+        align: 'right',
+        render: (v: number | null) => (v == null ? '-' : valueFormatter(v)),
+        sorter: (a, b) => (a.mean ?? -Infinity) - (b.mean ?? -Infinity),
+      })
+    }
+
+    if (showCurrent) {
+      cols.push({
         title: 'Current',
         dataIndex: 'current',
         key: 'current',
@@ -128,18 +164,22 @@ export const MatrixToTableRows: FC<TMatrixToTableRowsProps> = ({
         render: (v: number | null) => (v == null ? '-' : valueFormatter(v)),
         sorter: (a, b) => (a.current ?? -Infinity) - (b.current ?? -Infinity),
         defaultSortOrder: 'descend',
-      },
-      {
+      })
+    }
+
+    if (showCurrentTs) {
+      cols.push({
         title: 'Current @',
         dataIndex: 'currentTs',
         key: 'currentTs',
         width: 180,
         render: (ts: number | null) => (ts == null ? '-' : timestampFormatter(ts)),
         sorter: (a, b) => (a.currentTs ?? -Infinity) - (b.currentTs ?? -Infinity),
-      },
-    ],
-    [valueFormatter, timestampFormatter],
-  )
+      })
+    }
+
+    return cols
+  }, [showSeries, showMin, showMax, showMean, showCurrent, showCurrentTs, valueFormatter, timestampFormatter])
 
   if (error) {
     return <div>❌ Error: {error.message ?? String(error)}</div>

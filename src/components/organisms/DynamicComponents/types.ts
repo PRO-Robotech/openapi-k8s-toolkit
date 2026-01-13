@@ -448,6 +448,17 @@ export type TDynamicComponentsAppTypeMap = {
     formatter: 'bytes' | 'cores' | 'unit' | 'none'
     unit?: string
     dateFormatter?: TDateFormatOptions
+    tableColumns?: {
+      series?: boolean
+      min?: boolean
+      max?: boolean
+      mean?: boolean
+      current?: boolean
+      currentTs?: boolean
+      id?: boolean
+      value?: boolean
+      timestamp?: boolean
+    }
   }
   DefaultIframe: { id: number | string } & React.DetailedHTMLProps<
     React.IframeHTMLAttributes<HTMLIFrameElement>,

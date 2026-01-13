@@ -16,6 +16,14 @@ type TInner = {
   title?: string
   formatter?: 'bytes' | 'cores'
   dateFormatter?: TDateFormatOptions
+  tableColumns?: {
+    series?: boolean
+    min?: boolean
+    max?: boolean
+    mean?: boolean
+    current?: boolean
+    currentTs?: boolean
+  }
 }
 
 type TArgs = TInner & {
@@ -144,6 +152,7 @@ const meta: Meta<TArgs> = {
     title: { control: 'text' },
     formatter: { control: 'radio', options: ['bytes', 'cores'] },
     dateFormatter: { control: 'object' },
+    tableColumns: { control: 'object' },
     theme: { control: 'radio', options: ['light', 'dark'] },
     state: { control: 'radio', options: ['success', 'loading', 'error'] },
   },
@@ -152,6 +161,7 @@ const meta: Meta<TArgs> = {
     const data: TInner = {
       range: args.range,
       title: args.title,
+      ...(args.tableColumns ? { tableColumns: args.tableColumns } : {}),
       ...(args.formatter ? { formatter: args.formatter } : {}),
       ...(args.dateFormatter ? { dateFormatter: args.dateFormatter } : {}),
     }
@@ -174,6 +184,7 @@ const meta: Meta<TArgs> = {
               title={data.title}
               formatValue={buildFormatValue(args.formatter)}
               formatTimestamp={buildFormatTimestamp(args.dateFormatter)}
+              tableColumns={data.tableColumns}
             />
           </div>
         </SmartProvider>
@@ -207,6 +218,7 @@ export const Default: TStory = {
     title: 'Memory usage (min / max / current)',
     formatter: 'bytes',
     dateFormatter: { style: 'time', seconds: true },
+    tableColumns: { mean: true },
     theme: 'light',
     state: 'success',
   },

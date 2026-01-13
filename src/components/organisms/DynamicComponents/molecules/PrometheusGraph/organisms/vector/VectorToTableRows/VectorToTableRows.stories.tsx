@@ -15,6 +15,11 @@ type TExtraArgs = {
   state: 'success' | 'loading' | 'error'
   formatter?: 'bytes' | 'cores'
   dateFormatter?: TDateFormatOptions
+  tableColumns?: {
+    id?: boolean
+    value?: boolean
+    timestamp?: boolean
+  }
 }
 
 const buildFormatValue = (formatter?: TExtraArgs['formatter']) => {
@@ -101,14 +106,19 @@ const meta: Meta<typeof VectorToTableRows> = {
     state: { control: 'radio', options: ['success', 'loading', 'error'] },
     formatter: { control: 'radio', options: ['bytes', 'cores'] },
     dateFormatter: { control: 'object' },
+    tableColumns: { control: 'object' },
   } as any,
 
   render: (args: any) => {
-    const { query, title, theme, formatter, dateFormatter } = args as TExtraArgs & { query?: string; title?: string }
+    const { query, title, theme, formatter, dateFormatter, tableColumns } = args as TExtraArgs & {
+      query?: string
+      title?: string
+    }
 
     const data = {
       query,
       title,
+      ...(tableColumns ? { tableColumns } : {}),
       ...(formatter ? { formatter } : {}),
       ...(dateFormatter ? { dateFormatter } : {}),
     }
@@ -122,6 +132,7 @@ const meta: Meta<typeof VectorToTableRows> = {
               title={title}
               formatValue={buildFormatValue(formatter)}
               formatTimestamp={buildFormatTimestamp(dateFormatter)}
+              tableColumns={tableColumns}
             />
           </div>
         </SmartProvider>
@@ -154,6 +165,7 @@ export const Success: TStory = {
     query: 'container_memory_usage_bytes_success',
     formatter: 'bytes',
     dateFormatter: { style: 'time', seconds: true },
+    tableColumns: { id: true, value: true, timestamp: true },
     title: 'Vector → Table',
     theme: 'light',
     state: 'success',
