@@ -1,12 +1,21 @@
 /* eslint-disable no-console */
-import React, { FC, useState, useEffect } from 'react'
-import { Flex, Select, InputNumber, Radio, DatePicker, Button, theme as antdtheme } from 'antd'
+import React, { FC, useState, useEffect, useRef } from 'react'
+import { Flex, Select, InputNumber, Radio, DatePicker, Button, theme as antdtheme, notification } from 'antd'
 import type { RadioChangeEvent } from 'antd'
 import type { Dayjs } from 'dayjs'
 import { filterSelectOptions } from 'utils/filterSelectOptions'
 import { Spacer } from 'components/atoms'
 import { MonacoEditor } from './molecules'
 import { Styled } from './styled'
+
+const isValidRFC3339 = (dateString: string): boolean => {
+  const rfc3339Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/
+  if (!rfc3339Regex.test(dateString)) {
+    return false
+  }
+  const date = new Date(dateString)
+  return !Number.isNaN(date.getTime())
+}
 
 const SINCE_PRESETS = [
   { label: '5 min', value: 300 },
@@ -53,8 +62,23 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
   limitBytes,
 }) => {
   const { token } = antdtheme.useToken()
+  const [notificationApi, contextHolder] = notification.useNotification()
   const [currentContainer, setCurrentContainer] = useState<string | undefined>(containers[0] || undefined)
   const [previous, setPrevious] = useState<boolean>(false)
+  const warningShownRef = useRef(false)
+
+  useEffect(() => {
+    if (sinceTime && !isValidRFC3339(sinceTime) && !warningShownRef.current) {
+      warningShownRef.current = true
+      notificationApi.warning({
+        message: 'Invalid sinceTime format',
+        description: `Value "${sinceTime}" is not valid RFC3339. Expected format: "2024-01-01T00:00:00Z"`,
+        placement: 'bottomRight',
+        duration: 10,
+        style: { maxWidth: 400 },
+      })
+    }
+  }, [sinceTime, notificationApi])
 
   const [pendingTailLines, setPendingTailLines] = useState<number | undefined>(tailLines)
   const [pendingSinceMode, setPendingSinceMode] = useState<'relative' | 'absolute'>(sinceTime ? 'absolute' : 'relative')
@@ -161,6 +185,7 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
 
   return (
     <>
+      {contextHolder}
       <Styled.TopRowContent>
         <Flex gap={16}>
           <Styled.CustomSelect>
