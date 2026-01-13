@@ -78,6 +78,7 @@ export const PrometheusGraph: FC<{ data: TDynamicComponentsAppTypeMap['Prometheu
     formatter,
     unit,
     dateFormatter,
+    tableColumns,
     ...props
   } = data
 
@@ -98,7 +99,18 @@ export const PrometheusGraph: FC<{ data: TDynamicComponentsAppTypeMap['Prometheu
   const formatValue = createValueFormatter({ formatter, unit })
   const formatTimestamp = createDateFormatter(dateFormatter)
 
-  const preparedProps = { width, height, refetchInterval, min, max, topN, formatValue, formatTimestamp, ...parsedProps }
+  const preparedProps = {
+    width,
+    height,
+    refetchInterval,
+    min,
+    max,
+    topN,
+    formatValue,
+    formatTimestamp,
+    tableColumns,
+    ...parsedProps,
+  }
 
   if (isMultiqueryLoading) {
     return <div>Loading multiquery</div>

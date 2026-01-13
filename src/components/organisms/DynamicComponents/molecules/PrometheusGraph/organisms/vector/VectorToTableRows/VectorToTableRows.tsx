@@ -20,6 +20,7 @@ export const VectorToTableRows: FC<TVectorToTableRowsProps> = ({
   formatValue,
   formatTimestamp,
   title = 'Vector → Table',
+  tableColumns,
 }) => {
   const { data, isLoading, error } = usePromVector({ baseUrl, query, refetchInterval })
 
@@ -31,17 +32,26 @@ export const VectorToTableRows: FC<TVectorToTableRowsProps> = ({
   const valueFormatter = formatValue ?? formatBytes
   const timestampFormatter = formatTimestamp ?? formatTimestampDefault
 
-  const columns: ColumnsType<TRow> = useMemo(
-    () => [
-      {
+  const showId = tableColumns?.id !== false
+  const showValue = tableColumns?.value !== false
+  const showTimestamp = tableColumns?.timestamp !== false
+
+  const columns: ColumnsType<TRow> = useMemo(() => {
+    const cols: ColumnsType<TRow> = []
+
+    if (showId) {
+      cols.push({
         title: 'id',
         dataIndex: 'id',
         key: 'id',
         sorter: (a, b) => a.id.localeCompare(b.id),
         fixed: 'left',
         width: 260,
-      },
-      {
+      })
+    }
+
+    if (showValue) {
+      cols.push({
         title: 'value',
         dataIndex: 'value',
         key: 'value',
@@ -50,18 +60,22 @@ export const VectorToTableRows: FC<TVectorToTableRowsProps> = ({
         sorter: (a, b) => a.value - b.value,
         defaultSortOrder: 'descend',
         width: 160,
-      },
-      {
+      })
+    }
+
+    if (showTimestamp) {
+      cols.push({
         title: 'timestamp',
         dataIndex: 'timestamp',
         key: 'timestamp',
         render: (ts: number) => timestampFormatter(ts),
         sorter: (a, b) => a.timestamp - b.timestamp,
         width: 220,
-      },
-    ],
-    [valueFormatter, timestampFormatter],
-  )
+      })
+    }
+
+    return cols
+  }, [showId, showValue, showTimestamp, valueFormatter, timestampFormatter])
 
   if (error) {
     return <div>❌ Error: {error.message ?? String(error)}</div>
