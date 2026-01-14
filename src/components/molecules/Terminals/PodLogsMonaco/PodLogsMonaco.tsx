@@ -1,10 +1,14 @@
 /* eslint-disable no-console */
-import React, { FC, useState } from 'react'
-import { Flex, Select } from 'antd'
+import React, { FC, useState, useEffect, useRef } from 'react'
+import { Flex, Select, InputNumber, Radio, DatePicker, Button, theme as antdtheme, notification } from 'antd'
+import type { RadioChangeEvent } from 'antd'
+import type { Dayjs } from 'dayjs'
 import { filterSelectOptions } from 'utils/filterSelectOptions'
+import { isValidRFC3339 } from 'utils/converterDates'
 import { Spacer } from 'components/atoms'
 import { MonacoEditor } from './molecules'
 import { Styled } from './styled'
+import { SINCE_PRESETS } from './constants'
 
 export type TPodLogsMonacoProps = {
   cluster: string
@@ -19,6 +23,10 @@ export type TPodLogsMonacoProps = {
       containerStatuses: { name: string; state?: unknown & { running?: unknown }; restartCount?: number }[]
     }
   }
+  tailLines?: number
+  sinceSeconds?: number
+  sinceTime?: string
+  limitBytes?: number
 }
 
 export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
@@ -30,9 +38,95 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
   theme,
   substractHeight,
   rawPodInfo,
+  tailLines,
+  sinceSeconds,
+  sinceTime,
+  limitBytes,
 }) => {
+  const { token } = antdtheme.useToken()
+  const [notificationApi, contextHolder] = notification.useNotification()
   const [currentContainer, setCurrentContainer] = useState<string | undefined>(containers[0] || undefined)
   const [previous, setPrevious] = useState<boolean>(false)
+  const warningShownRef = useRef(false)
+
+  useEffect(() => {
+    if (sinceTime && !isValidRFC3339(sinceTime) && !warningShownRef.current) {
+      warningShownRef.current = true
+      notificationApi.warning({
+        message: 'Invalid sinceTime format',
+        description: `Value "${sinceTime}" is not valid RFC3339. Expected format: "2024-01-01T00:00:00Z"`,
+        placement: 'bottomRight',
+        duration: 10,
+        style: { maxWidth: 400 },
+      })
+    }
+  }, [sinceTime, notificationApi])
+
+  const [pendingTailLines, setPendingTailLines] = useState<number | undefined>(tailLines)
+  const [pendingSinceMode, setPendingSinceMode] = useState<'relative' | 'absolute'>(sinceTime ? 'absolute' : 'relative')
+  const [pendingSinceSeconds, setPendingSinceSeconds] = useState<number | undefined>(sinceSeconds)
+  const [pendingSinceTime, setPendingSinceTime] = useState<Dayjs | null>(null)
+  const [pendingLimitKB, setPendingLimitKB] = useState<number | undefined>(
+    limitBytes ? Math.round(limitBytes / 1024) : undefined
+  )
+
+  const [appliedFilters, setAppliedFilters] = useState({
+    tailLines,
+    sinceSeconds,
+    sinceTime,
+    limitBytes,
+  })
+
+  const [filterKey, setFilterKey] = useState(0)
+
+  useEffect(() => {
+    setPendingTailLines(tailLines)
+    setPendingSinceSeconds(sinceSeconds)
+    setPendingLimitKB(limitBytes ? Math.round(limitBytes / 1024) : undefined)
+    setPendingSinceMode(sinceTime ? 'absolute' : 'relative')
+  }, [tailLines, sinceSeconds, sinceTime, limitBytes])
+
+  const matchingPreset = SINCE_PRESETS.find(p => p.value === pendingSinceSeconds)
+
+  const handlePresetChange = (value: number | null) => {
+    if (value !== null) {
+      setPendingSinceSeconds(value)
+    }
+  }
+
+  const handleSecondsInputChange = (value: number | null) => {
+    setPendingSinceSeconds(value ?? undefined)
+  }
+
+  const handleSinceModeChange = (e: RadioChangeEvent) => {
+    setPendingSinceMode(e.target.value)
+  }
+
+  const handleDateTimeChange = (value: Dayjs | null) => {
+    setPendingSinceTime(value)
+  }
+
+  const handleApply = () => {
+    const newFilters = {
+      tailLines: pendingTailLines,
+      sinceSeconds: pendingSinceMode === 'relative' ? pendingSinceSeconds : undefined,
+      sinceTime: pendingSinceMode === 'absolute' && pendingSinceTime ? pendingSinceTime.toISOString() : undefined,
+      limitBytes: pendingLimitKB ? pendingLimitKB * 1024 : undefined,
+    }
+    setAppliedFilters(newFilters)
+    setFilterKey(prev => prev + 1)
+  }
+
+  const handleReset = () => {
+    setPendingTailLines(tailLines)
+    setPendingSinceSeconds(sinceSeconds)
+    setPendingSinceTime(null)
+    setPendingLimitKB(limitBytes ? Math.round(limitBytes / 1024) : undefined)
+    setPendingSinceMode(sinceTime ? 'absolute' : 'relative')
+
+    setAppliedFilters({ tailLines, sinceSeconds, sinceTime, limitBytes })
+    setFilterKey(prev => prev + 1)
+  }
 
   const endpoint = `/api/clusters/${cluster}/openapi-bff-ws/terminal/podLogs/podLogsNonWs`
 
@@ -73,6 +167,7 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
 
   return (
     <>
+      {contextHolder}
       <Styled.TopRowContent>
         <Flex gap={16}>
           <Styled.CustomSelect>
@@ -110,6 +205,96 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
           )}
         </Flex>
       </Styled.TopRowContent>
+      <Spacer $space={8} $samespace />
+
+      <Styled.FilterTitle $color={token.colorText}>Filters</Styled.FilterTitle>
+      <Styled.FilterRow>
+        <Styled.FilterGroup>
+          <Styled.FilterLabel $color={token.colorTextSecondary}>Tail lines:</Styled.FilterLabel>
+          <InputNumber
+            min={1}
+            placeholder="All"
+            value={pendingTailLines}
+            onChange={value => setPendingTailLines(value ?? undefined)}
+            style={{ width: 100 }}
+          />
+        </Styled.FilterGroup>
+
+        <Styled.FilterGroup>
+          <Styled.FilterLabel $color={token.colorTextSecondary}>Since:</Styled.FilterLabel>
+          <Radio.Group value={pendingSinceMode} onChange={handleSinceModeChange} size="small">
+            <Radio.Button value="relative">Relative</Radio.Button>
+            <Radio.Button value="absolute">Absolute</Radio.Button>
+          </Radio.Group>
+        </Styled.FilterGroup>
+
+        {pendingSinceMode === 'relative' && (
+          <Styled.SinceControls>
+            <Select
+              placeholder="Preset"
+              options={SINCE_PRESETS}
+              value={matchingPreset?.value ?? null}
+              onChange={handlePresetChange}
+              allowClear
+              style={{ width: 100 }}
+            />
+            <InputNumber
+              min={1}
+              placeholder="sec"
+              value={pendingSinceSeconds}
+              onChange={handleSecondsInputChange}
+              style={{ width: 100 }}
+              addonAfter="sec"
+            />
+          </Styled.SinceControls>
+        )}
+
+        {pendingSinceMode === 'absolute' && (
+          <DatePicker
+            showTime
+            value={pendingSinceTime}
+            onChange={handleDateTimeChange}
+            placeholder="Select date & time"
+          />
+        )}
+
+        <Styled.FilterGroup>
+          <Styled.FilterLabel $color={token.colorTextSecondary}>Limit:</Styled.FilterLabel>
+          <InputNumber
+            min={1}
+            placeholder="No limit"
+            value={pendingLimitKB}
+            onChange={value => setPendingLimitKB(value ?? undefined)}
+            style={{ width: 120 }}
+            addonAfter="KB"
+          />
+        </Styled.FilterGroup>
+
+        <Flex gap={8}>
+          <Button
+            size="small"
+            onClick={handleReset}
+            style={{
+              color: '#c77777',
+              borderColor: '#c77777',
+            }}
+          >
+            Reset
+          </Button>
+          <Button
+            size="small"
+            onClick={handleApply}
+            style={{
+              backgroundColor: '#5a9a5a',
+              borderColor: '#5a9a5a',
+              color: '#fff',
+            }}
+          >
+            Apply
+          </Button>
+        </Flex>
+      </Styled.FilterRow>
+
       <Spacer $space={16} $samespace />
       {currentContainer && (
         <MonacoEditor
@@ -120,7 +305,11 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
           theme={theme}
           substractHeight={substractHeight}
           previous={previous}
-          key={`${cluster}-${namespace}-${podName}-${currentContainer}-${previous}`}
+          tailLines={appliedFilters.tailLines}
+          sinceSeconds={appliedFilters.sinceSeconds}
+          sinceTime={appliedFilters.sinceTime}
+          limitBytes={appliedFilters.limitBytes}
+          key={`${cluster}-${namespace}-${podName}-${currentContainer}-${previous}-${filterKey}`}
         />
       )}
     </>

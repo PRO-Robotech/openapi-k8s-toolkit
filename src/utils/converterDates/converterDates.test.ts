@@ -1,4 +1,4 @@
-import { formatDateAuto } from './converterDates'
+import { formatDateAuto, isValidRFC3339 } from './converterDates'
 
 describe('formatDateAuto', () => {
   const ISO = '2025-12-29T10:11:12.000Z'
@@ -155,5 +155,41 @@ describe('formatDateAuto', () => {
     })
     // 10:11 AM expected in en-US; some envs include narrow no-break spaces.
     expect(s).toMatch(/AM|PM/i)
+  })
+})
+
+describe('isValidRFC3339', () => {
+  test('returns true for valid RFC3339 with Z timezone', () => {
+    expect(isValidRFC3339('2024-01-01T00:00:00Z')).toBe(true)
+    expect(isValidRFC3339('2025-12-29T10:11:12Z')).toBe(true)
+  })
+
+  test('returns true for valid RFC3339 with offset timezone', () => {
+    expect(isValidRFC3339('2024-01-01T00:00:00+00:00')).toBe(true)
+    expect(isValidRFC3339('2024-01-01T00:00:00-05:00')).toBe(true)
+    expect(isValidRFC3339('2024-01-01T12:30:45+02:00')).toBe(true)
+  })
+
+  test('returns true for valid RFC3339 with milliseconds', () => {
+    expect(isValidRFC3339('2024-01-01T00:00:00.000Z')).toBe(true)
+    expect(isValidRFC3339('2024-01-01T00:00:00.123456Z')).toBe(true)
+    expect(isValidRFC3339('2024-01-01T00:00:00.5+02:00')).toBe(true)
+  })
+
+  test('returns false for invalid formats', () => {
+    expect(isValidRFC3339('not-a-date')).toBe(false)
+    expect(isValidRFC3339('2024-01-01')).toBe(false) // missing time
+    expect(isValidRFC3339('2024-01-01T00:00:00')).toBe(false) // missing timezone
+    expect(isValidRFC3339('2024/01/01T00:00:00Z')).toBe(false) // wrong separator
+    expect(isValidRFC3339('01-01-2024T00:00:00Z')).toBe(false) // wrong order
+  })
+
+  test('returns false for invalid date values', () => {
+    expect(isValidRFC3339('2024-13-01T00:00:00Z')).toBe(false) // invalid month
+    expect(isValidRFC3339('2024-01-32T00:00:00Z')).toBe(false) // invalid day
+  })
+
+  test('returns false for empty string', () => {
+    expect(isValidRFC3339('')).toBe(false)
   })
 })

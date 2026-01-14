@@ -1,7 +1,7 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable no-console */
 import React, { FC, useEffect, useState, useRef } from 'react'
-import { Flex, Result, Spin } from 'antd'
+import { Flex, Result, Spin, notification } from 'antd'
 import Editor from '@monaco-editor/react'
 import type * as monaco from 'monaco-editor'
 import { Spacer, PauseCircleIcon, ResumeCircleIcon } from 'components/atoms'
@@ -15,6 +15,10 @@ type TMonacoEditorProps = {
   theme: 'dark' | 'light'
   substractHeight: number
   previous: boolean
+  tailLines?: number
+  sinceSeconds?: number
+  sinceTime?: string
+  limitBytes?: number
 }
 
 export const MonacoEditor: FC<TMonacoEditorProps> = ({
@@ -25,7 +29,12 @@ export const MonacoEditor: FC<TMonacoEditorProps> = ({
   theme,
   substractHeight,
   previous,
+  tailLines,
+  sinceSeconds,
+  sinceTime,
+  limitBytes,
 }) => {
+  const [notificationApi, contextHolder] = notification.useNotification()
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<Event>()
   const [isTerminalVisible, setIsTerminalVisible] = useState<boolean>(false)
@@ -34,6 +43,7 @@ export const MonacoEditor: FC<TMonacoEditorProps> = ({
 
   const socketRef = useRef<WebSocket | null>(null)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
+  const shownErrorsRef = useRef<Set<string>>(new Set())
 
   const [editorReady, setEditorReady] = useState<boolean>(false)
 
@@ -70,7 +80,7 @@ export const MonacoEditor: FC<TMonacoEditorProps> = ({
       socket.send(
         JSON.stringify({
           type: 'init',
-          payload: { namespace, podName, container, previous },
+          payload: { namespace, podName, container, previous, tailLines, sinceSeconds, sinceTime, limitBytes },
         }),
       )
       console.log(`[${namespace}/${podName}]: WebSocket Client Connected`)
@@ -86,6 +96,20 @@ export const MonacoEditor: FC<TMonacoEditorProps> = ({
         if (data.payload) {
           appendContent(data.payload)
         }
+      }
+      if (data.type === 'error') {
+        const errorKey = data.payload
+        if (!shownErrorsRef.current.has(errorKey)) {
+          shownErrorsRef.current.add(errorKey)
+          notificationApi.error({
+            message: 'Log fetch error',
+            description: data.payload,
+            placement: 'bottomRight',
+            duration: 10,
+            style: { maxWidth: 400 },
+          })
+        }
+        console.error('Log fetch error from server:', data.payload)
       }
     }
 
@@ -103,10 +127,11 @@ export const MonacoEditor: FC<TMonacoEditorProps> = ({
         socket.close()
       }
     }
-  }, [endpoint, namespace, podName, container, previous, editorReady])
+  }, [endpoint, namespace, podName, container, previous, tailLines, sinceSeconds, sinceTime, limitBytes, editorReady])
 
   return (
     <>
+      {contextHolder}
       <Styled.VisibilityContainer $isVisible={isTerminalVisible}>
         <Flex justify="start" align="center" gap={16}>
           <Styled.CursorPointerDiv
