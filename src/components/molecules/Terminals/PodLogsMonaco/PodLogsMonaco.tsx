@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 /* eslint-disable no-console */
 import React, { FC, useState, useEffect, useRef } from 'react'
 import { Flex, Select, InputNumber, Radio, DatePicker, Button, theme as antdtheme, notification } from 'antd'
@@ -67,7 +68,7 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
   const [pendingSinceSeconds, setPendingSinceSeconds] = useState<number | undefined>(sinceSeconds)
   const [pendingSinceTime, setPendingSinceTime] = useState<Dayjs | null>(null)
   const [pendingLimitKB, setPendingLimitKB] = useState<number | undefined>(
-    limitBytes ? Math.round(limitBytes / 1024) : undefined
+    limitBytes ? Math.round(limitBytes / 1024) : undefined,
   )
 
   const [appliedFilters, setAppliedFilters] = useState({
