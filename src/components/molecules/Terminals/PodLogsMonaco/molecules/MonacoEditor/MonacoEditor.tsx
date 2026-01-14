@@ -127,6 +127,7 @@ export const MonacoEditor: FC<TMonacoEditorProps> = ({
         socket.close()
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [endpoint, namespace, podName, container, previous, tailLines, sinceSeconds, sinceTime, limitBytes, editorReady])
 
   return (
