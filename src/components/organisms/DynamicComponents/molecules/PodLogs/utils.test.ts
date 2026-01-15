@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getRunningContainerNames } from './utils'
+import { getContainerNames } from './utils'
 
-describe('getRunningContainerNames', () => {
-  test('returns running containers and all init containers', () => {
+describe('getContainerNames', () => {
+  test('returns all containers regardless of state and all init containers', () => {
     const pod = {
       status: {
         containerStatuses: [
@@ -15,8 +15,8 @@ describe('getRunningContainerNames', () => {
       },
     } as any
 
-    expect(getRunningContainerNames(pod)).toEqual({
-      containers: ['c1', 'c4'],
+    expect(getContainerNames(pod)).toEqual({
+      containers: ['c1', 'c2', 'c3', 'c4'],
       initContainers: ['i1', 'i2'],
     })
   })
@@ -24,7 +24,7 @@ describe('getRunningContainerNames', () => {
   test('handles missing status gracefully', () => {
     const pod = {} as any
 
-    expect(getRunningContainerNames(pod)).toEqual({
+    expect(getContainerNames(pod)).toEqual({
       containers: [],
       initContainers: [],
     })
@@ -33,13 +33,13 @@ describe('getRunningContainerNames', () => {
   test('handles missing containerStatuses and initContainerStatuses', () => {
     const pod = { status: {} } as any
 
-    expect(getRunningContainerNames(pod)).toEqual({
+    expect(getContainerNames(pod)).toEqual({
       containers: [],
       initContainers: [],
     })
   })
 
-  test('returns empty containers when none are running', () => {
+  test('returns all containers even when none are running', () => {
     const pod = {
       status: {
         containerStatuses: [
@@ -50,8 +50,8 @@ describe('getRunningContainerNames', () => {
       },
     } as any
 
-    expect(getRunningContainerNames(pod)).toEqual({
-      containers: [],
+    expect(getContainerNames(pod)).toEqual({
+      containers: ['c1', 'c2'],
       initContainers: [],
     })
   })
