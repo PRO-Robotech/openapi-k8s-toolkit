@@ -132,7 +132,7 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
   const endpoint = `/api/clusters/${cluster}/openapi-bff-ws/terminal/podLogs/podLogsNonWs`
 
   if (containers.length === 0) {
-    return <>No Running Containers</>
+    return <>No Containers</>
   }
 
   const restartCount = rawPodInfo.status.containerStatuses.find(s => s.name === currentContainer)?.restartCount ?? 0

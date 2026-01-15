@@ -9,7 +9,7 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
 import { parseAll } from '../utils'
-import { getRunningContainerNames } from './utils'
+import { getContainerNames } from './utils'
 
 export const PodLogs: FC<{ data: TDynamicComponentsAppTypeMap['PodLogs']; children?: any }> = ({
   data,
@@ -106,7 +106,7 @@ export const PodLogs: FC<{ data: TDynamicComponentsAppTypeMap['PodLogs']; childr
     return <>No Pod Info</>
   }
 
-  const { containers, initContainers } = getRunningContainerNames(podInfo)
+  const { containers, initContainers } = getContainerNames(podInfo)
 
   return (
     <>
