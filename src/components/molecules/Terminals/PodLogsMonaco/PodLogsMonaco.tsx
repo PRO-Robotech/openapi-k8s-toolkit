@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 import React, { FC, useState, useEffect, useRef } from 'react'
 import { Select, InputNumber, Segmented, DatePicker, Button, theme as antdtheme, notification } from 'antd'
-import type { Dayjs } from 'dayjs'
+import dayjs, { Dayjs } from 'dayjs'
 import { filterSelectOptions } from 'utils/filterSelectOptions'
 import { isValidRFC3339 } from 'utils/converterDates'
 import { Spacer } from 'components/atoms'
@@ -161,6 +161,28 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
           },
         ]
 
+  const disabledDate = (current: Dayjs) => current && current.isAfter(dayjs())
+
+  const disabledTime = (current: Dayjs | null) => {
+    const now = dayjs()
+    const isToday = current && current.isSame(now, 'day')
+    if (!isToday) return {}
+
+    const currentHour = now.hour()
+    const currentMinute = now.minute()
+    const currentSecond = now.second()
+
+    return {
+      disabledHours: () => Array.from({ length: 24 }, (_, i) => i).filter(h => h > currentHour),
+      disabledMinutes: (selectedHour: number) =>
+        selectedHour === currentHour ? Array.from({ length: 60 }, (_, i) => i).filter(m => m > currentMinute) : [],
+      disabledSeconds: (selectedHour: number, selectedMinute: number) =>
+        selectedHour === currentHour && selectedMinute === currentMinute
+          ? Array.from({ length: 60 }, (_, i) => i).filter(s => s > currentSecond)
+          : [],
+    }
+  }
+
   return (
     <>
       {contextHolder}
@@ -245,6 +267,8 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
                 onChange={handleDateTimeChange}
                 placeholder="Date & time"
                 style={{ height: 32 }}
+                disabledDate={disabledDate}
+                disabledTime={disabledTime}
               />
             )}
 
