@@ -1,10 +1,10 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable no-console */
 import React, { FC, useEffect, useState, useRef } from 'react'
-import { Flex, Result, Spin, notification } from 'antd'
+import { Result, Spin, notification } from 'antd'
 import Editor from '@monaco-editor/react'
 import type * as monaco from 'monaco-editor'
-import { Spacer, PauseCircleIcon, ResumeCircleIcon } from 'components/atoms'
+import { PauseCircleIcon, ResumeCircleIcon } from 'components/atoms'
 import { Styled } from './styled'
 
 type TMonacoEditorProps = {
@@ -130,51 +130,53 @@ export const MonacoEditor: FC<TMonacoEditorProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [endpoint, namespace, podName, container, previous, tailLines, sinceSeconds, sinceTime, limitBytes, editorReady])
 
+  const isDark = theme === 'dark' || theme === undefined
+
   return (
     <>
       {contextHolder}
-      <Styled.VisibilityContainer $isVisible={isTerminalVisible}>
-        <Flex justify="start" align="center" gap={16}>
-          <Styled.CursorPointerDiv
-            onClick={() => {
-              if (isPaused) {
-                setIsPaused(false)
-                socketRef.current?.send(
-                  JSON.stringify({
-                    type: 'continue',
-                  }),
-                )
-              } else {
-                setIsPaused(true)
-                socketRef.current?.send(
-                  JSON.stringify({
-                    type: 'stop',
-                  }),
-                )
-              }
-            }}
-          >
-            {isPaused ? <ResumeCircleIcon /> : <PauseCircleIcon />}
-          </Styled.CursorPointerDiv>
-          <div>{isPaused ? 'Not streaming events' : 'Streaming events'}</div>
-        </Flex>
-      </Styled.VisibilityContainer>
-      <Spacer $space={16} $samespace />
       <Styled.CustomCard $isVisible={isTerminalVisible}>
-        <Styled.FullWidthDiv>
-          <Editor
-            defaultLanguage="plaintext"
-            language="plaintext"
-            width="100%"
-            height={`calc(100vh - ${substractHeight}px)`}
-            theme={theme === 'dark' ? 'vs-dark' : theme === undefined ? 'vs-dark' : 'vs'}
-            options={{
-              theme: theme === 'dark' ? 'vs-dark' : theme === undefined ? 'vs-dark' : 'vs',
-              readOnly: true,
-            }}
-            onMount={handleEditorDidMount}
-          />
-        </Styled.FullWidthDiv>
+        <Styled.EditorWrapper>
+          <Styled.StreamingOverlay $isVisible={isTerminalVisible} $isDark={isDark}>
+            <Styled.CursorPointerDiv
+              onClick={() => {
+                if (isPaused) {
+                  setIsPaused(false)
+                  socketRef.current?.send(
+                    JSON.stringify({
+                      type: 'continue',
+                    }),
+                  )
+                } else {
+                  setIsPaused(true)
+                  socketRef.current?.send(
+                    JSON.stringify({
+                      type: 'stop',
+                    }),
+                  )
+                }
+              }}
+            >
+              {isPaused ? <ResumeCircleIcon /> : <PauseCircleIcon />}
+            </Styled.CursorPointerDiv>
+            <div>{isPaused ? 'Not streaming events' : 'Streaming events...'}</div>
+          </Styled.StreamingOverlay>
+          <Styled.FullWidthDiv>
+            <Editor
+              defaultLanguage="plaintext"
+              language="plaintext"
+              width="100%"
+              height={`calc(100vh - ${substractHeight}px)`}
+              theme={isDark ? 'vs-dark' : 'vs'}
+              options={{
+                theme: isDark ? 'vs-dark' : 'vs',
+                readOnly: true,
+                padding: { top: 56 },
+              }}
+              onMount={handleEditorDidMount}
+            />
+          </Styled.FullWidthDiv>
+        </Styled.EditorWrapper>
       </Styled.CustomCard>
 
       {isLoading && !error && <Spin />}

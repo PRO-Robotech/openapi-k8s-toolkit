@@ -1,15 +1,14 @@
 /* eslint-disable max-lines-per-function */
 /* eslint-disable no-console */
 import React, { FC, useState, useEffect, useRef } from 'react'
-import { Flex, Select, InputNumber, Radio, DatePicker, Button, theme as antdtheme, notification } from 'antd'
-import type { RadioChangeEvent } from 'antd'
+import { Select, InputNumber, Segmented, DatePicker, Button, theme as antdtheme, notification } from 'antd'
 import type { Dayjs } from 'dayjs'
 import { filterSelectOptions } from 'utils/filterSelectOptions'
 import { isValidRFC3339 } from 'utils/converterDates'
 import { Spacer } from 'components/atoms'
 import { MonacoEditor } from './molecules'
 import { Styled } from './styled'
-import { SINCE_PRESETS } from './constants'
+import { SINCE_PRESETS, TAIL_LINES_PRESETS } from './constants'
 
 export type TPodLogsMonacoProps = {
   cluster: string
@@ -95,12 +94,8 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
     }
   }
 
-  const handleSecondsInputChange = (value: number | null) => {
-    setPendingSinceSeconds(value ?? undefined)
-  }
-
-  const handleSinceModeChange = (e: RadioChangeEvent) => {
-    setPendingSinceMode(e.target.value)
+  const handleSinceModeChange = (value: 'relative' | 'absolute') => {
+    setPendingSinceMode(value)
   }
 
   const handleDateTimeChange = (value: Dayjs | null) => {
@@ -169,11 +164,11 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
   return (
     <>
       {contextHolder}
-      <Styled.TopRowContent>
-        <Flex gap={16}>
+      <Styled.ControlsRow>
+        <Styled.ControlsLeft>
           <Styled.CustomSelect>
             <Select
-              placeholder="Select container"
+              placeholder="Container"
               options={options}
               filterOption={filterSelectOptions}
               disabled={containers.length === 0}
@@ -188,7 +183,7 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
           {currentContainer && (
             <Styled.CustomSelect>
               <Select
-                placeholder="Select current/previous"
+                placeholder="Current/previous"
                 options={prevCurOptions}
                 filterOption={filterSelectOptions}
                 disabled={!withPrevious}
@@ -204,97 +199,75 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
               />
             </Styled.CustomSelect>
           )}
-        </Flex>
-      </Styled.TopRowContent>
-      <Spacer $space={8} $samespace />
+        </Styled.ControlsLeft>
 
-      <Styled.FilterTitle $color={token.colorText}>Filters</Styled.FilterTitle>
-      <Styled.FilterRow>
-        <Styled.FilterGroup>
-          <Styled.FilterLabel $color={token.colorTextSecondary}>Tail lines:</Styled.FilterLabel>
-          <InputNumber
-            min={1}
-            placeholder="All"
-            value={pendingTailLines}
-            onChange={value => setPendingTailLines(value ?? undefined)}
-            style={{ width: 100 }}
-          />
-        </Styled.FilterGroup>
+        <Styled.ControlsRight>
+          <Styled.FiltersGroup>
+            <Styled.FilterSelect>
+              <Select
+                placeholder="Tail lines"
+                options={TAIL_LINES_PRESETS}
+                value={pendingTailLines}
+                onChange={value => setPendingTailLines(value ?? undefined)}
+                allowClear
+                style={{ width: 140 }}
+              />
+            </Styled.FilterSelect>
 
-        <Styled.FilterGroup>
-          <Styled.FilterLabel $color={token.colorTextSecondary}>Since:</Styled.FilterLabel>
-          <Radio.Group value={pendingSinceMode} onChange={handleSinceModeChange} size="small">
-            <Radio.Button value="relative">Relative</Radio.Button>
-            <Radio.Button value="absolute">Absolute</Radio.Button>
-          </Radio.Group>
-        </Styled.FilterGroup>
+            <Styled.DarkSegmented>
+              <Segmented
+                value={pendingSinceMode}
+                onChange={handleSinceModeChange}
+                options={[
+                  { label: 'Relative', value: 'relative' },
+                  { label: 'Absolute', value: 'absolute' },
+                ]}
+              />
+            </Styled.DarkSegmented>
 
-        {pendingSinceMode === 'relative' && (
-          <Styled.SinceControls>
-            <Select
-              placeholder="Preset"
-              options={SINCE_PRESETS}
-              value={matchingPreset?.value ?? null}
-              onChange={handlePresetChange}
-              allowClear
-              style={{ width: 100 }}
-            />
-            <InputNumber
-              min={1}
-              placeholder="sec"
-              value={pendingSinceSeconds}
-              onChange={handleSecondsInputChange}
-              style={{ width: 100 }}
-              addonAfter="sec"
-            />
-          </Styled.SinceControls>
-        )}
+            {pendingSinceMode === 'relative' && (
+              <Styled.FilterSelect>
+                <Select
+                  placeholder="Time range"
+                  options={SINCE_PRESETS}
+                  value={matchingPreset?.value ?? null}
+                  onChange={handlePresetChange}
+                  allowClear
+                  style={{ width: 140 }}
+                />
+              </Styled.FilterSelect>
+            )}
 
-        {pendingSinceMode === 'absolute' && (
-          <DatePicker
-            showTime
-            value={pendingSinceTime}
-            onChange={handleDateTimeChange}
-            placeholder="Select date & time"
-          />
-        )}
+            {pendingSinceMode === 'absolute' && (
+              <DatePicker
+                showTime
+                value={pendingSinceTime}
+                onChange={handleDateTimeChange}
+                placeholder="Date & time"
+                style={{ height: 32 }}
+              />
+            )}
 
-        <Styled.FilterGroup>
-          <Styled.FilterLabel $color={token.colorTextSecondary}>Limit:</Styled.FilterLabel>
-          <InputNumber
-            min={1}
-            placeholder="No limit"
-            value={pendingLimitKB}
-            onChange={value => setPendingLimitKB(value ?? undefined)}
-            style={{ width: 120 }}
-            addonAfter="KB"
-          />
-        </Styled.FilterGroup>
+            <Styled.LimitInput>
+              <InputNumber
+                min={1}
+                placeholder="Limit KB"
+                value={pendingLimitKB}
+                onChange={value => setPendingLimitKB(value ?? undefined)}
+              />
+            </Styled.LimitInput>
+          </Styled.FiltersGroup>
 
-        <Flex gap={8}>
-          <Button
-            size="small"
-            onClick={handleReset}
-            style={{
-              color: '#c77777',
-              borderColor: '#c77777',
-            }}
-          >
-            Reset
-          </Button>
-          <Button
-            size="small"
-            onClick={handleApply}
-            style={{
-              backgroundColor: '#5a9a5a',
-              borderColor: '#5a9a5a',
-              color: '#fff',
-            }}
-          >
-            Apply
-          </Button>
-        </Flex>
-      </Styled.FilterRow>
+          <Styled.ButtonsGroup>
+            <Button onClick={handleReset} style={{ height: 32 }}>
+              Clear
+            </Button>
+            <Button type="primary" onClick={handleApply} style={{ height: 32 }}>
+              Apply
+            </Button>
+          </Styled.ButtonsGroup>
+        </Styled.ControlsRight>
+      </Styled.ControlsRow>
 
       <Spacer $space={16} $samespace />
       {currentContainer && (
