@@ -26,7 +26,7 @@ const EditorWrapper = styled.div`
 
 type TStreamingOverlayProps = {
   $isVisible?: boolean
-  $isDark?: boolean
+  $colorBgLayout: string
 }
 
 const StreamingOverlay = styled.div<TStreamingOverlayProps>`
@@ -37,7 +37,7 @@ const StreamingOverlay = styled.div<TStreamingOverlayProps>`
   display: flex;
   align-items: center;
   gap: 16px;
-  background-color: ${({ $isDark }) => ($isDark ? '#1e1e1e' : '#fffffe')};
+  background-color: ${({ $colorBgLayout }) => $colorBgLayout};
   visibility: ${({ $isVisible }) => ($isVisible ? 'visible' : 'hidden')};
 `
 

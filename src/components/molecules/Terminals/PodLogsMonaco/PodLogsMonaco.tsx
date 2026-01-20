@@ -1,7 +1,7 @@
 /* eslint-disable max-lines-per-function */
 /* eslint-disable no-console */
 import React, { FC, useState, useEffect, useRef } from 'react'
-import { Select, InputNumber, Segmented, DatePicker, Button, theme as antdtheme, notification } from 'antd'
+import { Select, InputNumber, Segmented, DatePicker, notification, theme as antdtheme } from 'antd'
 import dayjs, { Dayjs } from 'dayjs'
 import { filterSelectOptions } from 'utils/filterSelectOptions'
 import { isValidRFC3339 } from 'utils/converterDates'
@@ -225,18 +225,22 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
 
         <Styled.ControlsRight>
           <Styled.FiltersGroup>
-            <Styled.FilterSelect>
+            <Styled.FilterInput>
               <Select
                 placeholder="Tail lines"
                 options={TAIL_LINES_PRESETS}
                 value={pendingTailLines}
                 onChange={value => setPendingTailLines(value ?? undefined)}
                 allowClear
-                style={{ width: 140 }}
               />
-            </Styled.FilterSelect>
+            </Styled.FilterInput>
 
-            <Styled.DarkSegmented>
+            <Styled.DarkSegmented
+              $colorBgLayout={token.colorBgLayout}
+              $colorBgContainer={token.colorBgContainer}
+              $colorTextSecondary={token.colorTextSecondary}
+              $colorText={token.colorText}
+            >
               <Segmented
                 value={pendingSinceMode}
                 onChange={handleSinceModeChange}
@@ -248,47 +252,45 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
             </Styled.DarkSegmented>
 
             {pendingSinceMode === 'relative' && (
-              <Styled.FilterSelect>
+              <Styled.FilterInput>
                 <Select
                   placeholder="Time range"
                   options={SINCE_PRESETS}
                   value={matchingPreset?.value ?? null}
                   onChange={handlePresetChange}
                   allowClear
-                  style={{ width: 140 }}
                 />
-              </Styled.FilterSelect>
+              </Styled.FilterInput>
             )}
 
             {pendingSinceMode === 'absolute' && (
-              <DatePicker
-                showTime
-                value={pendingSinceTime}
-                onChange={handleDateTimeChange}
-                placeholder="Date & time"
-                style={{ height: 32 }}
-                disabledDate={disabledDate}
-                disabledTime={disabledTime}
-              />
+              <Styled.FilterInput>
+                <DatePicker
+                  showTime
+                  value={pendingSinceTime}
+                  onChange={handleDateTimeChange}
+                  placeholder="Date & time"
+                  disabledDate={disabledDate}
+                  disabledTime={disabledTime}
+                />
+              </Styled.FilterInput>
             )}
 
-            <Styled.LimitInput>
+            <Styled.FilterInput>
               <InputNumber
                 min={1}
                 placeholder="Limit KB"
                 value={pendingLimitKB}
                 onChange={value => setPendingLimitKB(value ?? undefined)}
               />
-            </Styled.LimitInput>
+            </Styled.FilterInput>
           </Styled.FiltersGroup>
 
           <Styled.ButtonsGroup>
-            <Button onClick={handleReset} style={{ height: 32 }}>
-              Clear
-            </Button>
-            <Button type="primary" onClick={handleApply} style={{ height: 32 }}>
+            <Styled.FilterButton onClick={handleReset}>Clear</Styled.FilterButton>
+            <Styled.FilterButton type="primary" onClick={handleApply}>
               Apply
-            </Button>
+            </Styled.FilterButton>
           </Styled.ButtonsGroup>
         </Styled.ControlsRight>
       </Styled.ControlsRow>

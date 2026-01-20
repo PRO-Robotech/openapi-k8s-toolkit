@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { Button } from 'antd'
 
 const ControlsRow = styled.div`
   display: flex;
@@ -40,14 +41,14 @@ const TopRowContent = styled.div`
 
 const CustomSelect = styled.div`
   .ant-select {
-    width: 200px;
+    width: 120px;
 
-    @media (max-width: 1512px) {
+    @media (min-width: 1420px) {
       width: 160px;
     }
 
-    @media (max-width: 1420px) {
-      width: 120px;
+    @media (min-width: 1512px) {
+      width: 200px;
     }
   }
 
@@ -58,8 +59,11 @@ const CustomSelect = styled.div`
   }
 `
 
-const FilterSelect = styled.div`
-  .ant-select {
+const FilterInput = styled.div`
+  .ant-select,
+  .ant-input-number,
+  .ant-picker {
+    width: 120px;
     height: 32px;
   }
 
@@ -67,29 +71,6 @@ const FilterSelect = styled.div`
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  @media (max-width: 1512px) {
-    .ant-select {
-      width: 120px;
-    }
-  }
-
-  @media (max-width: 1420px) {
-    .ant-select {
-      width: 120px;
-    }
-  }
-`
-
-const LimitInput = styled.div`
-  .ant-input-number {
-    width: 100px;
-    height: 32px;
-
-    @media (max-width: 1420px) {
-      width: 80px;
-    }
   }
 `
 
@@ -133,32 +114,43 @@ const FilterTitle = styled.div<TFilterTitleProps>`
   margin-bottom: 8px;
 `
 
-const DarkSegmented = styled.div`
+type TDarkSegmentedProps = {
+  $colorBgLayout: string
+  $colorBgContainer: string
+  $colorTextSecondary: string
+  $colorText: string
+}
+
+const DarkSegmented = styled.div<TDarkSegmentedProps>`
   .ant-segmented {
-    background-color: #1e1f22;
+    background-color: ${({ $colorBgLayout }) => $colorBgLayout};
     height: 32px;
   }
 
   .ant-segmented-item {
-    color: rgba(255, 255, 255, 0.65);
+    color: ${({ $colorTextSecondary }) => $colorTextSecondary};
 
     &:hover {
-      color: rgba(255, 255, 255, 0.65);
+      color: ${({ $colorTextSecondary }) => $colorTextSecondary};
     }
   }
 
   .ant-segmented-item-selected {
-    background-color: #2d2f38;
-    color: #fff;
+    background-color: ${({ $colorBgContainer }) => $colorBgContainer};
+    color: ${({ $colorText }) => $colorText};
 
     &:hover {
-      color: #fff;
+      color: ${({ $colorText }) => $colorText};
     }
   }
 
   .ant-segmented-thumb {
-    background-color: #2d2f38;
+    background-color: ${({ $colorBgContainer }) => $colorBgContainer};
   }
+`
+
+const FilterButton = styled(Button)`
+  height: 32px;
 `
 
 export const Styled = {
@@ -169,12 +161,12 @@ export const Styled = {
   ButtonsGroup,
   TopRowContent,
   CustomSelect,
-  FilterSelect,
-  LimitInput,
+  FilterInput,
   FilterRow,
   FilterGroup,
   FilterLabel,
   SinceControls,
   FilterTitle,
   DarkSegmented,
+  FilterButton,
 }
