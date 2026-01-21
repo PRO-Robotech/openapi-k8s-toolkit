@@ -8,3 +8,12 @@ export const SINCE_PRESETS = [
   { label: '12 hours', value: 43200 },
   { label: '24 hours', value: 86400 },
 ]
+
+export const TAIL_LINES_PRESETS = [
+  { label: '50 lines', value: 50 },
+  { label: '100 lines', value: 100 },
+  { label: '200 lines', value: 200 },
+  { label: '500 lines', value: 500 },
+  { label: '1000 lines', value: 1000 },
+  { label: '5000 lines', value: 5000 },
+]
