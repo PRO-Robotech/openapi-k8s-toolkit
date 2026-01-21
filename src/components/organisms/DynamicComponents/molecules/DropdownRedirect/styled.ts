@@ -31,6 +31,7 @@ const TitleSelect = styled(Select)`
       font-size: 14px;
       right: 0;
       cursor: pointer;
+      color: inherit;
     }
 
     &:hover .ant-select-selector {
