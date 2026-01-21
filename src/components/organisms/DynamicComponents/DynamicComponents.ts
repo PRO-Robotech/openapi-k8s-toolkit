@@ -43,6 +43,8 @@ import {
   VMVNC,
   PrometheusGraph,
   DefaultIframe,
+  DropdownRedirect,
+  CopyButton,
 } from './molecules'
 import { TDynamicComponentsAppTypeMap } from './types'
 
@@ -90,4 +92,6 @@ export const DynamicComponents: TRendererComponents<TDynamicComponentsAppTypeMap
   VMVNC,
   PrometheusGraph,
   DefaultIframe,
+  DropdownRedirect,
+  CopyButton,
 }
