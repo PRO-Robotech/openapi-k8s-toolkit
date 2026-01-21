@@ -5,9 +5,13 @@ import jp from 'jsonpath'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
-import { useListWatch } from 'hooks/useListThenWatch'
+import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
 import { parseAll } from '../utils'
 import { Styled } from './styled'
+
+type TResourceList = {
+  items?: Record<string, unknown>[]
+}
 
 export const DropdownRedirect: FC<{ data: TDynamicComponentsAppTypeMap['DropdownRedirect'] }> = ({ data }) => {
   const {
@@ -43,24 +47,23 @@ export const DropdownRedirect: FC<{ data: TDynamicComponentsAppTypeMap['Dropdown
     ? parseAll({ text: currentValue, replaceValues, multiQueryData })
     : undefined
 
-  const { state, status, hasInitial } = useListWatch({
-    wsUrl: `/api/clusters/${clusterPrepared}/openapi-bff-ws/listThenWatch/listWatchWs`,
+  const {
+    data: resourceList,
+    isLoading: isResourceLoading,
+    isError,
+  } = useK8sSmartResource<TResourceList>({
+    cluster: clusterPrepared,
+    apiGroup: apiGroupPrepared,
+    apiVersion: apiVersionPrepared,
+    plural: pluralPrepared,
+    namespace: namespacePrepared,
     isEnabled: Boolean(clusterPrepared && apiVersionPrepared && pluralPrepared && !isMultiQueryLoading),
-    autoDrain: true,
-    query: {
-      apiGroup: apiGroupPrepared,
-      apiVersion: apiVersionPrepared,
-      plural: pluralPrepared,
-      namespace: namespacePrepared,
-    },
   })
 
   const options = useMemo(() => {
-    if (!hasInitial || !state.order.length) return []
+    if (!resourceList?.items?.length) return []
 
-    const items = state.order.map(key => state.byKey[key])
-
-    return items
+    return resourceList.items
       .map(item => {
         try {
           const results = jp.query(item, `$${jsonPath}`)
@@ -72,10 +75,9 @@ export const DropdownRedirect: FC<{ data: TDynamicComponentsAppTypeMap['Dropdown
       })
       .filter((v): v is string => v !== null)
       .map(value => ({ label: value, value }))
-  }, [state, hasInitial, jsonPath])
+  }, [resourceList, jsonPath])
 
-  const isLoading =
-    isMultiQueryLoading || status === 'connecting' || (status === 'open' && !hasInitial) || externalLoading
+  const isLoading = isMultiQueryLoading || isResourceLoading || externalLoading
 
   const handleChange = (selectedValue: unknown) => {
     if (typeof selectedValue !== 'string') return
@@ -93,6 +95,10 @@ export const DropdownRedirect: FC<{ data: TDynamicComponentsAppTypeMap['Dropdown
 
   if (isLoading) {
     return <Spin size="small" />
+  }
+
+  if (isError) {
+    return <span>Error loading resources</span>
   }
 
   return (

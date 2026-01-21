@@ -22,7 +22,6 @@ const TitleSelect = styled(Select)`
     .ant-select-selection-item {
       font-size: 20px;
       line-height: 24px;
-      font-family: RedHatDisplay, Overpass, overpass, helvetica, arial, sans-serif;
       padding-inline-end: 24px;
       cursor: pointer;
     }
