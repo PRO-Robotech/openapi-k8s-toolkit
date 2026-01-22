@@ -24,20 +24,17 @@ const EditorWrapper = styled.div`
   width: 100%;
 `
 
-type TStreamingOverlayProps = {
+type TStreamingBarProps = {
   $isVisible?: boolean
-  $colorBgLayout: string
+  $isDark?: boolean
 }
 
-const StreamingOverlay = styled.div<TStreamingOverlayProps>`
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 10;
+const StreamingBar = styled.div<TStreamingBarProps>`
   display: flex;
   align-items: center;
   gap: 16px;
-  background-color: ${({ $colorBgLayout }) => $colorBgLayout};
+  padding: 12px;
+  background-color: ${({ $isDark }) => ($isDark ? '#1e1e1e' : '#fffffe')};
   visibility: ${({ $isVisible }) => ($isVisible ? 'visible' : 'hidden')};
 `
 
@@ -50,6 +47,6 @@ export const Styled = {
   FullWidthDiv,
   CustomCard,
   EditorWrapper,
-  StreamingOverlay,
+  StreamingBar,
   CursorPointerDiv,
 }
