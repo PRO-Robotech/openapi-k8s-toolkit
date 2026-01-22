@@ -26,7 +26,7 @@ const EditorWrapper = styled.div`
 
 type TStreamingBarProps = {
   $isVisible?: boolean
-  $colorBgMonaco: string
+  $isDark?: boolean
 }
 
 const StreamingBar = styled.div<TStreamingBarProps>`
@@ -34,7 +34,7 @@ const StreamingBar = styled.div<TStreamingBarProps>`
   align-items: center;
   gap: 16px;
   padding: 12px;
-  background-color: ${({ $colorBgMonaco }) => $colorBgMonaco};
+  background-color: ${({ $isDark }) => ($isDark ? '#1e1e1e' : '#fffffe')};
   visibility: ${({ $isVisible }) => ($isVisible ? 'visible' : 'hidden')};
 `
 

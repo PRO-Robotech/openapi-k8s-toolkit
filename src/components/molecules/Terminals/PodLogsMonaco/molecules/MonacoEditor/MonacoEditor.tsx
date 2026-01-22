@@ -1,7 +1,7 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable no-console */
 import React, { FC, useEffect, useState, useRef } from 'react'
-import { Result, Spin, notification, theme as antdtheme } from 'antd'
+import { Result, Spin, notification } from 'antd'
 import Editor from '@monaco-editor/react'
 import type * as monaco from 'monaco-editor'
 import { PauseCircleIcon, ResumeCircleIcon } from 'components/atoms'
@@ -34,7 +34,6 @@ export const MonacoEditor: FC<TMonacoEditorProps> = ({
   sinceTime,
   limitBytes,
 }) => {
-  const { token } = antdtheme.useToken()
   const [notificationApi, contextHolder] = notification.useNotification()
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<Event>()
@@ -137,10 +136,7 @@ export const MonacoEditor: FC<TMonacoEditorProps> = ({
     <>
       {contextHolder}
       <Styled.CustomCard $isVisible={isTerminalVisible}>
-        <Styled.StreamingBar
-          $isVisible={isTerminalVisible}
-          $colorBgMonaco={(token as unknown as { colorBgMonaco: string }).colorBgMonaco}
-        >
+        <Styled.StreamingBar $isVisible={isTerminalVisible} $isDark={isDark}>
           <Styled.CursorPointerDiv
             onClick={() => {
               if (isPaused) {
