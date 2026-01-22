@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC, useMemo } from 'react'
 import { Spin } from 'antd'
 import { useNavigate } from 'react-router-dom'
@@ -13,7 +14,10 @@ type TResourceList = {
   items?: Record<string, unknown>[]
 }
 
-export const DropdownRedirect: FC<{ data: TDynamicComponentsAppTypeMap['DropdownRedirect'] }> = ({ data }) => {
+export const DropdownRedirect: FC<{ data: TDynamicComponentsAppTypeMap['DropdownRedirect']; children?: any }> = ({
+  data,
+  children,
+}) => {
   const {
     cluster,
     apiVersion,
@@ -102,15 +106,18 @@ export const DropdownRedirect: FC<{ data: TDynamicComponentsAppTypeMap['Dropdown
   }
 
   return (
-    <Styled.TitleSelect
-      value={currentValuePrepared}
-      onChange={handleChange}
-      options={options}
-      placeholder={placeholder}
-      style={style}
-      showSearch={showSearch}
-      filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
-      variant="borderless"
-    />
+    <>
+      <Styled.TitleSelect
+        value={currentValuePrepared}
+        onChange={handleChange}
+        options={options}
+        placeholder={placeholder}
+        style={style}
+        showSearch={showSearch}
+        filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
+        variant="borderless"
+      />
+      {children}
+    </>
   )
 }

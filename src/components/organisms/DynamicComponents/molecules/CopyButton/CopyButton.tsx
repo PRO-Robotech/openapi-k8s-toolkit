@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { FC } from 'react'
 import { Button, message } from 'antd'
 import { CopyOutlined } from '@ant-design/icons'
@@ -6,7 +7,10 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
 
-export const CopyButton: FC<{ data: TDynamicComponentsAppTypeMap['CopyButton'] }> = ({ data }) => {
+export const CopyButton: FC<{ data: TDynamicComponentsAppTypeMap['CopyButton']; children?: any }> = ({
+  data,
+  children,
+}) => {
   const {
     copyText,
     successMessage = 'Copied!',
@@ -57,6 +61,7 @@ export const CopyButton: FC<{ data: TDynamicComponentsAppTypeMap['CopyButton'] }
         style={style}
         size="large"
       />
+      {children}
     </>
   )
 }
