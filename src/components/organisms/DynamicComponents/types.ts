@@ -468,4 +468,28 @@ export type TDynamicComponentsAppTypeMap = {
     React.IframeHTMLAttributes<HTMLIFrameElement>,
     HTMLIFrameElement
   >
+  DropdownRedirect: {
+    id: number | string
+    cluster: string
+    apiVersion: string
+    apiGroup?: string
+    namespace?: string
+    plural: string
+    jsonPath: string
+    redirectUrl: string
+    currentValue?: string
+    placeholder?: string
+    style?: CSSProperties
+    showSearch?: boolean
+    loading?: boolean
+  }
+  CopyButton: {
+    id: number | string
+    copyText: string
+    successMessage?: string
+    errorMessage?: string
+    buttonType?: 'text' | 'link' | 'default' | 'primary' | 'dashed'
+    tooltip?: string
+    style?: CSSProperties
+  }
 }
