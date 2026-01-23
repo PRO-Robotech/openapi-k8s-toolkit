@@ -49,11 +49,11 @@ export const DropdownRedirect: FC<{ data: TDynamicComponentsAppTypeMap['Dropdown
   const apiGroupPrepared = apiGroup ? parseAll({ text: apiGroup, replaceValues, multiQueryData }) : undefined
   const namespacePrepared = namespace ? parseAll({ text: namespace, replaceValues, multiQueryData }) : undefined
   const pluralPrepared = parseAll({ text: plural, replaceValues, multiQueryData })
-  
+
   const currentValueRaw = currentValue
     ? parseWithoutPartsOfUrl({ text: currentValue, multiQueryData, customFallback: UNDEFINED_FALLBACK })
     : undefined
-  
+
   const currentValuePrepared = currentValueRaw === UNDEFINED_FALLBACK ? undefined : currentValueRaw
 
   const {
