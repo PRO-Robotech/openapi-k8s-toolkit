@@ -121,7 +121,7 @@ export const XTerminal: FC<TXTerminalProps> = ({ endpoint, namespace, podName, c
 
   return (
     <>
-      <Styled.CustomCard $isVisible={!isLoading && !error} $substractHeight={substractHeight}>
+      <Styled.CustomCard $isVisible={!isLoading && !error} $hasError={!!error} $substractHeight={substractHeight}>
         <Styled.FullWidthDiv $substractHeight={substractHeight}>
           <div ref={terminalRef} style={{ width: '100%', height: '100%' }} />
         </Styled.FullWidthDiv>
