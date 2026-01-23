@@ -9,6 +9,10 @@ export type TDropdownRedirectProps = {
   plural: string
   jsonPath: string
   redirectUrl: string
+  /**
+   * Current selected value. Use {reqsJsonPath[...]} format, not URL segments like {8}.
+   * Example: "{reqsJsonPath[0]['.items.0.metadata.name']['~undefined-value~']}"
+   */
   currentValue?: string
   placeholder?: string
   style?: CSSProperties
