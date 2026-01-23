@@ -7,7 +7,7 @@ import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
-import { parseAll } from '../utils'
+import { parseAll, parseWithoutPartsOfUrl } from '../utils'
 import { Styled } from './styled'
 
 type TResourceList = {
@@ -42,14 +42,19 @@ export const DropdownRedirect: FC<{ data: TDynamicComponentsAppTypeMap['Dropdown
     return acc
   }, {})
 
+  const UNDEFINED_FALLBACK = '~undefined-value~'
+
   const clusterPrepared = parseAll({ text: cluster, replaceValues, multiQueryData })
   const apiVersionPrepared = parseAll({ text: apiVersion, replaceValues, multiQueryData })
   const apiGroupPrepared = apiGroup ? parseAll({ text: apiGroup, replaceValues, multiQueryData }) : undefined
   const namespacePrepared = namespace ? parseAll({ text: namespace, replaceValues, multiQueryData }) : undefined
   const pluralPrepared = parseAll({ text: plural, replaceValues, multiQueryData })
-  const currentValuePrepared = currentValue
-    ? parseAll({ text: currentValue, replaceValues, multiQueryData })
+
+  const currentValueRaw = currentValue
+    ? parseWithoutPartsOfUrl({ text: currentValue, multiQueryData, customFallback: UNDEFINED_FALLBACK })
     : undefined
+
+  const currentValuePrepared = currentValueRaw === UNDEFINED_FALLBACK ? undefined : currentValueRaw
 
   const {
     data: resourceList,
