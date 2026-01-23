@@ -9,7 +9,7 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
-import { EditModal } from './molecules'
+import { TolerationsEditModal } from '../../atoms'
 import { getItemsInside } from './utils'
 
 export const Tolerations: FC<{ data: TDynamicComponentsAppTypeMap['Tolerations']; children?: any }> = ({
@@ -125,7 +125,7 @@ export const Tolerations: FC<{ data: TDynamicComponentsAppTypeMap['Tolerations']
           </Flex>
         </div>
         {contextHolder}
-        <EditModal
+        <TolerationsEditModal
           open={open}
           close={() => setOpen(false)}
           values={tolerations}
@@ -166,7 +166,7 @@ export const Tolerations: FC<{ data: TDynamicComponentsAppTypeMap['Tolerations']
         {children}
       </div>
       {contextHolder}
-      <EditModal
+      <TolerationsEditModal
         open={open}
         close={() => setOpen(false)}
         values={tolerations}

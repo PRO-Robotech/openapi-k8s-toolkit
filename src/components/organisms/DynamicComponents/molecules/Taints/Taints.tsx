@@ -9,7 +9,7 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
-import { EditModal } from './molecules'
+import { TaintsEditModal } from '../../atoms'
 import { getItemsInside } from './utils'
 
 export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children?: any }> = ({ data, children }) => {
@@ -123,7 +123,7 @@ export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children
           </Flex>
         </div>
         {contextHolder}
-        <EditModal
+        <TaintsEditModal
           open={open}
           close={() => setOpen(false)}
           values={taints}
@@ -164,7 +164,7 @@ export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children
         {children}
       </div>
       {contextHolder}
-      <EditModal
+      <TaintsEditModal
         open={open}
         close={() => setOpen(false)}
         values={taints}
