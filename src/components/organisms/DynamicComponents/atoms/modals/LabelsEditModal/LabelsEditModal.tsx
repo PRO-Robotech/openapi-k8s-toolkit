@@ -8,9 +8,9 @@ import { ResetedFormItem, CustomSizeTitle } from 'components/molecules/Blackhole
 import { filterSelectOptions } from 'utils/filterSelectOptions'
 import { CustomSelect, Spacer } from 'components/atoms'
 import { patchEntryWithReplaceOp } from 'api/forms'
-import { truncate } from '../../utils'
+import { truncate } from './utils'
 
-type TEditModalProps = {
+type TLabelsEditModalProps = {
   open: boolean
   close: () => void
   values?: Record<string, string | number>
@@ -28,7 +28,7 @@ type TEditModalProps = {
   inputLabelStyle?: CSSProperties
 }
 
-export const EditModal: FC<TEditModalProps> = ({
+export const LabelsEditModal: FC<TLabelsEditModalProps> = ({
   open,
   close,
   values,

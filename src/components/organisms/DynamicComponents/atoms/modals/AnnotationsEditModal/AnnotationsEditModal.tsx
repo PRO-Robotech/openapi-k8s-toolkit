@@ -1,18 +1,18 @@
 /* eslint-disable no-console */
 import React, { FC, useState, useEffect, CSSProperties } from 'react'
-import { Modal, Form, Alert, Input, Select, Button, Row, Col } from 'antd'
+import { Modal, Form, Alert, Input, Button, Row, Col } from 'antd'
 import { useQueryClient } from '@tanstack/react-query'
 import { TRequestError } from 'localTypes/api'
 import { ResetedFormItem, CustomSizeTitle } from 'components/molecules/BlackholeForm/atoms'
 import { Spacer, PlusIcon, MinusIcon } from 'components/atoms'
 import { patchEntryWithReplaceOp } from 'api/forms'
-import { TTaintEffect, TTaintLike } from '../../types'
+import { TStringNumberRecord } from './types'
 import { Styled } from './styled'
 
-type TEditModalProps = {
+type TAnnotationsEditModalProps = {
   open: boolean
   close: () => void
-  values?: TTaintLike[]
+  values?: TStringNumberRecord
   openNotificationSuccess?: () => void
   modalTitle: string
   modalDescriptionText?: string
@@ -25,7 +25,7 @@ type TEditModalProps = {
   inputLabelStyle?: CSSProperties
 }
 
-export const EditModal: FC<TEditModalProps> = ({
+export const AnnotationsEditModal: FC<TAnnotationsEditModalProps> = ({
   open,
   close,
   values,
@@ -45,13 +45,18 @@ export const EditModal: FC<TEditModalProps> = ({
   const [error, setError] = useState<TRequestError | undefined>()
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
-  const [form] = Form.useForm<{ taints: TTaintLike[] }>()
-  const taints = Form.useWatch<TTaintLike[]>('taints', form)
+  const [form] = Form.useForm<{ annotations: { key: string; value?: string }[] }>()
+  const annotations = Form.useWatch<{ key: string; value?: string }[]>('annotations', form)
 
   useEffect(() => {
     if (open) {
       form.setFieldsValue({
-        taints: values || [],
+        annotations: values
+          ? Object.entries(values).map(([key, value]) => ({
+              key,
+              value,
+            }))
+          : [],
       })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -61,10 +66,14 @@ export const EditModal: FC<TEditModalProps> = ({
     form
       .validateFields()
       .then(() => {
-        console.log(JSON.stringify(taints))
+        const result: Record<string, string> = {}
+        annotations.forEach(({ key, value }) => {
+          result[key] = value || ''
+        })
+        console.log(JSON.stringify(result))
         setIsLoading(true)
         setError(undefined)
-        patchEntryWithReplaceOp({ endpoint, pathToValue, body: taints })
+        patchEntryWithReplaceOp({ endpoint, pathToValue, body: result })
           .then(() => {
             queryClient.invalidateQueries({ queryKey: ['multi'] })
             if (openNotificationSuccess) {
@@ -81,8 +90,6 @@ export const EditModal: FC<TEditModalProps> = ({
       })
       .catch(() => console.log('Validating error'))
   }
-
-  const effectOptions: TTaintEffect[] = ['NoSchedule', 'PreferNoSchedule', 'NoExecute']
 
   return (
     <Modal
@@ -109,7 +116,7 @@ export const EditModal: FC<TEditModalProps> = ({
           <Spacer $space={10} $samespace />
         </>
       )}
-      <Form<{ taints: TTaintLike[] }> form={form}>
+      <Form<{ annotations: { key: string; value?: string }[] }> form={form}>
         {inputLabel && (
           <CustomSizeTitle $designNewLayout style={inputLabelStyle}>
             {inputLabel}
@@ -124,14 +131,11 @@ export const EditModal: FC<TEditModalProps> = ({
             <div>Value</div>
           </Col>
           <Col span={cols[2]}>
-            <div>Effect</div>
-          </Col>
-          <Col span={cols[3]}>
             <div />
           </Col>
         </Row>
         <Spacer $space={10} $samespace />
-        <Styled.ResetedFormList name="taints">
+        <Styled.ResetedFormList name="annotations">
           {(fields, { add, remove }) => (
             <>
               {fields.map(({ key, name, ...restField }) => (
@@ -140,58 +144,19 @@ export const EditModal: FC<TEditModalProps> = ({
                     <ResetedFormItem
                       {...restField}
                       name={[name, 'key']}
-                      rules={[
-                        {
-                          validator: (_, v) =>
-                            v === undefined || typeof v === 'string'
-                              ? Promise.resolve()
-                              : Promise.reject(new Error('Key must be a string.')),
-                        },
-                      ]}
+                      rules={[{ required: true, message: 'Key is required' }]}
                     >
-                      <Input placeholder="e.g. dedicated" />
+                      <Input placeholder="key" />
                     </ResetedFormItem>
                   </Col>
 
                   <Col span={cols[1]}>
-                    <ResetedFormItem
-                      {...restField}
-                      name={[name, 'value']}
-                      rules={[
-                        {
-                          validator: (_, v) =>
-                            v === undefined || typeof v === 'string'
-                              ? Promise.resolve()
-                              : Promise.reject(new Error('Value must be a string.')),
-                        },
-                      ]}
-                    >
-                      <Input placeholder="e.g. batch" />
+                    <ResetedFormItem {...restField} name={[name, 'value']}>
+                      <Input placeholder="value" />
                     </ResetedFormItem>
                   </Col>
 
                   <Col span={cols[2]}>
-                    <ResetedFormItem
-                      {...restField}
-                      name={[name, 'effect']}
-                      rules={[
-                        { required: true, message: 'Effect is required.' },
-                        {
-                          validator: (_, v) =>
-                            v && effectOptions.includes(v)
-                              ? Promise.resolve()
-                              : Promise.reject(new Error('Select a valid effect.')),
-                        },
-                      ]}
-                    >
-                      <Select
-                        placeholder="Select effect"
-                        options={effectOptions.map(eff => ({ label: eff, value: eff }))}
-                      />
-                    </ResetedFormItem>
-                  </Col>
-
-                  <Col span={cols[3]}>
                     <Button size="small" type="text" onClick={() => remove(name)}>
                       <MinusIcon />
                     </Button>

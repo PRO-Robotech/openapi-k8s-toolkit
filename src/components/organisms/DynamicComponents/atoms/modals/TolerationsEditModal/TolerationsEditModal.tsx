@@ -7,10 +7,10 @@ import { TRequestError } from 'localTypes/api'
 import { ResetedFormItem, CustomSizeTitle } from 'components/molecules/BlackholeForm/atoms'
 import { Spacer, PlusIcon, MinusIcon } from 'components/atoms'
 import { patchEntryWithReplaceOp } from 'api/forms'
-import { TToleration, TTolerationOperator, TTaintEffect } from '../../types'
+import { TToleration, TTolerationOperator, TTaintEffect } from './types'
 import { Styled } from './styled'
 
-type TEditModalProps = {
+type TTolerationsEditModalProps = {
   open: boolean
   close: () => void
   values?: TToleration[]
@@ -26,7 +26,7 @@ type TEditModalProps = {
   inputLabelStyle?: CSSProperties
 }
 
-export const EditModal: FC<TEditModalProps> = ({
+export const TolerationsEditModal: FC<TTolerationsEditModalProps> = ({
   open,
   close,
   values,

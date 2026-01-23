@@ -11,7 +11,7 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
-import { EditModal } from './molecules'
+import { LabelsEditModal } from '../../atoms'
 import { parseArrayOfAny, truncate } from './utils'
 
 export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children?: any }> = ({ data, children }) => {
@@ -170,7 +170,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
       )}
       {children}
       {contextHolder}
-      <EditModal
+      <LabelsEditModal
         open={open}
         close={() => setOpen(false)}
         // values={labelsRaw}
@@ -318,7 +318,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
       )}
       {children}
       {contextHolder}
-      <EditModal
+      <LabelsEditModal
         open={open}
         close={() => setOpen(false)}
         values={labelsRaw}

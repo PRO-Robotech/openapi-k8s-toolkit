@@ -9,7 +9,7 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
-import { EditModal } from './molecules'
+import { AnnotationsEditModal } from '../../atoms'
 import { getItemsInside } from './utils'
 
 export const Annotations: FC<{ data: TDynamicComponentsAppTypeMap['Annotations']; children?: any }> = ({
@@ -125,7 +125,7 @@ export const Annotations: FC<{ data: TDynamicComponentsAppTypeMap['Annotations']
           </Flex>
         </div>
         {contextHolder}
-        <EditModal
+        <AnnotationsEditModal
           open={open}
           close={() => setOpen(false)}
           values={annotations}
@@ -166,7 +166,7 @@ export const Annotations: FC<{ data: TDynamicComponentsAppTypeMap['Annotations']
         {children}
       </div>
       {contextHolder}
-      <EditModal
+      <AnnotationsEditModal
         open={open}
         close={() => setOpen(false)}
         values={annotations}
