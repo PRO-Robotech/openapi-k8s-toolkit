@@ -3,13 +3,15 @@
 /* eslint-disable no-console */
 import React, { FC, useState } from 'react'
 import jp from 'jsonpath'
+import { theme as antdtheme, Flex } from 'antd'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { getItemCounterItemsInside } from '../../utils/ItemCounter'
 import { getKeyCounterItemsInside } from '../../utils/KeyCounter'
 import { parseAll } from '../utils'
-import { renderActiveType } from './utils'
+import { renderActiveType, renderIcon } from './utils'
+import { Styled } from './styled'
 
 export const AggregatedCounterCard: FC<{
   data: TDynamicComponentsAppTypeMap['AggregatedCounterCard']
@@ -23,6 +25,7 @@ export const AggregatedCounterCard: FC<{
     counter,
     activeType,
   } = data
+  const { token } = antdtheme.useToken()
   const [open, setOpen] = useState<boolean>(false)
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
@@ -67,12 +70,18 @@ export const AggregatedCounterCard: FC<{
   const parsedText = parseAll({ text, replaceValues, multiQueryData })
 
   return (
-    <span>
-      {parsedText}
-      {counterToDisplay}
-      {iconBase64Encoded}
+    <>
+      <Styled.Card $colorBorder={token.colorBorder} $colorBgContainer={token.colorBgContainer}>
+        <Flex gap={4} vertical>
+          <Styled.CardTitle $colorTextDescription={token.colorTextDescription}>{parsedText}</Styled.CardTitle>
+          <Styled.CardNumber $colorText={token.colorText}>{counterToDisplay}</Styled.CardNumber>
+        </Flex>
+        <Styled.CardIcon $colorInfo={token.colorInfo}>
+          {iconBase64Encoded && renderIcon(iconBase64Encoded, token.colorInfo)}
+        </Styled.CardIcon>
+      </Styled.Card>
       {renderActiveType(activeType, { open, onClose: () => setOpen(false) })}
       {children}
-    </span>
+    </>
   )
 }
