@@ -18,4 +18,9 @@ export type TDropdownRedirectProps = {
   style?: CSSProperties
   showSearch?: boolean
   loading?: boolean
+  /**
+   * Whether popup menu matches select width. Default true (popup min-width equals select width).
+   * Can be a number to set specific min-width for popup.
+   */
+  popupMatchSelectWidth?: boolean | number
 }

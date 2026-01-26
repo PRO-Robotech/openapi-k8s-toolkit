@@ -31,6 +31,7 @@ export const DropdownRedirect: FC<{ data: TDynamicComponentsAppTypeMap['Dropdown
     style,
     showSearch = true,
     loading: externalLoading,
+    popupMatchSelectWidth,
   } = data
 
   const navigate = useNavigate()
@@ -121,6 +122,7 @@ export const DropdownRedirect: FC<{ data: TDynamicComponentsAppTypeMap['Dropdown
         showSearch={showSearch}
         filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
         variant="borderless"
+        popupMatchSelectWidth={popupMatchSelectWidth}
       />
       {children}
     </>

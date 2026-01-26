@@ -91,6 +91,12 @@ const meta: Meta<TArgs> = {
       control: 'object',
       description: 'data.style – inline CSS styles',
     },
+    popupMatchSelectWidth: {
+      control: 'select',
+      options: [undefined, true, false, 150, 200, 250, 300],
+      description:
+        'data.popupMatchSelectWidth – whether popup matches dropdown select width (default: true). Can be boolean or number for specific min-width.',
+    },
   },
 
   render: args => {
@@ -107,6 +113,7 @@ const meta: Meta<TArgs> = {
       placeholder: args.placeholder,
       showSearch: args.showSearch,
       style: args.style,
+      popupMatchSelectWidth: args.popupMatchSelectWidth,
     }
 
     return (
@@ -161,6 +168,7 @@ export const PodsInNamespace: Story = {
     placeholder: 'Select pod...',
     showSearch: true,
     style: undefined,
+    popupMatchSelectWidth: undefined,
   },
 }
 
@@ -178,6 +186,7 @@ export const NodesClusterScoped: Story = {
     placeholder: 'Select node...',
     showSearch: true,
     style: undefined,
+    popupMatchSelectWidth: undefined,
   },
 }
 
@@ -195,6 +204,7 @@ export const DeploymentsInNamespace: Story = {
     placeholder: 'Select deployment...',
     showSearch: true,
     style: undefined,
+    popupMatchSelectWidth: undefined,
   },
 }
 
@@ -212,6 +222,7 @@ export const CustomResourceDefinition: Story = {
     placeholder: 'Select resource...',
     showSearch: true,
     style: undefined,
+    popupMatchSelectWidth: undefined,
   },
 }
 
@@ -229,5 +240,24 @@ export const AllPodsAcrossNamespaces: Story = {
     placeholder: 'Select pod (all namespaces)...',
     showSearch: true,
     style: undefined,
+    popupMatchSelectWidth: undefined,
+  },
+}
+
+export const WithCustomPopupWidth: Story = {
+  args: {
+    id: 'wide-popup-dropdown',
+    cluster: '{2}',
+    apiVersion: 'v1',
+    apiGroup: undefined,
+    namespace: '{3}',
+    plural: 'pods',
+    jsonPath: '.metadata.name',
+    redirectUrl: '/openapi-ui/{2}/{3}/factory/pod-details/{chosenEntryValue}',
+    currentValue: '{6}',
+    placeholder: 'Select pod...',
+    showSearch: true,
+    style: undefined,
+    popupMatchSelectWidth: 300,
   },
 }

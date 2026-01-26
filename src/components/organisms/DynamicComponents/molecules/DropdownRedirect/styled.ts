@@ -9,7 +9,6 @@ import { Select } from 'antd'
 const TitleSelect = styled(Select)`
   &&.ant-select {
     cursor: pointer;
-    min-width: 200px;
 
     .ant-select-selector {
       border: none;
