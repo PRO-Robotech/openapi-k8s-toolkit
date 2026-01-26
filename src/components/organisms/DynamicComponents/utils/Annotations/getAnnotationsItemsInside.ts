@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { TStringNumberRecord } from './types'
+type TStringNumberRecord = Record<string, string>
 
 const isObject = (x: unknown): x is object => typeof x === 'object' && x !== null
 
@@ -13,7 +13,7 @@ const isString = (v: unknown): v is string => typeof v === 'string'
 const isStringNumberRecord = (x: unknown): x is TStringNumberRecord =>
   isPlainObject(x) && Object.values(x).every(isString)
 
-export const getItemsInside = (
+export const getAnnotationsItemsInside = (
   value: any[],
 ): { counter?: number; annotations?: TStringNumberRecord; error?: string } => {
   if (!Array.isArray(value)) {

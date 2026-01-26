@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getItemsInside, filterTaintLikes, isTaintLike } from './utils'
+import { getTaintsItemsInside, filterTaintLikes, isTaintLike } from './utils'
 import type { TTaintLike } from './types'
 
 describe('isTaintLike', () => {
@@ -62,7 +62,7 @@ describe('filterTaintLikes', () => {
   })
 })
 
-describe('getItemsInside', () => {
+describe('getTaintsItemsInside', () => {
   let consoleLogSpy: jest.SpyInstance
 
   beforeEach(() => {
@@ -74,14 +74,14 @@ describe('getItemsInside', () => {
   })
 
   test('returns error when value is not an array', () => {
-    expect(getItemsInside(undefined as any)).toEqual({ error: 'Value on jsonPath is not an array' })
-    expect(getItemsInside(null as any)).toEqual({ error: 'Value on jsonPath is not an array' })
-    expect(getItemsInside({} as any)).toEqual({ error: 'Value on jsonPath is not an array' })
+    expect(getTaintsItemsInside(undefined as any)).toEqual({ error: 'Value on jsonPath is not an array' })
+    expect(getTaintsItemsInside(null as any)).toEqual({ error: 'Value on jsonPath is not an array' })
+    expect(getTaintsItemsInside({} as any)).toEqual({ error: 'Value on jsonPath is not an array' })
   })
 
   test('returns "Error while flattening" when inner element is not iterable', () => {
     const value = [1] as any
-    const res = getItemsInside(value)
+    const res = getTaintsItemsInside(value)
 
     expect(res).toEqual({ error: 'Error while flattening' })
     expect(consoleLogSpy).toHaveBeenCalled()
@@ -95,7 +95,7 @@ describe('getItemsInside', () => {
       [{ effect: 'PreferNoSchedule', value: 'gpu' }],
     ] as any
 
-    const res = getItemsInside(value)
+    const res = getTaintsItemsInside(value)
 
     expect(res.counter).toBe(4)
     expect(res.taints).toEqual([
@@ -105,12 +105,12 @@ describe('getItemsInside', () => {
   })
 
   test('handles empty outer array', () => {
-    const res = getItemsInside([] as any)
+    const res = getTaintsItemsInside([] as any)
     expect(res).toEqual({ counter: 0, taints: [] })
   })
 
   test('handles empty inner arrays', () => {
-    const res = getItemsInside([[], []] as any)
+    const res = getTaintsItemsInside([[], []] as any)
     expect(res).toEqual({ counter: 0, taints: [] })
   })
 })

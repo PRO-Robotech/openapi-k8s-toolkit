@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { truncate } from './utils'
+import { truncate } from './truncate'
 
 describe('truncate', () => {
   test('returns original text when max is undefined', () => {

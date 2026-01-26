@@ -1,12 +1,6 @@
 import { CSSProperties } from 'react'
 
-export type TTolerationsProps = {
-  id: number | string
-  reqIndex: string
-  jsonPathToArray: string
-  text: string
-  errorText: string
-  containerStyle?: CSSProperties
+export type TTolerationsModalProps = {
   notificationSuccessMessage?: string
   notificationSuccessMessageDescription?: string
   modalTitle?: string
@@ -19,3 +13,20 @@ export type TTolerationsProps = {
   editModalWidth?: number | string
   cols: number[] // 5
 }
+
+export type TTolerationsViewProps = {
+  text: string
+  errorText: string
+  containerStyle?: CSSProperties
+}
+
+export type TTolerationsBaseProps = {
+  reqIndex: string
+  jsonPathToArray: string
+}
+
+export type TTolerationsProps = {
+  id: number | string
+} & TTolerationsBaseProps &
+  TTolerationsViewProps &
+  TTolerationsModalProps

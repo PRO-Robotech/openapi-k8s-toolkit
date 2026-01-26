@@ -10,7 +10,7 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
 import { TolerationsEditModal } from '../../atoms'
-import { getItemsInside } from './utils'
+import { getTolerationsItemsInside } from '../../utils/Tolerations'
 
 export const Tolerations: FC<{ data: TDynamicComponentsAppTypeMap['Tolerations']; children?: any }> = ({
   data,
@@ -70,7 +70,7 @@ export const Tolerations: FC<{ data: TDynamicComponentsAppTypeMap['Tolerations']
 
   const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToArray}`)
 
-  const { counter, tolerations, error: errorArrayOfObjects } = getItemsInside(anythingForNow)
+  const { counter, tolerations, error: errorArrayOfObjects } = getTolerationsItemsInside(anythingForNow)
 
   const notificationSuccessMessagePrepared = notificationSuccessMessage
     ? parseAll({
@@ -132,13 +132,13 @@ export const Tolerations: FC<{ data: TDynamicComponentsAppTypeMap['Tolerations']
           openNotificationSuccess={openNotificationSuccess}
           modalTitle={modalTitlePrepared}
           modalDescriptionText={modalDescriptionTextPrepared}
+          modalDescriptionTextStyle={modalDescriptionTextStyle}
           inputLabel={inputLabelPrepared}
+          inputLabelStyle={inputLabelStyle}
           endpoint={endpointPrepared}
           pathToValue={pathToValuePrepared}
           editModalWidth={editModalWidth}
           cols={cols}
-          modalDescriptionTextStyle={modalDescriptionTextStyle}
-          inputLabelStyle={inputLabelStyle}
         />
       </>
     )
@@ -173,13 +173,13 @@ export const Tolerations: FC<{ data: TDynamicComponentsAppTypeMap['Tolerations']
         openNotificationSuccess={openNotificationSuccess}
         modalTitle={modalTitlePrepared}
         modalDescriptionText={modalDescriptionTextPrepared}
+        modalDescriptionTextStyle={modalDescriptionTextStyle}
         inputLabel={inputLabelPrepared}
+        inputLabelStyle={inputLabelStyle}
         endpoint={endpointPrepared}
         pathToValue={pathToValuePrepared}
         editModalWidth={editModalWidth}
         cols={cols}
-        modalDescriptionTextStyle={modalDescriptionTextStyle}
-        inputLabelStyle={inputLabelStyle}
       />
     </>
   )

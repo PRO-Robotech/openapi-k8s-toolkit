@@ -1,12 +1,6 @@
 import { CSSProperties } from 'react'
 
-export type TAnnotationsProps = {
-  id: number | string
-  reqIndex: string
-  jsonPathToObj: string
-  text: string
-  errorText: string
-  containerStyle?: CSSProperties
+export type TAnnotationsModalProps = {
   notificationSuccessMessage?: string
   notificationSuccessMessageDescription?: string
   modalTitle?: string
@@ -19,3 +13,20 @@ export type TAnnotationsProps = {
   editModalWidth?: number | string
   cols: number[] // 3
 }
+
+export type TAnnotationsViewProps = {
+  text: string
+  errorText: string
+  containerStyle?: CSSProperties
+}
+
+export type TAnnotationsBaseProps = {
+  reqIndex: string
+  jsonPathToObj: string
+}
+
+export type TAnnotationsProps = {
+  id: number | string
+} & TAnnotationsBaseProps &
+  TAnnotationsViewProps &
+  TAnnotationsModalProps

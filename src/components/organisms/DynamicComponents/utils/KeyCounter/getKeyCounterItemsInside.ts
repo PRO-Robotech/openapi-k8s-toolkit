@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export const getItemsInside = (value: any[]): { counter?: number; error?: string } => {
+export const getKeyCounterItemsInside = (value: any[]): { counter?: number; error?: string } => {
   if (!Array.isArray(value)) {
     return { error: 'Value on jsonPath is not an array' }
   }

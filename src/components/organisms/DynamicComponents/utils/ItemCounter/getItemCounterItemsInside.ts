@@ -2,7 +2,7 @@
 
 const flattenOnce = (arr: unknown[][]): unknown[] => arr.reduce<unknown[]>((acc, row) => [...acc, ...row], [])
 
-export const getItemsInside = (value: any[]): { counter?: number; error?: string } => {
+export const getItemCounterItemsInside = (value: any[]): { counter?: number; error?: string } => {
   if (!Array.isArray(value)) {
     return { error: 'Value on jsonPath is not an array' }
   }

@@ -10,7 +10,7 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
 import { TaintsEditModal } from '../../atoms'
-import { getItemsInside } from './utils'
+import { getTaintsItemsInside } from '../../utils/Taints'
 
 export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children?: any }> = ({ data, children }) => {
   const {
@@ -68,7 +68,7 @@ export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children
 
   const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToArray}`)
 
-  const { counter, taints, error: errorArrayOfObjects } = getItemsInside(anythingForNow)
+  const { counter, taints, error: errorArrayOfObjects } = getTaintsItemsInside(anythingForNow)
 
   const notificationSuccessMessagePrepared = notificationSuccessMessage
     ? parseAll({
@@ -130,13 +130,13 @@ export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children
           openNotificationSuccess={openNotificationSuccess}
           modalTitle={modalTitlePrepared}
           modalDescriptionText={modalDescriptionTextPrepared}
+          modalDescriptionTextStyle={modalDescriptionTextStyle}
           inputLabel={inputLabelPrepared}
+          inputLabelStyle={inputLabelStyle}
           endpoint={endpointPrepared}
           pathToValue={pathToValuePrepared}
           editModalWidth={editModalWidth}
           cols={cols}
-          modalDescriptionTextStyle={modalDescriptionTextStyle}
-          inputLabelStyle={inputLabelStyle}
         />
       </>
     )

@@ -1,12 +1,6 @@
 import { CSSProperties } from 'react'
 
-export type TTaintsProps = {
-  id: number | string
-  reqIndex: string
-  jsonPathToArray: string
-  text: string
-  errorText: string
-  style?: CSSProperties
+export type TTaintsModalProps = {
   notificationSuccessMessage?: string
   notificationSuccessMessageDescription?: string
   modalTitle?: string
@@ -20,3 +14,20 @@ export type TTaintsProps = {
   editModalWidth?: number | string
   cols: number[] // 4
 }
+
+export type TTaintsViewProps = {
+  text: string
+  errorText: string
+  style?: CSSProperties
+}
+
+export type TTaintsBaseProps = {
+  reqIndex: string
+  jsonPathToArray: string
+}
+
+export type TTaintsProps = {
+  id: number | string
+} & TTaintsBaseProps &
+  TTaintsViewProps &
+  TTaintsModalProps

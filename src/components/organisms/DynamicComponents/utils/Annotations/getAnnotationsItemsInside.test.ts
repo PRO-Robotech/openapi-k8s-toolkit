@@ -1,18 +1,18 @@
 /* eslint-disable lines-between-class-members */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getItemsInside } from './utils'
+import { getAnnotationsItemsInside } from './getAnnotationsItemsInside'
 
-describe('getItemsInside', () => {
+describe('getAnnotationsItemsInside', () => {
   test('returns error when value is not an array', () => {
-    const res = getItemsInside(undefined as any)
+    const res = getAnnotationsItemsInside(undefined as any)
 
     expect(res).toEqual({ error: 'Value on jsonPath is not an array' })
   })
 
   test('returns counter 0 when first element is not an object', () => {
-    const res1 = getItemsInside([1] as any)
-    const res2 = getItemsInside(['x'] as any)
-    const res3 = getItemsInside([null] as any)
+    const res1 = getAnnotationsItemsInside([1] as any)
+    const res2 = getAnnotationsItemsInside(['x'] as any)
+    const res3 = getAnnotationsItemsInside([null] as any)
 
     expect(res1.counter).toBe(0)
     expect(res1.annotations).toBeUndefined()
@@ -25,21 +25,21 @@ describe('getItemsInside', () => {
   })
 
   test('returns annotations when first element is a string record (even if not object branch)', () => {
-    const res = getItemsInside([{ a: '1', b: '2' }] as any)
+    const res = getAnnotationsItemsInside([{ a: '1', b: '2' }] as any)
 
     expect(res.counter).toBe(2)
     expect(res.annotations).toEqual({ a: '1', b: '2' })
   })
 
   test('does not set annotations when record values are not all strings', () => {
-    const res = getItemsInside([{ a: '1', b: 2 }] as any)
+    const res = getAnnotationsItemsInside([{ a: '1', b: 2 }] as any)
 
     expect(res.counter).toBe(2)
     expect(res.annotations).toBeUndefined()
   })
 
   test('handles empty array safely (value[0] is undefined)', () => {
-    const res = getItemsInside([] as any)
+    const res = getAnnotationsItemsInside([] as any)
 
     // typeof undefined !== 'object' => first branch
     expect(res.counter).toBe(0)
@@ -52,7 +52,7 @@ describe('getItemsInside', () => {
       b = '2'
     }
 
-    const res = getItemsInside([new X()] as any)
+    const res = getAnnotationsItemsInside([new X()] as any)
 
     expect(res.counter).toBe(2)
     // annotations requires plain object with string values, so should be undefined
