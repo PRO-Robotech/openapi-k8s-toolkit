@@ -11,7 +11,7 @@ import { TaintsEditModal } from '../../../../atoms'
 import { getTaintsItemsInside } from '../../../../utils/Taints'
 import type { TTaintsBaseProps, TTaintsModalProps } from '../../../../types/Taints'
 
-export const Taints: FC<TTaintsBaseProps & TTaintsModalProps> = ({
+export const TaintsModal: FC<TTaintsBaseProps & TTaintsModalProps> = ({
   reqIndex,
   jsonPathToArray,
   notificationSuccessMessage,

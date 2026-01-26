@@ -1,1 +1,0 @@
-export { Labels } from './Labels'

@@ -1,20 +1,19 @@
-/* eslint-disable max-lines-per-function */
-/* eslint-disable react/no-unstable-nested-components */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-array-index-key */
+/* eslint-disable no-console */
 import React, { FC, useState } from 'react'
 import jp from 'jsonpath'
 import { notification } from 'antd'
 import { useMultiQuery } from '../../../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../../../utils'
-import { LabelsEditModal } from '../../../../atoms'
-import { parseLabelsArrayOfAny } from '../../../../utils/Labels'
-import type { TLabelsBaseProps, TLabelsModalProps } from '../../../../types/Labels'
+import { AnnotationsEditModal } from '../../../../atoms'
+import { getAnnotationsItemsInside } from '../../../../utils/Annotations'
+import type { TAnnotationsBaseProps, TAnnotationsModalProps } from '../../../../types/Annotations'
 
-export const Labels: FC<TLabelsBaseProps & TLabelsModalProps> = ({
+export const AnnotationsModal: FC<TAnnotationsBaseProps & TAnnotationsModalProps> = ({
   reqIndex,
-  jsonPathToLabels,
+  jsonPathToObj,
   notificationSuccessMessage,
   notificationSuccessMessageDescription,
   modalTitle,
@@ -22,12 +21,10 @@ export const Labels: FC<TLabelsBaseProps & TLabelsModalProps> = ({
   modalDescriptionTextStyle,
   inputLabel,
   inputLabelStyle,
-  maxEditTagTextLength,
-  allowClearEditSelect,
   endpoint,
   pathToValue,
   editModalWidth,
-  paddingContainerEnd,
+  cols,
 }) => {
   const [api, contextHolder] = notification.useNotification()
   const [open, setOpen] = useState<boolean>(false)
@@ -56,12 +53,13 @@ export const Labels: FC<TLabelsBaseProps & TLabelsModalProps> = ({
   const jsonRoot = multiQueryData[`req${reqIndex}`]
 
   if (jsonRoot === undefined) {
+    console.log(`Item Counter: No root for json path`)
     return <div>No root for json path</div>
   }
 
-  const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToLabels}`)
+  const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToObj}`)
 
-  const { data: labelsRaw, error: errorArrayOfObjects } = parseLabelsArrayOfAny(anythingForNow)
+  const { annotations, error: errorArrayOfObjects } = getAnnotationsItemsInside(anythingForNow)
 
   const notificationSuccessMessagePrepared = notificationSuccessMessage
     ? parseAll({
@@ -97,57 +95,47 @@ export const Labels: FC<TLabelsBaseProps & TLabelsModalProps> = ({
     })
   }
 
-  const EmptySelect = (
-    <>
-      {contextHolder}
-      <LabelsEditModal
-        open={open}
-        close={() => setOpen(false)}
-        // values={labelsRaw}
-        openNotificationSuccess={openNotificationSuccess}
-        modalTitle={modalTitlePrepared}
-        modalDescriptionText={modalDescriptionTextPrepared}
-        modalDescriptionTextStyle={modalDescriptionTextStyle}
-        inputLabel={inputLabelPrepared}
-        inputLabelStyle={inputLabelStyle}
-        maxEditTagTextLength={maxEditTagTextLength}
-        allowClearEditSelect={allowClearEditSelect}
-        endpoint={endpointPrepared}
-        pathToValue={pathToValuePrepared}
-        editModalWidth={editModalWidth}
-        paddingContainerEnd={paddingContainerEnd}
-      />
-    </>
-  )
-
-  if (!labelsRaw) {
-    if (errorArrayOfObjects) {
-      // return <div>{errorArrayOfObjects}</div>
-      return EmptySelect
-    }
-    // return <div>Not a valid data structure</div>
-    return EmptySelect
+  if (errorArrayOfObjects) {
+    console.log(`Item Counter: ${errorArrayOfObjects}`)
+    return (
+      <>
+        {contextHolder}
+        <AnnotationsEditModal
+          open={open}
+          close={() => setOpen(false)}
+          values={annotations}
+          openNotificationSuccess={openNotificationSuccess}
+          modalTitle={modalTitlePrepared}
+          modalDescriptionText={errorArrayOfObjects}
+          modalDescriptionTextStyle={modalDescriptionTextStyle}
+          inputLabel={inputLabelPrepared}
+          inputLabelStyle={inputLabelStyle}
+          endpoint={endpointPrepared}
+          pathToValue={pathToValuePrepared}
+          editModalWidth={editModalWidth}
+          cols={cols}
+        />
+      </>
+    )
   }
 
   return (
     <>
       {contextHolder}
-      <LabelsEditModal
+      <AnnotationsEditModal
         open={open}
         close={() => setOpen(false)}
-        values={labelsRaw}
+        values={annotations}
         openNotificationSuccess={openNotificationSuccess}
         modalTitle={modalTitlePrepared}
         modalDescriptionText={modalDescriptionTextPrepared}
         modalDescriptionTextStyle={modalDescriptionTextStyle}
         inputLabel={inputLabelPrepared}
         inputLabelStyle={inputLabelStyle}
-        maxEditTagTextLength={maxEditTagTextLength}
-        allowClearEditSelect={allowClearEditSelect}
         endpoint={endpointPrepared}
         pathToValue={pathToValuePrepared}
         editModalWidth={editModalWidth}
-        paddingContainerEnd={paddingContainerEnd}
+        cols={cols}
       />
     </>
   )

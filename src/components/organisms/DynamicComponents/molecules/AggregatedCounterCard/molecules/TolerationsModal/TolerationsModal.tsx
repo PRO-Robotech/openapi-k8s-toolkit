@@ -11,7 +11,7 @@ import { TolerationsEditModal } from '../../../../atoms'
 import { getTolerationsItemsInside } from '../../../../utils/Tolerations'
 import type { TTolerationsBaseProps, TTolerationsModalProps } from '../../../../types/Tolerations'
 
-export const Tolerations: FC<TTolerationsBaseProps & TTolerationsModalProps> = ({
+export const TolerationsModal: FC<TTolerationsBaseProps & TTolerationsModalProps> = ({
   reqIndex,
   jsonPathToArray,
   notificationSuccessMessage,
