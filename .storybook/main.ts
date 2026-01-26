@@ -40,6 +40,22 @@ const config: StorybookConfig = {
             __dirname,
             './mocks/themeContext.tsx',
           ),
+          '../../../../../DynamicRendererWithProviders/providers/multiQueryProvider': path.resolve(
+            __dirname,
+            './mocks/multiQueryProvider.tsx',
+          ),
+          '../../../../../DynamicRendererWithProviders/providers/partsOfUrlContext': path.resolve(
+            __dirname,
+            './mocks/partsOfUrlContext.tsx',
+          ),
+          '../../../../../DynamicRendererWithProviders/providers/hybridDataProvider': path.resolve(
+            __dirname,
+            './mocks/hybridDataProvider.tsx',
+          ),
+          '../../../../../DynamicRendererWithProviders/providers/themeContext': path.resolve(
+            __dirname,
+            './mocks/themeContext.tsx',
+          ),
         },
       },
       server: {

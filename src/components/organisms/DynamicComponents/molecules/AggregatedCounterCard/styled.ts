@@ -3,6 +3,7 @@ import styled from 'styled-components'
 type TCardProps = {
   $colorBorder: string
   $colorBgContainer: string
+  $cursorPointer?: boolean
 }
 
 const Card = styled.div<TCardProps>`
@@ -13,6 +14,7 @@ const Card = styled.div<TCardProps>`
   border: 1px solid ${({ $colorBorder }) => $colorBorder};
   background: ${({ $colorBgContainer }) => $colorBgContainer};
   box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.25);
+  cursor: ${({ $cursorPointer }) => ($cursorPointer ? 'pointer' : 'auto')};
 `
 
 type TCardTitleProps = {

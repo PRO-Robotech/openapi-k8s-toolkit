@@ -1,6 +1,14 @@
 /* eslint-disable no-underscore-dangle */
+import React, { Suspense, lazy } from 'react'
 import { TActiveTypeUnion } from '../../types/AggregatedCounterCard'
-import { LabelsModal, AnnotationsModal, TaintsModal, TolerationsModal, EnrichedTableModal } from './molecules'
+import { LabelsModal } from './molecules/LabelsModal'
+import { AnnotationsModal } from './molecules/AnnotationsModal'
+import { TaintsModal } from './molecules/TaintsModal'
+import { TolerationsModal } from './molecules/TolerationsModal'
+
+const LazyEnrichedTableModal = lazy(() =>
+  import('./molecules/EnrichedTableModal').then(mod => ({ default: mod.EnrichedTableModal })),
+)
 
 type TCommonExtraProps = {
   open: boolean
@@ -20,7 +28,11 @@ export const renderActiveType = (activeType: TActiveTypeUnion | undefined, extra
     case 'tolerations':
       return <TolerationsModal {...activeType.props} {...extraProps} />
     case 'table':
-      return <EnrichedTableModal {...activeType.props} {...extraProps} />
+      return (
+        <Suspense fallback={null}>
+          <LazyEnrichedTableModal {...activeType.props} {...extraProps} />
+        </Suspense>
+      )
     default: {
       const _exhaustive: never = activeType
       return _exhaustive

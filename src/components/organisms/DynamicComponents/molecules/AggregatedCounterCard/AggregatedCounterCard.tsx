@@ -53,7 +53,29 @@ export const AggregatedCounterCard: FC<{
 
   if (jsonRoot === undefined) {
     console.log(`Counter: ${id}: No root for json path`)
-    return <span style={counter.props.style}>{counter.props.errorText}</span>
+    return (
+      <Styled.Card
+        $colorBorder={token.colorBorder}
+        $colorBgContainer={token.colorBgContainer}
+        $cursorPointer={!!activeType}
+        onClick={() => {
+          if (activeType) {
+            setOpen(true)
+          }
+          return undefined
+        }}
+      >
+        <Flex gap={4} vertical>
+          <Styled.CardTitle
+            $colorTextDescription={token.colorTextDescription}
+          >{`Counter: ${id}: No root for json path`}</Styled.CardTitle>
+          <Styled.CardNumber $colorText={token.colorText}>-</Styled.CardNumber>
+        </Flex>
+        <Styled.CardIcon $colorInfo={token.colorInfo}>
+          {iconBase64Encoded && renderIcon(iconBase64Encoded, token.colorInfo)}
+        </Styled.CardIcon>
+      </Styled.Card>
+    )
   }
 
   const path = counter.type === 'item' ? counter.props.jsonPathToArray : counter.props.jsonPathToObj
@@ -64,14 +86,44 @@ export const AggregatedCounterCard: FC<{
 
   if (errorParsingCounter) {
     console.log(`Counter: ${id}: ${errorParsingCounter}`)
-    return <span style={counter.props.style}>{counter.props.errorText}</span>
+    return (
+      <Styled.Card
+        $colorBorder={token.colorBorder}
+        $colorBgContainer={token.colorBgContainer}
+        $cursorPointer={!!activeType}
+        onClick={() => {
+          if (activeType) {
+            setOpen(true)
+          }
+          return undefined
+        }}
+      >
+        <Flex gap={4} vertical>
+          <Styled.CardTitle $colorTextDescription={token.colorTextDescription}>{errorParsingCounter}</Styled.CardTitle>
+          <Styled.CardNumber $colorText={token.colorText}>-</Styled.CardNumber>
+        </Flex>
+        <Styled.CardIcon $colorInfo={token.colorInfo}>
+          {iconBase64Encoded && renderIcon(iconBase64Encoded, token.colorInfo)}
+        </Styled.CardIcon>
+      </Styled.Card>
+    )
   }
 
   const parsedText = parseAll({ text, replaceValues, multiQueryData })
 
   return (
     <>
-      <Styled.Card $colorBorder={token.colorBorder} $colorBgContainer={token.colorBgContainer}>
+      <Styled.Card
+        $colorBorder={token.colorBorder}
+        $colorBgContainer={token.colorBgContainer}
+        $cursorPointer={!!activeType}
+        onClick={() => {
+          if (activeType) {
+            setOpen(true)
+          }
+          return undefined
+        }}
+      >
         <Flex gap={4} vertical>
           <Styled.CardTitle $colorTextDescription={token.colorTextDescription}>{parsedText}</Styled.CardTitle>
           <Styled.CardNumber $colorText={token.colorText}>{counterToDisplay}</Styled.CardNumber>
