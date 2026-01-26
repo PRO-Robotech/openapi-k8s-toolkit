@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-array-index-key */
 /* eslint-disable no-console */
-import React, { FC } from 'react'
+import React, { FC, useState } from 'react'
 import jp from 'jsonpath'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
@@ -9,6 +9,7 @@ import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/p
 import { getItemCounterItemsInside } from '../../utils/ItemCounter'
 import { getKeyCounterItemsInside } from '../../utils/KeyCounter'
 import { parseAll } from '../utils'
+import { renderActiveType } from './utils'
 
 export const AggregatedCounterCard: FC<{
   data: TDynamicComponentsAppTypeMap['AggregatedCounterCard']
@@ -20,7 +21,9 @@ export const AggregatedCounterCard: FC<{
     text,
     iconBase64Encoded,
     counter,
+    activeType,
   } = data
+  const [open, setOpen] = useState<boolean>(false)
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
@@ -68,6 +71,7 @@ export const AggregatedCounterCard: FC<{
       {parsedText}
       {counterToDisplay}
       {iconBase64Encoded}
+      {renderActiveType(activeType, { open, onClose: () => setOpen(false) })}
       {children}
     </span>
   )

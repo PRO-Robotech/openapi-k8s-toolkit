@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-array-index-key */
 /* eslint-disable no-console */
-import React, { FC, useState } from 'react'
+import React, { FC } from 'react'
 import jp from 'jsonpath'
 import { notification } from 'antd'
 import { useMultiQuery } from '../../../../../DynamicRendererWithProviders/providers/hybridDataProvider'
@@ -9,9 +9,17 @@ import { usePartsOfUrl } from '../../../../../DynamicRendererWithProviders/provi
 import { parseAll } from '../../../utils'
 import { TolerationsEditModal } from '../../../../atoms'
 import { getTolerationsItemsInside } from '../../../../utils/Tolerations'
-import type { TTolerationsBaseProps, TTolerationsModalProps } from '../../../../types/Tolerations'
+import type { TTolerationsBaseProps, TTolerationsModalProps as TModalInner } from '../../../../types/Tolerations'
 
-export const TolerationsModal: FC<TTolerationsBaseProps & TTolerationsModalProps> = ({
+type TTolerationsModalProps = {
+  open: boolean
+  onClose: () => void
+} & TTolerationsBaseProps &
+  TModalInner
+
+export const TolerationsModal: FC<TTolerationsModalProps> = ({
+  open,
+  onClose,
   reqIndex,
   jsonPathToArray,
   notificationSuccessMessage,
@@ -27,7 +35,6 @@ export const TolerationsModal: FC<TTolerationsBaseProps & TTolerationsModalProps
   cols,
 }) => {
   const [api, contextHolder] = notification.useNotification()
-  const [open, setOpen] = useState<boolean>(false)
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
@@ -102,7 +109,7 @@ export const TolerationsModal: FC<TTolerationsBaseProps & TTolerationsModalProps
         {contextHolder}
         <TolerationsEditModal
           open={open}
-          close={() => setOpen(false)}
+          close={onClose}
           values={tolerations}
           openNotificationSuccess={openNotificationSuccess}
           modalTitle={modalTitlePrepared}
@@ -124,7 +131,7 @@ export const TolerationsModal: FC<TTolerationsBaseProps & TTolerationsModalProps
       {contextHolder}
       <TolerationsEditModal
         open={open}
-        close={() => setOpen(false)}
+        close={onClose}
         values={tolerations}
         openNotificationSuccess={openNotificationSuccess}
         modalTitle={modalTitlePrepared}

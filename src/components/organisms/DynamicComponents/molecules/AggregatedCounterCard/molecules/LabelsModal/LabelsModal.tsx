@@ -2,7 +2,7 @@
 /* eslint-disable react/no-unstable-nested-components */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-array-index-key */
-import React, { FC, useState } from 'react'
+import React, { FC } from 'react'
 import jp from 'jsonpath'
 import { notification } from 'antd'
 import { useMultiQuery } from '../../../../../DynamicRendererWithProviders/providers/hybridDataProvider'
@@ -10,9 +10,17 @@ import { usePartsOfUrl } from '../../../../../DynamicRendererWithProviders/provi
 import { parseAll } from '../../../utils'
 import { LabelsEditModal } from '../../../../atoms'
 import { parseLabelsArrayOfAny } from '../../../../utils/Labels'
-import type { TLabelsBaseProps, TLabelsModalProps } from '../../../../types/Labels'
+import type { TLabelsBaseProps, TLabelsModalProps as TModalInner } from '../../../../types/Labels'
 
-export const LabelsModal: FC<TLabelsBaseProps & TLabelsModalProps> = ({
+type TLabelsModalProps = {
+  open: boolean
+  onClose: () => void
+} & TLabelsBaseProps &
+  TModalInner
+
+export const LabelsModal: FC<TLabelsModalProps> = ({
+  open,
+  onClose,
   reqIndex,
   jsonPathToLabels,
   notificationSuccessMessage,
@@ -30,7 +38,6 @@ export const LabelsModal: FC<TLabelsBaseProps & TLabelsModalProps> = ({
   paddingContainerEnd,
 }) => {
   const [api, contextHolder] = notification.useNotification()
-  const [open, setOpen] = useState<boolean>(false)
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
@@ -102,7 +109,7 @@ export const LabelsModal: FC<TLabelsBaseProps & TLabelsModalProps> = ({
       {contextHolder}
       <LabelsEditModal
         open={open}
-        close={() => setOpen(false)}
+        close={onClose}
         // values={labelsRaw}
         openNotificationSuccess={openNotificationSuccess}
         modalTitle={modalTitlePrepared}
@@ -134,7 +141,7 @@ export const LabelsModal: FC<TLabelsBaseProps & TLabelsModalProps> = ({
       {contextHolder}
       <LabelsEditModal
         open={open}
-        close={() => setOpen(false)}
+        close={onClose}
         values={labelsRaw}
         openNotificationSuccess={openNotificationSuccess}
         modalTitle={modalTitlePrepared}

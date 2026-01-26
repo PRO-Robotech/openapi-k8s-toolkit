@@ -21,6 +21,8 @@ import { parseAll } from '../../../utils'
 import { ReadOnlyModal } from '../../../../atoms/modals'
 
 type TEnrichedTableModalProps = {
+  open: boolean
+  onClose: () => void
   modalTitle?: string
   modalDescriptionText?: string
   modalDescriptionTextStyle?: CSSProperties
@@ -28,6 +30,8 @@ type TEnrichedTableModalProps = {
 } & TInnerProps
 
 export const EnrichedTableModal: FC<TEnrichedTableModalProps> = ({
+  open,
+  onClose,
   modalTitle,
   modalDescriptionText,
   modalDescriptionTextStyle,
@@ -50,8 +54,6 @@ export const EnrichedTableModal: FC<TEnrichedTableModalProps> = ({
   const location = useLocation()
   const params = useParams()
   const navigate = useNavigate()
-
-  const [open, setOpen] = useState<boolean>(false)
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
   const [selectedRowsData, setSelectedRowsData] = useState<{ name: string; endpoint: string }[]>([])
@@ -272,7 +274,7 @@ export const EnrichedTableModal: FC<TEnrichedTableModalProps> = ({
     <>
       <ReadOnlyModal
         open={open}
-        close={() => setOpen(false)}
+        close={onClose}
         modalTitle={modalTitlePrepared}
         modalDescriptionText={modalDescriptionTextPrepared}
         modalDescriptionTextStyle={modalDescriptionTextStyle}

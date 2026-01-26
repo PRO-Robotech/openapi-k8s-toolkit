@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-array-index-key */
 /* eslint-disable no-console */
-import React, { FC, useState } from 'react'
+import React, { FC } from 'react'
 import jp from 'jsonpath'
 import { notification } from 'antd'
 import { useMultiQuery } from '../../../../../DynamicRendererWithProviders/providers/hybridDataProvider'
@@ -9,9 +9,17 @@ import { usePartsOfUrl } from '../../../../../DynamicRendererWithProviders/provi
 import { parseAll } from '../../../utils'
 import { AnnotationsEditModal } from '../../../../atoms'
 import { getAnnotationsItemsInside } from '../../../../utils/Annotations'
-import type { TAnnotationsBaseProps, TAnnotationsModalProps } from '../../../../types/Annotations'
+import type { TAnnotationsBaseProps, TAnnotationsModalProps as TModalInner } from '../../../../types/Annotations'
 
-export const AnnotationsModal: FC<TAnnotationsBaseProps & TAnnotationsModalProps> = ({
+type TAnnotationsModalProps = {
+  open: boolean
+  onClose: () => void
+} & TAnnotationsBaseProps &
+  TModalInner
+
+export const AnnotationsModal: FC<TAnnotationsModalProps> = ({
+  open,
+  onClose,
   reqIndex,
   jsonPathToObj,
   notificationSuccessMessage,
@@ -27,7 +35,6 @@ export const AnnotationsModal: FC<TAnnotationsBaseProps & TAnnotationsModalProps
   cols,
 }) => {
   const [api, contextHolder] = notification.useNotification()
-  const [open, setOpen] = useState<boolean>(false)
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
@@ -102,7 +109,7 @@ export const AnnotationsModal: FC<TAnnotationsBaseProps & TAnnotationsModalProps
         {contextHolder}
         <AnnotationsEditModal
           open={open}
-          close={() => setOpen(false)}
+          close={onClose}
           values={annotations}
           openNotificationSuccess={openNotificationSuccess}
           modalTitle={modalTitlePrepared}
@@ -124,7 +131,7 @@ export const AnnotationsModal: FC<TAnnotationsBaseProps & TAnnotationsModalProps
       {contextHolder}
       <AnnotationsEditModal
         open={open}
-        close={() => setOpen(false)}
+        close={onClose}
         values={annotations}
         openNotificationSuccess={openNotificationSuccess}
         modalTitle={modalTitlePrepared}

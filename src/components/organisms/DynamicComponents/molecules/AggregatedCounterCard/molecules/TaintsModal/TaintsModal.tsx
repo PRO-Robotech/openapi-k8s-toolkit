@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-array-index-key */
 /* eslint-disable no-console */
-import React, { FC, useState } from 'react'
+import React, { FC } from 'react'
 import jp from 'jsonpath'
 import { notification } from 'antd'
 import { useMultiQuery } from '../../../../../DynamicRendererWithProviders/providers/hybridDataProvider'
@@ -9,9 +9,17 @@ import { usePartsOfUrl } from '../../../../../DynamicRendererWithProviders/provi
 import { parseAll } from '../../../utils'
 import { TaintsEditModal } from '../../../../atoms'
 import { getTaintsItemsInside } from '../../../../utils/Taints'
-import type { TTaintsBaseProps, TTaintsModalProps } from '../../../../types/Taints'
+import type { TTaintsBaseProps, TTaintsModalProps as TModalInner } from '../../../../types/Taints'
 
-export const TaintsModal: FC<TTaintsBaseProps & TTaintsModalProps> = ({
+type TTaintsModalProps = {
+  open: boolean
+  onClose: () => void
+} & TTaintsBaseProps &
+  TModalInner
+
+export const TaintsModal: FC<TTaintsModalProps> = ({
+  open,
+  onClose,
   reqIndex,
   jsonPathToArray,
   notificationSuccessMessage,
@@ -27,7 +35,6 @@ export const TaintsModal: FC<TTaintsBaseProps & TTaintsModalProps> = ({
   cols,
 }) => {
   const [api, contextHolder] = notification.useNotification()
-  const [open, setOpen] = useState<boolean>(false)
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
@@ -101,7 +108,7 @@ export const TaintsModal: FC<TTaintsBaseProps & TTaintsModalProps> = ({
         {contextHolder}
         <TaintsEditModal
           open={open}
-          close={() => setOpen(false)}
+          close={onClose}
           values={taints}
           openNotificationSuccess={openNotificationSuccess}
           modalTitle={modalTitlePrepared}
@@ -123,7 +130,7 @@ export const TaintsModal: FC<TTaintsBaseProps & TTaintsModalProps> = ({
       {contextHolder}
       <TaintsEditModal
         open={open}
-        close={() => setOpen(false)}
+        close={onClose}
         values={taints}
         openNotificationSuccess={openNotificationSuccess}
         modalTitle={modalTitlePrepared}
