@@ -1,7 +1,7 @@
 import { CSSProperties } from 'react'
 import { TKeyCounterProps } from './KeyCounter'
 import { TItemCounterProps } from './ItemCounter'
-import { TLabelBaseProps, TLabelModalProps } from './Labels'
+import { TLabelsBaseProps, TLabelsModalProps } from './Labels'
 import { TAnnotationsBaseProps, TAnnotationsModalProps } from './Annotations'
 import { TTaintsBaseProps, TTaintsModalProps } from './Taints'
 import { TTolerationsBaseProps, TTolerationsModalProps } from './Tolerations'
@@ -23,7 +23,7 @@ export type TAggregatedCounterCardProps = {
   activeType?:
     | {
         type: 'labels'
-        props: TLabelBaseProps & TLabelModalProps
+        props: TLabelsBaseProps & TLabelsModalProps
       }
     | {
         type: 'annotations'

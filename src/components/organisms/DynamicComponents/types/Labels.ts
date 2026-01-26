@@ -1,7 +1,7 @@
 import { CSSProperties } from 'react'
 import { FlexProps, SelectProps } from 'antd'
 
-export type TLabelModalProps = {
+export type TLabelsModalProps = {
   notificationSuccessMessage?: string
   notificationSuccessMessageDescription?: string
   modalTitle?: string
@@ -17,7 +17,7 @@ export type TLabelModalProps = {
   paddingContainerEnd?: string
 }
 
-export type TLabelViewProps = {
+export type TLabelsViewProps = {
   linkPrefix?: string
   selectProps?: SelectProps
   maxTagKeyLength?: number
@@ -30,13 +30,13 @@ export type TLabelViewProps = {
   containerStyle?: CSSProperties
 }
 
-export type TLabelBaseProps = {
+export type TLabelsBaseProps = {
   reqIndex: string
   jsonPathToLabels: string
 }
 
 export type TLabelsProps = {
   id: number | string
-} & TLabelBaseProps &
-  TLabelViewProps &
-  TLabelModalProps
+} & TLabelsBaseProps &
+  TLabelsViewProps &
+  TLabelsModalProps

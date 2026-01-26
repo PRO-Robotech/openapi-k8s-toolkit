@@ -8,7 +8,6 @@ export type TTaintsModalProps = {
   modalDescriptionTextStyle?: CSSProperties
   inputLabel?: string
   inputLabelStyle?: CSSProperties
-  containerStyle?: CSSProperties
   endpoint?: string
   pathToValue?: string
   editModalWidth?: number | string
@@ -19,6 +18,7 @@ export type TTaintsViewProps = {
   text: string
   errorText: string
   style?: CSSProperties
+  containerStyle?: CSSProperties
 }
 
 export type TTaintsBaseProps = {
