@@ -6,8 +6,8 @@ import jp from 'jsonpath'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
+import { getItemCounterItemsInside } from '../../utils/ItemCounter'
 import { parseAll } from '../utils'
-import { getItemsInside } from './utils'
 
 export const ItemCounter: FC<{ data: TDynamicComponentsAppTypeMap['ItemCounter']; children?: any }> = ({
   data,
@@ -53,7 +53,7 @@ export const ItemCounter: FC<{ data: TDynamicComponentsAppTypeMap['ItemCounter']
 
   const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToArray}`)
 
-  const { counter, error: errorArrayOfObjects } = getItemsInside(anythingForNow)
+  const { counter, error: errorArrayOfObjects } = getItemCounterItemsInside(anythingForNow)
 
   if (errorArrayOfObjects) {
     console.log(`Item Counter: ${id}: ${errorArrayOfObjects}`)

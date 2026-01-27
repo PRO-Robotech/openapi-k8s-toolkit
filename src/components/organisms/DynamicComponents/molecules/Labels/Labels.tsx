@@ -12,7 +12,8 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
 import { LabelsEditModal } from '../../atoms'
-import { parseArrayOfAny, truncate } from './utils'
+import { parseLabelsArrayOfAny } from '../../utils/Labels'
+import { truncate } from '../../utils/truncate'
 
 export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children?: any }> = ({ data, children }) => {
   const {
@@ -80,7 +81,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
 
   const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToLabels}`)
 
-  const { data: labelsRaw, error: errorArrayOfObjects } = parseArrayOfAny(anythingForNow)
+  const { data: labelsRaw, error: errorArrayOfObjects } = parseLabelsArrayOfAny(anythingForNow)
 
   const notificationSuccessMessagePrepared = notificationSuccessMessage
     ? parseAll({
@@ -177,15 +178,15 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
         openNotificationSuccess={openNotificationSuccess}
         modalTitle={modalTitlePrepared}
         modalDescriptionText={modalDescriptionTextPrepared}
+        modalDescriptionTextStyle={modalDescriptionTextStyle}
         inputLabel={inputLabelPrepared}
+        inputLabelStyle={inputLabelStyle}
         maxEditTagTextLength={maxEditTagTextLength}
         allowClearEditSelect={allowClearEditSelect}
         endpoint={endpointPrepared}
         pathToValue={pathToValuePrepared}
         editModalWidth={editModalWidth}
         paddingContainerEnd={paddingContainerEnd}
-        modalDescriptionTextStyle={modalDescriptionTextStyle}
-        inputLabelStyle={inputLabelStyle}
       />
     </div>
   )
@@ -325,15 +326,15 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
         openNotificationSuccess={openNotificationSuccess}
         modalTitle={modalTitlePrepared}
         modalDescriptionText={modalDescriptionTextPrepared}
+        modalDescriptionTextStyle={modalDescriptionTextStyle}
         inputLabel={inputLabelPrepared}
+        inputLabelStyle={inputLabelStyle}
         maxEditTagTextLength={maxEditTagTextLength}
         allowClearEditSelect={allowClearEditSelect}
         endpoint={endpointPrepared}
         pathToValue={pathToValuePrepared}
         editModalWidth={editModalWidth}
         paddingContainerEnd={paddingContainerEnd}
-        modalDescriptionTextStyle={modalDescriptionTextStyle}
-        inputLabelStyle={inputLabelStyle}
       />
     </div>
   )

@@ -45,6 +45,7 @@ import {
   DefaultIframe,
   DropdownRedirect,
   CopyButton,
+  AggregatedCounterCard,
 } from './molecules'
 import { TDynamicComponentsAppTypeMap } from './types'
 
@@ -94,4 +95,5 @@ export const DynamicComponents: TRendererComponents<TDynamicComponentsAppTypeMap
   DefaultIframe,
   DropdownRedirect,
   CopyButton,
+  AggregatedCounterCard,
 }

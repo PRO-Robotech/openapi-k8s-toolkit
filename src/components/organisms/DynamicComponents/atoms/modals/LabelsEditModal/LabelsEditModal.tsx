@@ -8,7 +8,7 @@ import { ResetedFormItem, CustomSizeTitle } from 'components/molecules/Blackhole
 import { filterSelectOptions } from 'utils/filterSelectOptions'
 import { CustomSelect, Spacer } from 'components/atoms'
 import { patchEntryWithReplaceOp } from 'api/forms'
-import { truncate } from './utils'
+import { truncate } from '../../../utils/truncate'
 
 type TLabelsEditModalProps = {
   open: boolean

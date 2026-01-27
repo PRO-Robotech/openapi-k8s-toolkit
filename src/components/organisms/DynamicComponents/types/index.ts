@@ -43,6 +43,7 @@ import { TPrometheusGraphProps } from './PrometheusGraph'
 import { TDefaultIframeProps } from './DefaultIframe'
 import { TDropdownRedirectProps } from './DropdownRedirect'
 import { TCopyButtonProps } from './CopyButton'
+import { TAggregatedCounterCardProps } from './AggregatedCounterCard'
 
 export type TDynamicComponentsAppTypeMap = {
   antdText: TAntdTextProps
@@ -90,4 +91,5 @@ export type TDynamicComponentsAppTypeMap = {
   DefaultIframe: TDefaultIframeProps
   DropdownRedirect: TDropdownRedirectProps
   CopyButton: TCopyButtonProps
+  AggregatedCounterCard: TAggregatedCounterCardProps
 }

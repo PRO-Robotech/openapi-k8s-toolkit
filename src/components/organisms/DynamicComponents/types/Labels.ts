@@ -1,10 +1,23 @@
 import { CSSProperties } from 'react'
 import { FlexProps, SelectProps } from 'antd'
 
-export type TLabelsProps = {
-  id: number | string
-  reqIndex: string
-  jsonPathToLabels: string
+export type TLabelsModalProps = {
+  notificationSuccessMessage?: string
+  notificationSuccessMessageDescription?: string
+  modalTitle?: string
+  modalDescriptionText?: string
+  modalDescriptionTextStyle?: CSSProperties
+  inputLabel?: string
+  inputLabelStyle?: CSSProperties
+  maxEditTagTextLength?: number
+  allowClearEditSelect?: boolean
+  endpoint?: string
+  pathToValue?: string
+  editModalWidth?: number | string
+  paddingContainerEnd?: string
+}
+
+export type TLabelsViewProps = {
   linkPrefix?: string
   selectProps?: SelectProps
   maxTagKeyLength?: number
@@ -14,18 +27,16 @@ export type TLabelsProps = {
   emptyListMessage?: string
   emptyListMessageStyle?: CSSProperties
   readOnly?: true
-  notificationSuccessMessage?: string
-  notificationSuccessMessageDescription?: string
-  modalTitle?: string
-  modalDescriptionText?: string
-  modalDescriptionTextStyle?: CSSProperties
-  inputLabel?: string
-  inputLabelStyle?: CSSProperties
   containerStyle?: CSSProperties
-  maxEditTagTextLength?: number
-  allowClearEditSelect?: boolean
-  endpoint?: string
-  pathToValue?: string
-  editModalWidth?: number | string
-  paddingContainerEnd?: string
 }
+
+export type TLabelsBaseProps = {
+  reqIndex: string
+  jsonPathToLabels: string
+}
+
+export type TLabelsProps = {
+  id: number | string
+} & TLabelsBaseProps &
+  TLabelsViewProps &
+  TLabelsModalProps

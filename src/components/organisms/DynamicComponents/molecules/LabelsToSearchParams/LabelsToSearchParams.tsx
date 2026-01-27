@@ -8,8 +8,9 @@ import { Typography, Popover, Flex } from 'antd'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
+import { truncate } from '../../utils/truncate'
 import { parseAll } from '../utils'
-import { parseArrayOfAny, truncate } from './utils'
+import { parseLabelsArrayOfAny } from '../../utils/Labels'
 
 export const LabelsToSearchParams: FC<{
   data: TDynamicComponentsAppTypeMap['LabelsToSearchParams']
@@ -56,7 +57,7 @@ export const LabelsToSearchParams: FC<{
 
   const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToLabels}`)
 
-  const { data: labelsRaw, error: errorArrayOfObjects } = parseArrayOfAny(anythingForNow)
+  const { data: labelsRaw, error: errorArrayOfObjects } = parseLabelsArrayOfAny(anythingForNow)
 
   const linkPrefixPrepared = parseAll({ text: linkPrefix, replaceValues, multiQueryData })
 
