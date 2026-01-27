@@ -132,7 +132,9 @@ export const AggregatedCounterCard: FC<{
           {iconBase64Encoded && renderIcon(iconBase64Encoded, token.colorInfo)}
         </Styled.CardIcon>
       </Styled.Card>
-      {renderActiveType(activeType, { open, onClose: () => setOpen(false) })}
+      <Styled.HiddenContainer $isHidden={!open}>
+        {renderActiveType(activeType, { open, onClose: () => setOpen(false) })}
+      </Styled.HiddenContainer>
       {children}
     </>
   )

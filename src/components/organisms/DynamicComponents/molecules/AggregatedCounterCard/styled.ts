@@ -8,6 +8,7 @@ type TCardProps = {
 
 const Card = styled.div<TCardProps>`
   display: flex;
+  justify-content: space-between;
   padding: 16px;
   gap: 24px;
   border-radius: 6px;
@@ -52,9 +53,18 @@ const CardIcon = styled.div<TCardIconProps>`
   flex-shrink: 0;
 `
 
+type THiddenContainerProps = {
+  $isHidden?: boolean
+}
+
+const HiddenContainer = styled.div<THiddenContainerProps>`
+  display: ${({ $isHidden }) => ($isHidden ? 'none' : 'auto')};
+`
+
 export const Styled = {
   Card,
   CardTitle,
   CardNumber,
   CardIcon,
+  HiddenContainer,
 }

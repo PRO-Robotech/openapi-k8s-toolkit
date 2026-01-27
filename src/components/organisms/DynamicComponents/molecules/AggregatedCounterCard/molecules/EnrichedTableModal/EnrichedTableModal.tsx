@@ -4,7 +4,7 @@ import React, { FC, useState, CSSProperties } from 'react'
 import jp from 'jsonpath'
 import _ from 'lodash'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { Flex, Spin, Button } from 'antd'
+import { Flex, Spin, Button, theme as antdtheme } from 'antd'
 import { PlusOutlined, ClearOutlined, MinusOutlined } from '@ant-design/icons'
 import { EditIcon, DeleteIcon, PaddingContainer, DeleteModal, DeleteModalMany } from 'components/atoms'
 import { EnrichedTableProvider } from 'components/molecules'
@@ -19,6 +19,7 @@ import { serializeLabelsWithNoEncoding } from '../../../../utils/EnrichedTable'
 import { TEnrichedTableProps as TInnerProps } from '../../../../types/EnrichedTable'
 import { parseAll } from '../../../utils'
 import { ReadOnlyModal } from '../../../../atoms/modals'
+import { Styled } from './styled'
 
 type TEnrichedTableModalProps = {
   open: boolean
@@ -54,6 +55,7 @@ export const EnrichedTableModal: FC<TEnrichedTableModalProps> = ({
   const location = useLocation()
   const params = useParams()
   const navigate = useNavigate()
+  const { token } = antdtheme.useToken()
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
   const [selectedRowsData, setSelectedRowsData] = useState<{ name: string; endpoint: string }[]>([])
@@ -280,39 +282,44 @@ export const EnrichedTableModal: FC<TEnrichedTableModalProps> = ({
         modalDescriptionTextStyle={modalDescriptionTextStyle}
         editModalWidth={editModalWidth}
       >
-        <EnrichedTableProvider
-          tableMappingsReplaceValues={replaceValues}
-          cluster={clusterPrepared}
-          namespace={namespacePrepared}
-          theme={theme}
-          dataItems={itemsAlwaysArrWithAdditionalData}
-          tableProps={{
-            borderless: true,
-            paginationPosition: ['bottomRight'],
-            isTotalLeft: true,
-            editIcon: <EditIcon />,
-            deleteIcon: <DeleteIcon />,
-            disablePagination: true,
-          }}
-          selectData={
-            dataForControlsPrepared
-              ? {
-                  selectedRowKeys,
-                  onChange: (selectedRowKeys: React.Key[], selectedRowsData: { name: string; endpoint: string }[]) => {
-                    setSelectedRowKeys(selectedRowKeys)
-                    setSelectedRowsData(selectedRowsData)
-                  },
-                }
-              : undefined
-          }
-          k8sResource={k8sResourcePrepared}
-          dataForControlsInternal={{ onDeleteHandle }}
-          dataForControls={dataForControlsPrepared}
-          withoutControls={!dataForControlsPrepared}
-          baseprefix={baseprefix}
-          pathToKey={pathToKey}
-          {...props}
-        />
+        <Styled.ColorContainer $colorText={token.colorText}>
+          <EnrichedTableProvider
+            tableMappingsReplaceValues={replaceValues}
+            cluster={clusterPrepared}
+            namespace={namespacePrepared}
+            theme={theme}
+            dataItems={itemsAlwaysArrWithAdditionalData}
+            tableProps={{
+              borderless: true,
+              paginationPosition: ['bottomRight'],
+              isTotalLeft: true,
+              editIcon: <EditIcon />,
+              deleteIcon: <DeleteIcon />,
+              disablePagination: true,
+            }}
+            selectData={
+              dataForControlsPrepared
+                ? {
+                    selectedRowKeys,
+                    onChange: (
+                      selectedRowKeys: React.Key[],
+                      selectedRowsData: { name: string; endpoint: string }[],
+                    ) => {
+                      setSelectedRowKeys(selectedRowKeys)
+                      setSelectedRowsData(selectedRowsData)
+                    },
+                  }
+                : undefined
+            }
+            k8sResource={k8sResourcePrepared}
+            dataForControlsInternal={{ onDeleteHandle }}
+            dataForControls={dataForControlsPrepared}
+            withoutControls={!dataForControlsPrepared}
+            baseprefix={baseprefix}
+            pathToKey={pathToKey}
+            {...props}
+          />
+        </Styled.ColorContainer>
       </ReadOnlyModal>
       {dataForControlsPrepared && (
         <PaddingContainer $padding="4px">
