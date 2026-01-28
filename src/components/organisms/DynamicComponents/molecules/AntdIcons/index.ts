@@ -1,0 +1,1 @@
+export { AntdIcons } from './AntdIcons'
