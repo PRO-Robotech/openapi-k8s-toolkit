@@ -57,6 +57,7 @@ export const AggregatedCounterCard: FC<{
       <Styled.Card
         $colorBorder={token.colorBorder}
         $colorBgContainer={token.colorBgContainer}
+        $colorPrimary={token.colorPrimary}
         $cursorPointer={!!activeType}
         onClick={() => {
           if (activeType) {
@@ -90,6 +91,7 @@ export const AggregatedCounterCard: FC<{
       <Styled.Card
         $colorBorder={token.colorBorder}
         $colorBgContainer={token.colorBgContainer}
+        $colorPrimary={token.colorPrimary}
         $cursorPointer={!!activeType}
         onClick={() => {
           if (activeType) {
@@ -112,10 +114,11 @@ export const AggregatedCounterCard: FC<{
   const parsedText = parseAll({ text, replaceValues, multiQueryData })
 
   return (
-    <>
+    <div>
       <Styled.Card
         $colorBorder={token.colorBorder}
         $colorBgContainer={token.colorBgContainer}
+        $colorPrimary={token.colorPrimary}
         $cursorPointer={!!activeType}
         onClick={() => {
           if (activeType) {
@@ -136,6 +139,6 @@ export const AggregatedCounterCard: FC<{
         {renderActiveType(activeType, { open, onClose: () => setOpen(false) })}
       </Styled.HiddenContainer>
       {children}
-    </>
+    </div>
   )
 }
