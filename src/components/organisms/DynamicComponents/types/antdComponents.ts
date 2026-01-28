@@ -26,7 +26,7 @@ export type TAntdButtonProps = { id: number | string; text: string } & Omit<Butt
 
 export type TAntdIconsProps = {
   id: number | string
-  iconName: Exclude<keyof typeof AntIcons, 'createFromIconfontCN'>
+  iconName: Exclude<keyof typeof AntIcons, 'createFromIconfontCN'> // https://5x.ant.design/components/icon/
   iconProps?: AntdIconProps
   containerStyle?: React.CSSProperties
 }
