@@ -7,6 +7,7 @@ import {
   TAntdColProps,
   TAntdTabsProps,
   TAntdButtonProps,
+  TAntdIconsProps,
 } from './antdComponents'
 import { TDefaultDivProps } from './DefaultDiv'
 import { TPartsOfUrlProps } from './partsOfUrl'
@@ -54,6 +55,7 @@ export type TDynamicComponentsAppTypeMap = {
   antdCol: TAntdColProps
   antdTabs: TAntdTabsProps
   antdButton: TAntdButtonProps
+  antdIcons: TAntdIconsProps
   DefaultDiv: TDefaultDivProps
   partsOfUrl: TPartsOfUrlProps
   multiQuery: TMultiQueryProps

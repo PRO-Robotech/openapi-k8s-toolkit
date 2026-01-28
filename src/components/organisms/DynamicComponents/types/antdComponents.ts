@@ -1,6 +1,8 @@
 import { CardProps, FlexProps, RowProps, ColProps, ButtonProps, TabsProps } from 'antd'
 import type { TextProps } from 'antd/es/typography/Text'
 import type { LinkProps } from 'antd/es/typography/Link'
+import * as AntIcons from '@ant-design/icons'
+import { AntdIconProps } from '@ant-design/icons/lib/components/AntdIcon'
 
 export type TAntdTextProps = { id: number | string; text: string } & Omit<TextProps, 'id' | 'children'>
 
@@ -21,3 +23,10 @@ export type TAntdColProps = { id: number | string } & Omit<ColProps, 'id' | 'chi
 export type TAntdTabsProps = { id: number | string } & Omit<TabsProps, 'id' | 'children'>
 
 export type TAntdButtonProps = { id: number | string; text: string } & Omit<ButtonProps, 'id' | 'children'>
+
+export type TAntdIconsProps = {
+  id: number | string
+  iconName: Exclude<keyof typeof AntIcons, 'createFromIconfontCN'> // https://5x.ant.design/components/icon/
+  iconProps?: AntdIconProps
+  containerStyle?: React.CSSProperties
+}
