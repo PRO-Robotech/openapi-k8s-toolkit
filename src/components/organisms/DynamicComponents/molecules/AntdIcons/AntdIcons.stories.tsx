@@ -117,6 +117,7 @@ export const Default: Story = {
     id: 'example-antd-icons',
     iconName: 'UserOutlined' as any,
     iconProps: {
+      color: 'token.colorSuccess',
       style: { fontSize: 24 },
     } as any,
     containerStyle: {

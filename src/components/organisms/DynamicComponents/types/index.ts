@@ -45,6 +45,7 @@ import { TDefaultIframeProps } from './DefaultIframe'
 import { TDropdownRedirectProps } from './DropdownRedirect'
 import { TCopyButtonProps } from './CopyButton'
 import { TAggregatedCounterCardProps } from './AggregatedCounterCard'
+import { TBase64IconProps } from './Base64Icon'
 
 export type TDynamicComponentsAppTypeMap = {
   antdText: TAntdTextProps
@@ -94,4 +95,5 @@ export type TDynamicComponentsAppTypeMap = {
   DropdownRedirect: TDropdownRedirectProps
   CopyButton: TCopyButtonProps
   AggregatedCounterCard: TAggregatedCounterCardProps
+  Base64Icon: TBase64IconProps
 }

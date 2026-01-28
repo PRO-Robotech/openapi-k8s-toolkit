@@ -47,6 +47,7 @@ import {
   DropdownRedirect,
   CopyButton,
   AggregatedCounterCard,
+  Base64Icon,
 } from './molecules'
 import { TDynamicComponentsAppTypeMap } from './types'
 
@@ -98,4 +99,5 @@ export const DynamicComponents: TRendererComponents<TDynamicComponentsAppTypeMap
   DropdownRedirect,
   CopyButton,
   AggregatedCounterCard,
+  Base64Icon,
 }
