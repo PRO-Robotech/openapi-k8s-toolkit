@@ -20,3 +20,12 @@ export const renderAntIcon = (iconName: TAntIconName, iconProps?: AntdIconProps)
   const IconComponent = candidate
   return <IconComponent {...iconProps} />
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const resolveTokenColor = (value: unknown, token: Record<string, any>) => {
+  if (typeof value !== 'string') return value
+  if (!value.startsWith('token.')) return value
+
+  const tokenKey = value.replace('token.', '')
+  return token[tokenKey] ?? value
+}

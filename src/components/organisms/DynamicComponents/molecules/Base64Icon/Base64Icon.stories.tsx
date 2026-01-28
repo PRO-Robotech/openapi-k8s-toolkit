@@ -129,6 +129,17 @@ export const Default: Story = {
   },
 }
 
+export const TokenColor: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-base64-icon-dark',
+    theme: 'dark',
+    containerStyle: {
+      color: 'token.colorSuccess',
+    } as any,
+  },
+}
+
 export const DarkTheme: Story = {
   args: {
     ...Default.args,
