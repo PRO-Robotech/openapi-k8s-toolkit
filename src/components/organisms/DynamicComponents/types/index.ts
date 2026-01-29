@@ -46,6 +46,32 @@ import { TDropdownRedirectProps } from './DropdownRedirect'
 import { TCopyButtonProps } from './CopyButton'
 import { TAggregatedCounterCardProps } from './AggregatedCounterCard'
 import { TBase64IconProps } from './Base64Icon'
+import { TActionsDropdownProps } from './Actions'
+
+export type { TActionUnion } from './Actions'
+export type {
+  TActionBaseProps,
+  TActionConfirmProps,
+  TActionNotificationProps,
+  TEditLabelsActionProps,
+  TEditAnnotationsActionProps,
+  TEditTaintsActionProps,
+  TEditTolerationsActionProps,
+  TCordonActionProps,
+  TUncordonActionProps,
+  TScaleActionProps,
+  TEvictActionProps,
+  TSuspendActionProps,
+  TResumeActionProps,
+  TRolloutRestartActionProps,
+  TDrainActionProps,
+  TTriggerRunActionProps,
+  TDeleteChildrenActionProps,
+  TRollbackActionProps,
+  TDownloadAsFilesActionProps,
+  TGenericPatchActionProps,
+  TActionsDropdownProps,
+} from './Actions'
 
 export type TDynamicComponentsAppTypeMap = {
   antdText: TAntdTextProps
@@ -96,4 +122,5 @@ export type TDynamicComponentsAppTypeMap = {
   CopyButton: TCopyButtonProps
   AggregatedCounterCard: TAggregatedCounterCardProps
   Base64Icon: TBase64IconProps
+  ActionsDropdown: TActionsDropdownProps
 }
