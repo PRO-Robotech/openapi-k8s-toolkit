@@ -53,6 +53,7 @@ export type {
   TActionBaseProps,
   TActionConfirmProps,
   TActionNotificationProps,
+  TEditActionProps,
   TEditLabelsActionProps,
   TEditAnnotationsActionProps,
   TEditTaintsActionProps,

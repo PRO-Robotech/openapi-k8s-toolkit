@@ -71,6 +71,20 @@ type TDataReaderActionProps = TActionBaseProps &
     reqIndex: string
   }
 
+/**
+ * Edit: Navigate to resource edit/form page
+ */
+export type TEditActionProps = TActionBaseProps & {
+  cluster: string
+  namespace?: string
+  syntheticProject?: string
+  apiGroup?: string
+  apiVersion: string
+  plural: string
+  name: string
+  baseprefix?: string
+}
+
 // =============================================================================
 // Edit Metadata Actions
 // =============================================================================
@@ -153,6 +167,8 @@ export type TGenericPatchActionProps = TActionBaseProps &
   }
 
 export type TActionUnion =
+  // Navigation actions
+  | { type: 'edit'; props: TEditActionProps }
   // Edit metadata actions
   | { type: 'editLabels'; props: TEditLabelsActionProps }
   | { type: 'editAnnotations'; props: TEditAnnotationsActionProps }
@@ -181,9 +197,6 @@ export type TActionsDropdownProps = {
   id: number | string
   buttonText?: string
   buttonIcon?: string
-  buttonType?: 'primary' | 'default' | 'dashed' | 'link' | 'text'
-  buttonSize?: 'small' | 'middle' | 'large'
-  dropdownPlacement?: 'bottomLeft' | 'bottomRight' | 'topLeft' | 'topRight'
   containerStyle?: CSSProperties
   actions: TActionUnion[]
 }
