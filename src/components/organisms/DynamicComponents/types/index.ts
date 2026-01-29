@@ -46,6 +46,7 @@ import { TDropdownRedirectProps } from './DropdownRedirect'
 import { TCopyButtonProps } from './CopyButton'
 import { TAggregatedCounterCardProps } from './AggregatedCounterCard'
 import { TBase64IconProps } from './Base64Icon'
+import { TUsageGraphCardProps } from './UsageGraphCard'
 
 export type TDynamicComponentsAppTypeMap = {
   antdText: TAntdTextProps
@@ -96,4 +97,5 @@ export type TDynamicComponentsAppTypeMap = {
   CopyButton: TCopyButtonProps
   AggregatedCounterCard: TAggregatedCounterCardProps
   Base64Icon: TBase64IconProps
+  UsageGraphCard: TUsageGraphCardProps
 }
