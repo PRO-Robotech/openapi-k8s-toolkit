@@ -48,29 +48,14 @@ import { TAggregatedCounterCardProps } from './AggregatedCounterCard'
 import { TBase64IconProps } from './Base64Icon'
 import { TActionsDropdownProps } from './Actions'
 
-export type { TActionUnion } from './Actions'
 export type {
+  TActionUnion,
   TActionBaseProps,
-  TActionConfirmProps,
-  TActionNotificationProps,
   TEditActionProps,
   TEditLabelsActionProps,
   TEditAnnotationsActionProps,
   TEditTaintsActionProps,
   TEditTolerationsActionProps,
-  TCordonActionProps,
-  TUncordonActionProps,
-  TScaleActionProps,
-  TEvictActionProps,
-  TSuspendActionProps,
-  TResumeActionProps,
-  TRolloutRestartActionProps,
-  TDrainActionProps,
-  TTriggerRunActionProps,
-  TDeleteChildrenActionProps,
-  TRollbackActionProps,
-  TDownloadAsFilesActionProps,
-  TGenericPatchActionProps,
   TActionsDropdownProps,
 } from './Actions'
 
