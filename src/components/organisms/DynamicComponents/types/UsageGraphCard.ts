@@ -15,8 +15,11 @@ export type TUsageGraphCardProps = {
   maxColor?: string
   /* gradient bar */
   requested?: number
+  requestedQuery?: string
   used?: number
+  usedQuery?: string
   limit?: number
+  limitQuery?: string
   /* prom */
   baseUrl?: string
   query?: string
