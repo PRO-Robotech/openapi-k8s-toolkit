@@ -1,0 +1,1 @@
+export { ActionsDropdownForTable } from './ActionsDropdownForTable'
