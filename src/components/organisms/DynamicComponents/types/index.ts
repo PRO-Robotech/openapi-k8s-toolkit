@@ -46,7 +46,7 @@ import { TDropdownRedirectProps } from './DropdownRedirect'
 import { TCopyButtonProps } from './CopyButton'
 import { TAggregatedCounterCardProps } from './AggregatedCounterCard'
 import { TBase64IconProps } from './Base64Icon'
-import { TActionsDropdownProps } from './Actions'
+import { TActionsDropdownProps } from './ActionsDropdown'
 
 export type {
   TActionUnion,
@@ -57,7 +57,7 @@ export type {
   TEditTaintsActionProps,
   TEditTolerationsActionProps,
   TActionsDropdownProps,
-} from './Actions'
+} from './ActionsDropdown'
 
 export type TDynamicComponentsAppTypeMap = {
   antdText: TAntdTextProps
