@@ -6,10 +6,12 @@ export type TUsageGraphCardDatum = {
 }
 
 export type TUsageGraphCardProps = {
-  title?: string
+  title?: string // default: 'CPU, core'
   series?: TUsageGraphCardDatum[] // can be provided straight forward
   containerStyle?: CSSProperties
-  /* colors */
+  valueStrategy?: 'cpu' | 'memory' | 'bytes'
+  valuePrecision?: number // default 2
+  /* colors; defaults are provided */
   minColor?: string
   midColor?: string
   maxColor?: string
@@ -23,6 +25,6 @@ export type TUsageGraphCardProps = {
   /* prom */
   baseUrl?: string
   query?: string
-  refetchInterval?: number | false
-  range?: string
+  refetchInterval?: number | false // default: 30_000
+  range?: string // default: 1h
 }

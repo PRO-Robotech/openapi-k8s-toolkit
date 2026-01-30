@@ -10,8 +10,8 @@ import { usePromMatrixToLineSingle } from '../PrometheusGraph/hooks/queryRangeMa
 import { usePromVector } from '../PrometheusGraph/hooks/queryVector/usePromVector'
 import { TPrometheusVectorResponse } from '../PrometheusGraph/types'
 import { TUsageGraphCardProps, TUsageGraphCardDatum } from '../../types/UsageGraphCard'
-import { parseAll } from '../utils'
-import { RequestedMarkerSvg, UsedMarkerSvg, LimitMarkerSvg } from './atoms'
+import { parsePromTemplate } from '../utils'
+import { RequestedMarkerSvg, UsedMarkerSvg, LimitMarkerSvg, FormattedValue } from './atoms'
 import { getDefaultQuery, clampPercent } from './utils'
 import { DEFAULT_SERIES } from './constants'
 import { Styled } from './styled'
@@ -27,6 +27,8 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
     title = 'CPU, core',
     series = [],
     containerStyle,
+    valueStrategy,
+    valuePrecision = 2,
     /* colors */
     minColor = '#00ae89',
     midColor = '#adad4c',
@@ -56,14 +58,18 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
   }, {})
 
   const queryToUse = query ?? getDefaultQuery(title)
-  const preparedQuery = queryToUse ? parseAll({ text: queryToUse, replaceValues, multiQueryData }) : undefined
-  const preparedBaseUrl = baseUrl ? parseAll({ text: baseUrl, replaceValues, multiQueryData }) : baseUrl
-  const preparedRange = range ? parseAll({ text: range, replaceValues, multiQueryData }) : range
+  const preparedQuery = queryToUse ? parsePromTemplate({ text: queryToUse, replaceValues, multiQueryData }) : undefined
+  const preparedBaseUrl = baseUrl ? parsePromTemplate({ text: baseUrl, replaceValues, multiQueryData }) : baseUrl
+  const preparedRange = range ? parsePromTemplate({ text: range, replaceValues, multiQueryData }) : range
   const preparedRequestedQuery = requestedQuery
-    ? parseAll({ text: requestedQuery, replaceValues, multiQueryData })
+    ? parsePromTemplate({ text: requestedQuery, replaceValues, multiQueryData })
     : undefined
-  const preparedUsedQuery = usedQuery ? parseAll({ text: usedQuery, replaceValues, multiQueryData }) : preparedQuery
-  const preparedLimitQuery = limitQuery ? parseAll({ text: limitQuery, replaceValues, multiQueryData }) : undefined
+  const preparedUsedQuery = usedQuery
+    ? parsePromTemplate({ text: usedQuery, replaceValues, multiQueryData })
+    : preparedQuery
+  const preparedLimitQuery = limitQuery
+    ? parsePromTemplate({ text: limitQuery, replaceValues, multiQueryData })
+    : undefined
 
   const { data: fetchedSeries = [] } = usePromMatrixToLineSingle({
     baseUrl: preparedBaseUrl,
@@ -142,6 +148,8 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
   const limitPercent = 90
 
   const gradientMidStop = `${requestedPercent.toFixed(2)}%`
+
+  const normalizedValues = [resolvedRequested, resolvedUsed, resolvedLimit]
 
   const tooltipTitle = (
     <Styled.TooltipContent $isDark={isDark}>
@@ -226,17 +234,35 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
             </Styled.BarMarker>
           )}
           {resolvedUsed !== undefined && (
-            <Styled.UsedBadge $left={usedPercent} $isDark={isDark}>{`${resolvedUsed} used`}</Styled.UsedBadge>
+            <Styled.UsedBadge $left={usedPercent} $isDark={isDark}>
+              <FormattedValue
+                value={resolvedUsed}
+                valueStrategy={valueStrategy}
+                valuePrecision={valuePrecision}
+                normalizedValues={normalizedValues}
+              />
+              <span> used</span>
+            </Styled.UsedBadge>
           )}
           {resolvedRequested !== undefined && (
             <Styled.MarkerLabel $left={requestedPercent} $isDark={isDark}>
-              <span>{resolvedRequested}</span>
+              <FormattedValue
+                value={resolvedRequested}
+                valueStrategy={valueStrategy}
+                valuePrecision={valuePrecision}
+                normalizedValues={normalizedValues}
+              />
               <span>requested</span>
             </Styled.MarkerLabel>
           )}
           {resolvedLimit !== undefined && (
             <Styled.MarkerLabel $left={limitPercent} $isDark={isDark}>
-              <span>{resolvedLimit}</span>
+              <FormattedValue
+                value={resolvedLimit}
+                valueStrategy={valueStrategy}
+                valuePrecision={valuePrecision}
+                normalizedValues={normalizedValues}
+              />
               <span>limit</span>
             </Styled.MarkerLabel>
           )}

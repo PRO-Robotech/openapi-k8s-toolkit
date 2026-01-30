@@ -183,3 +183,24 @@ export const parseAll = ({
     replaceValues,
   })
 }
+
+export const parsePromTemplate = ({
+  text,
+  replaceValues,
+  multiQueryData,
+}: {
+  text: string
+  replaceValues: Record<string, string | undefined>
+  multiQueryData: TDataMap
+}): string => {
+  const parsed = parseJsonPathTemplate({
+    text: parseMutliqueryText({
+      text,
+      multiQueryData,
+    }),
+    multiQueryData,
+    replaceValues,
+  })
+
+  return parsed.replace(/\{(\d+)\}/g, (_, key) => replaceValues[key] || '')
+}

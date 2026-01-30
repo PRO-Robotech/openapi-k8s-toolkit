@@ -35,6 +35,12 @@ const meta: Meta<TArgs> = {
     query: { control: 'text', description: 'data.query (PromQL for range matrix)' },
     range: { control: 'text', description: 'data.range (Prometheus range e.g. 1h)' },
     refetchInterval: { control: 'number', description: 'data.refetchInterval (ms) or false' },
+    valueStrategy: {
+      control: { type: 'select' },
+      options: ['cpu', 'memory', 'bytes', undefined],
+      description: 'data.valueStrategy (formats requested/used/limit values)',
+    },
+    valuePrecision: { control: 'number', description: 'data.valuePrecision (max fraction digits)' },
     theme: {
       control: 'radio',
       options: ['light', 'dark'],
@@ -60,6 +66,8 @@ const meta: Meta<TArgs> = {
       query: args.query,
       range: args.range,
       refetchInterval: args.refetchInterval,
+      valueStrategy: args.valueStrategy,
+      valuePrecision: args.valuePrecision,
     }
     const isDark = args.theme === 'dark'
 
@@ -120,6 +128,7 @@ export const Default: Story = {
     requested: 18,
     used: 50,
     limit: 80,
+    valueStrategy: 'cpu',
     series: [
       { value: 22 },
       { value: 30 },
@@ -166,6 +175,7 @@ export const MemoryUsage: Story = {
     requested: 18,
     used: 50,
     limit: 80,
+    valueStrategy: 'memory',
     series: [
       { value: 1.2 },
       { value: 1.4 },
