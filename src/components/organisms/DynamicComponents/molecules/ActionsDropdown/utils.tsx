@@ -1,5 +1,4 @@
 import React from 'react'
-import { NavigateFunction } from 'react-router-dom'
 import { TActionUnion, TEditActionProps } from '../../types'
 import { LabelsModal } from '../AggregatedCounterCard/molecules/LabelsModal'
 import { AnnotationsModal } from '../AggregatedCounterCard/molecules/AnnotationsModal'
@@ -13,16 +12,7 @@ type TModalExtraProps = {
 }
 
 export const buildEditUrl = (props: TEditActionProps, fullPath: string): string => {
-  const {
-    cluster,
-    namespace,
-    syntheticProject,
-    apiGroup,
-    apiVersion,
-    plural,
-    name,
-    baseprefix = '',
-  } = props
+  const { cluster, namespace, syntheticProject, apiGroup, apiVersion, plural, name, baseprefix = '' } = props
 
   const pathPrefix = !apiGroup || apiGroup.length === 0 ? 'forms/builtin' : 'forms/apis'
   const apiGroupAndVersion = !apiGroup || apiGroup.length === 0 ? apiVersion : `${apiGroup}/${apiVersion}`
@@ -42,10 +32,7 @@ export const buildEditUrl = (props: TEditActionProps, fullPath: string): string 
   return `/${parts.join('/')}?backlink=${backlink}`
 }
 
-export const renderActionModal = (
-  action: TActionUnion,
-  extraProps: TModalExtraProps,
-): React.ReactNode => {
+export const renderActionModal = (action: TActionUnion, extraProps: TModalExtraProps): React.ReactNode => {
   switch (action.type) {
     case 'edit':
       return null
@@ -63,16 +50,14 @@ export const renderActionModal = (
       return <TolerationsModal {...action.props} {...extraProps} />
 
     default: {
+      // eslint-disable-next-line no-underscore-dangle
       const _exhaustive: never = action
       return _exhaustive
     }
   }
 }
 
-export const getMenuItems = (
-  actions: TActionUnion[],
-  onActionClick: (action: TActionUnion) => void,
-) =>
+export const getMenuItems = (actions: TActionUnion[], onActionClick: (action: TActionUnion) => void) =>
   actions.map((action, index) => ({
     key: `${action.type}-${index}`,
     label: action.props.text,

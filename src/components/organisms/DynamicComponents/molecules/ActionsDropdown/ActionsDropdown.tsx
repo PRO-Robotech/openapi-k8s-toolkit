@@ -13,11 +13,7 @@ export const ActionsDropdown: FC<{
   data: TDynamicComponentsAppTypeMap['ActionsDropdown']
   children?: any
 }> = ({ data, children }) => {
-  const {
-    buttonText = 'Actions',
-    containerStyle,
-    actions,
-  } = data
+  const { buttonText = 'Actions', containerStyle, actions } = data
 
   const navigate = useNavigate()
   const location = useLocation()
@@ -37,9 +33,8 @@ export const ActionsDropdown: FC<{
     return (
       <div>
         <h4>Errors:</h4>
-        <ul>
-          {errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}
-        </ul>
+        {/* eslint-disable-next-line react/no-array-index-key */}
+        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
       </div>
     )
   }
@@ -99,20 +94,14 @@ export const ActionsDropdown: FC<{
 
   return (
     <div style={containerStyle}>
-      <Dropdown
-        menu={{ items: menuItems }}
-        trigger={['click']}
-      >
+      <Dropdown menu={{ items: menuItems }} trigger={['click']}>
         <Button>
           {buttonText}
           <DownOutlined />
         </Button>
       </Dropdown>
 
-      {activeAction && renderActionModal(
-        activeAction,
-        { open: modalOpen, onClose: handleCloseModal },
-      )}
+      {activeAction && renderActionModal(activeAction, { open: modalOpen, onClose: handleCloseModal })}
 
       {children}
     </div>
