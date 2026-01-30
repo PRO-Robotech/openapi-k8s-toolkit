@@ -70,6 +70,11 @@ const ChartContainer = styled.div`
   border-radius: 10px;
   overflow: hidden;
   position: relative;
+  outline: none;
+
+  * {
+    outline: none;
+  }
 `
 
 const ChartWrapper = styled.div`
