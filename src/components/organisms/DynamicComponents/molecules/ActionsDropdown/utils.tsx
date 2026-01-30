@@ -61,8 +61,7 @@ export const getMenuItems = (actions: TActionUnion[], onActionClick: (action: TA
   actions.map((action, index) => ({
     key: `${action.type}-${index}`,
     label: action.props.text,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    icon: action.props.icon ? renderAntIcon(action.props.icon as any) : undefined,
+    icon: action.props.icon ? renderAntIcon(action.props.icon) : undefined,
     disabled: action.props.disabled,
     danger: action.props.danger,
     onClick: () => onActionClick(action),

@@ -1,11 +1,14 @@
 import { CSSProperties } from 'react'
+import * as AntIcons from '@ant-design/icons'
 import { TLabelsBaseProps, TLabelsModalProps } from './Labels'
 import { TAnnotationsBaseProps, TAnnotationsModalProps } from './Annotations'
 import { TTaintsBaseProps, TTaintsModalProps } from './Taints'
 import { TTolerationsBaseProps, TTolerationsModalProps } from './Tolerations'
 
+type TAntIconName = Exclude<keyof typeof AntIcons, 'createFromIconfontCN'>
+
 export type TActionBaseProps = {
-  icon?: string
+  icon?: TAntIconName
   text: string
   disabled?: boolean
   tooltip?: string
