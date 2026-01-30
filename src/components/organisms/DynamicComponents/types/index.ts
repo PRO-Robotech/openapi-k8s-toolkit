@@ -48,17 +48,6 @@ import { TAggregatedCounterCardProps } from './AggregatedCounterCard'
 import { TBase64IconProps } from './Base64Icon'
 import { TActionsDropdownProps } from './ActionsDropdown'
 
-export type {
-  TActionUnion,
-  TActionBaseProps,
-  TEditActionProps,
-  TEditLabelsActionProps,
-  TEditAnnotationsActionProps,
-  TEditTaintsActionProps,
-  TEditTolerationsActionProps,
-  TActionsDropdownProps,
-} from './ActionsDropdown'
-
 export type TDynamicComponentsAppTypeMap = {
   antdText: TAntdTextProps
   antdLink: TAntdLinkProps

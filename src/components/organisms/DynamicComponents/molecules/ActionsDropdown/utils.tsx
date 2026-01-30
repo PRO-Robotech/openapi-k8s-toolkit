@@ -1,5 +1,5 @@
 import React from 'react'
-import { TActionUnion, TEditActionProps } from '../../types'
+import { TActionUnion, TEditActionProps } from '../../types/ActionsDropdown'
 import { LabelsModal } from '../AggregatedCounterCard/molecules/LabelsModal'
 import { AnnotationsModal } from '../AggregatedCounterCard/molecules/AnnotationsModal'
 import { TaintsModal } from '../AggregatedCounterCard/molecules/TaintsModal'
