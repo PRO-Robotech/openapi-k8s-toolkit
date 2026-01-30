@@ -49,6 +49,7 @@ import {
   AggregatedCounterCard,
   Base64Icon,
   UsageGraphCard,
+  ActionsDropdown,
 } from './molecules'
 import { TDynamicComponentsAppTypeMap } from './types'
 
@@ -102,4 +103,5 @@ export const DynamicComponents: TRendererComponents<TDynamicComponentsAppTypeMap
   AggregatedCounterCard,
   Base64Icon,
   UsageGraphCard,
+  ActionsDropdown,
 }
