@@ -1,11 +1,11 @@
 import styled from 'styled-components'
 
-type TThemeProps = {
-  $isDark?: boolean
+type TTooltipContentProps = {
+  $colorInfoBgHover: string
 }
 
-const TooltipContent = styled.div<TThemeProps>`
-  background: ${({ $isDark }) => ($isDark ? '#1f2937' : '#dbeafe')};
+const TooltipContent = styled.div<TTooltipContentProps>`
+  background: ${({ $colorInfoBgHover }) => $colorInfoBgHover};
   border-radius: 6px;
   padding: 6px 8px;
   box-shadow:
@@ -14,14 +14,18 @@ const TooltipContent = styled.div<TThemeProps>`
     0 6px 16px 0 rgba(0, 0, 0, 0.08);
 `
 
-const TooltipRow = styled.div<TThemeProps>`
+type TTooltipRowProps = {
+  $colorText: string
+}
+
+const TooltipRow = styled.div<TTooltipRowProps>`
   display: flex;
   align-items: center;
   gap: 4px;
   font-family: 'Roboto', sans-serif;
   font-size: 12px;
   line-height: 20px;
-  color: ${({ $isDark }) => ($isDark ? 'rgba(255, 255, 255, 0.88)' : 'rgba(0, 0, 0, 0.88)')};
+  color: ${({ $colorText }) => $colorText};
   white-space: nowrap;
 `
 
@@ -37,9 +41,14 @@ const TooltipDot = styled.span<TTooltipDotProps>`
   display: inline-block;
 `
 
-const Wrapper = styled.div<TThemeProps>`
-  background: ${({ $isDark }) => ($isDark ? '#2a2f3a' : '#ffffff')};
-  border: 1px solid ${({ $isDark }) => ($isDark ? '#485263' : '#cbd5e1')};
+type TWrapperProps = {
+  $colorBgContainer: string
+  $colorBorder: string
+}
+
+const Wrapper = styled.div<TWrapperProps>`
+  background: ${({ $colorBgContainer }) => $colorBgContainer};
+  border: 1px solid ${({ $colorBorder }) => $colorBorder};
   border-radius: 6px;
   box-sizing: border-box;
   padding: 4px 0 25px;
@@ -55,12 +64,14 @@ const Header = styled.div`
   box-sizing: border-box;
 `
 
-const Title = styled.div<TThemeProps>`
-  font-family: 'Roboto', sans-serif;
+type TTitleProps = {
+  $colorText: string
+}
+
+const Title = styled.div<TTitleProps>`
   font-size: 16px;
   line-height: 24px;
-  font-weight: 400;
-  color: ${({ $isDark }) => ($isDark ? 'rgba(255, 255, 255, 0.88)' : 'rgba(0, 0, 0, 0.88)')};
+  color: ${({ $colorText }) => $colorText};
 `
 
 const ChartContainer = styled.div`
@@ -91,7 +102,11 @@ const ChartInner = styled.div`
   height: 80px;
 `
 
-const ChartOverlay = styled.div<TThemeProps>`
+type TChartOverlayProps = {
+  $isDark?: boolean
+}
+
+const ChartOverlay = styled.div<TChartOverlayProps>`
   position: absolute;
   inset: 0;
   border-radius: 10px;
@@ -168,17 +183,16 @@ const BarMarker = styled.div<TBarMarkerProps>`
 
 type TMarkerLabelProps = {
   $left: number
-  $isDark?: boolean
+  $colorText: string
 }
 const MarkerLabel = styled.div<TMarkerLabelProps>`
   position: absolute;
   top: calc(var(--bar-top) + var(--bar-height) + 10px);
   left: ${({ $left }) => $left}%;
   transform: translateX(-50%);
-  font-family: 'Roboto', sans-serif;
   font-size: 16px;
   line-height: 16px;
-  color: ${({ $isDark }) => ($isDark ? 'rgba(255, 255, 255, 0.88)' : 'rgba(0, 0, 0, 0.88)')};
+  color: ${({ $colorText }) => $colorText};
   white-space: nowrap;
   text-align: center;
 
@@ -189,7 +203,9 @@ const MarkerLabel = styled.div<TMarkerLabelProps>`
 
 type TUsedBadgeProps = {
   $left: number
-  $isDark?: boolean
+  $colorBgContainer: string
+  $colorBorder: string
+  $colorText: string
 }
 
 const UsedBadge = styled.div<TUsedBadgeProps>`
@@ -198,8 +214,8 @@ const UsedBadge = styled.div<TUsedBadgeProps>`
   top: -58px;
   transform: translateX(-50%);
   padding: 6px 12px;
-  background: ${({ $isDark }) => ($isDark ? '#2a2f3a' : '#ffffff')};
-  border: 1px solid ${({ $isDark }) => ($isDark ? '#485263' : '#cbd5e1')};
+  background: ${({ $colorBgContainer }) => $colorBgContainer};
+  border: 1px solid ${({ $colorBorder }) => $colorBorder};
   border-radius: 8px;
   box-shadow:
     0 9px 28px 0 rgba(0, 0, 0, 0.05),
@@ -208,7 +224,7 @@ const UsedBadge = styled.div<TUsedBadgeProps>`
   font-family: 'Roboto', sans-serif;
   font-size: 24px;
   line-height: 32px;
-  color: ${({ $isDark }) => ($isDark ? 'rgba(255, 255, 255, 0.88)' : 'rgba(0, 0, 0, 0.88)')};
+  color: ${({ $colorText }) => $colorText};
   white-space: nowrap;
   z-index: 3;
 `

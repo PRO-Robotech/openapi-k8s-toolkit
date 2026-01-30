@@ -1,7 +1,7 @@
 /* eslint-disable max-lines-per-function */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { FC } from 'react'
-import { Tooltip } from 'antd'
+import { Tooltip, theme as antdtheme } from 'antd'
 import { ComposedChart, Line, Area, ResponsiveContainer, XAxis, YAxis } from 'recharts'
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
@@ -22,6 +22,8 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
   children,
 }) => {
   const { data: multiQueryData, isLoading: isMultiqueryLoading } = useMultiQuery()
+
+  const { token } = antdtheme.useToken()
 
   const {
     title = 'CPU, core',
@@ -152,16 +154,16 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
   const normalizedValues = [resolvedRequested, resolvedUsed, resolvedLimit]
 
   const tooltipTitle = (
-    <Styled.TooltipContent $isDark={isDark}>
-      <Styled.TooltipRow $isDark={isDark}>
+    <Styled.TooltipContent $colorInfoBgHover={token.colorInfoBgHover}>
+      <Styled.TooltipRow $colorText={token.colorText}>
         <Styled.TooltipDot $color="#5EDBBD" />
         Requested
       </Styled.TooltipRow>
-      <Styled.TooltipRow $isDark={isDark}>
+      <Styled.TooltipRow $colorText={token.colorText}>
         <Styled.TooltipDot $color="#FF1C1C" />
         Used
       </Styled.TooltipRow>
-      <Styled.TooltipRow $isDark={isDark}>
+      <Styled.TooltipRow $colorText={token.colorText}>
         <Styled.TooltipDot $color="#FD9125" />
         Limit
       </Styled.TooltipRow>
@@ -169,9 +171,9 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
   )
 
   return (
-    <Styled.Wrapper style={containerStyle} $isDark={isDark}>
+    <Styled.Wrapper style={containerStyle} $colorBgContainer={token.colorBgContainer} $colorBorder={token.colorBorder}>
       <Styled.Header>
-        <Styled.Title $isDark={isDark}>{title}</Styled.Title>
+        <Styled.Title $colorText={token.colorText}>{title}</Styled.Title>
       </Styled.Header>
       <Styled.ChartContainer>
         <Styled.ChartWrapper>
@@ -205,7 +207,7 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
           <Tooltip
             title={tooltipTitle}
             placement="bottom"
-            color={isDark ? '#1f2937' : '#dbeafe'}
+            color={token.colorInfoBgHover}
             styles={{
               root: { marginTop: '-35px' },
               body: { padding: 0, borderRadius: 6 },
@@ -234,7 +236,12 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
             </Styled.BarMarker>
           )}
           {resolvedUsed !== undefined && (
-            <Styled.UsedBadge $left={usedPercent} $isDark={isDark}>
+            <Styled.UsedBadge
+              $left={usedPercent}
+              $colorText={token.colorText}
+              $colorBgContainer={token.colorBgContainer}
+              $colorBorder={token.colorBorder}
+            >
               <FormattedValue
                 value={resolvedUsed}
                 valueStrategy={valueStrategy}
@@ -245,7 +252,7 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
             </Styled.UsedBadge>
           )}
           {resolvedRequested !== undefined && (
-            <Styled.MarkerLabel $left={requestedPercent} $isDark={isDark}>
+            <Styled.MarkerLabel $left={requestedPercent} $colorText={token.colorText}>
               <FormattedValue
                 value={resolvedRequested}
                 valueStrategy={valueStrategy}
@@ -256,7 +263,7 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
             </Styled.MarkerLabel>
           )}
           {resolvedLimit !== undefined && (
-            <Styled.MarkerLabel $left={limitPercent} $isDark={isDark}>
+            <Styled.MarkerLabel $left={limitPercent} $colorText={token.colorText}>
               <FormattedValue
                 value={resolvedLimit}
                 valueStrategy={valueStrategy}
