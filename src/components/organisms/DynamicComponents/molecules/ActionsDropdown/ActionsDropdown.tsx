@@ -2,7 +2,7 @@
 import React, { FC, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Dropdown, Button } from 'antd'
-import { DownOutlined } from '@ant-design/icons'
+import { DownOutlined, MoreOutlined } from '@ant-design/icons'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { TActionUnion } from '../../types/ActionsDropdown'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
@@ -14,7 +14,7 @@ export const ActionsDropdown: FC<{
   data: TDynamicComponentsAppTypeMap['ActionsDropdown']
   children?: any
 }> = ({ data, children }) => {
-  const { buttonText = 'Actions', containerStyle, actions } = data
+  const { buttonText = 'Actions', buttonVariant = 'default', containerStyle, actions } = data
 
   const navigate = useNavigate()
   const location = useLocation()
@@ -93,13 +93,33 @@ export const ActionsDropdown: FC<{
 
   const menuItems = getMenuItems(actions, handleActionClick)
 
+  const renderButton = () => {
+    if (buttonVariant === 'icon') {
+      return (
+        <Button
+          type="text"
+          size="small"
+          onClick={e => {
+            e.stopPropagation()
+            e.preventDefault()
+          }}
+          icon={<MoreOutlined style={{ fontSize: 16 }} />}
+          style={{ height: 24 }}
+        />
+      )
+    }
+    return (
+      <Button>
+        {buttonText}
+        <DownOutlined />
+      </Button>
+    )
+  }
+
   return (
     <div style={containerStyle}>
       <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-        <Button>
-          {buttonText}
-          <DownOutlined />
-        </Button>
+        {renderButton()}
       </Dropdown>
 
       {activeAction && renderActionModal(activeAction, { open: modalOpen, onClose: handleCloseModal })}

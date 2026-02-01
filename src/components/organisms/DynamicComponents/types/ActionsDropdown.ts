@@ -45,6 +45,7 @@ export type TActionsDropdownProps = {
   id: number | string
   buttonText?: string
   buttonIcon?: string
+  buttonVariant?: 'default' | 'icon'
   containerStyle?: CSSProperties
   actions: TActionUnion[]
 }
