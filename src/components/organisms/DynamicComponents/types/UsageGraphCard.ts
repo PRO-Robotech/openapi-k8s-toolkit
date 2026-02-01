@@ -11,9 +11,7 @@ export type TUsageGraphCardProps = {
   title?: string // default: 'CPU, core'
   series?: TUsageGraphCardDatum[] // can be provided straight forward
   containerStyle?: CSSProperties
-  valueStrategy?: 'cpu' | 'memory' | 'bytes'
-  valuePrecision?: number // default 2
-  hideUnit?: boolean // default true
+  valueStrategy: 'cpu' | 'memory'
   converterBytesProps?: Partial<Omit<TConverterBytesProps, 'id' | 'bytesValue'>>
   converterCoresProps?: Partial<Omit<TConverterCoresProps, 'id' | 'coresValue'>>
   /* colors; defaults are provided */

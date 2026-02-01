@@ -33,6 +33,7 @@ export const ConverterCores: FC<{ data: TDynamicComponentsAppTypeMap['ConverterC
     fromUnit,
     toUnit,
     format,
+    showUnit,
     precision,
     locale,
     notANumberText,
@@ -73,6 +74,7 @@ export const ConverterCores: FC<{ data: TDynamicComponentsAppTypeMap['ConverterC
       const result = String(
         convertCores(0, targetUnit, {
           format,
+          showUnit,
           precision,
           locale,
         }),
@@ -80,7 +82,7 @@ export const ConverterCores: FC<{ data: TDynamicComponentsAppTypeMap['ConverterC
       return <span style={style}>{result}</span>
     }
 
-    const result = formatCoresAuto(0, { precision, locale })
+    const result = formatCoresAuto(0, { precision, locale, showUnit })
     return <span style={style}>{result}</span>
   }
 
@@ -142,6 +144,7 @@ export const ConverterCores: FC<{ data: TDynamicComponentsAppTypeMap['ConverterC
     const result = String(
       convertCores(totalCores, targetUnit, {
         format,
+        showUnit,
         precision,
         locale,
       }),
@@ -149,6 +152,6 @@ export const ConverterCores: FC<{ data: TDynamicComponentsAppTypeMap['ConverterC
     return <span style={style}>{result}</span>
   }
 
-  const result = formatCoresAuto(totalCores, { precision, locale })
+  const result = formatCoresAuto(totalCores, { precision, locale, showUnit })
   return <span style={style}>{result}</span>
 }
