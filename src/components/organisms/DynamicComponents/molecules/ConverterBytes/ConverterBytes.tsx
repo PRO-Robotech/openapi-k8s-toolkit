@@ -31,6 +31,7 @@ export const ConverterBytes: FC<{ data: TDynamicComponentsAppTypeMap['ConverterB
     fromUnit,
     toUnit,
     format,
+    showUnit,
     precision,
     locale,
     standard,
@@ -72,6 +73,7 @@ export const ConverterBytes: FC<{ data: TDynamicComponentsAppTypeMap['ConverterB
       const result = String(
         convertBytes(0, targetUnit, {
           format,
+          showUnit,
           precision,
           locale,
         }),
@@ -79,7 +81,7 @@ export const ConverterBytes: FC<{ data: TDynamicComponentsAppTypeMap['ConverterB
       return <span style={style}>{result}</span>
     }
 
-    const result = formatBytesAuto(0, { standard, precision, locale })
+    const result = formatBytesAuto(0, { standard, precision, locale, showUnit })
     return <span style={style}>{result}</span>
   }
 
@@ -144,6 +146,7 @@ export const ConverterBytes: FC<{ data: TDynamicComponentsAppTypeMap['ConverterB
     const result = String(
       convertBytes(totalBytes, targetUnit, {
         format,
+        showUnit,
         precision,
         locale,
       }),
@@ -153,6 +156,6 @@ export const ConverterBytes: FC<{ data: TDynamicComponentsAppTypeMap['ConverterB
   }
 
   // CASE B: no target -> auto-scale from bytes
-  const result = formatBytesAuto(totalBytes, { standard, precision, locale })
+  const result = formatBytesAuto(totalBytes, { standard, precision, locale, showUnit })
   return <span style={style}>{result}</span>
 }

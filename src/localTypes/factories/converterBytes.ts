@@ -80,6 +80,8 @@ export type TUnitInput =
 export type TConvertOptions = {
   /** If true, returns "12.3 GiB" instead of just 12.3 */
   format?: boolean
+  /** If false and format=true, return formatted number without unit */
+  showUnit?: boolean
   /** Max fraction digits when formatting (default 2) */
   precision?: number
   /** Locale for number formatting (default: undefined => user agent) */

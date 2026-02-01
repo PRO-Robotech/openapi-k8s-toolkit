@@ -37,8 +37,6 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
     series = [],
     containerStyle,
     valueStrategy,
-    valuePrecision = 2,
-    hideUnit = true,
     /* colors */
     minColor = '#00ae89',
     midColor = '#adad4c',
@@ -182,8 +180,6 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
   const limitPercent = 100
 
   const gradientMidStop = `${requestedPercent.toFixed(2)}%`
-
-  const normalizedValues = [resolvedRequested, resolvedUsed, resolvedLimit]
 
   const tooltipTitle = (
     <Styled.TooltipContent $colorInfoBgHover={token.colorInfoBgHover}>
@@ -377,9 +373,8 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
                 <FormattedValue
                   value={resolvedUsed}
                   valueStrategy={valueStrategy}
-                  valuePrecision={valuePrecision}
-                  normalizedValues={normalizedValues}
-                  hideUnit={hideUnit}
+                  converterBytesProps={data.converterBytesProps}
+                  converterCoresProps={data.converterCoresProps}
                 />
                 <span> used</span>
               </Styled.UsedBadge>
@@ -394,9 +389,8 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
                 <FormattedValue
                   value={resolvedRequested}
                   valueStrategy={valueStrategy}
-                  valuePrecision={valuePrecision}
-                  normalizedValues={normalizedValues}
-                  hideUnit={hideUnit}
+                  converterBytesProps={data.converterBytesProps}
+                  converterCoresProps={data.converterCoresProps}
                 />
                 <span>requested</span>
               </Styled.MarkerLabel>
@@ -411,9 +405,8 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
                 <FormattedValue
                   value={resolvedLimit}
                   valueStrategy={valueStrategy}
-                  valuePrecision={valuePrecision}
-                  normalizedValues={normalizedValues}
-                  hideUnit={hideUnit}
+                  converterBytesProps={data.converterBytesProps}
+                  converterCoresProps={data.converterCoresProps}
                 />
                 <span>limit</span>
               </Styled.MarkerLabel>

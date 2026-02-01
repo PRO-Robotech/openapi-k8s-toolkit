@@ -37,11 +37,9 @@ const meta: Meta<TArgs> = {
     refetchInterval: { control: 'number', description: 'data.refetchInterval (ms) or false' },
     valueStrategy: {
       control: { type: 'select' },
-      options: ['cpu', 'memory', 'bytes', undefined],
+      options: ['cpu', 'memory'],
       description: 'data.valueStrategy (formats requested/used/limit values)',
     },
-    valuePrecision: { control: 'number', description: 'data.valuePrecision (max fraction digits)' },
-    hideUnit: { control: 'boolean', description: 'data.hideUnit (hide units in labels/badge)' },
     converterBytesProps: { control: 'object', description: 'data.converterBytesProps (ConverterBytes overrides)' },
     converterCoresProps: { control: 'object', description: 'data.converterCoresProps (ConverterCores overrides)' },
     theme: {
@@ -70,8 +68,6 @@ const meta: Meta<TArgs> = {
       range: args.range,
       refetchInterval: args.refetchInterval,
       valueStrategy: args.valueStrategy,
-      valuePrecision: args.valuePrecision,
-      hideUnit: args.hideUnit,
       converterBytesProps: args.converterBytesProps,
       converterCoresProps: args.converterCoresProps,
     }
@@ -130,13 +126,15 @@ type Story = StoryObj<TArgs>
 export const Default: Story = {
   args: {
     theme: 'light',
-    title: 'CPU, core',
+    title: 'Memory',
     requested: 0,
     used: 40,
     limit: 80,
-    valueStrategy: 'cpu',
-    hideUnit: true,
-    converterCoresProps: { precision: 0 },
+    valueStrategy: 'memory',
+    // converterCoresProps: { precision: 0, format: false },
+    // converterBytesProps: { toUnit: 'Tb', format: true, showUnit: false, precision: 2 },
+    converterBytesProps: { showUnit: false, precision: 2 },
+    converterCoresProps: { showUnit: false, precision: 2 },
     containerStyle: { width: '200px' },
     series: [
       // { value: 20 },
@@ -243,4 +241,3 @@ export const CustomGradient: Story = {
     maxColor: '#f97316',
   },
 }
-

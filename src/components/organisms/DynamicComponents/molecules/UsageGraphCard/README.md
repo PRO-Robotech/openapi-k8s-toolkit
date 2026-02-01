@@ -28,5 +28,6 @@ Badges and labels are positioned by percentage, then clamped to avoid overflow:
 `ResizeObserver` updates the clamped positions when the container or labels change size.
 
 ## Notes
-- `valueStrategy`, `valuePrecision`, and `hideUnit` control formatting via `FormattedValue`.
+- `valueStrategy` selects whether `FormattedValue` uses `ConverterCores` or `ConverterBytes`.
+- Units/formatting come from `converterCoresProps` / `converterBytesProps` passed into `UsageGraphCard`.
 - The chart uses a padded Y domain based on the current series values.
