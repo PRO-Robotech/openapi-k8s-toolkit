@@ -76,7 +76,6 @@ const Title = styled.div<TTitleProps>`
 
 const ChartContainer = styled.div`
   width: 100%;
-  max-width: 394px;
   height: 96px;
   border-radius: 10px;
   overflow: hidden;
@@ -99,7 +98,7 @@ const ChartWrapper = styled.div`
 
 const ChartInner = styled.div`
   width: 100%;
-  height: 80px;
+  height: 100%;
 `
 
 type TChartOverlayProps = {
@@ -148,7 +147,7 @@ const GradientBarWrapper = styled.div`
 
 const GradientBarContainer = styled.div`
   width: 100%;
-  max-width: 332px;
+  max-width: calc(100% - 55px);
   position: relative;
   height: 72px;
 
@@ -157,18 +156,32 @@ const GradientBarContainer = styled.div`
   --marker-height: 36px;
 `
 
+const BadgesContainer = styled.div`
+  position: absolute;
+  inset: 0 10px;
+  height: 100%;
+  pointer-events: none;
+
+  --badge-edge: 16px;
+  --badge-gap: 14px;
+  --marker-top: calc(var(--bar-top) + (var(--bar-height) / 2) - (var(--marker-height) / 2) + 50);
+`
+
 type TBarMarkerProps = {
   $left: number
   $flip?: boolean
   $flipX?: boolean
   $paddingTop?: number
+  $edgeAlign?: boolean
 }
 
 const BarMarker = styled.div<TBarMarkerProps>`
+  --marker-half-width: 5px;
   position: absolute;
   padding-top: ${({ $paddingTop }) => $paddingTop ?? 15}px;
-  left: ${({ $left }) => $left}%;
-  top: calc(var(--bar-top) + (var(--bar-height) / 2) - (var(--marker-height) / 2) + 50);
+  left: ${({ $left, $edgeAlign }) =>
+    $edgeAlign ? `${$left}%` : `clamp(var(--marker-half-width), ${$left}%, calc(100% - var(--marker-half-width)))`};
+  top: var(--marker-top);
   width: 10px;
   height: var(--marker-height);
   transform: translateX(-50%) ${({ $flip, $flipX }) => `${$flip ? ' scaleY(-1)' : ''}${$flipX ? ' scaleX(-1)' : ''}`};
@@ -183,13 +196,18 @@ const BarMarker = styled.div<TBarMarkerProps>`
 
 type TMarkerLabelProps = {
   $left: number
+  $leftOffset?: number
+  $paddingLeft?: number
+  $paddingRight?: number
   $colorText: string
 }
 const MarkerLabel = styled.div<TMarkerLabelProps>`
   position: absolute;
   top: calc(var(--bar-top) + var(--bar-height) + 10px);
-  left: ${({ $left }) => $left}%;
+  left: ${({ $left, $leftOffset = 0 }) => `calc(${$left}% + ${$leftOffset}px)`};
   transform: translateX(-50%);
+  padding-left: ${({ $paddingLeft = 0 }) => $paddingLeft}px;
+  padding-right: ${({ $paddingRight = 0 }) => $paddingRight}px;
   font-size: 16px;
   line-height: 16px;
   color: ${({ $colorText }) => $colorText};
@@ -210,8 +228,8 @@ type TUsedBadgeProps = {
 
 const UsedBadge = styled.div<TUsedBadgeProps>`
   position: absolute;
-  left: ${({ $left }) => $left}%;
-  top: -58px;
+  left: ${({ $left }) => `clamp(var(--badge-edge), ${$left}%, calc(100% - var(--badge-edge)))`};
+  top: -30px;
   transform: translateX(-50%);
   padding: 6px 12px;
   background: ${({ $colorBgContainer }) => $colorBgContainer};
@@ -222,8 +240,8 @@ const UsedBadge = styled.div<TUsedBadgeProps>`
     0 3px 6px -4px rgba(0, 0, 0, 0.12),
     0 6px 16px 0 rgba(0, 0, 0, 0.08);
   font-family: 'Roboto', sans-serif;
-  font-size: 24px;
-  line-height: 32px;
+  font-size: 16px;
+  line-height: 22px;
   color: ${({ $colorText }) => $colorText};
   white-space: nowrap;
   z-index: 3;
@@ -243,6 +261,7 @@ export const Styled = {
   GradientBar,
   GradientBarWrapper,
   GradientBarContainer,
+  BadgesContainer,
   BarMarker,
   MarkerLabel,
   UsedBadge,

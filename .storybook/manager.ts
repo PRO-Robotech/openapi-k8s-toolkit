@@ -1,6 +1,7 @@
 // .storybook/manager.ts
 import { addons } from 'storybook/manager-api'
 import { create } from 'storybook/theming' // or import { themes } if you just want light/dark presets
+import './preview.css'
 
 const customTheme = create({
   base: 'dark', // or 'light'
