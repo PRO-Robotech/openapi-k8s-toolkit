@@ -51,7 +51,7 @@ const Wrapper = styled.div<TWrapperProps>`
   border: 1px solid ${({ $colorBorder }) => $colorBorder};
   border-radius: 6px;
   box-sizing: border-box;
-  padding: 4px 0 25px 0;
+  padding: 4px 0 25px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -161,6 +161,7 @@ const BadgesContainer = styled.div`
   inset: 0 10px;
   height: 100%;
   pointer-events: none;
+
   --badge-edge: 16px;
   --badge-gap: 14px;
   --marker-top: calc(var(--bar-top) + (var(--bar-height) / 2) - (var(--marker-height) / 2) + 50);
