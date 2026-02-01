@@ -68,9 +68,6 @@ const loadingHandler = http.get('http://localhost:9090/api/v1/query', async () =
   return HttpResponse.json({})
 })
 
-const errorHandler = http.get('http://localhost:9090/api/v1/query', () =>
-  HttpResponse.json({ status: 'error', errorType: 'internal', error: 'boom' }, { status: 500 }),
-)
 
 const meta: Meta<typeof VectorToPie> = {
   title: 'Factory/Prometheus Internal/Vector/ToPie',
@@ -138,15 +135,5 @@ export const Loading: TStory = {
     state: 'loading',
   },
   parameters: { msw: { handlers: [loadingHandler] } },
-}
-
-export const Error: TStory = {
-  args: {
-    query: 'some_distribution_metric_error',
-    formatter: 'bytes',
-    theme: 'light',
-    state: 'error',
-  },
-  parameters: { msw: { handlers: [errorHandler] } },
 }
 

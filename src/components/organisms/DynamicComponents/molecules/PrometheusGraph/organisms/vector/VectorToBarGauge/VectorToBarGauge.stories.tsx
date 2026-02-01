@@ -58,9 +58,6 @@ const loadingHandler = http.get('http://localhost:9090/api/v1/query', async () =
   return HttpResponse.json({})
 })
 
-const errorHandler = http.get('http://localhost:9090/api/v1/query', () =>
-  HttpResponse.json({ status: 'error', errorType: 'internal', error: 'boom' }, { status: 500 }),
-)
 
 const meta: Meta<typeof VectorToBarGauge> = {
   title: 'Factory/Prometheus Internal/Vector/ToBar/Gauge',
@@ -149,17 +146,5 @@ export const Loading: TStory = {
     state: 'loading',
   },
   parameters: { msw: { handlers: [loadingHandler] } },
-}
-
-export const Error: TStory = {
-  args: {
-    query: 'container_memory_usage_bytes_error',
-    title: 'Vector → Bar Gauge',
-    topN: 10,
-    formatter: 'bytes',
-    theme: 'light',
-    state: 'error',
-  },
-  parameters: { msw: { handlers: [errorHandler] } },
 }
 

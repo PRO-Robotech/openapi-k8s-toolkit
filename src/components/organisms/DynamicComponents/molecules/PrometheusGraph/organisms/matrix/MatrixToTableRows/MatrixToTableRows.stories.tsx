@@ -240,7 +240,3 @@ export const Loading: TStory = {
   parameters: { msw: { handlers: [handlerByState('loading')] } },
 }
 
-export const Error: TStory = {
-  args: { ...Default.args, state: 'error' },
-  parameters: { msw: { handlers: [handlerByState('error')] } },
-}
