@@ -9,6 +9,7 @@ type TAntIconName = Exclude<keyof typeof AntIcons, 'createFromIconfontCN'>
 
 export type TActionBaseProps = {
   icon?: TAntIconName
+  iconBase64Encoded?: string
   text: string
   disabled?: boolean
   tooltip?: string

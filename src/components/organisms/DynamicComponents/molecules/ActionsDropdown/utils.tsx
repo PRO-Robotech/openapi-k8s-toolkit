@@ -5,6 +5,7 @@ import { AnnotationsModal } from '../AggregatedCounterCard/molecules/Annotations
 import { TaintsModal } from '../AggregatedCounterCard/molecules/TaintsModal'
 import { TolerationsModal } from '../AggregatedCounterCard/molecules/TolerationsModal'
 import { renderAntIcon } from '../AntdIcons/utils'
+import { renderIcon as renderBase64Icon } from '../AggregatedCounterCard/utils'
 
 type TModalExtraProps = {
   open: boolean
@@ -57,11 +58,27 @@ export const renderActionModal = (action: TActionUnion, extraProps: TModalExtraP
   }
 }
 
+const getActionIcon = (action: TActionUnion): React.ReactNode => {
+  if (action.props.iconBase64Encoded) {
+    return (
+      <span style={{ display: 'inline-flex', width: 14, height: 14, alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ display: 'inline-flex', transform: 'scale(0.58)' }}>
+          {renderBase64Icon(action.props.iconBase64Encoded, 'currentColor')}
+        </span>
+      </span>
+    )
+  }
+  if (action.props.icon) {
+    return renderAntIcon(action.props.icon)
+  }
+  return undefined
+}
+
 export const getMenuItems = (actions: TActionUnion[], onActionClick: (action: TActionUnion) => void) =>
   actions.map((action, index) => ({
     key: `${action.type}-${index}`,
     label: action.props.text,
-    icon: action.props.icon ? renderAntIcon(action.props.icon) : undefined,
+    icon: getActionIcon(action),
     disabled: action.props.disabled,
     danger: action.props.danger,
     onClick: () => onActionClick(action),
