@@ -50,6 +50,10 @@ export const renderActionModal = (action: TActionUnion, extraProps: TModalExtraP
     case 'editTolerations':
       return <TolerationsModal {...action.props} {...extraProps} />
 
+    case 'delete':
+      // Delete modal is handled separately in ActionsDropdown component
+      return null
+
     default: {
       // eslint-disable-next-line no-underscore-dangle
       const _exhaustive: never = action

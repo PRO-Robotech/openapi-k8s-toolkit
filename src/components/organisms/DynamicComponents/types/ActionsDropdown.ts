@@ -35,12 +35,19 @@ export type TEditTaintsActionProps = TActionBaseProps & TTaintsBaseProps & TTain
 
 export type TEditTolerationsActionProps = TActionBaseProps & TTolerationsBaseProps & TTolerationsModalProps
 
+export type TDeleteActionProps = TActionBaseProps & {
+  endpoint: string
+  name: string
+  redirectTo?: string
+}
+
 export type TActionUnion =
   | { type: 'edit'; props: TEditActionProps }
   | { type: 'editLabels'; props: TEditLabelsActionProps }
   | { type: 'editAnnotations'; props: TEditAnnotationsActionProps }
   | { type: 'editTaints'; props: TEditTaintsActionProps }
   | { type: 'editTolerations'; props: TEditTolerationsActionProps }
+  | { type: 'delete'; props: TDeleteActionProps }
 
 export type TActionsDropdownProps = {
   id: number | string
