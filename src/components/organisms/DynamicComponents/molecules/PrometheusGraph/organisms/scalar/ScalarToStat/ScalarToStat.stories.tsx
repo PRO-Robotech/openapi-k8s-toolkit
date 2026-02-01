@@ -138,7 +138,3 @@ export const Default: TStory = {
   parameters: { msw: { handlers: [handlerByState('success')] } },
 }
 
-export const DarkTheme: TStory = {
-  args: { ...Default.args, theme: 'dark' },
-  parameters: { msw: { handlers: [handlerByState('success')] } },
-}

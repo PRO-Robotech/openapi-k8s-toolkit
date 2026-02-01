@@ -41,6 +41,9 @@ const meta: Meta<TArgs> = {
       description: 'data.valueStrategy (formats requested/used/limit values)',
     },
     valuePrecision: { control: 'number', description: 'data.valuePrecision (max fraction digits)' },
+    hideUnit: { control: 'boolean', description: 'data.hideUnit (hide units in labels/badge)' },
+    converterBytesProps: { control: 'object', description: 'data.converterBytesProps (ConverterBytes overrides)' },
+    converterCoresProps: { control: 'object', description: 'data.converterCoresProps (ConverterCores overrides)' },
     theme: {
       control: 'radio',
       options: ['light', 'dark'],
@@ -68,6 +71,9 @@ const meta: Meta<TArgs> = {
       refetchInterval: args.refetchInterval,
       valueStrategy: args.valueStrategy,
       valuePrecision: args.valuePrecision,
+      hideUnit: args.hideUnit,
+      converterBytesProps: args.converterBytesProps,
+      converterCoresProps: args.converterCoresProps,
     }
     const isDark = args.theme === 'dark'
 
@@ -125,11 +131,44 @@ export const Default: Story = {
   args: {
     theme: 'light',
     title: 'CPU, core',
-    requested: 18,
-    used: 50,
+    requested: 0,
+    used: 40,
     limit: 80,
     valueStrategy: 'cpu',
+    hideUnit: true,
+    converterCoresProps: { precision: 0 },
+    containerStyle: { width: '200px' },
     series: [
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 21 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      // { value: 20 },
+      { value: 20 },
       { value: 22 },
       { value: 30 },
       { value: 26 },
@@ -176,6 +215,7 @@ export const MemoryUsage: Story = {
     used: 50,
     limit: 80,
     valueStrategy: 'memory',
+    converterBytesProps: { standard: 'iec', precision: 1 },
     series: [
       { value: 1.2 },
       { value: 1.4 },
@@ -204,9 +244,3 @@ export const CustomGradient: Story = {
   },
 }
 
-export const DarkTheme: Story = {
-  args: {
-    ...Default.args,
-    theme: 'dark',
-  },
-}

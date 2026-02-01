@@ -1,4 +1,6 @@
 import { CSSProperties } from 'react'
+import { TConverterBytesProps } from './ConverterBytes'
+import { TConverterCoresProps } from './ConverterCores'
 
 export type TUsageGraphCardDatum = {
   value: number
@@ -11,6 +13,9 @@ export type TUsageGraphCardProps = {
   containerStyle?: CSSProperties
   valueStrategy?: 'cpu' | 'memory' | 'bytes'
   valuePrecision?: number // default 2
+  hideUnit?: boolean // default true
+  converterBytesProps?: Partial<Omit<TConverterBytesProps, 'id' | 'bytesValue'>>
+  converterCoresProps?: Partial<Omit<TConverterCoresProps, 'id' | 'coresValue'>>
   /* colors; defaults are provided */
   minColor?: string
   midColor?: string

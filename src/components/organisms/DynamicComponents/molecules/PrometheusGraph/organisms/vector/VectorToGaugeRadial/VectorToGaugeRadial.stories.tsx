@@ -179,13 +179,3 @@ export const Error: TStory = {
   parameters: { msw: { handlers: [errorHandler] } },
 }
 
-export const DarkTheme: TStory = {
-  args: {
-    ...Default.args,
-    query: 'up_success_dark',
-    theme: 'dark',
-    state: 'success',
-    valueMode: '0.7',
-  },
-  parameters: { msw: { handlers: [successHandler('0.7')] } },
-}

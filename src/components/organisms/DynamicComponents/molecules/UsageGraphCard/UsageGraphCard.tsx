@@ -1,6 +1,6 @@
 /* eslint-disable max-lines-per-function */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { FC } from 'react'
+import React, { FC, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Tooltip, theme as antdtheme } from 'antd'
 import { ComposedChart, Line, Area, ResponsiveContainer, XAxis, YAxis } from 'recharts'
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
@@ -21,6 +21,13 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   children,
 }) => {
+  const badgesContainerRef = useRef<HTMLDivElement | null>(null)
+  const usedBadgeRef = useRef<HTMLDivElement | null>(null)
+  const requestedLabelRef = useRef<HTMLDivElement | null>(null)
+  const limitLabelRef = useRef<HTMLDivElement | null>(null)
+  const [clampedUsedPercent, setClampedUsedPercent] = useState<number | null>(null)
+  const [clampedRequestedPercent, setClampedRequestedPercent] = useState<number | null>(null)
+
   const { data: multiQueryData, isLoading: isMultiqueryLoading } = useMultiQuery()
 
   const { token } = antdtheme.useToken()
@@ -31,6 +38,7 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
     containerStyle,
     valueStrategy,
     valuePrecision = 2,
+    hideUnit = true,
     /* colors */
     minColor = '#00ae89',
     midColor = '#adad4c',
@@ -140,6 +148,30 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
     label: entry.label,
   }))
 
+  const yDomain = useMemo<[number, number] | ['auto', 'auto']>(() => {
+    const values = chartData.map(item => item.value).filter(Number.isFinite)
+
+    if (values.length === 0) {
+      return ['auto', 'auto']
+    }
+
+    const minValue = Math.min(...values)
+    const maxValue = Math.max(...values)
+    const range = maxValue - minValue
+
+    if (!Number.isFinite(range)) {
+      return ['auto', 'auto']
+    }
+
+    if (range === 0) {
+      const pad = Math.max(Math.abs(maxValue) * 0.01, 1)
+      return [maxValue - pad, maxValue + pad]
+    }
+
+    const pad = range * 0.1
+    return [minValue - pad, maxValue + pad]
+  }, [chartData])
+
   const resolvedRequested = requested ?? resolveVectorValue(requestedResponse)
   const resolvedUsed = used ?? resolveVectorValue(usedResponse)
   const resolvedLimit = limit ?? resolveVectorValue(limitResponse)
@@ -147,7 +179,7 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
   const requestedPercent = clampPercent(resolvedRequested ?? NaN, resolvedLimit ?? NaN)
   const usedPercent = clampPercent(resolvedUsed ?? NaN, resolvedLimit ?? NaN)
 
-  const limitPercent = 90
+  const limitPercent = 100
 
   const gradientMidStop = `${requestedPercent.toFixed(2)}%`
 
@@ -170,6 +202,104 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
     </Styled.TooltipContent>
   )
 
+  const updateUsedBadgeClamp = useCallback(() => {
+    const container = badgesContainerRef.current
+    const badge = usedBadgeRef.current
+
+    if (!container || !badge || !Number.isFinite(usedPercent)) {
+      setClampedUsedPercent(null)
+      return
+    }
+
+    const containerWidth = container.clientWidth
+    const badgeWidth = badge.offsetWidth
+
+    if (containerWidth <= 0 || badgeWidth <= 0) {
+      setClampedUsedPercent(null)
+      return
+    }
+
+    const leftPx = (usedPercent / 100) * containerWidth
+    const halfBadge = badgeWidth / 2
+    const clampedPx = Math.min(Math.max(leftPx, halfBadge), containerWidth - halfBadge)
+    const clampedPercent = (clampedPx / containerWidth) * 100
+
+    setClampedUsedPercent(clampedPercent)
+  }, [usedPercent])
+
+  const updateRequestedLabelClamp = useCallback(() => {
+    const container = badgesContainerRef.current
+    const requestedLabel = requestedLabelRef.current
+    const limitLabel = limitLabelRef.current
+
+    if (
+      !container ||
+      !requestedLabel ||
+      !limitLabel ||
+      !Number.isFinite(requestedPercent) ||
+      !Number.isFinite(limitPercent)
+    ) {
+      setClampedRequestedPercent(null)
+      return
+    }
+
+    const containerWidth = container.clientWidth
+    const requestedWidth = requestedLabel.offsetWidth
+    const limitWidth = limitLabel.offsetWidth
+
+    if (containerWidth <= 0 || requestedWidth <= 0 || limitWidth <= 0) {
+      setClampedRequestedPercent(null)
+      return
+    }
+
+    const requestedLeftPx = (requestedPercent / 100) * containerWidth
+    const limitLeftPx = (limitPercent / 100) * containerWidth
+    const requestedHalf = requestedWidth / 2
+    const limitHalf = limitWidth / 2
+    const limitLeftEdge = limitLeftPx - limitHalf
+    const containerMin = 0
+    const containerMax = containerWidth
+    const maxLeftPx = limitLeftEdge - requestedHalf
+    const clampedPx = Math.min(Math.max(requestedLeftPx, containerMin), containerMax, maxLeftPx)
+    const clampedPercent = (clampedPx / containerWidth) * 100
+
+    setClampedRequestedPercent(clampedPercent)
+  }, [requestedPercent, limitPercent])
+
+  useLayoutEffect(() => {
+    updateUsedBadgeClamp()
+    updateRequestedLabelClamp()
+
+    const container = badgesContainerRef.current
+    const badge = usedBadgeRef.current
+    const requestedLabel = requestedLabelRef.current
+    const limitLabel = limitLabelRef.current
+
+    if (!container || !('ResizeObserver' in window)) {
+      return undefined
+    }
+
+    const observer = new ResizeObserver(() => {
+      updateUsedBadgeClamp()
+      updateRequestedLabelClamp()
+    })
+
+    observer.observe(container)
+    if (badge) {
+      observer.observe(badge)
+    }
+    if (requestedLabel) {
+      observer.observe(requestedLabel)
+    }
+    if (limitLabel) {
+      observer.observe(limitLabel)
+    }
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [updateUsedBadgeClamp, updateRequestedLabelClamp])
+
   return (
     <Styled.Wrapper style={containerStyle} $colorBgContainer={token.colorBgContainer} $colorBorder={token.colorBorder}>
       <Styled.Header>
@@ -181,7 +311,7 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
             <ResponsiveContainer>
               <ComposedChart data={chartData} margin={{ top: 8, right: 12, left: 12, bottom: 0 }}>
                 <XAxis dataKey="index" hide />
-                <YAxis hide domain={['dataMin - 2', 'dataMax + 2']} />
+                <YAxis hide domain={yDomain} padding={{ top: 6, bottom: 24 }} />
                 <Area
                   type="monotone"
                   dataKey="value"
@@ -220,59 +350,75 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
               style={{ ['--gradient-mid-stop' as string]: gradientMidStop }}
             />
           </Tooltip>
-          {resolvedRequested !== undefined && (
-            <Styled.BarMarker $left={requestedPercent}>
-              <RequestedMarkerSvg />
-            </Styled.BarMarker>
-          )}
-          {resolvedUsed !== undefined && (
-            <Styled.BarMarker $left={usedPercent} $flipX $paddingTop={10}>
-              <UsedMarkerSvg />
-            </Styled.BarMarker>
-          )}
-          {resolvedLimit !== undefined && (
-            <Styled.BarMarker $left={limitPercent}>
-              <LimitMarkerSvg />
-            </Styled.BarMarker>
-          )}
-          {resolvedUsed !== undefined && (
-            <Styled.UsedBadge
-              $left={usedPercent}
-              $colorText={token.colorText}
-              $colorBgContainer={token.colorBgContainer}
-              $colorBorder={token.colorBorder}
-            >
-              <FormattedValue
-                value={resolvedUsed}
-                valueStrategy={valueStrategy}
-                valuePrecision={valuePrecision}
-                normalizedValues={normalizedValues}
-              />
-              <span> used</span>
-            </Styled.UsedBadge>
-          )}
-          {resolvedRequested !== undefined && (
-            <Styled.MarkerLabel $left={requestedPercent} $colorText={token.colorText}>
-              <FormattedValue
-                value={resolvedRequested}
-                valueStrategy={valueStrategy}
-                valuePrecision={valuePrecision}
-                normalizedValues={normalizedValues}
-              />
-              <span>requested</span>
-            </Styled.MarkerLabel>
-          )}
-          {resolvedLimit !== undefined && (
-            <Styled.MarkerLabel $left={limitPercent} $colorText={token.colorText}>
-              <FormattedValue
-                value={resolvedLimit}
-                valueStrategy={valueStrategy}
-                valuePrecision={valuePrecision}
-                normalizedValues={normalizedValues}
-              />
-              <span>limit</span>
-            </Styled.MarkerLabel>
-          )}
+          <Styled.BadgesContainer ref={badgesContainerRef}>
+            {resolvedRequested !== undefined && (
+              <Styled.BarMarker $left={requestedPercent} $edgeAlign>
+                <RequestedMarkerSvg />
+              </Styled.BarMarker>
+            )}
+            {resolvedUsed !== undefined && (
+              <Styled.BarMarker $left={usedPercent} $flipX $paddingTop={10}>
+                <UsedMarkerSvg />
+              </Styled.BarMarker>
+            )}
+            {resolvedLimit !== undefined && (
+              <Styled.BarMarker $left={limitPercent}>
+                <LimitMarkerSvg />
+              </Styled.BarMarker>
+            )}
+            {resolvedUsed !== undefined && (
+              <Styled.UsedBadge
+                ref={usedBadgeRef}
+                $left={clampedUsedPercent ?? usedPercent}
+                $colorText={token.colorText}
+                $colorBgContainer={token.colorBgContainer}
+                $colorBorder={token.colorBorder}
+              >
+                <FormattedValue
+                  value={resolvedUsed}
+                  valueStrategy={valueStrategy}
+                  valuePrecision={valuePrecision}
+                  normalizedValues={normalizedValues}
+                  hideUnit={hideUnit}
+                />
+                <span> used</span>
+              </Styled.UsedBadge>
+            )}
+            {resolvedRequested !== undefined && (
+              <Styled.MarkerLabel
+                ref={requestedLabelRef}
+                $left={clampedRequestedPercent ?? requestedPercent}
+                $paddingLeft={3}
+                $colorText={token.colorText}
+              >
+                <FormattedValue
+                  value={resolvedRequested}
+                  valueStrategy={valueStrategy}
+                  valuePrecision={valuePrecision}
+                  normalizedValues={normalizedValues}
+                  hideUnit={hideUnit}
+                />
+                <span>requested</span>
+              </Styled.MarkerLabel>
+            )}
+            {resolvedLimit !== undefined && (
+              <Styled.MarkerLabel
+                ref={limitLabelRef}
+                $left={limitPercent}
+                $paddingRight={3}
+                $colorText={token.colorText}
+              >
+                <FormattedValue
+                  value={resolvedLimit}
+                  valueStrategy={valueStrategy}
+                  valuePrecision={valuePrecision}
+                  normalizedValues={normalizedValues}
+                  hideUnit={hideUnit}
+                />
+                <span>limit</span>
+              </Styled.MarkerLabel>
+            )}
+          </Styled.BadgesContainer>
         </Styled.GradientBarContainer>
       </Styled.GradientBarWrapper>
       {children}

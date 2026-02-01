@@ -150,12 +150,3 @@ export const Error: TStory = {
   parameters: { msw: { handlers: [errorHandler] } },
 }
 
-export const DarkTheme: TStory = {
-  args: {
-    query: 'some_distribution_metric_dark',
-    formatter: 'bytes',
-    theme: 'dark',
-    state: 'success',
-  },
-  parameters: { msw: { handlers: [successHandler] } },
-}

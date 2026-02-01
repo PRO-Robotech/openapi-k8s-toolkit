@@ -163,14 +163,3 @@ export const Error: TStory = {
   parameters: { msw: { handlers: [errorHandler] } },
 }
 
-export const DarkTheme: TStory = {
-  args: {
-    query: 'container_memory_usage_bytes_dark',
-    title: 'Vector → Bar Gauge',
-    topN: 10,
-    formatter: 'bytes',
-    theme: 'dark',
-    state: 'success',
-  },
-  parameters: { msw: { handlers: [successHandler] } },
-}
