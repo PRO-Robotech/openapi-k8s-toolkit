@@ -6,7 +6,6 @@ import { TJSON } from 'localTypes/JSON'
 import { TPrepareTableReq, TPrepareTableRes } from 'localTypes/bff/table'
 import { TAdditionalPrinterColumns } from 'localTypes/richTable'
 import { usePermissions } from 'hooks/usePermissions'
-import { TActionUnion } from '../../../../organisms/DynamicComponents/types/ActionsDropdown'
 import { EnrichedTable } from '../EnrichedTable'
 import { prepare } from './utils'
 
@@ -58,7 +57,6 @@ export type TEnrichedTableProviderProps = {
     disablePagination?: boolean
   }
   withoutControls?: boolean
-  actions?: TActionUnion[]
 
   /* primary key */
   pathToKey?: string
@@ -82,7 +80,6 @@ export const EnrichedTableProvider: FC<TEnrichedTableProviderProps> = ({
   selectData,
   tableProps,
   withoutControls,
-  actions,
   pathToKey,
 }) => {
   const location = useLocation()
@@ -222,7 +219,6 @@ export const EnrichedTableProvider: FC<TEnrichedTableProviderProps> = ({
       selectData={selectData}
       tableProps={tableProps}
       withoutControls={preparedProps.withoutControls ?? withoutControls}
-      actions={actions}
     />
   )
 }

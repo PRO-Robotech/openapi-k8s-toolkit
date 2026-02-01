@@ -16,9 +16,7 @@ import { isFlatObject } from 'utils/isFlatObject'
 import { parseValueWithUnit, toBytes } from 'utils/converterBytes'
 import { parseCoresWithUnit, toCores } from 'utils/converterCores'
 import { TableFactory } from '../../molecules'
-import { TActionUnion } from '../../../../organisms/DynamicComponents/types/ActionsDropdown'
 import { ShortenedTextWithTooltip, FilterDropdown, TrimmedTags, TextAlignContainer, TinyButton } from './atoms'
-import { ActionsDropdownForTable } from './molecules'
 import { TInternalDataForControls } from './types'
 
 export const getCellRender = ({
@@ -357,14 +355,12 @@ export const getEnrichedColumnsWithControls = ({
   editIcon,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   deleteIcon,
-  actions,
 }: {
   enrichedColumns: TableProps['columns']
   navigate: NavigateFunction
   baseprefix?: string
   editIcon?: ReactNode
   deleteIcon?: ReactNode
-  actions?: TActionUnion[]
 }): TableProps['columns'] | undefined => {
   if (!enrichedColumns) {
     return undefined
@@ -378,15 +374,7 @@ export const getEnrichedColumnsWithControls = ({
       key: 'controls',
       className: 'controls',
       width: 60,
-      render: (value: TInternalDataForControls, record: TJSON) => {
-        if (actions && actions.length > 0) {
-          return (
-            <TextAlignContainer $align="center">
-              <ActionsDropdownForTable actions={actions} rowData={record} controlsData={value} />
-            </TextAlignContainer>
-          )
-        }
-
+      render: (value: TInternalDataForControls) => {
         return (
           // <TextAlignContainer $align="right" className="hideable">
           <TextAlignContainer $align="center">

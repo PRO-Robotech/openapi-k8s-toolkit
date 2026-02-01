@@ -12,7 +12,6 @@ import {
   TAdditionalPrinterColumnsUndefinedValues,
   TAdditionalPrinterColumnsCustomSortersAndFilters,
 } from 'localTypes/richTable'
-import { TActionUnion } from '../../../../organisms/DynamicComponents/types/ActionsDropdown'
 import { TableComponents } from './atoms'
 import { TInternalDataForControls } from './types'
 import { getEnrichedColumns, getEnrichedColumnsWithControls } from './utils'
@@ -37,7 +36,6 @@ export type TEnrichedTableProps = {
     selectedRowKeys: React.Key[]
   }
   withoutControls?: boolean
-  actions?: TActionUnion[]
   tableProps?: {
     borderless?: boolean
     paginationPosition?: TablePaginationConfig['position']
@@ -66,7 +64,6 @@ export const EnrichedTable: FC<TEnrichedTableProps> = ({
   additionalPrinterColumnsCustomSortersAndFilters,
   selectData,
   withoutControls = false,
-  actions,
   tableProps,
 }) => {
   const navigate = useNavigate()
@@ -102,7 +99,6 @@ export const EnrichedTable: FC<TEnrichedTableProps> = ({
         baseprefix,
         editIcon: tableProps?.editIcon,
         deleteIcon: tableProps?.deleteIcon,
-        actions,
       })
 
   if (!columnsWithControls) {
