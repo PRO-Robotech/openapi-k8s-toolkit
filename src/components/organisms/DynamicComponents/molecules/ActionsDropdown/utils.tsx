@@ -78,7 +78,7 @@ const getActionIcon = (action: TActionUnion): React.ReactNode => {
 }
 
 const isActionDisabledByPermission = (action: TActionUnion, permissions?: TActionsPermissions): boolean => {
-  if (!permissions) return false
+  if (!permissions) return true
 
   switch (action.type) {
     case 'edit':
