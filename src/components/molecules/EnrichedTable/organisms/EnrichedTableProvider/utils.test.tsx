@@ -217,6 +217,38 @@ describe('prepare (rich table data/columns)', () => {
     expect(row._flatMapLabels_Value).toBeNull()
   })
 
+  test('flatMap: preserves _flatMap value column and populates values', () => {
+    const additionalPrinterColumns = [
+      { name: 'Labels', type: 'flatMap', jsonPath: '.metadata.labels' },
+      { name: 'Labels Key', jsonPath: '_flatMapLabels_Key' },
+      { name: 'Labels Value', jsonPath: '_flatMapLabels_Value' },
+    ] as any
+
+    const dataItems = [
+      {
+        metadata: {
+          name: 'n1',
+          labels: {
+            a: '1',
+            b: '2',
+          },
+        },
+      },
+    ] as any
+
+    const { columns, dataSource } = prepare({
+      dataItems,
+      additionalPrinterColumns,
+    })
+
+    const valueColumn = (columns as any[]).find(c => c.key === 'Labels Value')
+    expect(valueColumn?.dataIndex).toBe('_flatMapLabels_Value')
+
+    const rows = dataSource as any[]
+    const values = rows.map(r => r._flatMapLabels_Value).sort()
+    expect(values).toEqual(['1', '2'])
+  })
+
   //
   // NEW TESTS for pathToKey
   //
