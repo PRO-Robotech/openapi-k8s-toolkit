@@ -279,6 +279,7 @@ describe('getMenuItems', () => {
           endpoint: '/api/annotations',
           pathToValue: '/metadata/annotations',
           modalTitle: 'Edit Annotations',
+          cols: [12, 12],
         },
       }
       const permissions: TActionsPermissions = { canPatch: false }
@@ -298,6 +299,7 @@ describe('getMenuItems', () => {
           endpoint: '/api/taints',
           pathToValue: '/spec/taints',
           modalTitle: 'Edit Taints',
+          cols: [12, 12],
         },
       }
       const permissions: TActionsPermissions = { canPatch: false }
@@ -317,6 +319,7 @@ describe('getMenuItems', () => {
           endpoint: '/api/tolerations',
           pathToValue: '/spec/tolerations',
           modalTitle: 'Edit Tolerations',
+          cols: [12, 12],
         },
       }
       const permissions: TActionsPermissions = { canPatch: false }
