@@ -45,6 +45,15 @@ const meta: Meta<TArgs> = {
       control: 'object',
       description: 'data.actions (array of action objects with type and props)',
     },
+    permissions: {
+      control: 'object',
+      description: 'data.permissions ({ canUpdate, canPatch, canDelete } - manual override, takes priority)',
+    },
+    permissionContext: {
+      control: 'object',
+      description:
+        'data.permissionContext ({ cluster, namespace?, apiGroup?, plural } - for automatic permission checking)',
+    },
 
     // provider knobs
     isLoading: {
@@ -81,6 +90,8 @@ const meta: Meta<TArgs> = {
       buttonVariant: args.buttonVariant,
       containerStyle: args.containerStyle,
       actions: args.actions,
+      permissions: args.permissions,
+      permissionContext: args.permissionContext,
     }
 
     return (
@@ -340,6 +351,91 @@ export const TableRowContext: Story = {
       },
     },
     partsOfUrl: ['openapi-ui', 'default', 'builtin-table', 'pods'],
+    theme: 'light',
+  },
+}
+
+/**
+ * Demonstrates permission-based action disabling.
+ * User has canUpdate but no canPatch or canDelete.
+ * Edit action is enabled, but Labels/Annotations/Delete are disabled.
+ */
+export const WithPermissions: Story = {
+  args: {
+    id: 'permissions-demo',
+    buttonText: 'Actions',
+    buttonVariant: 'default',
+    containerStyle: {},
+    actions: [
+      {
+        type: 'edit',
+        props: {
+          text: 'Edit (requires update)',
+          icon: 'EditOutlined',
+          cluster: 'default',
+          apiVersion: 'v1',
+          plural: 'pods',
+          name: 'example-pod',
+          baseprefix: '/openapi-ui',
+        },
+      },
+      {
+        type: 'editLabels',
+        props: {
+          text: 'Edit Labels (requires patch)',
+          icon: 'TagsOutlined',
+          reqIndex: '0',
+          jsonPathToLabels: '.metadata.labels',
+          endpoint: '/api/mock/labels',
+          pathToValue: '/metadata/labels',
+          modalTitle: 'Edit Labels',
+          editModalWidth: 650,
+        },
+      },
+      {
+        type: 'editAnnotations',
+        props: {
+          text: 'Edit Annotations (requires patch)',
+          icon: 'FileTextOutlined',
+          reqIndex: '0',
+          jsonPathToObj: '.metadata.annotations',
+          endpoint: '/api/mock/annotations',
+          pathToValue: '/metadata/annotations',
+          modalTitle: 'Edit Annotations',
+          cols: [12, 12],
+          editModalWidth: 720,
+        },
+      },
+      {
+        type: 'delete',
+        props: {
+          text: 'Delete (requires delete)',
+          icon: 'DeleteOutlined',
+          endpoint: '/api/mock/delete',
+          name: 'example-pod',
+        },
+      },
+    ],
+    permissions: {
+      canUpdate: true,
+      canPatch: false,
+      canDelete: false,
+    },
+
+    isLoading: false,
+    isError: false,
+    errors: [],
+    multiQueryData: {
+      req0: {
+        metadata: {
+          name: 'example-pod',
+          namespace: 'default',
+          labels: { app: 'demo' },
+          annotations: { description: 'test' },
+        },
+      },
+    },
+    partsOfUrl: ['openapi-ui', 'default'],
     theme: 'light',
   },
 }
