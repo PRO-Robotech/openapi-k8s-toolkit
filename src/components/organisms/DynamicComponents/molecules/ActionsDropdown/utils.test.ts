@@ -336,16 +336,16 @@ describe('getMenuItems', () => {
       expect(items[2].disabled).toBeFalsy()
     })
 
-    it('does not disable actions when specific permission is undefined', () => {
+    it('disables actions when specific permission is undefined (stricter check)', () => {
       const actions: TActionUnion[] = [createEditAction(), createDeleteAction(), createEditLabelsAction()]
       const permissions: TActionsPermissions = {} // all undefined
 
       const items = getMenuItems(actions, mockOnActionClick, permissions)
 
-      // undefined !== false, so should not be disabled
-      expect(items[0].disabled).toBeFalsy()
-      expect(items[1].disabled).toBeFalsy()
-      expect(items[2].disabled).toBeFalsy()
+      // undefined !== true, so should be disabled (safer while loading)
+      expect(items[0].disabled).toBe(true)
+      expect(items[1].disabled).toBe(true)
+      expect(items[2].disabled).toBe(true)
     })
 
     it('combines action disabled prop with permission-based disabling', () => {

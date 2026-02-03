@@ -82,14 +82,14 @@ const isActionDisabledByPermission = (action: TActionUnion, permissions?: TActio
 
   switch (action.type) {
     case 'edit':
-      return permissions.canUpdate === false
+      return permissions.canUpdate !== true
     case 'editLabels':
     case 'editAnnotations':
     case 'editTaints':
     case 'editTolerations':
-      return permissions.canPatch === false
+      return permissions.canPatch !== true
     case 'delete':
-      return permissions.canDelete === false
+      return permissions.canDelete !== true
     default:
       return false
   }
