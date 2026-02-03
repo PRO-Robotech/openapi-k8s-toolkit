@@ -104,6 +104,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     cluster: clusterPrepared,
     verb: 'create',
     refetchInterval: false,
+    enabler: Boolean(dataForControlsPrepared && clusterPrepared),
   })
 
   const fetchUrlPrepared = fetchUrl ? parseAll({ text: fetchUrl, replaceValues, multiQueryData }) : undefined

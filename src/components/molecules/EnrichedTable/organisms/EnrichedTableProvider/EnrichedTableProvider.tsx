@@ -95,6 +95,7 @@ export const EnrichedTableProvider: FC<TEnrichedTableProviderProps> = ({
     cluster,
     verb: 'update',
     refetchInterval: false,
+    enabler: Boolean(dataForControls && dataForControls.plural && cluster),
   })
 
   const deletePermission = usePermissions({
@@ -104,6 +105,7 @@ export const EnrichedTableProvider: FC<TEnrichedTableProviderProps> = ({
     cluster,
     verb: 'delete',
     refetchInterval: false,
+    enabler: Boolean(dataForControls && dataForControls.plural && cluster),
   })
 
   useEffect(() => {

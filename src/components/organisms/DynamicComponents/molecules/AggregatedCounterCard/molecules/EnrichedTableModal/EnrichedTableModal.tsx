@@ -114,6 +114,7 @@ export const EnrichedTableModal: FC<TEnrichedTableModalProps> = ({
     cluster: clusterPrepared,
     verb: 'create',
     refetchInterval: false,
+    enabler: Boolean(dataForControlsPrepared && clusterPrepared),
   })
 
   const fetchUrlPrepared = fetchUrl ? parseAll({ text: fetchUrl, replaceValues, multiQueryData }) : undefined
