@@ -5,6 +5,7 @@ import React, { FC, useState } from 'react'
 import jp from 'jsonpath'
 import { notification, Flex, Button } from 'antd'
 import { EditIcon } from 'components/atoms'
+import { usePermissions } from 'hooks/usePermissions'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
@@ -35,6 +36,8 @@ export const Annotations: FC<{ data: TDynamicComponentsAppTypeMap['Annotations']
     pathToValue,
     editModalWidth,
     cols,
+    permissions,
+    permissionContext,
   } = data
 
   const [api, contextHolder] = notification.useNotification()
@@ -42,6 +45,52 @@ export const Annotations: FC<{ data: TDynamicComponentsAppTypeMap['Annotations']
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
+
+  const safeMultiQueryData = multiQueryData || {}
+
+  const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
+    acc[index.toString()] = value
+    return acc
+  }, {})
+
+  const permissionContextPrepared = permissionContext
+    ? {
+        cluster: parseAll({ text: permissionContext.cluster, replaceValues, multiQueryData: safeMultiQueryData }),
+        namespace: permissionContext.namespace
+          ? parseAll({ text: permissionContext.namespace, replaceValues, multiQueryData: safeMultiQueryData })
+          : undefined,
+        apiGroup: permissionContext.apiGroup
+          ? parseAll({ text: permissionContext.apiGroup, replaceValues, multiQueryData: safeMultiQueryData })
+          : undefined,
+        plural: parseAll({ text: permissionContext.plural, replaceValues, multiQueryData: safeMultiQueryData }),
+      }
+    : undefined
+
+  const isPermissionContextValid =
+    !!permissionContextPrepared &&
+    !isMultiQueryLoading &&
+    !!permissionContextPrepared.cluster &&
+    permissionContextPrepared.cluster !== '-' &&
+    !!permissionContextPrepared.plural &&
+    permissionContextPrepared.plural !== '-'
+
+  const patchPermission = usePermissions({
+    cluster: permissionContextPrepared?.cluster || '',
+    namespace: permissionContextPrepared?.namespace,
+    apiGroup: permissionContextPrepared?.apiGroup,
+    plural: permissionContextPrepared?.plural || '',
+    verb: 'patch',
+    refetchInterval: false,
+    enabler: isPermissionContextValid,
+  })
+
+  // Permission gating for patch-based edit:
+  // 1) canPatch: Manual permissions override hook result if provided.
+  // 2) shouldGateEdit: True when permissions or permissionContext are provided; otherwise don't gate.
+  // 3) canEdit: Allow edit when gating is off or canPatch === true.
+  const canPatch = permissions?.canPatch ?? patchPermission.data?.status.allowed
+  const shouldGateEdit = Boolean(permissions || permissionContext)
+  const canEdit = !shouldGateEdit || canPatch === true
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
@@ -55,11 +104,6 @@ export const Annotations: FC<{ data: TDynamicComponentsAppTypeMap['Annotations']
       </div>
     )
   }
-
-  const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
-    acc[index.toString()] = value
-    return acc
-  }, {})
 
   const jsonRoot = multiQueryData[`req${reqIndex}`]
 
@@ -113,6 +157,51 @@ export const Annotations: FC<{ data: TDynamicComponentsAppTypeMap['Annotations']
         <div style={containerStyle}>
           <Flex align="center" gap={8}>
             {errorText}
+            {canEdit && (
+              <Button
+                type="text"
+                size="small"
+                onClick={e => {
+                  e.stopPropagation()
+                  setOpen(true)
+                }}
+                icon={<EditIcon />}
+              />
+            )}
+          </Flex>
+        </div>
+        {contextHolder}
+        {canEdit && (
+          <AnnotationsEditModal
+            open={open}
+            close={() => setOpen(false)}
+            values={annotations}
+            openNotificationSuccess={openNotificationSuccess}
+            modalTitle={modalTitlePrepared}
+            modalDescriptionText={modalDescriptionTextPrepared}
+            modalDescriptionTextStyle={modalDescriptionTextStyle}
+            inputLabel={inputLabelPrepared}
+            inputLabelStyle={inputLabelStyle}
+            endpoint={endpointPrepared}
+            pathToValue={pathToValuePrepared}
+            editModalWidth={editModalWidth}
+            cols={cols}
+          />
+        )}
+      </>
+    )
+  }
+
+  const parsedText = parseAll({ text, replaceValues, multiQueryData })
+
+  const parsedTextWithCounter = parsedText.replace('~counter~', String(counter || 0))
+
+  return (
+    <>
+      <div style={containerStyle}>
+        <Flex align="center" gap={8}>
+          {parsedTextWithCounter}
+          {canEdit && (
             <Button
               type="text"
               size="small"
@@ -122,9 +211,12 @@ export const Annotations: FC<{ data: TDynamicComponentsAppTypeMap['Annotations']
               }}
               icon={<EditIcon />}
             />
-          </Flex>
-        </div>
-        {contextHolder}
+          )}
+        </Flex>
+        {children}
+      </div>
+      {contextHolder}
+      {canEdit && (
         <AnnotationsEditModal
           open={open}
           close={() => setOpen(false)}
@@ -140,47 +232,7 @@ export const Annotations: FC<{ data: TDynamicComponentsAppTypeMap['Annotations']
           editModalWidth={editModalWidth}
           cols={cols}
         />
-      </>
-    )
-  }
-
-  const parsedText = parseAll({ text, replaceValues, multiQueryData })
-
-  const parsedTextWithCounter = parsedText.replace('~counter~', String(counter || 0))
-
-  return (
-    <>
-      <div style={containerStyle}>
-        <Flex align="center" gap={8}>
-          {parsedTextWithCounter}
-          <Button
-            type="text"
-            size="small"
-            onClick={e => {
-              e.stopPropagation()
-              setOpen(true)
-            }}
-            icon={<EditIcon />}
-          />
-        </Flex>
-        {children}
-      </div>
-      {contextHolder}
-      <AnnotationsEditModal
-        open={open}
-        close={() => setOpen(false)}
-        values={annotations}
-        openNotificationSuccess={openNotificationSuccess}
-        modalTitle={modalTitlePrepared}
-        modalDescriptionText={modalDescriptionTextPrepared}
-        modalDescriptionTextStyle={modalDescriptionTextStyle}
-        inputLabel={inputLabelPrepared}
-        inputLabelStyle={inputLabelStyle}
-        endpoint={endpointPrepared}
-        pathToValue={pathToValuePrepared}
-        editModalWidth={editModalWidth}
-        cols={cols}
-      />
+      )}
     </>
   )
 }

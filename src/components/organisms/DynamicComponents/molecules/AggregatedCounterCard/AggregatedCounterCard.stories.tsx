@@ -44,7 +44,7 @@ const meta: Meta<TArgs> = {
     activeType: {
       control: 'object',
       description:
-        'data.activeType (optional; { type: "labels" | "annotations" | "taints" | "tolerations" | "table", props: ... })',
+        'data.activeType (optional; { type: "labels" | "annotations" | "taints" | "tolerations" | "table", props: ...; labels/annotations/taints/tolerations support permissions/permissionContext })',
     },
 
     // provider knobs
@@ -157,6 +157,9 @@ export const Default: Story = {
         pathToValue: '/metadata/labels',
         editModalWidth: 720,
         paddingContainerEnd: '16px',
+        permissions: {
+          canPatch: true,
+        },
       },
     },
 
@@ -228,6 +231,9 @@ export const WithTaintsActiveType: Story = {
         pathToValue: '.spec.taints',
         editModalWidth: 720,
         cols: [6, 6, 6, 6],
+        permissions: {
+          canPatch: true,
+        },
       },
     },
     multiQueryData: {
@@ -243,6 +249,106 @@ export const WithTaintsActiveType: Story = {
             {
               key: 'node-role.kubernetes.io/control-plane',
               value: '',
+              effect: 'NoSchedule',
+            },
+          ],
+        },
+      },
+    },
+  },
+}
+
+export const WithAnnotationsActiveType: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-aggregated-counter-card-annotations',
+    text: 'Pod annotations',
+    counter: {
+      type: 'item',
+      props: {
+        reqIndex: '2',
+        jsonPathToArray: '.data.metadata.annotations',
+        errorText: 'No annotations found',
+        style: { color: '#999' },
+      },
+    },
+    activeType: {
+      type: 'annotations',
+      props: {
+        reqIndex: '2',
+        jsonPathToObj: '.data.metadata.annotations',
+        notificationSuccessMessage: 'Annotations updated',
+        notificationSuccessMessageDescription: 'Annotations were successfully patched',
+        modalTitle: 'Edit annotations',
+        modalDescriptionText: 'Add, edit or remove annotations for this resource.',
+        inputLabel: 'Annotations',
+        endpoint: '/api/mock/annotations',
+        pathToValue: '.metadata.annotations',
+        editModalWidth: 720,
+        cols: [8, 8, 8],
+        permissions: {
+          canPatch: true,
+        },
+      },
+    },
+    multiQueryData: {
+      req0: (Default.args as TArgs).multiQueryData?.req0,
+      req2: {
+        data: {
+          metadata: {
+            annotations: {
+              'example.com/owner': 'team-a',
+              'example.com/trace': 'enabled',
+            },
+          },
+        },
+      },
+    },
+  },
+}
+
+export const WithTolerationsActiveType: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-aggregated-counter-card-tolerations',
+    text: 'Pod tolerations',
+    counter: {
+      type: 'item',
+      props: {
+        reqIndex: '3',
+        jsonPathToArray: '.spec.tolerations',
+        errorText: 'No tolerations found',
+        style: { color: '#999' },
+      },
+    },
+    activeType: {
+      type: 'tolerations',
+      props: {
+        reqIndex: '3',
+        jsonPathToArray: '.spec.tolerations',
+        notificationSuccessMessage: 'Tolerations updated',
+        notificationSuccessMessageDescription: 'Tolerations were successfully patched',
+        modalTitle: 'Edit tolerations',
+        modalDescriptionText: 'Add, edit or remove tolerations for this resource.',
+        inputLabel: 'Tolerations',
+        endpoint: '/api/mock/tolerations',
+        pathToValue: '.spec.tolerations',
+        editModalWidth: 720,
+        cols: [6, 6, 6, 6, 6],
+        permissions: {
+          canPatch: true,
+        },
+      },
+    },
+    multiQueryData: {
+      req0: (Default.args as TArgs).multiQueryData?.req0,
+      req3: {
+        spec: {
+          tolerations: [
+            {
+              key: 'dedicated',
+              operator: 'Equal',
+              value: 'gpu',
               effect: 'NoSchedule',
             },
           ],

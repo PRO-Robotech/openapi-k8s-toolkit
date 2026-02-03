@@ -49,6 +49,19 @@ export type TActionUnion =
   | { type: 'editTolerations'; props: TEditTolerationsActionProps }
   | { type: 'delete'; props: TDeleteActionProps }
 
+export type TActionsPermissions = {
+  canUpdate?: boolean
+  canPatch?: boolean
+  canDelete?: boolean
+}
+
+export type TPermissionContext = {
+  cluster: string
+  namespace?: string
+  apiGroup?: string
+  plural: string
+}
+
 export type TActionsDropdownProps = {
   id: number | string
   buttonText?: string
@@ -56,4 +69,8 @@ export type TActionsDropdownProps = {
   buttonVariant?: 'default' | 'icon'
   containerStyle?: CSSProperties
   actions: TActionUnion[]
+  /** Manual permission override. Takes priority over permissionContext. */
+  permissions?: TActionsPermissions
+  /** Resource context for automatic permission checking. */
+  permissionContext?: TPermissionContext
 }

@@ -1,5 +1,5 @@
 import React from 'react'
-import { TActionUnion, TEditActionProps } from '../../types/ActionsDropdown'
+import { TActionUnion, TEditActionProps, TActionsPermissions } from '../../types/ActionsDropdown'
 import { LabelsModal } from '../AggregatedCounterCard/molecules/LabelsModal'
 import { AnnotationsModal } from '../AggregatedCounterCard/molecules/AnnotationsModal'
 import { TaintsModal } from '../AggregatedCounterCard/molecules/TaintsModal'
@@ -77,12 +77,32 @@ const getActionIcon = (action: TActionUnion): React.ReactNode => {
   return undefined
 }
 
-export const getMenuItems = (actions: TActionUnion[], onActionClick: (action: TActionUnion) => void) =>
+const isActionDisabledByPermission = (action: TActionUnion, permissions: TActionsPermissions): boolean => {
+  switch (action.type) {
+    case 'edit':
+      return permissions.canUpdate !== true
+    case 'editLabels':
+    case 'editAnnotations':
+    case 'editTaints':
+    case 'editTolerations':
+      return permissions.canPatch !== true
+    case 'delete':
+      return permissions.canDelete !== true
+    default:
+      return false
+  }
+}
+
+export const getMenuItems = (
+  actions: TActionUnion[],
+  onActionClick: (action: TActionUnion) => void,
+  permissions: TActionsPermissions,
+) =>
   actions.map((action, index) => ({
     key: `${action.type}-${index}`,
     label: action.props.text,
     icon: getActionIcon(action),
-    disabled: action.props.disabled,
+    disabled: action.props.disabled || isActionDisabledByPermission(action, permissions),
     danger: action.props.danger,
     onClick: () => onActionClick(action),
   }))

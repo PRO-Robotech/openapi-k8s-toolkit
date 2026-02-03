@@ -35,6 +35,6 @@ export const usePermissions = ({
         })
       ).data,
     refetchInterval: refetchInterval !== undefined ? refetchInterval : 5000,
-    enabled: enabler || true,
+    enabled: enabler ?? true,
   })
 }

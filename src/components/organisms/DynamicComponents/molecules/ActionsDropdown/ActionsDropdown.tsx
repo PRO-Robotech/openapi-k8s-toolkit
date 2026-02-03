@@ -4,8 +4,9 @@ import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { Dropdown, Button } from 'antd'
 import { DownOutlined, MoreOutlined } from '@ant-design/icons'
 import { DeleteModal } from 'components/atoms'
+import { usePermissions } from 'hooks/usePermissions'
 import { TDynamicComponentsAppTypeMap } from '../../types'
-import { TActionUnion } from '../../types/ActionsDropdown'
+import { TActionUnion, TActionsPermissions } from '../../types/ActionsDropdown'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
@@ -16,7 +17,14 @@ export const ActionsDropdown: FC<{
   data: TDynamicComponentsAppTypeMap['ActionsDropdown']
   children?: any
 }> = ({ data, children }) => {
-  const { buttonText = 'Actions', buttonVariant = 'default', containerStyle, actions } = data
+  const {
+    buttonText = 'Actions',
+    buttonVariant = 'default',
+    containerStyle,
+    actions,
+    permissions,
+    permissionContext,
+  } = data
 
   const navigate = useNavigate()
   const location = useLocation()
@@ -34,6 +42,53 @@ export const ActionsDropdown: FC<{
   const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
 
+  const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
+    acc[index.toString()] = value
+    return acc
+  }, {})
+
+  const permissionContextPrepared = permissionContext
+    ? {
+        cluster: parseAll({ text: permissionContext.cluster, replaceValues, multiQueryData }),
+        namespace: permissionContext.namespace
+          ? parseAll({ text: permissionContext.namespace, replaceValues, multiQueryData })
+          : undefined,
+        apiGroup: permissionContext.apiGroup
+          ? parseAll({ text: permissionContext.apiGroup, replaceValues, multiQueryData })
+          : undefined,
+        plural: parseAll({ text: permissionContext.plural, replaceValues, multiQueryData }),
+      }
+    : undefined
+
+  const isPermissionContextValid =
+    !!permissionContextPrepared &&
+    !isMultiQueryLoading &&
+    !!permissionContextPrepared.cluster &&
+    permissionContextPrepared.cluster !== '-' &&
+    !!permissionContextPrepared.plural &&
+    permissionContextPrepared.plural !== '-'
+
+  const permissionBaseParams = {
+    cluster: permissionContextPrepared?.cluster || '',
+    namespace: permissionContextPrepared?.namespace,
+    apiGroup: permissionContextPrepared?.apiGroup,
+    plural: permissionContextPrepared?.plural || '',
+    refetchInterval: false as const,
+    enabler: isPermissionContextValid,
+  }
+
+  const updatePermission = usePermissions({ ...permissionBaseParams, verb: 'update' })
+  const patchPermission = usePermissions({ ...permissionBaseParams, verb: 'patch' })
+  const deletePermission = usePermissions({ ...permissionBaseParams, verb: 'delete' })
+
+  const computedPermissions: TActionsPermissions = {
+    canUpdate: updatePermission.data?.status.allowed,
+    canPatch: patchPermission.data?.status.allowed,
+    canDelete: deletePermission.data?.status.allowed,
+  }
+
+  const effectivePermissions = permissions ?? computedPermissions
+
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
   }
@@ -47,11 +102,6 @@ export const ActionsDropdown: FC<{
       </div>
     )
   }
-
-  const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
-    acc[index.toString()] = value
-    return acc
-  }, {})
 
   const handleActionClick = (action: TActionUnion) => {
     if (action.type === 'edit') {
@@ -132,7 +182,7 @@ export const ActionsDropdown: FC<{
     // else: no navigation, just close modal (table context)
   }
 
-  const menuItems = getMenuItems(actions, handleActionClick)
+  const menuItems = getMenuItems(actions, handleActionClick, effectivePermissions)
 
   const renderButton = () => {
     if (buttonVariant === 'icon') {

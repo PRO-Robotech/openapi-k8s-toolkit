@@ -79,6 +79,14 @@ const meta: Meta<TArgs> = {
       control: 'object',
       description: 'data.cols [keyCol, valueCol, actionsCol] (AntD grid spans, length 3)',
     },
+    permissions: {
+      control: 'object',
+      description: 'data.permissions (optional; { canPatch?: boolean } manual override)',
+    },
+    permissionContext: {
+      control: 'object',
+      description: 'data.permissionContext (optional; auto permission check context)',
+    },
 
     // provider knobs
     isLoading: { control: 'boolean', description: 'useMultiQuery.isLoading' },
@@ -113,6 +121,8 @@ const meta: Meta<TArgs> = {
       pathToValue: args.pathToValue,
       editModalWidth: args.editModalWidth,
       cols: args.cols,
+      permissions: args.permissions,
+      permissionContext: args.permissionContext,
     }
 
     return (
@@ -183,6 +193,9 @@ export const Default: Story = {
     pathToValue: '/metadata/annotations',
     editModalWidth: 720,
     cols: [8, 12, 4],
+    permissions: {
+      canPatch: true,
+    },
 
     // providers
     isLoading: false,
