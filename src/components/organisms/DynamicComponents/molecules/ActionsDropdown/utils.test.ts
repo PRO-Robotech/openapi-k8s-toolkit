@@ -173,10 +173,12 @@ describe('getMenuItems', () => {
     },
   })
 
+  const allAllowedPermissions: TActionsPermissions = { canUpdate: true, canPatch: true, canDelete: true }
+
   it('creates menu items from actions array', () => {
     const actions: TActionUnion[] = [createEditAction(), createDeleteAction()]
 
-    const items = getMenuItems(actions, mockOnActionClick)
+    const items = getMenuItems(actions, mockOnActionClick, allAllowedPermissions)
 
     expect(items).toHaveLength(2)
     expect(items[0].key).toBe('edit-0')
@@ -187,7 +189,7 @@ describe('getMenuItems', () => {
 
   it('calls onActionClick when item is clicked', () => {
     const editAction = createEditAction()
-    const items = getMenuItems([editAction], mockOnActionClick)
+    const items = getMenuItems([editAction], mockOnActionClick, allAllowedPermissions)
 
     items[0].onClick()
 
@@ -198,7 +200,7 @@ describe('getMenuItems', () => {
   it('respects disabled prop on individual actions', () => {
     const actions: TActionUnion[] = [createEditAction({ disabled: true }), createDeleteAction({ disabled: false })]
 
-    const items = getMenuItems(actions, mockOnActionClick)
+    const items = getMenuItems(actions, mockOnActionClick, allAllowedPermissions)
 
     expect(items[0].disabled).toBe(true)
     expect(items[1].disabled).toBe(false)
@@ -207,7 +209,7 @@ describe('getMenuItems', () => {
   it('respects danger prop on actions', () => {
     const actions: TActionUnion[] = [createEditAction({ danger: false }), createDeleteAction({ danger: true })]
 
-    const items = getMenuItems(actions, mockOnActionClick)
+    const items = getMenuItems(actions, mockOnActionClick, allAllowedPermissions)
 
     expect(items[0].danger).toBe(false)
     expect(items[1].danger).toBe(true)
@@ -329,14 +331,14 @@ describe('getMenuItems', () => {
       expect(items[0].disabled).toBe(true)
     })
 
-    it('does not disable actions when permissions object is undefined', () => {
+    it('disables actions when permissions object is empty', () => {
       const actions: TActionUnion[] = [createEditAction(), createDeleteAction(), createEditLabelsAction()]
 
-      const items = getMenuItems(actions, mockOnActionClick, undefined)
+      const items = getMenuItems(actions, mockOnActionClick, {})
 
-      expect(items[0].disabled).toBeFalsy()
-      expect(items[1].disabled).toBeFalsy()
-      expect(items[2].disabled).toBeFalsy()
+      expect(items[0].disabled).toBe(true)
+      expect(items[1].disabled).toBe(true)
+      expect(items[2].disabled).toBe(true)
     })
 
     it('disables actions when specific permission is undefined (stricter check)', () => {

@@ -77,9 +77,7 @@ const getActionIcon = (action: TActionUnion): React.ReactNode => {
   return undefined
 }
 
-const isActionDisabledByPermission = (action: TActionUnion, permissions?: TActionsPermissions): boolean => {
-  if (!permissions) return true
-
+const isActionDisabledByPermission = (action: TActionUnion, permissions: TActionsPermissions): boolean => {
   switch (action.type) {
     case 'edit':
       return permissions.canUpdate !== true
@@ -98,7 +96,7 @@ const isActionDisabledByPermission = (action: TActionUnion, permissions?: TActio
 export const getMenuItems = (
   actions: TActionUnion[],
   onActionClick: (action: TActionUnion) => void,
-  permissions?: TActionsPermissions,
+  permissions: TActionsPermissions,
 ) =>
   actions.map((action, index) => ({
     key: `${action.type}-${index}`,

@@ -81,13 +81,11 @@ export const ActionsDropdown: FC<{
   const patchPermission = usePermissions({ ...permissionBaseParams, verb: 'patch' })
   const deletePermission = usePermissions({ ...permissionBaseParams, verb: 'delete' })
 
-  const computedPermissions: TActionsPermissions | undefined = isPermissionContextValid
-    ? {
-        canUpdate: updatePermission.data?.status.allowed,
-        canPatch: patchPermission.data?.status.allowed,
-        canDelete: deletePermission.data?.status.allowed,
-      }
-    : undefined
+  const computedPermissions: TActionsPermissions = {
+    canUpdate: updatePermission.data?.status.allowed,
+    canPatch: patchPermission.data?.status.allowed,
+    canDelete: deletePermission.data?.status.allowed,
+  }
 
   const effectivePermissions = permissions ?? computedPermissions
 
