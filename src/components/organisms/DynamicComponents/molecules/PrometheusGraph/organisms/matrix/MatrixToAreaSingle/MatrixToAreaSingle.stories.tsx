@@ -227,7 +227,3 @@ export const OneDay: TStory = {
   parameters: { msw: { handlers: [successHandler] } },
 }
 
-export const DarkTheme: TStory = {
-  args: { ...Default.args, theme: 'dark', state: 'success' },
-  parameters: { msw: { handlers: [successHandler] } },
-}

@@ -184,7 +184,3 @@ export const Min: TStory = {
   parameters: { msw: { handlers: [successHandler] } },
 }
 
-export const DarkTheme: TStory = {
-  args: { ...Default.args, theme: 'dark' },
-  parameters: { msw: { handlers: [successHandler] } },
-}

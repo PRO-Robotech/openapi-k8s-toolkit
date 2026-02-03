@@ -80,12 +80,16 @@ export const convertBytes: (bytes: number, unit: TUnitInput, opts?: TConvertOpti
   const factor = UNIT_FACTORS[canon]
   const value = bytes / factor
 
-  return opts?.format
-    ? `${value.toLocaleString(opts.locale, {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: opts?.precision ?? 2,
-      })} ${canon}`
-    : value
+  if (!opts?.format) {
+    return value
+  }
+
+  const formatted = value.toLocaleString(opts.locale, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: opts?.precision ?? 2,
+  })
+
+  return opts?.showUnit === false ? formatted : `${formatted} ${canon}`
 }
 
 /**
@@ -94,8 +98,8 @@ export const convertBytes: (bytes: number, unit: TUnitInput, opts?: TConvertOpti
  */
 export const formatBytesAuto: (
   bytes: number,
-  options?: { standard?: 'si' | 'iec'; precision?: number; locale?: string },
-) => string = (bytes, { standard = 'si', precision = 2, locale } = {}) => {
+  options?: { standard?: 'si' | 'iec'; precision?: number; locale?: string; showUnit?: boolean },
+) => string = (bytes, { standard = 'si', precision = 2, locale, showUnit } = {}) => {
   if (!Number.isFinite(bytes)) {
     // throw new Error('bytes must be a finite number')
     console.error('bytes must be a finite number')
@@ -116,7 +120,7 @@ export const formatBytesAuto: (
   const idx = bytes > 0 ? Math.min(ladder.length - 1, Math.floor(Math.log(bytes) / Math.log(base))) : 0
 
   const unit = ladder[Math.max(0, idx)]
-  return String(convertBytes(bytes, unit, { format: true, precision, locale }))
+  return String(convertBytes(bytes, unit, { format: true, precision, locale, showUnit }))
 }
 
 // ---- Examples ----

@@ -45,6 +45,7 @@ const meta: Meta<TArgs> = {
       description: 'data.toUnit (explicit target unit when using fromUnit or inline unit).',
     },
     format: { control: { type: 'boolean' }, description: 'data.format' },
+    showUnit: { control: { type: 'boolean' }, description: 'data.showUnit (when format=true)' },
     precision: { control: 'number', description: 'data.precision' },
     locale: { control: 'text', description: 'data.locale' },
     standard: {
@@ -84,6 +85,7 @@ const meta: Meta<TArgs> = {
               fromUnit: args.fromUnit,
               toUnit: args.toUnit,
               format: args.format,
+              showUnit: args.showUnit,
               precision: args.precision,
               locale: args.locale,
               standard: args.standard,
@@ -106,6 +108,7 @@ const meta: Meta<TArgs> = {
             fromUnit: args.fromUnit,
             toUnit: args.toUnit,
             format: args.format,
+            showUnit: args.showUnit,
             precision: args.precision,
             locale: args.locale,
             standard: args.standard,
@@ -158,6 +161,15 @@ export const FormatOff: Story = {
     ...Default.args,
     unit: 'k',
     format: false,
+  },
+}
+
+export const FormatNoUnit: Story = {
+  args: {
+    ...Default.args,
+    unit: 'Mi',
+    format: true,
+    showUnit: false,
   },
 }
 

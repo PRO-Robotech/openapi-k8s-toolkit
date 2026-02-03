@@ -1,0 +1,25 @@
+html,
+body {
+  margin: 0;
+  font-family: 'Roboto';
+  overscroll-behavior: none;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+.ant-input-number-outlined {
+  width: 100%;
+}
+
+.ant-breadcrumb > ol > li .ant-breadcrumb-link {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 25px;
+}
+
+.ant-breadcrumb > ol > li:last-child .ant-breadcrumb-link {
+  font-size: 16px;
+}

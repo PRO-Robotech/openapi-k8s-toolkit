@@ -3,7 +3,14 @@
 import _ from 'lodash'
 import jp from 'jsonpath'
 import { prepareTemplate } from 'utils/prepareTemplate'
-import { parsePartsOfUrl, parseMutliqueryText, parseJsonPathTemplate, parseWithoutPartsOfUrl, parseAll } from './utils'
+import {
+  parsePartsOfUrl,
+  parseMutliqueryText,
+  parseJsonPathTemplate,
+  parseWithoutPartsOfUrl,
+  parseAll,
+  parsePromTemplate,
+} from './utils'
 
 // Mock prepareTemplate so we can assert interactions easily
 jest.mock('utils/prepareTemplate', () => ({
@@ -383,4 +390,25 @@ it('supports {7} placeholder inside JSONPath expressions via replaceValues', () 
   expect(result).toBe('probe=READY')
 
   jpSpy.mockRestore()
+})
+
+describe('parsePromTemplate', () => {
+  it('preserves prom label braces and resolves reqsJsonPath placeholders', () => {
+    const multiQueryData = {
+      req0: {
+        items: [{ metadata: { name: 'node-1' } }],
+      },
+    }
+
+    const text =
+      'sum(kube_pod_container_resource_limits{resource="memory",node=~"{reqsJsonPath[0][\'.items.0.metadata.name\'][\'-\']}"})'
+
+    const result = parsePromTemplate({
+      text,
+      replaceValues: {},
+      multiQueryData,
+    })
+
+    expect(result).toBe('sum(kube_pod_container_resource_limits{resource="memory",node=~"node-1"})')
+  })
 })

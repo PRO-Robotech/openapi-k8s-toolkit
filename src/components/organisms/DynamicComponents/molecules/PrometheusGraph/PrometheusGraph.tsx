@@ -3,7 +3,7 @@ import React, { FC } from 'react'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
-import { parseAll } from '../utils'
+import { parseAll, parsePromTemplate } from '../utils'
 import {
   MatrixToAreaMulti,
   MatrixToAreaSingle,
@@ -90,10 +90,14 @@ export const PrometheusGraph: FC<{ data: TDynamicComponentsAppTypeMap['Prometheu
   }, {})
 
   const parsedProps = Object.fromEntries(
-    Object.entries(props).map(([k, v]) => [
-      k,
-      v === undefined ? undefined : parseAll({ text: v, replaceValues, multiQueryData }),
-    ]),
+    Object.entries(props).map(([k, v]) => {
+      if (v === undefined) {
+        return [k, undefined]
+      }
+
+      const parser = k === 'query' || k === 'baseUrl' || k === 'range' ? parsePromTemplate : parseAll
+      return [k, parser({ text: v, replaceValues, multiQueryData })]
+    }),
   )
 
   const formatValue = createValueFormatter({ formatter, unit })

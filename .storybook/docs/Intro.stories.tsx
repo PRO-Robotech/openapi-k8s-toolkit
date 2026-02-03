@@ -1,9 +1,14 @@
 // .storybook/docs/Intro.stories.tsx
-import type { Meta, StoryObj } from '@storybook/react'
 import React, { FC } from 'react'
+import { theme as antdTheme } from 'antd'
+import type { Meta, StoryObj } from '@storybook/react'
 
-const IntroPage: FC = () => (
-  <div style={{ padding: 24, maxWidth: 900, margin: '0 auto' }}>
+const IntroPage: FC = () => {
+  const { token } = antdTheme.useToken()
+
+  return (
+    <div style={{ background: token.colorBgLayout, minHeight: '100vh' }}>
+      <div style={{ padding: 24, maxWidth: 900, margin: '0 auto', color: token.colorText }}>
     <h1 style={{ fontSize: 32, marginBottom: 8 }}>🚀 Welcome to openapi-k8s-toolkit</h1>
 
     <p style={{ fontSize: 16, opacity: 0.9, marginBottom: 24 }}>
@@ -58,16 +63,15 @@ data:
       </li>
       <li>Copy the YAML from the editor into your layout/factory config.</li>
     </ol>
-  </div>
-)
+      </div>
+    </div>
+  )
+}
 
 const meta: Meta<typeof IntroPage> = {
   title: 'Welcome',
   component: IntroPage,
   parameters: {
-    docs: {
-      page: () => <IntroPage />,
-    },
     options: {
       initialActive: 'overview',
     },
@@ -76,7 +80,7 @@ const meta: Meta<typeof IntroPage> = {
 
 export default meta
 
-type Story = StoryObj<typeof IntroPage>
+type IntroStory = StoryObj<typeof IntroPage>
 
 // Empty story – we only care about the custom docs.page above
-export const Overview: Story = {}
+export const Overview: IntroStory = {}
