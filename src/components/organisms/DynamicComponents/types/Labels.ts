@@ -1,6 +1,17 @@
 import { CSSProperties } from 'react'
 import { FlexProps, SelectProps } from 'antd'
 
+export type TLabelsPermissions = {
+  canPatch?: boolean
+}
+
+export type TPermissionContext = {
+  cluster: string
+  namespace?: string
+  apiGroup?: string
+  plural: string
+}
+
 export type TLabelsModalProps = {
   notificationSuccessMessage?: string
   notificationSuccessMessageDescription?: string
@@ -33,6 +44,10 @@ export type TLabelsViewProps = {
 export type TLabelsBaseProps = {
   reqIndex: string
   jsonPathToLabels: string
+  /** Manual permission override. Takes priority over permissionContext. */
+  permissions?: TLabelsPermissions
+  /** Resource context for automatic permission checking. */
+  permissionContext?: TPermissionContext
 }
 
 export type TLabelsProps = {

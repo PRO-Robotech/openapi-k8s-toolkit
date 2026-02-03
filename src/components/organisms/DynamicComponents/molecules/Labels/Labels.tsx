@@ -7,6 +7,7 @@ import jp from 'jsonpath'
 import { useNavigate } from 'react-router-dom'
 import { Popover, notification, Flex, Button } from 'antd'
 import { UncontrolledSelect, CursorPointerTag, CursorPointerTagMinContent, EditIcon, Spacer } from 'components/atoms'
+import { usePermissions } from 'hooks/usePermissions'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
@@ -44,6 +45,8 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
     pathToValue,
     editModalWidth,
     paddingContainerEnd,
+    permissions,
+    permissionContext,
   } = data
 
   const [api, contextHolder] = notification.useNotification()
@@ -54,6 +57,52 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
+
+  const safeMultiQueryData = multiQueryData || {}
+
+  const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
+    acc[index.toString()] = value
+    return acc
+  }, {})
+
+  const permissionContextPrepared = permissionContext
+    ? {
+        cluster: parseAll({ text: permissionContext.cluster, replaceValues, multiQueryData: safeMultiQueryData }),
+        namespace: permissionContext.namespace
+          ? parseAll({ text: permissionContext.namespace, replaceValues, multiQueryData: safeMultiQueryData })
+          : undefined,
+        apiGroup: permissionContext.apiGroup
+          ? parseAll({ text: permissionContext.apiGroup, replaceValues, multiQueryData: safeMultiQueryData })
+          : undefined,
+        plural: parseAll({ text: permissionContext.plural, replaceValues, multiQueryData: safeMultiQueryData }),
+      }
+    : undefined
+
+  const isPermissionContextValid =
+    !!permissionContextPrepared &&
+    !isMultiQueryLoading &&
+    !!permissionContextPrepared.cluster &&
+    permissionContextPrepared.cluster !== '-' &&
+    !!permissionContextPrepared.plural &&
+    permissionContextPrepared.plural !== '-'
+
+  const patchPermission = usePermissions({
+    cluster: permissionContextPrepared?.cluster || '',
+    namespace: permissionContextPrepared?.namespace,
+    apiGroup: permissionContextPrepared?.apiGroup,
+    plural: permissionContextPrepared?.plural || '',
+    verb: 'patch',
+    refetchInterval: false,
+    enabler: isPermissionContextValid,
+  })
+
+  // Permission gating for patch-based edit:
+  // 1) canPatch: Manual permissions override hook result if provided.
+  // 2) shouldGateEdit: True when permissions or permissionContext are provided; otherwise don't gate.
+  // 3) canEdit: Allow edit when not readOnly and either gating is off or canPatch === true.
+  const canPatch = permissions?.canPatch ?? patchPermission.data?.status.allowed
+  const shouldGateEdit = Boolean(permissions || permissionContext)
+  const canEdit = !readOnly && (!shouldGateEdit || canPatch === true)
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
@@ -67,11 +116,6 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
       </div>
     )
   }
-
-  const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
-    acc[index.toString()] = value
-    return acc
-  }, {})
 
   const jsonRoot = multiQueryData[`req${reqIndex}`]
 
@@ -120,7 +164,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
 
   const EmptySelect = (
     <div style={containerStyle}>
-      {!readOnly && !verticalViewList && (
+      {canEdit && !verticalViewList && (
         <Flex justify="flex-end">
           <Button
             type="text"
@@ -150,7 +194,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
           isCursorPointer
         />
       )}
-      {!readOnly && verticalViewList && (
+      {canEdit && verticalViewList && (
         <>
           <Spacer $space={8} $samespace />
           <Flex justify="flex-start">
@@ -171,23 +215,25 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
       )}
       {children}
       {contextHolder}
-      <LabelsEditModal
-        open={open}
-        close={() => setOpen(false)}
-        // values={labelsRaw}
-        openNotificationSuccess={openNotificationSuccess}
-        modalTitle={modalTitlePrepared}
-        modalDescriptionText={modalDescriptionTextPrepared}
-        modalDescriptionTextStyle={modalDescriptionTextStyle}
-        inputLabel={inputLabelPrepared}
-        inputLabelStyle={inputLabelStyle}
-        maxEditTagTextLength={maxEditTagTextLength}
-        allowClearEditSelect={allowClearEditSelect}
-        endpoint={endpointPrepared}
-        pathToValue={pathToValuePrepared}
-        editModalWidth={editModalWidth}
-        paddingContainerEnd={paddingContainerEnd}
-      />
+      {canEdit && (
+        <LabelsEditModal
+          open={open}
+          close={() => setOpen(false)}
+          // values={labelsRaw}
+          openNotificationSuccess={openNotificationSuccess}
+          modalTitle={modalTitlePrepared}
+          modalDescriptionText={modalDescriptionTextPrepared}
+          modalDescriptionTextStyle={modalDescriptionTextStyle}
+          inputLabel={inputLabelPrepared}
+          inputLabelStyle={inputLabelStyle}
+          maxEditTagTextLength={maxEditTagTextLength}
+          allowClearEditSelect={allowClearEditSelect}
+          endpoint={endpointPrepared}
+          pathToValue={pathToValuePrepared}
+          editModalWidth={editModalWidth}
+          paddingContainerEnd={paddingContainerEnd}
+        />
+      )}
     </div>
   )
 
@@ -204,7 +250,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
 
   return (
     <div style={containerStyle}>
-      {!readOnly && !verticalViewList && (
+      {canEdit && !verticalViewList && (
         <Flex justify="flex-end">
           <Button
             type="text"
@@ -298,7 +344,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
           // isCursorPointer
         />
       )}
-      {!readOnly && verticalViewList && (
+      {canEdit && verticalViewList && (
         <>
           <Spacer $space={8} $samespace />
           <Flex justify="flex-start">
@@ -319,23 +365,25 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
       )}
       {children}
       {contextHolder}
-      <LabelsEditModal
-        open={open}
-        close={() => setOpen(false)}
-        values={labelsRaw}
-        openNotificationSuccess={openNotificationSuccess}
-        modalTitle={modalTitlePrepared}
-        modalDescriptionText={modalDescriptionTextPrepared}
-        modalDescriptionTextStyle={modalDescriptionTextStyle}
-        inputLabel={inputLabelPrepared}
-        inputLabelStyle={inputLabelStyle}
-        maxEditTagTextLength={maxEditTagTextLength}
-        allowClearEditSelect={allowClearEditSelect}
-        endpoint={endpointPrepared}
-        pathToValue={pathToValuePrepared}
-        editModalWidth={editModalWidth}
-        paddingContainerEnd={paddingContainerEnd}
-      />
+      {canEdit && (
+        <LabelsEditModal
+          open={open}
+          close={() => setOpen(false)}
+          values={labelsRaw}
+          openNotificationSuccess={openNotificationSuccess}
+          modalTitle={modalTitlePrepared}
+          modalDescriptionText={modalDescriptionTextPrepared}
+          modalDescriptionTextStyle={modalDescriptionTextStyle}
+          inputLabel={inputLabelPrepared}
+          inputLabelStyle={inputLabelStyle}
+          maxEditTagTextLength={maxEditTagTextLength}
+          allowClearEditSelect={allowClearEditSelect}
+          endpoint={endpointPrepared}
+          pathToValue={pathToValuePrepared}
+          editModalWidth={editModalWidth}
+          paddingContainerEnd={paddingContainerEnd}
+        />
+      )}
     </div>
   )
 }
