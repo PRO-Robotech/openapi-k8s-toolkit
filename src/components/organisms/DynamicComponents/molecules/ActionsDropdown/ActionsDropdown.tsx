@@ -10,6 +10,7 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
 import { buildEditUrl, renderActionModal, getMenuItems } from './utils'
+import { Styled } from './styled'
 
 export const ActionsDropdown: FC<{
   data: TDynamicComponentsAppTypeMap['ActionsDropdown']
@@ -136,15 +137,14 @@ export const ActionsDropdown: FC<{
   const renderButton = () => {
     if (buttonVariant === 'icon') {
       return (
-        <Button
+        <Styled.IconButton
           type="text"
           size="small"
           onClick={e => {
             e.stopPropagation()
             e.preventDefault()
           }}
-          icon={<MoreOutlined style={{ fontSize: 16 }} />}
-          style={{ height: 24 }}
+          icon={<MoreOutlined />}
         />
       )
     }
