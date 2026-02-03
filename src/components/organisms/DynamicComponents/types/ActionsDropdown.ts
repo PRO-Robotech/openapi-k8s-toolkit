@@ -9,6 +9,7 @@ type TAntIconName = Exclude<keyof typeof AntIcons, 'createFromIconfontCN'>
 
 export type TActionBaseProps = {
   icon?: TAntIconName
+  iconBase64Encoded?: string
   text: string
   disabled?: boolean
   tooltip?: string
@@ -34,17 +35,25 @@ export type TEditTaintsActionProps = TActionBaseProps & TTaintsBaseProps & TTain
 
 export type TEditTolerationsActionProps = TActionBaseProps & TTolerationsBaseProps & TTolerationsModalProps
 
+export type TDeleteActionProps = TActionBaseProps & {
+  endpoint: string
+  name: string
+  redirectTo?: string
+}
+
 export type TActionUnion =
   | { type: 'edit'; props: TEditActionProps }
   | { type: 'editLabels'; props: TEditLabelsActionProps }
   | { type: 'editAnnotations'; props: TEditAnnotationsActionProps }
   | { type: 'editTaints'; props: TEditTaintsActionProps }
   | { type: 'editTolerations'; props: TEditTolerationsActionProps }
+  | { type: 'delete'; props: TDeleteActionProps }
 
 export type TActionsDropdownProps = {
   id: number | string
   buttonText?: string
   buttonIcon?: string
+  buttonVariant?: 'default' | 'icon'
   containerStyle?: CSSProperties
   actions: TActionUnion[]
 }

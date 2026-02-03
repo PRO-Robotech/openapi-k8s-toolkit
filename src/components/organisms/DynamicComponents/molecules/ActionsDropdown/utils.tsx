@@ -5,6 +5,8 @@ import { AnnotationsModal } from '../AggregatedCounterCard/molecules/Annotations
 import { TaintsModal } from '../AggregatedCounterCard/molecules/TaintsModal'
 import { TolerationsModal } from '../AggregatedCounterCard/molecules/TolerationsModal'
 import { renderAntIcon } from '../AntdIcons/utils'
+import { renderIcon as renderBase64Icon } from '../AggregatedCounterCard/utils'
+import { Styled } from './styled'
 
 type TModalExtraProps = {
   open: boolean
@@ -49,6 +51,10 @@ export const renderActionModal = (action: TActionUnion, extraProps: TModalExtraP
     case 'editTolerations':
       return <TolerationsModal {...action.props} {...extraProps} />
 
+    case 'delete':
+      // Delete modal is handled separately in ActionsDropdown component
+      return null
+
     default: {
       // eslint-disable-next-line no-underscore-dangle
       const _exhaustive: never = action
@@ -57,11 +63,25 @@ export const renderActionModal = (action: TActionUnion, extraProps: TModalExtraP
   }
 }
 
+const getActionIcon = (action: TActionUnion): React.ReactNode => {
+  if (action.props.iconBase64Encoded) {
+    return (
+      <Styled.IconWrapper>
+        <Styled.IconScaler>{renderBase64Icon(action.props.iconBase64Encoded, 'currentColor')}</Styled.IconScaler>
+      </Styled.IconWrapper>
+    )
+  }
+  if (action.props.icon) {
+    return renderAntIcon(action.props.icon)
+  }
+  return undefined
+}
+
 export const getMenuItems = (actions: TActionUnion[], onActionClick: (action: TActionUnion) => void) =>
   actions.map((action, index) => ({
     key: `${action.type}-${index}`,
     label: action.props.text,
-    icon: action.props.icon ? renderAntIcon(action.props.icon) : undefined,
+    icon: getActionIcon(action),
     disabled: action.props.disabled,
     danger: action.props.danger,
     onClick: () => onActionClick(action),

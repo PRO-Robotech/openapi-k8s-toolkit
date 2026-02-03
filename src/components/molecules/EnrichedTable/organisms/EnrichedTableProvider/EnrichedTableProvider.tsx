@@ -218,7 +218,7 @@ export const EnrichedTableProvider: FC<TEnrichedTableProviderProps> = ({
       additionalPrinterColumnsCustomSortersAndFilters={preparedProps.additionalPrinterColumnsCustomSortersAndFilters}
       selectData={selectData}
       tableProps={tableProps}
-      withoutControls={withoutControls}
+      withoutControls={preparedProps.withoutControls ?? withoutControls}
     />
   )
 }
