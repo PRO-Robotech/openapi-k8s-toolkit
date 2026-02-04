@@ -16,6 +16,7 @@ export type TManageableBreadcrumbsProviderProps = {
   replaceValues: Record<string, string | undefined>
   pathname: string
   idToCompare: string
+  fallbackIdToCompare?: string
 }
 
 export const ManageableBreadcrumbsProvider: FC<TManageableBreadcrumbsProviderProps> = ({
@@ -27,6 +28,7 @@ export const ManageableBreadcrumbsProvider: FC<TManageableBreadcrumbsProviderPro
   replaceValues,
   pathname,
   idToCompare,
+  fallbackIdToCompare,
 }) => {
   const {
     data: rawData,
@@ -67,6 +69,7 @@ export const ManageableBreadcrumbsProvider: FC<TManageableBreadcrumbsProviderPro
     replaceValues,
     pathname,
     idToCompare,
+    fallbackIdToCompare,
   })
 
   if (!result) {
