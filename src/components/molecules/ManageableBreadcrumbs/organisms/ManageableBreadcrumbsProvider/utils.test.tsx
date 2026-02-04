@@ -48,6 +48,25 @@ describe('prepareDataForManageableBreadcrumbs', () => {
     expect(res).toBeUndefined()
   })
 
+  test('falls back to fallbackIdToCompare when idToCompare is not found', () => {
+    const data = [
+      { id: 'primary', breadcrumbItems: [] },
+      { id: 'fallback', breadcrumbItems: [{ key: 'k1', label: 'Fallback' }] },
+    ] as any
+
+    const res = prepareDataForManageableBreadcrumbs({
+      data,
+      replaceValues: {},
+      pathname: '/whatever',
+      idToCompare: 'missing',
+      fallbackIdToCompare: 'fallback',
+    })
+
+    expect(res).toBeDefined()
+    expect(res!.breadcrumbItems).toHaveLength(1)
+    expect((res!.breadcrumbItems[0] as any).key).toBe('k1')
+  })
+
   test('maps breadcrumb items with Link when link is provided', () => {
     const data = [
       {
