@@ -10,7 +10,7 @@ import { TActionUnion, TActionsPermissions } from '../../types/ActionsDropdown'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
-import { buildEditUrl, renderActionModal, getMenuItems } from './utils'
+import { buildEditUrl, renderActionModal, getMenuItems, getRequiredPermissions } from './utils'
 import { Styled } from './styled'
 
 export const ActionsDropdown: FC<{
@@ -68,23 +68,38 @@ export const ActionsDropdown: FC<{
     !!permissionContextPrepared.plural &&
     permissionContextPrepared.plural !== '-'
 
+  const shouldCheckPermissions = !permissions
+  const requiredPermissions = shouldCheckPermissions ? getRequiredPermissions(actions) : []
+  const requiredVerbs = new Set(requiredPermissions.map(permission => permission.verb))
+
   const permissionBaseParams = {
     cluster: permissionContextPrepared?.cluster || '',
     namespace: permissionContextPrepared?.namespace,
     apiGroup: permissionContextPrepared?.apiGroup,
     plural: permissionContextPrepared?.plural || '',
     refetchInterval: false as const,
-    enabler: isPermissionContextValid,
   }
 
-  const updatePermission = usePermissions({ ...permissionBaseParams, verb: 'update' })
-  const patchPermission = usePermissions({ ...permissionBaseParams, verb: 'patch' })
-  const deletePermission = usePermissions({ ...permissionBaseParams, verb: 'delete' })
+  const updatePermission = usePermissions({
+    ...permissionBaseParams,
+    verb: 'update',
+    enabler: shouldCheckPermissions && isPermissionContextValid && requiredVerbs.has('update'),
+  })
+  const patchPermission = usePermissions({
+    ...permissionBaseParams,
+    verb: 'patch',
+    enabler: shouldCheckPermissions && isPermissionContextValid && requiredVerbs.has('patch'),
+  })
+  const deletePermission = usePermissions({
+    ...permissionBaseParams,
+    verb: 'delete',
+    enabler: shouldCheckPermissions && isPermissionContextValid && requiredVerbs.has('delete'),
+  })
 
   const computedPermissions: TActionsPermissions = {
-    canUpdate: updatePermission.data?.status.allowed,
-    canPatch: patchPermission.data?.status.allowed,
-    canDelete: deletePermission.data?.status.allowed,
+    canUpdate: requiredVerbs.has('update') ? updatePermission.data?.status.allowed : undefined,
+    canPatch: requiredVerbs.has('patch') ? patchPermission.data?.status.allowed : undefined,
+    canDelete: requiredVerbs.has('delete') ? deletePermission.data?.status.allowed : undefined,
   }
 
   const effectivePermissions = permissions ?? computedPermissions
