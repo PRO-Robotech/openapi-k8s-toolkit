@@ -1233,7 +1233,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
                 />
               </>
             )}
-            {isCreate && createPermission.data?.status.allowed === false && (
+            {/* {isCreate && createPermission.data?.status.allowed === false && (
               <>
                 <Spacer $space={10} $samespace />
                 <Alert type="warning" message="Insufficient rights to create" />
@@ -1244,7 +1244,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
                 <Spacer $space={10} $samespace />
                 <Alert type="warning" message="Insufficient rights to edit" />
               </>
-            )}
+            )} */}
             {/* {error && (
               <>
                 <Spacer $space={10} $samespace />
@@ -1266,7 +1266,15 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
       <FlexGrow />
       <Styled.ControlsRowContainer $bgColor={token.colorPrimaryBg} $designNewLayout={designNewLayout}>
         <Flex gap={designNewLayout ? 10 : 16} align="center">
-          <Button type="primary" onClick={onSubmit} loading={isLoading}>
+          <Button
+            type="primary"
+            onClick={onSubmit}
+            loading={isLoading}
+            disabled={
+              (isCreate && createPermission.data?.status.allowed !== true) ||
+              (!isCreate && updatePermission.data?.status.allowed !== true)
+            }
+          >
             Submit
           </Button>
           {backlink && <Button onClick={() => navigate(backlink)}>Cancel</Button>}

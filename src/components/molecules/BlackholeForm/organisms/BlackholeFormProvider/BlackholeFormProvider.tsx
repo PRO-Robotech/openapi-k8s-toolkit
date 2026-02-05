@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 /* eslint-disable max-lines-per-function */
 /* eslint-disable no-console */
 import React, { FC, useState, useEffect, ReactNode, useCallback } from 'react'
@@ -8,8 +9,25 @@ import { OpenAPIV2 } from 'openapi-types'
 import { TUrlParams } from 'localTypes/form'
 import { TPrepareFormReq, TPrepareFormRes } from 'localTypes/bff/form'
 import { TFormPrefill } from 'localTypes/formExtensions'
+import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
 import { YamlEditorSingleton } from '../../../YamlEditorSingleton'
 import { BlackholeForm } from '../BlackholeForm'
+
+type TCustomFormsOverridesResponse = {
+  items?: {
+    spec?: {
+      customizationId?: string
+    }
+  }[]
+}
+
+type TCustomFormsOverridesMappingResponse = {
+  items?: {
+    spec?: {
+      mappings?: Record<string, string | undefined>
+    }
+  }[]
+}
 
 export type TBlackholeFormProviderProps = {
   theme: 'light' | 'dark'
@@ -35,6 +53,13 @@ export type TBlackholeFormProviderProps = {
         prefillValueNamespaceOnly?: string
       }
   customizationId?: string
+  forcingCustomization: {
+    baseApiGroup: string
+    baseApiVersion: string
+    cfoMappingPlural: string
+    cfoMappinResourceName: string
+    fallbackId?: string
+  }
   isCreate?: boolean
   backlink?: string | null
   modeData?: {
@@ -53,6 +78,7 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
   urlParamsForPermissions,
   data,
   customizationId,
+  forcingCustomization,
   isCreate,
   backlink,
   modeData,
@@ -74,9 +100,32 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
     formPrefills?: TFormPrefill
     namespacesData?: string[]
   }>()
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [isNamespaced, setIsNamespaced] = useState<boolean>(false)
   const [isError, setIsError] = useState<false | string | ReactNode>(false)
+
+  const { data: overridesData, isLoading: overridesLoading } = useK8sSmartResource<TCustomFormsOverridesResponse>({
+    cluster,
+    apiGroup: forcingCustomization.baseApiGroup,
+    apiVersion: forcingCustomization.baseApiVersion,
+    plural: 'customformsoverrides',
+    isEnabled: Boolean(cluster && forcingCustomization.baseApiGroup && forcingCustomization.baseApiVersion),
+  })
+
+  const { data: mappingData, isLoading: mappingLoading } = useK8sSmartResource<TCustomFormsOverridesMappingResponse>({
+    cluster,
+    apiGroup: forcingCustomization.baseApiGroup,
+    apiVersion: forcingCustomization.baseApiVersion,
+    plural: forcingCustomization.cfoMappingPlural,
+    fieldSelector: `metadata.name=${forcingCustomization.cfoMappinResourceName}`,
+    isEnabled: Boolean(
+      cluster &&
+        forcingCustomization.baseApiGroup &&
+        forcingCustomization.baseApiVersion &&
+        forcingCustomization.cfoMappingPlural &&
+        forcingCustomization.cfoMappinResourceName,
+    ),
+  })
 
   const fallbackToManualMode = useCallback(() => {
     if (modeData) {
@@ -85,12 +134,31 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
     }
   }, [modeData])
 
+  const forcedCustomizationId = customizationId ? mappingData?.items?.[0]?.spec?.mappings?.[customizationId] : undefined
+  const hasMatchingOverride = Boolean(
+    customizationId && overridesData?.items?.some(item => item?.spec?.customizationId === customizationId),
+  )
+  const hasForcedMatchingOverride = Boolean(
+    forcedCustomizationId && overridesData?.items?.some(item => item?.spec?.customizationId === forcedCustomizationId),
+  )
+  const isResolutionReady = !customizationId || (!overridesLoading && !mappingLoading)
+  const resolvedCustomizationId = isResolutionReady
+    ? hasMatchingOverride
+      ? customizationId
+      : hasForcedMatchingOverride
+      ? forcedCustomizationId
+      : forcingCustomization.fallbackId
+    : undefined
+
   useEffect(() => {
+    if (!isResolutionReady) return
+    if (customizationId && !resolvedCustomizationId) return
+
     setIsLoading(true)
     const payload: TPrepareFormReq = {
       data,
       cluster,
-      customizationId,
+      customizationId: resolvedCustomizationId,
     }
     axios
       .post<TPrepareFormRes>(`/api/clusters/${cluster}/openapi-bff/forms/formPrepare/prepareFormProps`, payload)
@@ -123,7 +191,7 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
       .finally(() => {
         setIsLoading(false)
       })
-  }, [cluster, data, customizationId, fallbackToManualMode])
+  }, [cluster, data, customizationId, resolvedCustomizationId, isResolutionReady, fallbackToManualMode])
 
   if (isLoading) {
     return <Spin />
