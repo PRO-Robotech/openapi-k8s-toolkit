@@ -407,13 +407,8 @@ describe('getRequiredPermissions', () => {
     },
   })
 
-  it('returns unique required permissions in action order', () => {
-    const actions: TActionUnion[] = [
-      createEditAction(),
-      createEditLabelsAction(),
-      createDeleteAction(),
-      createEditLabelsAction(),
-    ]
+  it('returns required permissions in action order', () => {
+    const actions: TActionUnion[] = [createEditAction(), createEditLabelsAction(), createDeleteAction()]
 
     const required = getRequiredPermissions(actions)
 

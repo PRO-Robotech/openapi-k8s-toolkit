@@ -50,9 +50,9 @@ export type TActionUnion =
   | { type: 'delete'; props: TDeleteActionProps }
 
 export type TActionsPermissions = {
-  canUpdate?: boolean
-  canPatch?: boolean
-  canDelete?: boolean
+  canUpdate?: boolean // For 'edit' action
+  canPatch?: boolean // For 'editLabels', 'editAnnotations', 'editTaints', 'editTolerations' actions
+  canDelete?: boolean // For 'delete' action
 }
 
 export type TPermissionContext = {

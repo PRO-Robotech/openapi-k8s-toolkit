@@ -31,22 +31,7 @@ const ACTION_REQUIRED_PERMISSIONS: Record<TActionUnion['type'], TRequiredPermiss
 const toArray = <T,>(value: T | T[]): T[] => (Array.isArray(value) ? value : [value])
 
 export const getRequiredPermissions = (actions: TActionUnion[]): TRequiredPermission[] => {
-  const uniqueKeys = new Set<string>()
-  const result: TRequiredPermission[] = []
-
-  actions.forEach(action => {
-    const required = toArray(ACTION_REQUIRED_PERMISSIONS[action.type])
-
-    required.forEach(permission => {
-      const key = `${permission.verb}:${permission.subresource ?? ''}`
-      if (!uniqueKeys.has(key)) {
-        uniqueKeys.add(key)
-        result.push(permission)
-      }
-    })
-  })
-
-  return result
+  return actions.flatMap(action => toArray(ACTION_REQUIRED_PERMISSIONS[action.type]))
 }
 
 export const buildEditUrl = (props: TEditActionProps, fullPath: string): string => {
@@ -124,8 +109,6 @@ const isActionDisabledByPermission = (action: TActionUnion, permissions: TAction
       return permissions.canPatch !== true
     case 'delete':
       return permissions.canDelete !== true
-    default:
-      return false
   }
 }
 
