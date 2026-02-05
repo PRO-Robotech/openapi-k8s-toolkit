@@ -1,4 +1,5 @@
 import React from 'react'
+import type { TPermissionVerb } from 'localTypes/permissions'
 import { TActionUnion, TEditActionProps, TActionsPermissions } from '../../types/ActionsDropdown'
 import { LabelsModal } from '../AggregatedCounterCard/molecules/LabelsModal'
 import { AnnotationsModal } from '../AggregatedCounterCard/molecules/AnnotationsModal'
@@ -11,6 +12,41 @@ import { Styled } from './styled'
 type TModalExtraProps = {
   open: boolean
   onClose: () => void
+}
+
+export type TRequiredPermission = {
+  verb: TPermissionVerb
+  subresource?: string
+}
+
+const ACTION_REQUIRED_PERMISSIONS: Record<TActionUnion['type'], TRequiredPermission | TRequiredPermission[]> = {
+  edit: { verb: 'update' },
+  editLabels: { verb: 'patch' },
+  editAnnotations: { verb: 'patch' },
+  editTaints: { verb: 'patch' },
+  editTolerations: { verb: 'patch' },
+  delete: { verb: 'delete' },
+}
+
+const toArray = <T,>(value: T | T[]): T[] => (Array.isArray(value) ? value : [value])
+
+export const getRequiredPermissions = (actions: TActionUnion[]): TRequiredPermission[] => {
+  const uniqueKeys = new Set<string>()
+  const result: TRequiredPermission[] = []
+
+  actions.forEach(action => {
+    const required = toArray(ACTION_REQUIRED_PERMISSIONS[action.type])
+
+    required.forEach(permission => {
+      const key = `${permission.verb}:${permission.subresource ?? ''}`
+      if (!uniqueKeys.has(key)) {
+        uniqueKeys.add(key)
+        result.push(permission)
+      }
+    })
+  })
+
+  return result
 }
 
 export const buildEditUrl = (props: TEditActionProps, fullPath: string): string => {

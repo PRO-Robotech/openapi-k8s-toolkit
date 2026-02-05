@@ -1,5 +1,5 @@
 import { TActionUnion, TActionsPermissions, TEditActionProps } from '../../types/ActionsDropdown'
-import { buildEditUrl, getMenuItems } from './utils'
+import { buildEditUrl, getMenuItems, getRequiredPermissions } from './utils'
 
 describe('buildEditUrl', () => {
   const fullPath = '/openapi-ui/cluster1/builtin-table/pods'
@@ -365,5 +365,58 @@ describe('getMenuItems', () => {
       expect(items[0].disabled).toBe(true) // disabled by prop
       expect(items[1].disabled).toBe(true) // disabled by permission
     })
+  })
+})
+
+describe('getRequiredPermissions', () => {
+  const createEditAction = (overrides = {}): TActionUnion => ({
+    type: 'edit',
+    props: {
+      text: 'Edit',
+      icon: 'EditOutlined',
+      cluster: 'cluster',
+      apiVersion: 'v1',
+      plural: 'pods',
+      name: 'pod-1',
+      ...overrides,
+    },
+  })
+
+  const createDeleteAction = (overrides = {}): TActionUnion => ({
+    type: 'delete',
+    props: {
+      text: 'Delete',
+      icon: 'DeleteOutlined',
+      endpoint: '/api/delete',
+      name: 'pod-1',
+      ...overrides,
+    },
+  })
+
+  const createEditLabelsAction = (overrides = {}): TActionUnion => ({
+    type: 'editLabels',
+    props: {
+      text: 'Edit Labels',
+      icon: 'TagsOutlined',
+      reqIndex: '0',
+      jsonPathToLabels: '.metadata.labels',
+      endpoint: '/api/labels',
+      pathToValue: '/metadata/labels',
+      modalTitle: 'Edit Labels',
+      ...overrides,
+    },
+  })
+
+  it('returns unique required permissions in action order', () => {
+    const actions: TActionUnion[] = [
+      createEditAction(),
+      createEditLabelsAction(),
+      createDeleteAction(),
+      createEditLabelsAction(),
+    ]
+
+    const required = getRequiredPermissions(actions)
+
+    expect(required).toEqual([{ verb: 'update' }, { verb: 'patch' }, { verb: 'delete' }])
   })
 })
