@@ -25,6 +25,7 @@ type TYamlEditorSingletonProps = {
   designNewLayoutHeight?: number
   openNotification?: boolean
   readOnly?: boolean
+  canEdit?: boolean
 }
 
 const NOTIFICATION_KEY = 'yaml-data-changed' // Single static key = only one notification
@@ -43,6 +44,7 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
   designNewLayoutHeight,
   openNotification,
   readOnly = false,
+  canEdit,
 }) => {
   const { token } = antdtheme.useToken()
   const navigate = useNavigate()
@@ -195,7 +197,7 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
       {!readOnly && (
         <Styled.ControlsRowContainer $bgColor={token.colorPrimaryBg} $designNewLayout={designNewLayout}>
           <Flex gap={designNewLayout ? 10 : 16} align="center">
-            <Button type="primary" onClick={onSubmit} loading={isLoading}>
+            <Button type="primary" onClick={onSubmit} loading={isLoading} disabled={canEdit === false}>
               Submit
             </Button>
             {backlink && <Button onClick={() => navigate(backlink)}>Cancel</Button>}

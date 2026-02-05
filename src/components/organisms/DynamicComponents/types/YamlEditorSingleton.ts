@@ -1,3 +1,14 @@
+export type TYamlEditorSingletonPermissions = {
+  canUpdate?: boolean
+}
+
+export type TPermissionContext = {
+  cluster: string
+  namespace?: string
+  apiGroup?: string
+  plural: string
+}
+
 export type TYamlEditorSingletonProps = {
   id: number | string
   cluster: string
@@ -11,4 +22,8 @@ export type TYamlEditorSingletonProps = {
   pathToData?: string | string[] // jsonpath or keys as string[]
   substractHeight?: number
   readOnly?: boolean
+  /** Manual permission override. Takes priority over permissionContext. */
+  permissions?: TYamlEditorSingletonPermissions
+  /** Resource context for automatic permission checking. */
+  permissionContext?: TPermissionContext
 }

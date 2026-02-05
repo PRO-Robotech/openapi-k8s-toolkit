@@ -186,6 +186,25 @@ describe('prepareDataForManageableSidebar', () => {
     expect(res!.selectedKeys).toEqual(['root', 'child'])
   })
 
+  test('selectedKeys matches internalMetaLink with search params when provided', () => {
+    const data = [
+      {
+        id: 'main',
+        menuItems: [link('root', 'Root', '/root', [link('child', 'Child', '/root/child?tab=details')])],
+      },
+    ] as any
+
+    const res = prepareDataForManageableSidebar({
+      data,
+      replaceValues: {},
+      pathname: '/root/child',
+      searchParams: '?tab=details',
+      idToCompare: 'main',
+    })
+
+    expect(res!.selectedKeys).toEqual(['root', 'child'])
+  })
+
   test('selectedKeys can be driven by tags when pathname does not match', () => {
     const data = [
       {

@@ -13,6 +13,7 @@ export type TManageableSidebarProviderProps = {
   isEnabled?: boolean
   replaceValues: Record<string, string | undefined>
   pathname: string
+  searchParams?: string
   idToCompare: string
   fallbackIdToCompare?: string
   currentTags?: string[]
@@ -28,6 +29,7 @@ export const ManageableSidebarProvider: FC<TManageableSidebarProviderProps> = ({
   isEnabled,
   replaceValues,
   pathname,
+  searchParams,
   idToCompare,
   fallbackIdToCompare,
   currentTags,
@@ -72,6 +74,7 @@ export const ManageableSidebarProvider: FC<TManageableSidebarProviderProps> = ({
     data: parsedData,
     replaceValues,
     pathname,
+    searchParams,
     idToCompare,
     fallbackIdToCompare,
     currentTags,
