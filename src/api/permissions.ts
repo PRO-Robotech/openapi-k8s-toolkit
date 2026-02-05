@@ -11,6 +11,7 @@ export const checkPermission = async ({
     verb: 'get' | 'list' | 'watch' | 'create' | 'delete' | 'patch' | 'update'
     namespace?: string
     name?: string
+    subresource?: string
   }
 }): Promise<
   AxiosResponse<{
@@ -26,6 +27,7 @@ export const checkPermission = async ({
       resourceAttributes: {
         ...(body.apiGroup ? { group: body.apiGroup } : {}),
         resource: body.plural,
+        ...(body.subresource ? { subresource: body.subresource } : {}),
         verb: body.verb,
         ...(body.namespace ? { namespace: body.namespace } : {}),
         ...(body.name ? { name: body.name } : {}),

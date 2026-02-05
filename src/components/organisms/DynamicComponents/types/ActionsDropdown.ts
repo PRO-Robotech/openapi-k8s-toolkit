@@ -60,6 +60,7 @@ export type TPermissionContext = {
   namespace?: string
   apiGroup?: string
   plural: string
+  subresource?: string
 }
 
 export type TActionsDropdownProps = {
