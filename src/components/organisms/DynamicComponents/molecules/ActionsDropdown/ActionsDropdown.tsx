@@ -57,6 +57,9 @@ export const ActionsDropdown: FC<{
           ? parseAll({ text: permissionContext.apiGroup, replaceValues, multiQueryData })
           : undefined,
         plural: parseAll({ text: permissionContext.plural, replaceValues, multiQueryData }),
+        subresource: permissionContext.subresource
+          ? parseAll({ text: permissionContext.subresource, replaceValues, multiQueryData })
+          : undefined,
       }
     : undefined
 
@@ -77,6 +80,7 @@ export const ActionsDropdown: FC<{
     namespace: permissionContextPrepared?.namespace,
     apiGroup: permissionContextPrepared?.apiGroup,
     plural: permissionContextPrepared?.plural || '',
+    subresource: permissionContextPrepared?.subresource,
     refetchInterval: false as const,
   }
 
@@ -95,11 +99,23 @@ export const ActionsDropdown: FC<{
     verb: 'delete',
     enabler: shouldCheckPermissions && isPermissionContextValid && requiredVerbs.has('delete'),
   })
+  const createPermission = usePermissions({
+    ...permissionBaseParams,
+    verb: 'create',
+    enabler: shouldCheckPermissions && isPermissionContextValid && requiredVerbs.has('create'),
+  })
+  const getPermission = usePermissions({
+    ...permissionBaseParams,
+    verb: 'get',
+    enabler: shouldCheckPermissions && isPermissionContextValid && requiredVerbs.has('get'),
+  })
 
   const computedPermissions: TActionsPermissions = {
     canUpdate: requiredVerbs.has('update') ? updatePermission.data?.status.allowed : undefined,
     canPatch: requiredVerbs.has('patch') ? patchPermission.data?.status.allowed : undefined,
     canDelete: requiredVerbs.has('delete') ? deletePermission.data?.status.allowed : undefined,
+    canCreate: requiredVerbs.has('create') ? createPermission.data?.status.allowed : undefined,
+    canGet: requiredVerbs.has('get') ? getPermission.data?.status.allowed : undefined,
   }
 
   const effectivePermissions = permissions ?? computedPermissions

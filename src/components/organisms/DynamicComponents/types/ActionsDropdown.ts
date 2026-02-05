@@ -53,6 +53,8 @@ export type TActionsPermissions = {
   canUpdate?: boolean // For 'edit' action
   canPatch?: boolean // For 'editLabels', 'editAnnotations', 'editTaints', 'editTolerations' actions
   canDelete?: boolean // For 'delete' action
+  canGet?: boolean // For 'get' action
+  canCreate?: boolean // For 'create' action
 }
 
 export type TPermissionContext = {
