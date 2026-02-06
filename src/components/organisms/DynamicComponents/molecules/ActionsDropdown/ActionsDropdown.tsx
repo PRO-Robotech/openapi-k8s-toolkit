@@ -22,7 +22,7 @@ export const ActionsDropdown: FC<{
     permissionContext,
   } = data
 
-  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryError, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
@@ -60,7 +60,7 @@ export const ActionsDropdown: FC<{
     return <Spin size="small" />
   }
 
-  if (isMultiQueryErrors) {
+  if (isMultiQueryError) {
     const errorMessage = errors
       .filter((e): e is Error | string => e !== null)
       .map(e => (typeof e === 'string' ? e : e.message))
