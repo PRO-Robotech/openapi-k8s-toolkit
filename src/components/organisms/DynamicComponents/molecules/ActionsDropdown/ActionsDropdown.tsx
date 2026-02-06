@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { FC, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { Dropdown, Button } from 'antd'
 import { DownOutlined, MoreOutlined } from '@ant-design/icons'
 import { DeleteModal } from 'components/atoms'
 import { usePermissions } from 'hooks/usePermissions'
+import { createNewEntry, patchEntryWithMergePatch, patchEntryWithReplaceOp } from 'api/forms'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { TActionUnion, TActionsPermissions } from '../../types/ActionsDropdown'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
@@ -27,6 +29,7 @@ export const ActionsDropdown: FC<{
   } = data
 
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const location = useLocation()
   const [searchParams] = useSearchParams()
   const fullPath = location.pathname + location.search
@@ -134,6 +137,17 @@ export const ActionsDropdown: FC<{
     )
   }
 
+  const invalidateMultiQuery = () => {
+    queryClient.invalidateQueries({ queryKey: ['multi'] })
+  }
+
+  const parseValueIfString = (value: unknown) => {
+    if (typeof value === 'string') {
+      return parseAll({ text: value, replaceValues, multiQueryData })
+    }
+    return value
+  }
+
   const handleActionClick = (action: TActionUnion) => {
     if (action.type === 'edit') {
       const clusterPrepared = parseAll({ text: action.props.cluster, replaceValues, multiQueryData })
@@ -183,6 +197,102 @@ export const ActionsDropdown: FC<{
         endpoint: endpointPrepared,
         redirectTo: redirectToPrepared,
       })
+      return
+    }
+
+    if (action.type === 'cordon' || action.type === 'uncordon' || action.type === 'suspend' || action.type === 'resume') {
+      const endpointPrepared = parseAll({ text: action.props.endpoint, replaceValues, multiQueryData })
+      const pathToValuePrepared = parseAll({ text: action.props.pathToValue, replaceValues, multiQueryData })
+      const valuePrepared = parseValueIfString(action.props.value)
+
+      patchEntryWithReplaceOp({
+        endpoint: endpointPrepared,
+        pathToValue: pathToValuePrepared,
+        body: valuePrepared,
+      })
+        .then(() => invalidateMultiQuery())
+        .catch(error => {
+          // eslint-disable-next-line no-console
+          console.error(error)
+        })
+
+      return
+    }
+
+    if (action.type === 'rolloutRestart') {
+      const endpointPrepared = parseAll({ text: action.props.endpoint, replaceValues, multiQueryData })
+      const annotationKeyPrepared = action.props.annotationKey
+        ? parseAll({ text: action.props.annotationKey, replaceValues, multiQueryData })
+        : 'kubectl.kubernetes.io/restartedAt'
+      const timestampPrepared = action.props.timestamp
+        ? parseAll({ text: action.props.timestamp, replaceValues, multiQueryData })
+        : new Date().toISOString()
+
+      patchEntryWithMergePatch({
+        endpoint: endpointPrepared,
+        body: {
+          spec: {
+            template: {
+              metadata: {
+                annotations: {
+                  [annotationKeyPrepared]: timestampPrepared,
+                },
+              },
+            },
+          },
+        },
+      })
+        .then(() => invalidateMultiQuery())
+        .catch(error => {
+          // eslint-disable-next-line no-console
+          console.error(error)
+        })
+
+      return
+    }
+
+    if (action.type === 'evict') {
+      const endpointPrepared = parseAll({ text: action.props.endpoint, replaceValues, multiQueryData })
+      const namePrepared = parseAll({ text: action.props.name, replaceValues, multiQueryData })
+      const namespacePrepared = action.props.namespace
+        ? parseAll({ text: action.props.namespace, replaceValues, multiQueryData })
+        : undefined
+      const apiVersionPrepared = action.props.apiVersion
+        ? parseAll({ text: action.props.apiVersion, replaceValues, multiQueryData })
+        : 'policy/v1'
+
+      const deleteOptions: Record<string, unknown> = {}
+      if (action.props.gracePeriodSeconds !== undefined) {
+        deleteOptions.gracePeriodSeconds = action.props.gracePeriodSeconds
+      }
+      if (action.props.dryRun && action.props.dryRun.length > 0) {
+        deleteOptions.dryRun = action.props.dryRun
+      }
+
+      const body = {
+        apiVersion: apiVersionPrepared,
+        kind: 'Eviction',
+        metadata: {
+          name: namePrepared,
+          ...(namespacePrepared ? { namespace: namespacePrepared } : {}),
+        },
+        ...(Object.keys(deleteOptions).length > 0 ? { deleteOptions } : {}),
+      }
+
+      createNewEntry({ endpoint: endpointPrepared, body })
+        .then(() => invalidateMultiQuery())
+        .catch(error => {
+          // eslint-disable-next-line no-console
+          console.error(error)
+        })
+
+      return
+    }
+
+    if (action.type === 'openKubeletConfig') {
+      const urlPrepared = parseAll({ text: action.props.url, replaceValues, multiQueryData })
+      const target = action.props.target ?? '_blank'
+      window.open(urlPrepared, target)
       return
     }
 
