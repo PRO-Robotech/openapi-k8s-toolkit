@@ -14,7 +14,7 @@ type TDeleteModalData = {
   redirectTo?: string
 }
 
-type TEvictModalData = {
+export type TEvictModalData = {
   name: string
   endpoint: string
   namespace?: string
@@ -23,21 +23,21 @@ type TEvictModalData = {
   dryRun?: string[]
 }
 
-type TParseContext = {
+export type TParseContext = {
   replaceValues: Record<string, string | undefined>
   multiQueryData: Record<string, unknown>
 }
 
 type TUseActionsDropdownHandlersParams = TParseContext
 
-const parseValueIfString = (value: unknown, ctx: TParseContext) => {
+export const parseValueIfString = (value: unknown, ctx: TParseContext) => {
   if (typeof value === 'string') {
     return parseAll({ text: value, ...ctx })
   }
   return value
 }
 
-const buildEvictModalData = (props: TEvictActionProps, ctx: TParseContext): TEvictModalData => {
+export const buildEvictModalData = (props: TEvictActionProps, ctx: TParseContext): TEvictModalData => {
   const endpointPrepared = parseAll({ text: props.endpoint, ...ctx })
   const namePrepared = parseAll({ text: props.name, ...ctx })
   const namespacePrepared = props.namespace ? parseAll({ text: props.namespace, ...ctx }) : undefined
@@ -53,7 +53,7 @@ const buildEvictModalData = (props: TEvictActionProps, ctx: TParseContext): TEvi
   }
 }
 
-const buildEvictBody = (data: TEvictModalData) => {
+export const buildEvictBody = (data: TEvictModalData) => {
   const deleteOptions: Record<string, unknown> = {}
   if (data.gracePeriodSeconds !== undefined) {
     deleteOptions.gracePeriodSeconds = data.gracePeriodSeconds

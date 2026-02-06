@@ -173,7 +173,85 @@ describe('getMenuItems', () => {
     },
   })
 
-  const allAllowedPermissions: TActionsPermissions = { canUpdate: true, canPatch: true, canDelete: true }
+  const createCordonAction = (overrides = {}): TActionUnion => ({
+    type: 'cordon',
+    props: {
+      text: 'Cordon',
+      endpoint: '/api/cordon',
+      pathToValue: '/spec/unschedulable',
+      value: true,
+      ...overrides,
+    },
+  })
+
+  const createUncordonAction = (overrides = {}): TActionUnion => ({
+    type: 'uncordon',
+    props: {
+      text: 'Uncordon',
+      endpoint: '/api/uncordon',
+      pathToValue: '/spec/unschedulable',
+      value: false,
+      ...overrides,
+    },
+  })
+
+  const createSuspendAction = (overrides = {}): TActionUnion => ({
+    type: 'suspend',
+    props: {
+      text: 'Suspend',
+      endpoint: '/api/suspend',
+      pathToValue: '/spec/paused',
+      value: true,
+      ...overrides,
+    },
+  })
+
+  const createResumeAction = (overrides = {}): TActionUnion => ({
+    type: 'resume',
+    props: {
+      text: 'Resume',
+      endpoint: '/api/resume',
+      pathToValue: '/spec/paused',
+      value: false,
+      ...overrides,
+    },
+  })
+
+  const createRolloutRestartAction = (overrides = {}): TActionUnion => ({
+    type: 'rolloutRestart',
+    props: {
+      text: 'Rollout Restart',
+      endpoint: '/api/rollout',
+      ...overrides,
+    },
+  })
+
+  const createEvictAction = (overrides = {}): TActionUnion => ({
+    type: 'evict',
+    props: {
+      text: 'Evict',
+      endpoint: '/api/evict',
+      name: 'pod-1',
+      ...overrides,
+    },
+  })
+
+  const createOpenKubeletConfigAction = (overrides = {}): TActionUnion => ({
+    type: 'openKubeletConfig',
+    props: {
+      text: 'Kubelet Config',
+      url: '/api/kubelet',
+      ...overrides,
+    },
+  })
+
+  const allAllowedPermissions: TActionsPermissions = {
+    canUpdate: true,
+    canPatch: true,
+    canDelete: true,
+    canCreate: true,
+    canGet: true,
+  }
 
   it('creates menu items from actions array', () => {
     const actions: TActionUnion[] = [createEditAction(), createDeleteAction()]
@@ -331,6 +409,90 @@ describe('getMenuItems', () => {
       expect(items[0].disabled).toBe(true)
     })
 
+    it('disables cordon action when canPatch is false', () => {
+      const items = getMenuItems([createCordonAction()], mockOnActionClick, { canPatch: false })
+
+      expect(items[0].disabled).toBe(true)
+    })
+
+    it('enables cordon action when canPatch is true', () => {
+      const items = getMenuItems([createCordonAction()], mockOnActionClick, { canPatch: true })
+
+      expect(items[0].disabled).toBe(false)
+    })
+
+    it('disables uncordon action when canPatch is false', () => {
+      const items = getMenuItems([createUncordonAction()], mockOnActionClick, { canPatch: false })
+
+      expect(items[0].disabled).toBe(true)
+    })
+
+    it('enables uncordon action when canPatch is true', () => {
+      const items = getMenuItems([createUncordonAction()], mockOnActionClick, { canPatch: true })
+
+      expect(items[0].disabled).toBe(false)
+    })
+
+    it('disables suspend action when canPatch is false', () => {
+      const items = getMenuItems([createSuspendAction()], mockOnActionClick, { canPatch: false })
+
+      expect(items[0].disabled).toBe(true)
+    })
+
+    it('enables suspend action when canPatch is true', () => {
+      const items = getMenuItems([createSuspendAction()], mockOnActionClick, { canPatch: true })
+
+      expect(items[0].disabled).toBe(false)
+    })
+
+    it('disables resume action when canPatch is false', () => {
+      const items = getMenuItems([createResumeAction()], mockOnActionClick, { canPatch: false })
+
+      expect(items[0].disabled).toBe(true)
+    })
+
+    it('enables resume action when canPatch is true', () => {
+      const items = getMenuItems([createResumeAction()], mockOnActionClick, { canPatch: true })
+
+      expect(items[0].disabled).toBe(false)
+    })
+
+    it('disables rolloutRestart action when canPatch is false', () => {
+      const items = getMenuItems([createRolloutRestartAction()], mockOnActionClick, { canPatch: false })
+
+      expect(items[0].disabled).toBe(true)
+    })
+
+    it('enables rolloutRestart action when canPatch is true', () => {
+      const items = getMenuItems([createRolloutRestartAction()], mockOnActionClick, { canPatch: true })
+
+      expect(items[0].disabled).toBe(false)
+    })
+
+    it('disables evict action when canCreate is false', () => {
+      const items = getMenuItems([createEvictAction()], mockOnActionClick, { canCreate: false })
+
+      expect(items[0].disabled).toBe(true)
+    })
+
+    it('enables evict action when canCreate is true', () => {
+      const items = getMenuItems([createEvictAction()], mockOnActionClick, { canCreate: true })
+
+      expect(items[0].disabled).toBe(false)
+    })
+
+    it('disables openKubeletConfig action when canGet is false', () => {
+      const items = getMenuItems([createOpenKubeletConfigAction()], mockOnActionClick, { canGet: false })
+
+      expect(items[0].disabled).toBe(true)
+    })
+
+    it('enables openKubeletConfig action when canGet is true', () => {
+      const items = getMenuItems([createOpenKubeletConfigAction()], mockOnActionClick, { canGet: true })
+
+      expect(items[0].disabled).toBe(false)
+    })
+
     it('disables actions when permissions object is empty', () => {
       const actions: TActionUnion[] = [createEditAction(), createDeleteAction(), createEditLabelsAction()]
 
@@ -369,41 +531,35 @@ describe('getMenuItems', () => {
 })
 
 describe('getRequiredPermissions', () => {
-  const createEditAction = (overrides = {}): TActionUnion => ({
+  const createEditAction = (): TActionUnion => ({
     type: 'edit',
     props: {
       text: 'Edit',
-      icon: 'EditOutlined',
       cluster: 'cluster',
       apiVersion: 'v1',
       plural: 'pods',
       name: 'pod-1',
-      ...overrides,
     },
   })
 
-  const createDeleteAction = (overrides = {}): TActionUnion => ({
+  const createDeleteAction = (): TActionUnion => ({
     type: 'delete',
     props: {
       text: 'Delete',
-      icon: 'DeleteOutlined',
       endpoint: '/api/delete',
       name: 'pod-1',
-      ...overrides,
     },
   })
 
-  const createEditLabelsAction = (overrides = {}): TActionUnion => ({
+  const createEditLabelsAction = (): TActionUnion => ({
     type: 'editLabels',
     props: {
       text: 'Edit Labels',
-      icon: 'TagsOutlined',
       reqIndex: '0',
       jsonPathToLabels: '.metadata.labels',
       endpoint: '/api/labels',
       pathToValue: '/metadata/labels',
       modalTitle: 'Edit Labels',
-      ...overrides,
     },
   })
 
@@ -413,5 +569,163 @@ describe('getRequiredPermissions', () => {
     const required = getRequiredPermissions(actions)
 
     expect(required).toEqual([{ verb: 'update' }, { verb: 'patch' }, { verb: 'delete' }])
+  })
+
+  it('returns patch verb for editAnnotations', () => {
+    const action: TActionUnion = {
+      type: 'editAnnotations',
+      props: {
+        text: 'Edit Annotations',
+        reqIndex: '0',
+        jsonPathToObj: '.metadata.annotations',
+        endpoint: '/api/annotations',
+        pathToValue: '/metadata/annotations',
+        modalTitle: 'Edit Annotations',
+        cols: [12, 12],
+      },
+    }
+
+    expect(getRequiredPermissions([action])).toEqual([{ verb: 'patch' }])
+  })
+
+  it('returns patch verb for editTaints', () => {
+    const action: TActionUnion = {
+      type: 'editTaints',
+      props: {
+        text: 'Edit Taints',
+        reqIndex: '0',
+        jsonPathToArray: '.spec.taints',
+        endpoint: '/api/taints',
+        pathToValue: '/spec/taints',
+        modalTitle: 'Edit Taints',
+        cols: [6, 6, 6, 6],
+      },
+    }
+
+    expect(getRequiredPermissions([action])).toEqual([{ verb: 'patch' }])
+  })
+
+  it('returns patch verb for editTolerations', () => {
+    const action: TActionUnion = {
+      type: 'editTolerations',
+      props: {
+        text: 'Edit Tolerations',
+        reqIndex: '0',
+        jsonPathToArray: '.spec.tolerations',
+        endpoint: '/api/tolerations',
+        pathToValue: '/spec/tolerations',
+        modalTitle: 'Edit Tolerations',
+        cols: [6, 6, 6, 6],
+      },
+    }
+
+    expect(getRequiredPermissions([action])).toEqual([{ verb: 'patch' }])
+  })
+
+  it('returns patch verb for cordon', () => {
+    const action: TActionUnion = {
+      type: 'cordon',
+      props: { text: 'Cordon', endpoint: '/api/cordon', pathToValue: '/spec/unschedulable', value: true },
+    }
+
+    expect(getRequiredPermissions([action])).toEqual([{ verb: 'patch' }])
+  })
+
+  it('returns patch verb for uncordon', () => {
+    const action: TActionUnion = {
+      type: 'uncordon',
+      props: { text: 'Uncordon', endpoint: '/api/uncordon', pathToValue: '/spec/unschedulable', value: false },
+    }
+
+    expect(getRequiredPermissions([action])).toEqual([{ verb: 'patch' }])
+  })
+
+  it('returns patch verb for suspend', () => {
+    const action: TActionUnion = {
+      type: 'suspend',
+      props: { text: 'Suspend', endpoint: '/api/suspend', pathToValue: '/spec/paused', value: true },
+    }
+
+    expect(getRequiredPermissions([action])).toEqual([{ verb: 'patch' }])
+  })
+
+  it('returns patch verb for resume', () => {
+    const action: TActionUnion = {
+      type: 'resume',
+      props: { text: 'Resume', endpoint: '/api/resume', pathToValue: '/spec/paused', value: false },
+    }
+
+    expect(getRequiredPermissions([action])).toEqual([{ verb: 'patch' }])
+  })
+
+  it('returns patch verb for rolloutRestart', () => {
+    const action: TActionUnion = {
+      type: 'rolloutRestart',
+      props: { text: 'Rollout Restart', endpoint: '/api/rollout' },
+    }
+
+    expect(getRequiredPermissions([action])).toEqual([{ verb: 'patch' }])
+  })
+
+  it('returns create verb with eviction subresource for evict', () => {
+    const action: TActionUnion = {
+      type: 'evict',
+      props: { text: 'Evict', endpoint: '/api/evict', name: 'pod-1' },
+    }
+
+    expect(getRequiredPermissions([action])).toEqual([{ verb: 'create', subresource: 'eviction' }])
+  })
+
+  it('returns get verb with proxy subresource for openKubeletConfig', () => {
+    const action: TActionUnion = {
+      type: 'openKubeletConfig',
+      props: { text: 'Kubelet Config', url: '/api/kubelet' },
+    }
+
+    expect(getRequiredPermissions([action])).toEqual([{ verb: 'get', subresource: 'proxy' }])
+  })
+
+  it('returns all permissions for a full node actions dropdown', () => {
+    const actions: TActionUnion[] = [
+      createEditAction(),
+      {
+        type: 'cordon',
+        props: { text: 'Cordon', endpoint: '/api/cordon', pathToValue: '/spec/unschedulable', value: true },
+      },
+      {
+        type: 'openKubeletConfig',
+        props: { text: 'Kubelet Config', url: '/api/kubelet' },
+      },
+      createDeleteAction(),
+    ]
+
+    const required = getRequiredPermissions(actions)
+
+    expect(required).toEqual([
+      { verb: 'update' },
+      { verb: 'patch' },
+      { verb: 'get', subresource: 'proxy' },
+      { verb: 'delete' },
+    ])
+  })
+
+  it('returns all permissions for a full pod actions dropdown', () => {
+    const actions: TActionUnion[] = [
+      createEditAction(),
+      { type: 'evict', props: { text: 'Evict', endpoint: '/api/evict', name: 'pod-1' } },
+      createDeleteAction(),
+    ]
+
+    const required = getRequiredPermissions(actions)
+
+    expect(required).toEqual([
+      { verb: 'update' },
+      { verb: 'create', subresource: 'eviction' },
+      { verb: 'delete' },
+    ])
+  })
+
+  it('returns empty array for empty actions', () => {
+    expect(getRequiredPermissions([])).toEqual([])
   })
 })
