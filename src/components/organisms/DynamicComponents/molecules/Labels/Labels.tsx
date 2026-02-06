@@ -99,10 +99,11 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
   // Permission gating for patch-based edit:
   // 1) canPatch: Manual permissions override hook result if provided.
   // 2) shouldGateEdit: True when permissions or permissionContext are provided; otherwise don't gate.
-  // 3) canEdit: Allow edit when not readOnly and either gating is off or canPatch === true.
+  // 3) canSubmitEdit: Allow save when not readOnly and either gating is off or canPatch === true.
   const canPatch = permissions?.canPatch ?? patchPermission.data?.status.allowed
   const shouldGateEdit = Boolean(permissions || permissionContext)
-  const canEdit = !readOnly && (!shouldGateEdit || canPatch === true)
+  const canOpenEdit = !readOnly
+  const canSubmitEdit = !readOnly && (!shouldGateEdit || canPatch === true)
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
@@ -164,7 +165,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
 
   const EmptySelect = (
     <div style={containerStyle}>
-      {canEdit && !verticalViewList && (
+      {canOpenEdit && !verticalViewList && (
         <Flex justify="flex-end">
           <Button
             type="text"
@@ -194,7 +195,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
           isCursorPointer
         />
       )}
-      {canEdit && verticalViewList && (
+      {canOpenEdit && verticalViewList && (
         <>
           <Spacer $space={8} $samespace />
           <Flex justify="flex-start">
@@ -215,12 +216,13 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
       )}
       {children}
       {contextHolder}
-      {canEdit && (
+      {canOpenEdit && (
         <LabelsEditModal
           open={open}
           close={() => setOpen(false)}
           // values={labelsRaw}
           openNotificationSuccess={openNotificationSuccess}
+          disableSubmit={!canSubmitEdit}
           modalTitle={modalTitlePrepared}
           modalDescriptionText={modalDescriptionTextPrepared}
           modalDescriptionTextStyle={modalDescriptionTextStyle}
@@ -250,7 +252,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
 
   return (
     <div style={containerStyle}>
-      {canEdit && !verticalViewList && (
+      {canOpenEdit && !verticalViewList && (
         <Flex justify="flex-end">
           <Button
             type="text"
@@ -344,7 +346,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
           // isCursorPointer
         />
       )}
-      {canEdit && verticalViewList && (
+      {canOpenEdit && verticalViewList && (
         <>
           <Spacer $space={8} $samespace />
           <Flex justify="flex-start">
@@ -365,12 +367,13 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
       )}
       {children}
       {contextHolder}
-      {canEdit && (
+      {canOpenEdit && (
         <LabelsEditModal
           open={open}
           close={() => setOpen(false)}
           values={labelsRaw}
           openNotificationSuccess={openNotificationSuccess}
+          disableSubmit={!canSubmitEdit}
           modalTitle={modalTitlePrepared}
           modalDescriptionText={modalDescriptionTextPrepared}
           modalDescriptionTextStyle={modalDescriptionTextStyle}

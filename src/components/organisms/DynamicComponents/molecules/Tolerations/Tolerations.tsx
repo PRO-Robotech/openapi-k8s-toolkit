@@ -87,10 +87,11 @@ export const Tolerations: FC<{ data: TDynamicComponentsAppTypeMap['Tolerations']
   // Permission gating for patch-based edit:
   // 1) canPatch: Manual permissions override hook result if provided.
   // 2) shouldGateEdit: True when permissions or permissionContext are provided; otherwise don't gate.
-  // 3) canEdit: Allow edit when gating is off or canPatch === true.
+  // 3) canSubmitEdit: Allow save when gating is off or canPatch === true.
   const canPatch = permissions?.canPatch ?? patchPermission.data?.status.allowed
   const shouldGateEdit = Boolean(permissions || permissionContext)
-  const canEdit = !shouldGateEdit || canPatch === true
+  const canOpenEdit = true
+  const canSubmitEdit = !shouldGateEdit || canPatch === true
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
@@ -157,7 +158,7 @@ export const Tolerations: FC<{ data: TDynamicComponentsAppTypeMap['Tolerations']
         <div style={containerStyle}>
           <Flex align="center" gap={8}>
             {errorText}
-            {canEdit && (
+            {canOpenEdit && (
               <Button
                 type="text"
                 size="small"
@@ -171,12 +172,13 @@ export const Tolerations: FC<{ data: TDynamicComponentsAppTypeMap['Tolerations']
           </Flex>
         </div>
         {contextHolder}
-        {canEdit && (
+        {canOpenEdit && (
           <TolerationsEditModal
             open={open}
             close={() => setOpen(false)}
             values={tolerations}
             openNotificationSuccess={openNotificationSuccess}
+            disableSubmit={!canSubmitEdit}
             modalTitle={modalTitlePrepared}
             modalDescriptionText={modalDescriptionTextPrepared}
             modalDescriptionTextStyle={modalDescriptionTextStyle}
@@ -201,7 +203,7 @@ export const Tolerations: FC<{ data: TDynamicComponentsAppTypeMap['Tolerations']
       <div style={containerStyle}>
         <Flex align="center" gap={8}>
           {parsedTextWithCounter}
-          {canEdit && (
+          {canOpenEdit && (
             <Button
               type="text"
               size="small"
@@ -216,12 +218,13 @@ export const Tolerations: FC<{ data: TDynamicComponentsAppTypeMap['Tolerations']
         {children}
       </div>
       {contextHolder}
-      {canEdit && (
+      {canOpenEdit && (
         <TolerationsEditModal
           open={open}
           close={() => setOpen(false)}
           values={tolerations}
           openNotificationSuccess={openNotificationSuccess}
+          disableSubmit={!canSubmitEdit}
           modalTitle={modalTitlePrepared}
           modalDescriptionText={modalDescriptionTextPrepared}
           modalDescriptionTextStyle={modalDescriptionTextStyle}

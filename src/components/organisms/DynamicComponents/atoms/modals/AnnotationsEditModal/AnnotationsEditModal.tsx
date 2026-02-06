@@ -14,6 +14,7 @@ type TAnnotationsEditModalProps = {
   close: () => void
   values?: TStringNumberRecord
   openNotificationSuccess?: () => void
+  disableSubmit?: boolean
   modalTitle: string
   modalDescriptionText?: string
   inputLabel?: string
@@ -30,6 +31,7 @@ export const AnnotationsEditModal: FC<TAnnotationsEditModalProps> = ({
   close,
   values,
   openNotificationSuccess,
+  disableSubmit,
   modalTitle,
   modalDescriptionText,
   inputLabel,
@@ -103,6 +105,7 @@ export const AnnotationsEditModal: FC<TAnnotationsEditModalProps> = ({
         setError(undefined)
       }}
       okText="Save"
+      okButtonProps={{ disabled: disableSubmit }}
       confirmLoading={isLoading}
       maskClosable={false}
       width={editModalWidth || 520}

@@ -30,7 +30,7 @@ const meta: Meta<TArgs> = {
     id: { control: 'text', description: 'data.id' },
     text: {
       control: 'text',
-      description: 'data.text (supports parseAll placeholders like {0}, {reqs[0][\'data\',\'name\']})',
+      description: "data.text (supports parseAll placeholders like {0}, {reqs[0]['data','name']})",
     },
     iconBase64Encoded: {
       control: 'text',
@@ -129,6 +129,10 @@ const meta: Meta<TArgs> = {
 export default meta
 
 type Story = StoryObj<TArgs>
+type TLabelsActiveType = Extract<NonNullable<TArgs['activeType']>, { type: 'labels' }>
+type TTaintsActiveType = Extract<NonNullable<TArgs['activeType']>, { type: 'taints' }>
+type TAnnotationsActiveType = Extract<NonNullable<TArgs['activeType']>, { type: 'annotations' }>
+type TTolerationsActiveType = Extract<NonNullable<TArgs['activeType']>, { type: 'tolerations' }>
 
 export const Default: Story = {
   args: {
@@ -264,10 +268,10 @@ export const WithAnnotationsActiveType: Story = {
     id: 'example-aggregated-counter-card-annotations',
     text: 'Pod annotations',
     counter: {
-      type: 'item',
+      type: 'key',
       props: {
         reqIndex: '2',
-        jsonPathToArray: '.data.metadata.annotations',
+        jsonPathToObj: '.data.metadata.annotations',
         errorText: 'No annotations found',
         style: { color: '#999' },
       },
@@ -369,6 +373,70 @@ export const MissingRoot: Story = {
         jsonPathToArray: '.data.items',
         errorText: 'No data for this counter',
         style: { color: '#c00' },
+      },
+    },
+  },
+}
+
+export const LabelsNoPatchPermission: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-aggregated-counter-card-labels-no-patch-permission',
+    activeType: {
+      ...(Default.args!.activeType as TLabelsActiveType),
+      props: {
+        ...(Default.args!.activeType as TLabelsActiveType).props,
+        permissions: {
+          canPatch: false,
+        },
+      },
+    },
+  },
+}
+
+export const TaintsNoPatchPermission: Story = {
+  args: {
+    ...WithTaintsActiveType.args,
+    id: 'example-aggregated-counter-card-taints-no-patch-permission',
+    activeType: {
+      ...(WithTaintsActiveType.args!.activeType as TTaintsActiveType),
+      props: {
+        ...(WithTaintsActiveType.args!.activeType as TTaintsActiveType).props,
+        permissions: {
+          canPatch: false,
+        },
+      },
+    },
+  },
+}
+
+export const AnnotationsNoPatchPermission: Story = {
+  args: {
+    ...WithAnnotationsActiveType.args,
+    id: 'example-aggregated-counter-card-annotations-no-patch-permission',
+    activeType: {
+      ...(WithAnnotationsActiveType.args!.activeType as TAnnotationsActiveType),
+      props: {
+        ...(WithAnnotationsActiveType.args!.activeType as TAnnotationsActiveType).props,
+        permissions: {
+          canPatch: false,
+        },
+      },
+    },
+  },
+}
+
+export const TolerationsNoPatchPermission: Story = {
+  args: {
+    ...WithTolerationsActiveType.args,
+    id: 'example-aggregated-counter-card-tolerations-no-patch-permission',
+    activeType: {
+      ...(WithTolerationsActiveType.args!.activeType as TTolerationsActiveType),
+      props: {
+        ...(WithTolerationsActiveType.args!.activeType as TTolerationsActiveType).props,
+        permissions: {
+          canPatch: false,
+        },
       },
     },
   },

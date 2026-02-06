@@ -325,3 +325,13 @@ export const LoadingMultiQuery: Story = {
     isLoading: true,
   },
 }
+
+export const NoPatchPermission: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-labels-no-patch-permission',
+    permissions: {
+      canPatch: false,
+    },
+  },
+}
