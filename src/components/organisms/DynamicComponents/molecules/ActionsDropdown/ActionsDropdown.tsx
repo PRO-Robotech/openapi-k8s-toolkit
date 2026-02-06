@@ -1,4 +1,4 @@
-import { FC, ReactNode } from 'react'
+import { FC, ReactElement } from 'react'
 import { Dropdown, Button, Spin, Tooltip } from 'antd'
 import { DownOutlined, MoreOutlined, WarningOutlined } from '@ant-design/icons'
 import { ConfirmModal, DeleteModal } from 'components/atoms'
@@ -11,7 +11,7 @@ import { Styled } from './styled'
 
 export const ActionsDropdown: FC<{
   data: TDynamicComponentsAppTypeMap['ActionsDropdown']
-  children?: ReactNode
+  children?: ReactElement | ReactElement[]
 }> = ({ data, children }) => {
   const {
     buttonText = 'Actions',
