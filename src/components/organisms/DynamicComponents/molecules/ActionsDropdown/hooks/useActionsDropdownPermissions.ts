@@ -30,9 +30,6 @@ export const useActionsDropdownPermissions = ({
           ? parseAll({ text: permissionContext.apiGroup, replaceValues, multiQueryData })
           : undefined,
         plural: parseAll({ text: permissionContext.plural, replaceValues, multiQueryData }),
-        subresource: permissionContext.subresource
-          ? parseAll({ text: permissionContext.subresource, replaceValues, multiQueryData })
-          : undefined,
       }
     : undefined
 
@@ -48,38 +45,45 @@ export const useActionsDropdownPermissions = ({
   const requiredPermissions = shouldCheckPermissions ? getRequiredPermissions(actions) : []
   const requiredVerbs = new Set(requiredPermissions.map(permission => permission.verb))
 
+  const getSubresourceForVerb = (verb: string): string | undefined =>
+    requiredPermissions.find(p => p.verb === verb && p.subresource)?.subresource
+
   const permissionBaseParams = {
     cluster: permissionContextPrepared?.cluster || '',
     namespace: permissionContextPrepared?.namespace,
     apiGroup: permissionContextPrepared?.apiGroup,
     plural: permissionContextPrepared?.plural || '',
-    subresource: permissionContextPrepared?.subresource,
     refetchInterval: false as const,
   }
 
   const updatePermission = usePermissions({
     ...permissionBaseParams,
     verb: 'update',
+    subresource: getSubresourceForVerb('update'),
     enabler: shouldCheckPermissions && isPermissionContextValid && requiredVerbs.has('update'),
   })
   const patchPermission = usePermissions({
     ...permissionBaseParams,
     verb: 'patch',
+    subresource: getSubresourceForVerb('patch'),
     enabler: shouldCheckPermissions && isPermissionContextValid && requiredVerbs.has('patch'),
   })
   const deletePermission = usePermissions({
     ...permissionBaseParams,
     verb: 'delete',
+    subresource: getSubresourceForVerb('delete'),
     enabler: shouldCheckPermissions && isPermissionContextValid && requiredVerbs.has('delete'),
   })
   const createPermission = usePermissions({
     ...permissionBaseParams,
     verb: 'create',
+    subresource: getSubresourceForVerb('create'),
     enabler: shouldCheckPermissions && isPermissionContextValid && requiredVerbs.has('create'),
   })
   const getPermission = usePermissions({
     ...permissionBaseParams,
     verb: 'get',
+    subresource: getSubresourceForVerb('get'),
     enabler: shouldCheckPermissions && isPermissionContextValid && requiredVerbs.has('get'),
   })
 
