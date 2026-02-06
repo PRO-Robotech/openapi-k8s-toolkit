@@ -1,6 +1,6 @@
 import { FC, ReactNode } from 'react'
-import { Dropdown, Button } from 'antd'
-import { DownOutlined, MoreOutlined } from '@ant-design/icons'
+import { Dropdown, Button, Spin, Tooltip } from 'antd'
+import { DownOutlined, MoreOutlined, WarningOutlined } from '@ant-design/icons'
 import { ConfirmModal, DeleteModal } from 'components/atoms'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
@@ -57,16 +57,19 @@ export const ActionsDropdown: FC<{
   })
 
   if (isMultiQueryLoading) {
-    return <div>Loading...</div>
+    return <Spin size="small" />
   }
 
   if (isMultiQueryErrors) {
+    const errorMessage = errors
+      .filter((e): e is Error | string => e !== null)
+      .map(e => (typeof e === 'string' ? e : e.message))
+      .join('; ')
+
     return (
-      <div>
-        <h4>Errors:</h4>
-        {/* eslint-disable-next-line react/no-array-index-key */}
-        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
-      </div>
+      <Tooltip title={errorMessage || 'Failed to load data'}>
+        <WarningOutlined style={{ color: 'red' }} />
+      </Tooltip>
     )
   }
 
