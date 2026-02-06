@@ -1,4 +1,5 @@
 import React from 'react'
+import { Tooltip } from 'antd'
 import type { TPermissionVerb } from 'localTypes/permissions'
 import { TActionUnion, TEditActionProps, TActionsPermissions } from '../../types/ActionsDropdown'
 import { LabelsModal } from '../AggregatedCounterCard/molecules/LabelsModal'
@@ -145,7 +146,13 @@ export const getMenuItems = (
 ) =>
   actions.map((action, index) => ({
     key: `${action.type}-${index}`,
-    label: action.props.text,
+    label: action.props.tooltip ? (
+      <Tooltip title={action.props.tooltip}>
+        <span>{action.props.text}</span>
+      </Tooltip>
+    ) : (
+      action.props.text
+    ),
     icon: getActionIcon(action),
     disabled: action.props.disabled || isActionDisabledByPermission(action, permissions),
     danger: action.props.danger,

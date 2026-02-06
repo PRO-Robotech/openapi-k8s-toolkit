@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { FC } from 'react'
+import { FC, ReactNode } from 'react'
 import { Dropdown, Button } from 'antd'
 import { DownOutlined, MoreOutlined } from '@ant-design/icons'
 import { ConfirmModal, DeleteModal } from 'components/atoms'
@@ -12,7 +11,7 @@ import { Styled } from './styled'
 
 export const ActionsDropdown: FC<{
   data: TDynamicComponentsAppTypeMap['ActionsDropdown']
-  children?: any
+  children?: ReactNode
 }> = ({ data, children }) => {
   const {
     buttonText = 'Actions',
