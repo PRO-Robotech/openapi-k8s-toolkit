@@ -41,6 +41,32 @@ export type TDeleteActionProps = TActionBaseProps & {
   redirectTo?: string
 }
 
+export type TPatchFieldActionProps = TActionBaseProps & {
+  endpoint: string
+  pathToValue: string
+  value: unknown
+}
+
+export type TRolloutRestartActionProps = TActionBaseProps & {
+  endpoint: string
+  annotationKey?: string
+  timestamp?: string
+}
+
+export type TEvictActionProps = TActionBaseProps & {
+  endpoint: string
+  name: string
+  namespace?: string
+  apiVersion?: string
+  gracePeriodSeconds?: number
+  dryRun?: string[]
+}
+
+export type TOpenKubeletConfigActionProps = TActionBaseProps & {
+  url: string
+  target?: '_blank' | '_self'
+}
+
 export type TActionUnion =
   | { type: 'edit'; props: TEditActionProps }
   | { type: 'editLabels'; props: TEditLabelsActionProps }
@@ -48,6 +74,13 @@ export type TActionUnion =
   | { type: 'editTaints'; props: TEditTaintsActionProps }
   | { type: 'editTolerations'; props: TEditTolerationsActionProps }
   | { type: 'delete'; props: TDeleteActionProps }
+  | { type: 'cordon'; props: TPatchFieldActionProps }
+  | { type: 'uncordon'; props: TPatchFieldActionProps }
+  | { type: 'suspend'; props: TPatchFieldActionProps }
+  | { type: 'resume'; props: TPatchFieldActionProps }
+  | { type: 'rolloutRestart'; props: TRolloutRestartActionProps }
+  | { type: 'evict'; props: TEvictActionProps }
+  | { type: 'openKubeletConfig'; props: TOpenKubeletConfigActionProps }
 
 export type TActionsPermissions = {
   canUpdate?: boolean // For 'edit' action

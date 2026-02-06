@@ -26,6 +26,13 @@ const ACTION_REQUIRED_PERMISSIONS: Record<TActionUnion['type'], TRequiredPermiss
   editTaints: { verb: 'patch' },
   editTolerations: { verb: 'patch' },
   delete: { verb: 'delete' },
+  cordon: { verb: 'patch' },
+  uncordon: { verb: 'patch' },
+  suspend: { verb: 'patch' },
+  resume: { verb: 'patch' },
+  rolloutRestart: { verb: 'patch' },
+  evict: { verb: 'create', subresource: 'eviction' },
+  openKubeletConfig: { verb: 'get', subresource: 'proxy' },
 }
 
 const toArray = <T,>(value: T | T[]): T[] => (Array.isArray(value) ? value : [value])
@@ -75,6 +82,14 @@ export const renderActionModal = (action: TActionUnion, extraProps: TModalExtraP
     case 'delete':
       // Delete modal is handled separately in ActionsDropdown component
       return null
+    case 'cordon':
+    case 'uncordon':
+    case 'suspend':
+    case 'resume':
+    case 'rolloutRestart':
+    case 'evict':
+    case 'openKubeletConfig':
+      return null
 
     default: {
       // eslint-disable-next-line no-underscore-dangle
@@ -106,9 +121,20 @@ const isActionDisabledByPermission = (action: TActionUnion, permissions: TAction
     case 'editAnnotations':
     case 'editTaints':
     case 'editTolerations':
+    case 'cordon':
+    case 'uncordon':
+    case 'suspend':
+    case 'resume':
+    case 'rolloutRestart':
       return permissions.canPatch !== true
     case 'delete':
       return permissions.canDelete !== true
+    case 'evict':
+      return permissions.canCreate !== true
+    case 'openKubeletConfig':
+      return permissions.canGet !== true
+    default:
+      return true
   }
 }
 
