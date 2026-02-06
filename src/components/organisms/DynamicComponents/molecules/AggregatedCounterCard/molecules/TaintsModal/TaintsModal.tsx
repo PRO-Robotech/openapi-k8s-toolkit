@@ -14,12 +14,14 @@ import type { TTaintsBaseProps, TTaintsModalProps as TModalInner } from '../../.
 type TTaintsModalProps = {
   open: boolean
   onClose: () => void
+  disableSubmit?: boolean
 } & TTaintsBaseProps &
   TModalInner
 
 export const TaintsModal: FC<TTaintsModalProps> = ({
   open,
   onClose,
+  disableSubmit,
   reqIndex,
   jsonPathToArray,
   notificationSuccessMessage,
@@ -111,6 +113,7 @@ export const TaintsModal: FC<TTaintsModalProps> = ({
           close={onClose}
           values={taints}
           openNotificationSuccess={openNotificationSuccess}
+          disableSubmit={disableSubmit}
           modalTitle={modalTitlePrepared}
           modalDescriptionText={errorArrayOfObjects}
           modalDescriptionTextStyle={modalDescriptionTextStyle}
@@ -133,6 +136,7 @@ export const TaintsModal: FC<TTaintsModalProps> = ({
         close={onClose}
         values={taints}
         openNotificationSuccess={openNotificationSuccess}
+        disableSubmit={disableSubmit}
         modalTitle={modalTitlePrepared}
         modalDescriptionText={modalDescriptionTextPrepared}
         inputLabel={inputLabelPrepared}

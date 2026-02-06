@@ -282,3 +282,13 @@ export const NoRootForJsonPath: Story = {
     },
   },
 }
+
+export const NoPatchPermission: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-taints-no-patch-permission',
+    permissions: {
+      canPatch: false,
+    },
+  },
+}

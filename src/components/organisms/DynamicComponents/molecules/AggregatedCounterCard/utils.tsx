@@ -13,24 +13,27 @@ const LazyEnrichedTableModal = lazy(() =>
 type TCommonExtraProps = {
   open: boolean
   onClose: () => void
+  disableSubmit?: boolean
 }
 
 export const renderActiveType = (activeType: TActiveTypeUnion | undefined, extraProps: TCommonExtraProps) => {
   if (!activeType) return null
 
+  const { open, onClose, disableSubmit } = extraProps
+
   switch (activeType.type) {
     case 'labels':
-      return <LabelsModal {...activeType.props} {...extraProps} />
+      return <LabelsModal {...activeType.props} open={open} onClose={onClose} disableSubmit={disableSubmit} />
     case 'annotations':
-      return <AnnotationsModal {...activeType.props} {...extraProps} />
+      return <AnnotationsModal {...activeType.props} open={open} onClose={onClose} disableSubmit={disableSubmit} />
     case 'taints':
-      return <TaintsModal {...activeType.props} {...extraProps} />
+      return <TaintsModal {...activeType.props} open={open} onClose={onClose} disableSubmit={disableSubmit} />
     case 'tolerations':
-      return <TolerationsModal {...activeType.props} {...extraProps} />
+      return <TolerationsModal {...activeType.props} open={open} onClose={onClose} disableSubmit={disableSubmit} />
     case 'table':
       return (
         <Suspense fallback={null}>
-          <LazyEnrichedTableModal {...activeType.props} {...extraProps} />
+          <LazyEnrichedTableModal {...activeType.props} open={open} onClose={onClose} />
         </Suspense>
       )
     default: {

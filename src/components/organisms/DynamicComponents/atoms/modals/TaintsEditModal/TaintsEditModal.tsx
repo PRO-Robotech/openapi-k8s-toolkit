@@ -14,6 +14,7 @@ type TTaintsEditModalProps = {
   close: () => void
   values?: TTaintLike[]
   openNotificationSuccess?: () => void
+  disableSubmit?: boolean
   modalTitle: string
   modalDescriptionText?: string
   inputLabel?: string
@@ -30,6 +31,7 @@ export const TaintsEditModal: FC<TTaintsEditModalProps> = ({
   close,
   values,
   openNotificationSuccess,
+  disableSubmit,
   modalTitle,
   modalDescriptionText,
   inputLabel,
@@ -96,6 +98,7 @@ export const TaintsEditModal: FC<TTaintsEditModalProps> = ({
         setError(undefined)
       }}
       okText="Save"
+      okButtonProps={{ disabled: disableSubmit }}
       confirmLoading={isLoading}
       maskClosable={false}
       width={editModalWidth || 520}

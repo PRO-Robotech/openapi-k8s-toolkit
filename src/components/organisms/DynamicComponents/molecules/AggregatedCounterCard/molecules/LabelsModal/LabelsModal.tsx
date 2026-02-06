@@ -15,12 +15,14 @@ import type { TLabelsBaseProps, TLabelsModalProps as TModalInner } from '../../.
 type TLabelsModalProps = {
   open: boolean
   onClose: () => void
+  disableSubmit?: boolean
 } & TLabelsBaseProps &
   TModalInner
 
 export const LabelsModal: FC<TLabelsModalProps> = ({
   open,
   onClose,
+  disableSubmit,
   reqIndex,
   jsonPathToLabels,
   notificationSuccessMessage,
@@ -112,6 +114,7 @@ export const LabelsModal: FC<TLabelsModalProps> = ({
         close={onClose}
         // values={labelsRaw}
         openNotificationSuccess={openNotificationSuccess}
+        disableSubmit={disableSubmit}
         modalTitle={modalTitlePrepared}
         modalDescriptionText={modalDescriptionTextPrepared}
         modalDescriptionTextStyle={modalDescriptionTextStyle}
@@ -144,6 +147,7 @@ export const LabelsModal: FC<TLabelsModalProps> = ({
         close={onClose}
         values={labelsRaw}
         openNotificationSuccess={openNotificationSuccess}
+        disableSubmit={disableSubmit}
         modalTitle={modalTitlePrepared}
         modalDescriptionText={modalDescriptionTextPrepared}
         modalDescriptionTextStyle={modalDescriptionTextStyle}

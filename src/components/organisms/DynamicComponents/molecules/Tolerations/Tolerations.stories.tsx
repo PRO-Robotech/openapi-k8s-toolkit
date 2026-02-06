@@ -244,3 +244,13 @@ export const LoadingMultiQuery: Story = {
     isLoading: true,
   },
 }
+
+export const NoPatchPermission: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-tolerations-no-patch-permission',
+    permissions: {
+      canPatch: false,
+    },
+  },
+}
