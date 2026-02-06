@@ -41,6 +41,7 @@ export const ActionsDropdown: FC<{
   })
 
   const {
+    notificationContextHolder,
     activeAction,
     modalOpen,
     deleteModalData,
@@ -96,6 +97,7 @@ export const ActionsDropdown: FC<{
 
   return (
     <div style={containerStyle}>
+      {notificationContextHolder}
       <Dropdown menu={{ items: menuItems }} trigger={['click']}>
         {renderButton()}
       </Dropdown>

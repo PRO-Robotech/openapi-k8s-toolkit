@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { notification } from 'antd'
+import { AxiosError } from 'axios'
 import { createNewEntry, patchEntryWithMergePatch, patchEntryWithReplaceOp } from 'api/forms'
 import { parseAll } from '../../utils'
 import { buildEditUrl } from '../utils'
@@ -21,9 +23,54 @@ type TEvictModalData = {
   dryRun?: string[]
 }
 
-type TUseActionsDropdownHandlersParams = {
+type TParseContext = {
   replaceValues: Record<string, string | undefined>
   multiQueryData: Record<string, unknown>
+}
+
+type TUseActionsDropdownHandlersParams = TParseContext
+
+const parseValueIfString = (value: unknown, ctx: TParseContext) => {
+  if (typeof value === 'string') {
+    return parseAll({ text: value, ...ctx })
+  }
+  return value
+}
+
+const buildEvictModalData = (props: TEvictActionProps, ctx: TParseContext): TEvictModalData => {
+  const endpointPrepared = parseAll({ text: props.endpoint, ...ctx })
+  const namePrepared = parseAll({ text: props.name, ...ctx })
+  const namespacePrepared = props.namespace ? parseAll({ text: props.namespace, ...ctx }) : undefined
+  const apiVersionPrepared = props.apiVersion ? parseAll({ text: props.apiVersion, ...ctx }) : 'policy/v1'
+
+  return {
+    endpoint: endpointPrepared,
+    name: namePrepared,
+    namespace: namespacePrepared,
+    apiVersion: apiVersionPrepared,
+    gracePeriodSeconds: props.gracePeriodSeconds,
+    dryRun: props.dryRun,
+  }
+}
+
+const buildEvictBody = (data: TEvictModalData) => {
+  const deleteOptions: Record<string, unknown> = {}
+  if (data.gracePeriodSeconds !== undefined) {
+    deleteOptions.gracePeriodSeconds = data.gracePeriodSeconds
+  }
+  if (data.dryRun && data.dryRun.length > 0) {
+    deleteOptions.dryRun = data.dryRun
+  }
+
+  return {
+    apiVersion: data.apiVersion,
+    kind: 'Eviction',
+    metadata: {
+      name: data.name,
+      ...(data.namespace ? { namespace: data.namespace } : {}),
+    },
+    ...(Object.keys(deleteOptions).length > 0 ? { deleteOptions } : {}),
+  }
 }
 
 export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TUseActionsDropdownHandlersParams) => {
@@ -31,6 +78,7 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
   const location = useLocation()
   const [searchParams] = useSearchParams()
   const queryClient = useQueryClient()
+  const [notificationApi, notificationContextHolder] = notification.useNotification()
 
   const fullPath = location.pathname + location.search
 
@@ -44,32 +92,29 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
     queryClient.invalidateQueries({ queryKey: ['multi'] })
   }
 
-  const parseValueIfString = (value: unknown) => {
-    if (typeof value === 'string') {
-      return parseAll({ text: value, replaceValues, multiQueryData })
-    }
-    return value
+  const showSuccess = (actionLabel: string) => {
+    notificationApi.success({
+      message: `${actionLabel} successful`,
+      placement: 'bottomRight',
+    })
   }
 
-  const buildEvictModalData = (props: TEvictActionProps): TEvictModalData => {
-    const endpointPrepared = parseAll({ text: props.endpoint, replaceValues, multiQueryData })
-    const namePrepared = parseAll({ text: props.name, replaceValues, multiQueryData })
-    const namespacePrepared = props.namespace
-      ? parseAll({ text: props.namespace, replaceValues, multiQueryData })
-      : undefined
-    const apiVersionPrepared = props.apiVersion
-      ? parseAll({ text: props.apiVersion, replaceValues, multiQueryData })
-      : 'policy/v1'
+  const showError = (actionLabel: string, error: unknown) => {
+    const description =
+      error instanceof AxiosError
+        ? error.response?.data?.message || error.message
+        : error instanceof Error
+          ? error.message
+          : 'Unknown error'
 
-    return {
-      endpoint: endpointPrepared,
-      name: namePrepared,
-      namespace: namespacePrepared,
-      apiVersion: apiVersionPrepared,
-      gracePeriodSeconds: props.gracePeriodSeconds,
-      dryRun: props.dryRun,
-    }
+    notificationApi.error({
+      message: `${actionLabel} failed`,
+      description,
+      placement: 'bottomRight',
+    })
   }
+
+  const ctx: TParseContext = { replaceValues, multiQueryData }
 
   const handleActionClick = (action: TActionUnion) => {
     if (action.type === 'edit') {
@@ -129,17 +174,22 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
       action.type === 'suspend' ||
       action.type === 'resume'
     ) {
+      const actionLabel = action.props.text || action.type
       const endpointPrepared = parseAll({ text: action.props.endpoint, replaceValues, multiQueryData })
       const pathToValuePrepared = parseAll({ text: action.props.pathToValue, replaceValues, multiQueryData })
-      const valuePrepared = parseValueIfString(action.props.value)
+      const valuePrepared = parseValueIfString(action.props.value, ctx)
 
       patchEntryWithReplaceOp({
         endpoint: endpointPrepared,
         pathToValue: pathToValuePrepared,
         body: valuePrepared,
       })
-        .then(() => invalidateMultiQuery())
+        .then(() => {
+          invalidateMultiQuery()
+          showSuccess(actionLabel)
+        })
         .catch(error => {
+          showError(actionLabel, error)
           // eslint-disable-next-line no-console
           console.error(error)
         })
@@ -148,6 +198,7 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
     }
 
     if (action.type === 'rolloutRestart') {
+      const actionLabel = action.props.text || 'Rollout restart'
       const endpointPrepared = parseAll({ text: action.props.endpoint, replaceValues, multiQueryData })
       const annotationKeyPrepared = action.props.annotationKey
         ? parseAll({ text: action.props.annotationKey, replaceValues, multiQueryData })
@@ -170,8 +221,12 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
           },
         },
       })
-        .then(() => invalidateMultiQuery())
+        .then(() => {
+          invalidateMultiQuery()
+          showSuccess(actionLabel)
+        })
         .catch(error => {
+          showError(actionLabel, error)
           // eslint-disable-next-line no-console
           console.error(error)
         })
@@ -180,7 +235,7 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
     }
 
     if (action.type === 'evict') {
-      const evictData = buildEvictModalData(action.props)
+      const evictData = buildEvictModalData(action.props, ctx)
       setEvictModalData(evictData)
       return
     }
@@ -201,27 +256,15 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
 
     setIsEvictLoading(true)
 
-    const deleteOptions: Record<string, unknown> = {}
-    if (evictModalData.gracePeriodSeconds !== undefined) {
-      deleteOptions.gracePeriodSeconds = evictModalData.gracePeriodSeconds
-    }
-    if (evictModalData.dryRun && evictModalData.dryRun.length > 0) {
-      deleteOptions.dryRun = evictModalData.dryRun
-    }
-
-    const body = {
-      apiVersion: evictModalData.apiVersion,
-      kind: 'Eviction',
-      metadata: {
-        name: evictModalData.name,
-        ...(evictModalData.namespace ? { namespace: evictModalData.namespace } : {}),
-      },
-      ...(Object.keys(deleteOptions).length > 0 ? { deleteOptions } : {}),
-    }
+    const body = buildEvictBody(evictModalData)
 
     createNewEntry({ endpoint: evictModalData.endpoint, body })
-      .then(() => invalidateMultiQuery())
+      .then(() => {
+        invalidateMultiQuery()
+        showSuccess(`Evict ${evictModalData.name}`)
+      })
       .catch(error => {
+        showError(`Evict ${evictModalData.name}`, error)
         // eslint-disable-next-line no-console
         console.error(error)
       })
@@ -260,6 +303,7 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
   }
 
   return {
+    notificationContextHolder,
     activeAction,
     modalOpen,
     deleteModalData,
