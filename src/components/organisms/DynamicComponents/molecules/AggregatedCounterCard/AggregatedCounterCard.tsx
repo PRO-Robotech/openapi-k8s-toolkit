@@ -96,17 +96,16 @@ export const AggregatedCounterCard: FC<{
     enabler: isPermissionContextValid,
   })
 
-  // Permission gating for patch-based modals:
+  // Permission handling for patch-based modals:
   // 1) canPatch: If the active type (labels/annotations/taints/tolerations) provides a manual
   //    permissions?.canPatch, use that. Otherwise fall back to the usePermissions hook result.
   // 2) shouldGateEdit: True when permissions or permissionContext are provided; otherwise we don't gate.
-  // 3) canOpenActiveType: The card can open its modal if there is an activeType and:
-  //    - it is not a patch-gated type, or
-  //    - gating is off (no permissions/context), or
-  //    - gating is on and canPatch === true.
+  // 3) canOpenActiveType: The card can open its modal whenever activeType exists.
+  // 4) canSubmitActiveType: Save is enabled unless this is a patch-gated type with denied permission.
   const canPatch = patchActiveType?.props.permissions?.canPatch ?? patchPermission.data?.status.allowed
   const shouldGateEdit = Boolean(patchActiveType?.props.permissions || patchActiveType?.props.permissionContext)
-  const canOpenActiveType = !!activeType && (!patchActiveType || !shouldGateEdit || canPatch === true)
+  const canOpenActiveType = !!activeType
+  const canSubmitActiveType = !patchActiveType || !shouldGateEdit || canPatch === true
 
   useEffect(() => {
     if (open && !canOpenActiveType) {
@@ -214,7 +213,12 @@ export const AggregatedCounterCard: FC<{
         </Styled.CardIcon>
       </Styled.Card>
       <Styled.HiddenContainer $isHidden={!open}>
-        {canOpenActiveType && renderActiveType(activeType, { open, onClose: () => setOpen(false) })}
+        {canOpenActiveType &&
+          renderActiveType(activeType, {
+            open,
+            onClose: () => setOpen(false),
+            disableSubmit: !canSubmitActiveType,
+          })}
       </Styled.HiddenContainer>
       {children}
     </div>

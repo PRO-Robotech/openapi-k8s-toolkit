@@ -10,6 +10,14 @@ import { BlackholeFormProvider } from './BlackholeFormProvider'
 jest.mock('axios')
 const mockPost = axios.post as unknown as jest.Mock
 
+jest.mock('hooks/useK8sSmartResource', () => ({
+  useK8sSmartResource: () => ({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+  }),
+}))
+
 jest.mock('../BlackholeForm', () => ({
   BlackholeForm: (props: any) => (
     <div data-testid="blackhole-form">
@@ -25,6 +33,12 @@ jest.mock('../../../YamlEditorSingleton', () => ({
 const baseProps = {
   theme: 'light' as const,
   cluster: 'c1',
+  forcingCustomization: {
+    baseApiGroup: 'front.in-cloud.io',
+    baseApiVersion: 'v1alpha1',
+    cfoMappingPlural: 'cfomappings',
+    cfoMappinResourceName: 'default',
+  },
   urlParams: {} as any,
   urlParamsForPermissions: { apiGroup: 'apps', plural: 'deployments' },
   data: {

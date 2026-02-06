@@ -71,26 +71,49 @@ const mapLinksFromRaw = ({
 const findMatchingItems = ({
   items,
   pathname,
+  searchParams,
   tags,
 }: {
   items: (ItemType & { internalMetaLink?: string })[]
   pathname: string
+  searchParams?: string
   tags: { keysAndTags?: Record<string, string[]>; currentTags?: string[] }
 }): React.Key[] => {
+  const normalizePath = (value?: string): string | undefined => {
+    if (!value) {
+      return undefined
+    }
+    return value.startsWith('/') ? value.slice(1) : value
+  }
+
   const traverse = (nodes: (ItemType & { internalMetaLink?: string })[], parents: React.Key[]): React.Key[] =>
     nodes.flatMap(node => {
       const currentPath = [...parents, node.key ? node.key : String(node.key)]
 
-      const cleanNodeInternalMetaLink = node.internalMetaLink?.startsWith('/')
-        ? node.internalMetaLink.slice(1)
-        : node.internalMetaLink
-      const cleanPathname = pathname.startsWith('/') ? pathname.slice(1) : pathname
+      const cleanNodeInternalMetaLink = normalizePath(node.internalMetaLink)
+      const cleanPathname = normalizePath(pathname.split('?')[0])
+      let searchSuffix: string | undefined
+      if (searchParams && searchParams.length > 0) {
+        searchSuffix = searchParams.startsWith('?') ? searchParams : `?${searchParams}`
+      }
+
+      let pathnameWithSearch: string | undefined
+      if (searchSuffix) {
+        pathnameWithSearch = `${pathname}${searchSuffix}`
+      } else if (pathname.includes('?')) {
+        pathnameWithSearch = pathname
+      }
+      const cleanPathnameWithSearch = normalizePath(pathnameWithSearch)
       // const matched =
       //   cleanNodeInternalMetaLink === cleanPathname ||
       //   (cleanNodeInternalMetaLink && currentPath && cleanNodeInternalMetaLink.includes(cleanPathname))
       //     ? currentPath
       //     : []
-      const matched = cleanNodeInternalMetaLink === cleanPathname ? currentPath : []
+      const matched =
+        cleanNodeInternalMetaLink === cleanPathname ||
+        (cleanPathnameWithSearch && cleanNodeInternalMetaLink === cleanPathnameWithSearch)
+          ? currentPath
+          : []
 
       const tagsToMatch =
         tags && tags.keysAndTags && node.key
@@ -117,6 +140,7 @@ export const prepareDataForManageableSidebar = ({
   data,
   replaceValues,
   pathname,
+  searchParams,
   idToCompare,
   fallbackIdToCompare,
   currentTags,
@@ -124,6 +148,7 @@ export const prepareDataForManageableSidebar = ({
   data: { id: string; menuItems: TLink[]; keysAndTags?: Record<string, string[]>; externalKeys?: string[] }[]
   replaceValues: Record<string, string | undefined>
   pathname: string
+  searchParams?: string
   idToCompare: string
   fallbackIdToCompare?: string
   currentTags?: string[]
@@ -153,6 +178,7 @@ export const prepareDataForManageableSidebar = ({
     ? findMatchingItems({
         items: result?.menuItems,
         pathname,
+        searchParams,
         tags: { keysAndTags: foundData.keysAndTags, currentTags: preparedCurrentTags },
       })
     : []

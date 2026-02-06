@@ -14,12 +14,14 @@ import type { TTolerationsBaseProps, TTolerationsModalProps as TModalInner } fro
 type TTolerationsModalProps = {
   open: boolean
   onClose: () => void
+  disableSubmit?: boolean
 } & TTolerationsBaseProps &
   TModalInner
 
 export const TolerationsModal: FC<TTolerationsModalProps> = ({
   open,
   onClose,
+  disableSubmit,
   reqIndex,
   jsonPathToArray,
   notificationSuccessMessage,
@@ -112,6 +114,7 @@ export const TolerationsModal: FC<TTolerationsModalProps> = ({
           close={onClose}
           values={tolerations}
           openNotificationSuccess={openNotificationSuccess}
+          disableSubmit={disableSubmit}
           modalTitle={modalTitlePrepared}
           modalDescriptionText={errorArrayOfObjects}
           modalDescriptionTextStyle={modalDescriptionTextStyle}
@@ -134,6 +137,7 @@ export const TolerationsModal: FC<TTolerationsModalProps> = ({
         close={onClose}
         values={tolerations}
         openNotificationSuccess={openNotificationSuccess}
+        disableSubmit={disableSubmit}
         modalTitle={modalTitlePrepared}
         modalDescriptionText={modalDescriptionTextPrepared}
         modalDescriptionTextStyle={modalDescriptionTextStyle}
