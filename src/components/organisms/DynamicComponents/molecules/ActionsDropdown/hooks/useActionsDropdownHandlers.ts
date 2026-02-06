@@ -221,13 +221,13 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
 
     createNewEntry({ endpoint: evictModalData.endpoint, body })
       .then(() => invalidateMultiQuery())
-      .finally(() => {
-        setIsEvictLoading(false)
-        setEvictModalData(null)
-      })
       .catch(error => {
         // eslint-disable-next-line no-console
         console.error(error)
+      })
+      .finally(() => {
+        setIsEvictLoading(false)
+        setEvictModalData(null)
       })
   }
 
