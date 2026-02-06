@@ -204,12 +204,10 @@ export const Default: Story = {
     multiQueryData: {
       req0: {
         data: {
-          annotations: [
-            {
-              'example.com/foo': 'bar',
-              'example.com/hello': 'world',
-            },
-          ],
+          annotations: {
+            'example.com/foo': 'bar',
+            'example.com/hello': 'world',
+          },
         },
       },
     },
@@ -222,7 +220,7 @@ export const Default: Story = {
  */
 export const MissingRoot: Story = {
   args: {
-    ...Default.args,
+    ...Default.args!,
     multiQueryData: {
       // no req0 -> jsonRoot === undefined
     },
@@ -234,7 +232,7 @@ export const MissingRoot: Story = {
  */
 export const Loading: Story = {
   args: {
-    ...Default.args,
+    ...Default.args!,
     isLoading: true,
   },
 }
@@ -244,8 +242,32 @@ export const Loading: Story = {
  */
 export const ProviderError: Story = {
   args: {
-    ...Default.args,
+    ...Default.args!,
     isError: true,
     errors: [{ message: 'Failed to fetch data for annotations' }],
+  },
+}
+
+export const NoPatchPermission: Story = {
+  args: {
+    ...Default.args!,
+    id: 'example-annotations-no-patch-permission',
+    permissions: {
+      canPatch: false,
+    },
+  },
+}
+
+export const NoAnnotations: Story = {
+  args: {
+    ...Default.args!,
+    id: 'example-annotations-empty',
+    multiQueryData: {
+      req0: {
+        data: {
+          annotations: {},
+        },
+      },
+    },
   },
 }

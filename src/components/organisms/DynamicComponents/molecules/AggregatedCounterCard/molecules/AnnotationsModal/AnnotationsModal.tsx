@@ -14,12 +14,14 @@ import type { TAnnotationsBaseProps, TAnnotationsModalProps as TModalInner } fro
 type TAnnotationsModalProps = {
   open: boolean
   onClose: () => void
+  disableSubmit?: boolean
 } & TAnnotationsBaseProps &
   TModalInner
 
 export const AnnotationsModal: FC<TAnnotationsModalProps> = ({
   open,
   onClose,
+  disableSubmit,
   reqIndex,
   jsonPathToObj,
   notificationSuccessMessage,
@@ -112,6 +114,7 @@ export const AnnotationsModal: FC<TAnnotationsModalProps> = ({
           close={onClose}
           values={annotations}
           openNotificationSuccess={openNotificationSuccess}
+          disableSubmit={disableSubmit}
           modalTitle={modalTitlePrepared}
           modalDescriptionText={errorArrayOfObjects}
           modalDescriptionTextStyle={modalDescriptionTextStyle}
@@ -134,6 +137,7 @@ export const AnnotationsModal: FC<TAnnotationsModalProps> = ({
         close={onClose}
         values={annotations}
         openNotificationSuccess={openNotificationSuccess}
+        disableSubmit={disableSubmit}
         modalTitle={modalTitlePrepared}
         modalDescriptionText={modalDescriptionTextPrepared}
         modalDescriptionTextStyle={modalDescriptionTextStyle}
