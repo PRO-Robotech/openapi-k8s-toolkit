@@ -200,7 +200,12 @@ export const ActionsDropdown: FC<{
       return
     }
 
-    if (action.type === 'cordon' || action.type === 'uncordon' || action.type === 'suspend' || action.type === 'resume') {
+    if (
+      action.type === 'cordon' ||
+      action.type === 'uncordon' ||
+      action.type === 'suspend' ||
+      action.type === 'resume'
+    ) {
       const endpointPrepared = parseAll({ text: action.props.endpoint, replaceValues, multiQueryData })
       const pathToValuePrepared = parseAll({ text: action.props.pathToValue, replaceValues, multiQueryData })
       const valuePrepared = parseValueIfString(action.props.value)
