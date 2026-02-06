@@ -1,5 +1,5 @@
 import { TActionUnion, TActionsPermissions, TEditActionProps } from '../../types/ActionsDropdown'
-import { buildEditUrl, getMenuItems, getRequiredPermissions } from './utils'
+import { buildEditUrl, getMenuItems, getRequiredPermissions, getVisibleActions } from './utils'
 
 describe('buildEditUrl', () => {
   const fullPath = '/openapi-ui/cluster1/builtin-table/pods'
@@ -727,5 +727,102 @@ describe('getRequiredPermissions', () => {
 
   it('returns empty array for empty actions', () => {
     expect(getRequiredPermissions([])).toEqual([])
+  })
+})
+
+describe('getVisibleActions', () => {
+  const baseCtx = {
+    replaceValues: {},
+    multiQueryData: {
+      req0: {
+        spec: {
+          unschedulable: false,
+        },
+      },
+    } as Record<string, unknown>,
+  }
+
+  const cordonAction: TActionUnion = {
+    type: 'cordon',
+    props: {
+      text: 'Cordon',
+      endpoint: '/api/cordon',
+      pathToValue: '/spec/unschedulable',
+      value: true,
+      visibleWhen: {
+        value: "{reqsJsonPath[0]['.spec.unschedulable']['-']}",
+        criteria: 'notEquals',
+        valueToCompare: 'true',
+      },
+    },
+  }
+
+  const uncordonAction: TActionUnion = {
+    type: 'uncordon',
+    props: {
+      text: 'Uncordon',
+      endpoint: '/api/uncordon',
+      pathToValue: '/spec/unschedulable',
+      value: false,
+      visibleWhen: {
+        value: "{reqsJsonPath[0]['.spec.unschedulable']['-']}",
+        criteria: 'equals',
+        valueToCompare: 'true',
+      },
+    },
+  }
+
+  it('shows cordon and hides uncordon when unschedulable is false', () => {
+    const visibleActions = getVisibleActions([cordonAction, uncordonAction], baseCtx)
+
+    expect(visibleActions).toEqual([cordonAction])
+  })
+
+  it('shows uncordon and hides cordon when unschedulable is true', () => {
+    const ctx = {
+      ...baseCtx,
+      multiQueryData: {
+        req0: {
+          spec: {
+            unschedulable: true,
+          },
+        },
+      } as Record<string, unknown>,
+    }
+    const visibleActions = getVisibleActions([cordonAction, uncordonAction], ctx)
+
+    expect(visibleActions).toEqual([uncordonAction])
+  })
+
+  it('supports exists criteria', () => {
+    const actionWithExists: TActionUnion = {
+      type: 'openKubeletConfig',
+      props: {
+        text: 'Open',
+        url: '/api/kubelet',
+        visibleWhen: {
+          value: "{reqsJsonPath[0]['.spec.unschedulable']['-']}",
+          criteria: 'exists',
+        },
+      },
+    }
+
+    expect(getVisibleActions([actionWithExists], baseCtx)).toEqual([actionWithExists])
+  })
+
+  it('supports notExists criteria', () => {
+    const actionWithNotExists: TActionUnion = {
+      type: 'openKubeletConfig',
+      props: {
+        text: 'Open',
+        url: '/api/kubelet',
+        visibleWhen: {
+          value: "{reqsJsonPath[0]['.metadata.missing']['-']}",
+          criteria: 'notExists',
+        },
+      },
+    }
+
+    expect(getVisibleActions([actionWithNotExists], baseCtx)).toEqual([actionWithNotExists])
   })
 })

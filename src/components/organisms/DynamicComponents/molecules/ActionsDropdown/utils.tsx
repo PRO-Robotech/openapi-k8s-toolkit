@@ -1,6 +1,7 @@
 import React from 'react'
 import { Tooltip } from 'antd'
 import type { TPermissionVerb } from 'localTypes/permissions'
+import { parseAll } from '../utils'
 import { TActionUnion, TEditActionProps, TActionsPermissions } from '../../types/ActionsDropdown'
 import { LabelsModal } from '../AggregatedCounterCard/molecules/LabelsModal'
 import { AnnotationsModal } from '../AggregatedCounterCard/molecules/AnnotationsModal'
@@ -13,6 +14,11 @@ import { Styled } from './styled'
 type TModalExtraProps = {
   open: boolean
   onClose: () => void
+}
+
+type TVisibilityContext = {
+  replaceValues: Record<string, string | undefined>
+  multiQueryData: Record<string, unknown>
 }
 
 export type TRequiredPermission = {
@@ -40,6 +46,39 @@ const toArray = <T,>(value: T | T[]): T[] => (Array.isArray(value) ? value : [va
 
 export const getRequiredPermissions = (actions: TActionUnion[]): TRequiredPermission[] => {
   return actions.flatMap(action => toArray(ACTION_REQUIRED_PERMISSIONS[action.type]))
+}
+
+const UNDEFINED_FALLBACK = 'Undefined with no fallback'
+const isMeaningfulValue = (value: string): boolean => value.length > 0 && value !== '-' && value !== UNDEFINED_FALLBACK
+
+export const getVisibleActions = (actions: TActionUnion[], { replaceValues, multiQueryData }: TVisibilityContext): TActionUnion[] => {
+  return actions.filter(action => {
+    const condition = action.props.visibleWhen
+
+    if (!condition) return true
+
+    const currentValue = parseAll({ text: condition.value, replaceValues, multiQueryData })
+    const hasValue = isMeaningfulValue(currentValue)
+
+    if (condition.criteria === 'exists') {
+      return hasValue
+    }
+
+    if (condition.criteria === 'notExists') {
+      return !hasValue
+    }
+
+    if (condition.valueToCompare === undefined) {
+      return true
+    }
+
+    const expectedValues = (Array.isArray(condition.valueToCompare) ? condition.valueToCompare : [condition.valueToCompare]).map(
+      value => parseAll({ text: value, replaceValues, multiQueryData }),
+    )
+    const matches = expectedValues.includes(currentValue)
+
+    return condition.criteria === 'equals' ? matches : !matches
+  })
 }
 
 export const buildEditUrl = (props: TEditActionProps, fullPath: string): string => {

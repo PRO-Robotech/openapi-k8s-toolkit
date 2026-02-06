@@ -7,6 +7,14 @@ import { TTolerationsBaseProps, TTolerationsModalProps } from './Tolerations'
 
 type TAntIconName = Exclude<keyof typeof AntIcons, 'createFromIconfontCN'>
 
+export type TActionVisibilityCriteria = 'equals' | 'notEquals' | 'exists' | 'notExists'
+
+export type TActionVisibility = {
+  value: string
+  criteria: TActionVisibilityCriteria
+  valueToCompare?: string | string[]
+}
+
 export type TActionBaseProps = {
   icon?: TAntIconName
   iconBase64Encoded?: string
@@ -14,6 +22,7 @@ export type TActionBaseProps = {
   disabled?: boolean
   tooltip?: string
   danger?: boolean
+  visibleWhen?: TActionVisibility
 }
 
 export type TEditActionProps = TActionBaseProps & {

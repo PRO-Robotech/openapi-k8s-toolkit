@@ -5,7 +5,7 @@ import { ConfirmModal, DeleteModal } from 'components/atoms'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
-import { renderActionModal, getMenuItems } from './utils'
+import { renderActionModal, getMenuItems, getVisibleActions } from './utils'
 import { useActionsDropdownPermissions, useActionsDropdownHandlers } from './hooks'
 import { Styled } from './styled'
 
@@ -29,13 +29,18 @@ export const ActionsDropdown: FC<{
     acc[index.toString()] = value
     return acc
   }, {})
+  const safeMultiQueryData = multiQueryData ?? {}
+  const visibleActions = getVisibleActions(actions, {
+    replaceValues,
+    multiQueryData: safeMultiQueryData,
+  })
 
   const effectivePermissions = useActionsDropdownPermissions({
-    actions,
+    actions: visibleActions,
     permissions,
     permissionContext,
     replaceValues,
-    multiQueryData,
+    multiQueryData: safeMultiQueryData,
     isMultiQueryLoading,
   })
 
@@ -53,7 +58,7 @@ export const ActionsDropdown: FC<{
     handleEvictCancel,
   } = useActionsDropdownHandlers({
     replaceValues,
-    multiQueryData,
+    multiQueryData: safeMultiQueryData,
   })
 
   if (isMultiQueryLoading) {
@@ -73,7 +78,7 @@ export const ActionsDropdown: FC<{
     )
   }
 
-  const menuItems = getMenuItems(actions, handleActionClick, effectivePermissions)
+  const menuItems = getMenuItems(visibleActions, handleActionClick, effectivePermissions)
 
   const renderButton = () => {
     if (buttonVariant === 'icon') {
