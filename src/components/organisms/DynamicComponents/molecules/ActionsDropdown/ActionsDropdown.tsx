@@ -2,7 +2,7 @@
 import { FC } from 'react'
 import { Dropdown, Button } from 'antd'
 import { DownOutlined, MoreOutlined } from '@ant-design/icons'
-import { DeleteModal } from 'components/atoms'
+import { ConfirmModal, DeleteModal } from 'components/atoms'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
@@ -40,11 +40,21 @@ export const ActionsDropdown: FC<{
     isMultiQueryLoading,
   })
 
-  const { activeAction, modalOpen, deleteModalData, handleActionClick, handleCloseModal, handleDeleteModalClose } =
-    useActionsDropdownHandlers({
-      replaceValues,
-      multiQueryData,
-    })
+  const {
+    activeAction,
+    modalOpen,
+    deleteModalData,
+    evictModalData,
+    isEvictLoading,
+    handleActionClick,
+    handleCloseModal,
+    handleDeleteModalClose,
+    handleEvictConfirm,
+    handleEvictCancel,
+  } = useActionsDropdownHandlers({
+    replaceValues,
+    multiQueryData,
+  })
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
@@ -94,6 +104,19 @@ export const ActionsDropdown: FC<{
 
       {deleteModalData && (
         <DeleteModal name={deleteModalData.name} endpoint={deleteModalData.endpoint} onClose={handleDeleteModalClose} />
+      )}
+
+      {evictModalData && (
+        <ConfirmModal
+          title={`Evict «${evictModalData.name}?»`}
+          onConfirm={handleEvictConfirm}
+          onClose={handleEvictCancel}
+          confirmText="Evict"
+          confirmLoading={isEvictLoading}
+          danger
+        >
+          This will evict the pod. It may be blocked by PodDisruptionBudget.
+        </ConfirmModal>
       )}
 
       {children}

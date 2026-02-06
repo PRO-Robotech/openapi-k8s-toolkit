@@ -4,12 +4,21 @@ import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { createNewEntry, patchEntryWithMergePatch, patchEntryWithReplaceOp } from 'api/forms'
 import { parseAll } from '../../utils'
 import { buildEditUrl } from '../utils'
-import type { TActionUnion } from '../../../types/ActionsDropdown'
+import type { TActionUnion, TEvictActionProps } from '../../../types/ActionsDropdown'
 
 type TDeleteModalData = {
   name: string
   endpoint: string
   redirectTo?: string
+}
+
+type TEvictModalData = {
+  name: string
+  endpoint: string
+  namespace?: string
+  apiVersion: string
+  gracePeriodSeconds?: number
+  dryRun?: string[]
 }
 
 type TUseActionsDropdownHandlersParams = {
@@ -28,6 +37,8 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
   const [activeAction, setActiveAction] = useState<TActionUnion | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [deleteModalData, setDeleteModalData] = useState<TDeleteModalData | null>(null)
+  const [evictModalData, setEvictModalData] = useState<TEvictModalData | null>(null)
+  const [isEvictLoading, setIsEvictLoading] = useState(false)
 
   const invalidateMultiQuery = () => {
     queryClient.invalidateQueries({ queryKey: ['multi'] })
@@ -38,6 +49,26 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
       return parseAll({ text: value, replaceValues, multiQueryData })
     }
     return value
+  }
+
+  const buildEvictModalData = (props: TEvictActionProps): TEvictModalData => {
+    const endpointPrepared = parseAll({ text: props.endpoint, replaceValues, multiQueryData })
+    const namePrepared = parseAll({ text: props.name, replaceValues, multiQueryData })
+    const namespacePrepared = props.namespace
+      ? parseAll({ text: props.namespace, replaceValues, multiQueryData })
+      : undefined
+    const apiVersionPrepared = props.apiVersion
+      ? parseAll({ text: props.apiVersion, replaceValues, multiQueryData })
+      : 'policy/v1'
+
+    return {
+      endpoint: endpointPrepared,
+      name: namePrepared,
+      namespace: namespacePrepared,
+      apiVersion: apiVersionPrepared,
+      gracePeriodSeconds: props.gracePeriodSeconds,
+      dryRun: props.dryRun,
+    }
   }
 
   const handleActionClick = (action: TActionUnion) => {
@@ -149,40 +180,8 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
     }
 
     if (action.type === 'evict') {
-      const endpointPrepared = parseAll({ text: action.props.endpoint, replaceValues, multiQueryData })
-      const namePrepared = parseAll({ text: action.props.name, replaceValues, multiQueryData })
-      const namespacePrepared = action.props.namespace
-        ? parseAll({ text: action.props.namespace, replaceValues, multiQueryData })
-        : undefined
-      const apiVersionPrepared = action.props.apiVersion
-        ? parseAll({ text: action.props.apiVersion, replaceValues, multiQueryData })
-        : 'policy/v1'
-
-      const deleteOptions: Record<string, unknown> = {}
-      if (action.props.gracePeriodSeconds !== undefined) {
-        deleteOptions.gracePeriodSeconds = action.props.gracePeriodSeconds
-      }
-      if (action.props.dryRun && action.props.dryRun.length > 0) {
-        deleteOptions.dryRun = action.props.dryRun
-      }
-
-      const body = {
-        apiVersion: apiVersionPrepared,
-        kind: 'Eviction',
-        metadata: {
-          name: namePrepared,
-          ...(namespacePrepared ? { namespace: namespacePrepared } : {}),
-        },
-        ...(Object.keys(deleteOptions).length > 0 ? { deleteOptions } : {}),
-      }
-
-      createNewEntry({ endpoint: endpointPrepared, body })
-        .then(() => invalidateMultiQuery())
-        .catch(error => {
-          // eslint-disable-next-line no-console
-          console.error(error)
-        })
-
+      const evictData = buildEvictModalData(action.props)
+      setEvictModalData(evictData)
       return
     }
 
@@ -195,6 +194,46 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
 
     setActiveAction(action)
     setModalOpen(true)
+  }
+
+  const handleEvictConfirm = () => {
+    if (!evictModalData) return
+
+    setIsEvictLoading(true)
+
+    const deleteOptions: Record<string, unknown> = {}
+    if (evictModalData.gracePeriodSeconds !== undefined) {
+      deleteOptions.gracePeriodSeconds = evictModalData.gracePeriodSeconds
+    }
+    if (evictModalData.dryRun && evictModalData.dryRun.length > 0) {
+      deleteOptions.dryRun = evictModalData.dryRun
+    }
+
+    const body = {
+      apiVersion: evictModalData.apiVersion,
+      kind: 'Eviction',
+      metadata: {
+        name: evictModalData.name,
+        ...(evictModalData.namespace ? { namespace: evictModalData.namespace } : {}),
+      },
+      ...(Object.keys(deleteOptions).length > 0 ? { deleteOptions } : {}),
+    }
+
+    createNewEntry({ endpoint: evictModalData.endpoint, body })
+      .then(() => invalidateMultiQuery())
+      .finally(() => {
+        setIsEvictLoading(false)
+        setEvictModalData(null)
+      })
+      .catch(error => {
+        // eslint-disable-next-line no-console
+        console.error(error)
+      })
+  }
+
+  const handleEvictCancel = () => {
+    setEvictModalData(null)
+    setIsEvictLoading(false)
   }
 
   const handleCloseModal = () => {
@@ -224,8 +263,12 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
     activeAction,
     modalOpen,
     deleteModalData,
+    evictModalData,
+    isEvictLoading,
     handleActionClick,
     handleCloseModal,
     handleDeleteModalClose,
+    handleEvictConfirm,
+    handleEvictCancel,
   }
 }
