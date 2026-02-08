@@ -39,6 +39,7 @@ Main subsystems inside the component:
 ## Props Contract
 
 ### Identity / routing / API context
+
 - `cluster`
 - `type` (`builtin` | `apis`)
 - `apiGroupApiVersion`
@@ -48,6 +49,7 @@ Main subsystems inside the component:
 - `backlink`
 
 ### Schema + rendering behavior
+
 - `staticProperties`
 - `required`
 - `sortPaths`
@@ -57,15 +59,18 @@ Main subsystems inside the component:
 - `designNewLayout`, `designNewLayoutHeight`
 
 ### Prefills
+
 - `formsPrefills` (path/value array; can contain wildcards)
 - `prefillValuesSchema` (flat-ish prefill object, normalized by schema)
 - `prefillValueNamespaceOnly`
 
 ### Mode / namespace
+
 - `isCreate`
 - `isNameSpaced` (`false` or namespace list)
 
 ### Theme
+
 - `theme` (passed to `YamlEditor`)
 
 ---
@@ -73,6 +78,7 @@ Main subsystems inside the component:
 ## State and Refs
 
 ### State
+
 - `properties`: live schema, mutable during runtime.
 - `yamlValues`: data fed into `YamlEditor`.
 - `isLoading`, `error`.
@@ -82,6 +88,7 @@ Main subsystems inside the component:
 - `resolvedHiddenPaths`: wildcard-resolved hidden paths based on current values.
 
 ### Refs (critical for race-safe behavior)
+
 - `expandedKeysRef`: always-current expanded keys for restoration after YAML/schema updates.
 - `blockedPathsRef`: tombstones for paths removed by YAML diff/remove actions.
 - `manualBlockedPathsRef`: subset representing explicit user removals (`removeField`), not auto-unblocked.
@@ -97,19 +104,24 @@ Main subsystems inside the component:
 ## Derived Values
 
 ### `editorUri`
+
 `inmemory://openapi-ui/{cluster}/{apiGroupApiVersion}/{type}/{plural}/{kind}/{create|edit}.yaml`
 
 Used both as:
+
 - `editorUri` prop for YAML model identity.
 - React `key` for `YamlEditor` to force remount when resource context changes.
 
 ### `normalizedPrefill`
+
 `normalizeValuesForQuotasToNumber(prefillValuesSchema, staticProperties)`
 
 Important detail: this is intentionally based on `staticProperties`, not live `properties`, to avoid feedback loops.
 
 ### `initialValues`
+
 Merged from:
+
 1. Create defaults (`apiVersion`, `kind`) if `isCreate`.
 2. Non-wildcard entries from `formsPrefills`.
 3. `prefillValueNamespaceOnly` -> `metadata.namespace`.
@@ -118,13 +130,16 @@ Merged from:
 Then shallow key-sort for deterministic order.
 
 ### `prefillTemplates`
+
 Wildcard templates from:
+
 - `formsPrefills.spec.values`
 - `normalizedPrefill` entries
 
 Converted with `toWildcardPath`, sorted by path length descending (specific first).
 
 ### Wildcard hidden/expanded templates
+
 - `hiddenWildcardTemplates` from `hiddenPaths` via `sanitizeWildcardPath`.
 - `expandedWildcardTemplates` from `expandedPaths` via `sanitizeWildcardPath`.
 
@@ -135,49 +150,66 @@ Resolved against current values with `expandWildcardTemplates`.
 ## Lifecycle and Effects
 
 ### 1) Resource context change -> reset sync/editor
+
 On `editorUri` change:
+
 - Increment both request ids (invalidate stale responses).
 - Abort both in-flight sync requests.
 - Clear `yamlValues`.
 - `YamlEditor` remount (via `key={editorUri}`) clears model-specific transient state.
 
 ### 2) Permission hooks
+
 Runs both hooks continuously but each has mode-specific `enabler`:
+
 - create permission enabled only in create mode.
 - update permission enabled only in edit mode.
 
 Submit button disabled when corresponding permission `allowed !== true`.
 
 ### 3) Initial wildcard resolve
+
 When `initialValues` ready:
+
 - Resolve hidden wildcard templates and set `resolvedHiddenPaths`.
 - Resolve expanded templates and merge into `expandedKeys` (unique by JSON path key).
 
 ### 4) Form values watcher
+
 `allValues = Form.useWatch([], form)` and effect `[allValues]` triggers `onValuesChangeCallback()`.
 
 This is the core "react to any form change" pipeline.
 
 ### 5) Focus guard for YAML application
+
 Listeners on `overflowRef`:
+
 - `focusin` -> `isAnyFieldFocusedRef = true`.
 - `focusout` outside root -> clear flag and trigger `onValuesChangeCallback()` (resync after typing).
 
 ### 6) Initial values re-sync guard
+
 When computed `initialValues` changes and differs from `prevInitialValues`:
+
 - call `onValuesChangeCallback(initialValues)`.
 
 ### 7) Persisted keys change re-sync
+
 Whenever `persistedKeys` changes:
+
 - call `onValuesChangeCallback()` so YAML payload includes latest persistence intent.
 
 ### 8) Initial expansion enrichment
+
 On `[apiGroupApiVersion, formsPrefills, prefillValuesSchema, type, plural]`:
+
 - Collect prefix paths from prefills (`getPrefixSubarrays`) and schema prefill paths.
 - Merge into `expandedKeys` uniquely.
 
 ### 9) Initial schema materialization from initial values
+
 When `initialValues` exists:
+
 - run `materializeAdditionalFromValues`.
 - if schema changed, update `properties`.
 - merge returned `toPersist` into `persistedKeys`.
@@ -189,11 +221,13 @@ No auto-expand here by design (preserve user collapse/expand choices).
 ## Sync Pipeline: Form -> YAML
 
 ### Entry points
+
 - Form `onValuesChange` callback
 - `useEffect([allValues])`
 - manual calls after add/remove/makeUndefined/blur/persist changes/initial sync
 
 ### `onValuesChangeCallback(values?, changedValues?)`
+
 1. Build current value snapshot (`v`), scrubbing literal wildcard keys.
 2. Resolve hidden/expanded wildcard templates against `v`.
 3. Merge auto-expanded resolved paths into `expandedKeys`.
@@ -202,7 +236,9 @@ No auto-expand here by design (preserve user collapse/expand choices).
 6. Increment `valuesToYamlReqId` and call debounced values->yaml request.
 
 ### Array shrink handling
+
 For arrays present in old and new snapshots where `newLen < prevLen`:
+
 - Optionally scope purge to changed roots from `changedValues`.
 - For each removed index subtree:
   - remove matching `expandedKeys`
@@ -212,7 +248,9 @@ For arrays present in old and new snapshots where `newLen < prevLen`:
 This prevents ghost UI state and stale persist markers after item deletions.
 
 ### Array grow handling
+
 For each new index:
+
 - Initialize missing item with type-aware default based on schema inference:
   - object -> `{}`
   - array -> `[]`
@@ -224,6 +262,7 @@ For each new index:
 - Apply wildcard prefill templates via `applyPrefillForNewArrayItem`.
 
 ### Debounced request: `debouncedPostValuesToYaml`
+
 - Abort previous request.
 - Call `/openapi-bff/forms/formSync/getYamlValuesByFromValues`.
 - Ignore stale response if `myId` no longer current.
@@ -235,15 +274,18 @@ For each new index:
 ## Sync Pipeline: YAML -> Form
 
 ### Entry point
+
 `onYamlChangeCallback(values)` from `YamlEditor`.
 
 Behavior:
+
 1. If a form field is currently focused, ignore this change (avoid clobbering typed input).
 2. Build payload `{ values, properties }`.
 3. Increment `yamlToValuesReqId`.
 4. Call debounced YAML->values request.
 
 ### Debounced request: `debouncedPostYamlToValues`
+
 1. Abort previous YAML->values request.
 2. POST to `/openapi-bff/forms/formSync/getFormValuesByYaml`.
 3. Ignore stale responses by request id.
@@ -268,6 +310,7 @@ Errors are silently ignored (mostly cancellations/transients).
 ## Additional Properties Lifecycle
 
 ### Add (`addField`)
+
 1. Build nested schema patch rooted at `path` for `name`.
 2. Merge into `properties` via `deepMerge`.
 3. Unblock path in both blocked refs.
@@ -276,6 +319,7 @@ Errors are silently ignored (mostly cancellations/transients).
 6. Trigger `onValuesChangeCallback()` for YAML sync.
 
 ### Remove (`removeField`)
+
 1. Add full path to `blockedPathsRef` and `manualBlockedPathsRef`.
 2. Set form value to `undefined`.
 3. Remove matching subtrees from `expandedKeys` and `persistedKeys`.
@@ -289,6 +333,7 @@ Manual block means path should not auto-return from generic unblocking until gen
 ## Submit Flow
 
 `onSubmit`:
+
 1. Scroll overflow container to bottom.
 2. `form.validateFields()`.
 3. Build values payload:
@@ -342,6 +387,7 @@ Manual block means path should not auto-return from generic unblocking until gen
 ## Namespace Behavior
 
 `namespaceData` is only passed when `isNameSpaced` is truthy:
+
 - selectable namespaces come from `isNameSpaced` array.
 - selector is disabled in edit mode (`disabled: !isCreate`).
 
@@ -352,16 +398,19 @@ Permissions query namespace uses current form `metadata.namespace`.
 ## Endpoint Summary
 
 ### BFF form sync
+
 - Values -> YAML:
   - `POST /api/clusters/{cluster}/openapi-bff/forms/formSync/getYamlValuesByFromValues`
 - YAML -> Values:
   - `POST /api/clusters/{cluster}/openapi-bff/forms/formSync/getFormValuesByYaml`
 
 ### Resource write
+
 - Create: `createNewEntry({ endpoint, body })`
 - Update: `updateEntry({ endpoint, body })`
 
 Endpoint format:
+
 - Builtin: `/api/clusters/{cluster}/k8s/{apiGroupApiVersion}/{plural}/{name?}`
 - APIS: `/api/clusters/{cluster}/k8s/apis/{apiGroupApiVersion}/{plural}/{name?}`
 - Namespaced inserts `/namespaces/{namespace}` before `{plural}`.
@@ -397,6 +446,7 @@ Primary behavioral tests are in:
 - `src/components/molecules/BlackholeForm/organisms/BlackholeForm/BlackholeForm.test.tsx`
 
 Covered scenarios include:
+
 - create/edit submit endpoint/body correctness
 - permission-based submit disable
 - builtin vs apis endpoint format
@@ -407,4 +457,3 @@ Covered scenarios include:
 - deep nested additionalProperties lifecycle
 - transform/submit error modal behavior
 - cancel navigation
-

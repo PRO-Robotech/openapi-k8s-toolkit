@@ -7,6 +7,14 @@ import { TTolerationsBaseProps, TTolerationsModalProps } from './Tolerations'
 
 type TAntIconName = Exclude<keyof typeof AntIcons, 'createFromIconfontCN'>
 
+export type TActionVisibilityCriteria = 'equals' | 'notEquals' | 'exists' | 'notExists'
+
+export type TActionVisibility = {
+  value: string
+  criteria: TActionVisibilityCriteria
+  valueToCompare?: string | string[]
+}
+
 export type TActionBaseProps = {
   icon?: TAntIconName
   iconBase64Encoded?: string
@@ -14,6 +22,7 @@ export type TActionBaseProps = {
   disabled?: boolean
   tooltip?: string
   danger?: boolean
+  visibleWhen?: TActionVisibility
 }
 
 export type TEditActionProps = TActionBaseProps & {
@@ -41,6 +50,32 @@ export type TDeleteActionProps = TActionBaseProps & {
   redirectTo?: string
 }
 
+export type TPatchFieldActionProps = TActionBaseProps & {
+  endpoint: string
+  pathToValue: string
+  value: unknown
+}
+
+export type TRolloutRestartActionProps = TActionBaseProps & {
+  endpoint: string
+  annotationKey?: string
+  timestamp?: string
+}
+
+export type TEvictActionProps = TActionBaseProps & {
+  endpoint: string
+  name: string
+  namespace?: string
+  apiVersion?: string
+  gracePeriodSeconds?: number
+  dryRun?: string[]
+}
+
+export type TOpenKubeletConfigActionProps = TActionBaseProps & {
+  url: string
+  target?: '_blank' | '_self'
+}
+
 export type TActionUnion =
   | { type: 'edit'; props: TEditActionProps }
   | { type: 'editLabels'; props: TEditLabelsActionProps }
@@ -48,11 +83,20 @@ export type TActionUnion =
   | { type: 'editTaints'; props: TEditTaintsActionProps }
   | { type: 'editTolerations'; props: TEditTolerationsActionProps }
   | { type: 'delete'; props: TDeleteActionProps }
+  | { type: 'cordon'; props: TPatchFieldActionProps }
+  | { type: 'uncordon'; props: TPatchFieldActionProps }
+  | { type: 'suspend'; props: TPatchFieldActionProps }
+  | { type: 'resume'; props: TPatchFieldActionProps }
+  | { type: 'rolloutRestart'; props: TRolloutRestartActionProps }
+  | { type: 'evict'; props: TEvictActionProps }
+  | { type: 'openKubeletConfig'; props: TOpenKubeletConfigActionProps }
 
 export type TActionsPermissions = {
-  canUpdate?: boolean
-  canPatch?: boolean
-  canDelete?: boolean
+  canUpdate?: boolean // For 'edit' action
+  canPatch?: boolean // For 'editLabels', 'editAnnotations', 'editTaints', 'editTolerations' actions
+  canDelete?: boolean // For 'delete' action
+  canGet?: boolean // For 'get' action
+  canCreate?: boolean // For 'create' action
 }
 
 export type TPermissionContext = {
@@ -60,12 +104,12 @@ export type TPermissionContext = {
   namespace?: string
   apiGroup?: string
   plural: string
+  subresource?: string
 }
 
 export type TActionsDropdownProps = {
   id: number | string
   buttonText?: string
-  buttonIcon?: string
   buttonVariant?: 'default' | 'icon'
   containerStyle?: CSSProperties
   actions: TActionUnion[]
