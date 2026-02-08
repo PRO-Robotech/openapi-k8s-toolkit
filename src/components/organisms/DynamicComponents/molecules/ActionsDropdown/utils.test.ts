@@ -159,11 +159,89 @@ describe('getMenuItems', () => {
     },
   })
 
+  const allAllowedPermissions: TActionsPermissions = {
+    canUpdate: true,
+    canPatch: true,
+    canDelete: true,
+    canCreate: true,
+    canGet: true,
+  }
+
+  it('creates menu items from actions array', () => {
+    const actions: TActionUnion[] = [createEditAction(), createDeleteAction()]
+
+    const items = getMenuItems(actions, mockOnActionClick, allAllowedPermissions)
+
+    expect(items).toHaveLength(2)
+    expect(items[0].key).toBe('edit-0')
+    expect(items[0].label).toBe('Edit')
+    expect(items[1].key).toBe('delete-1')
+    expect(items[1].label).toBe('Delete')
+  })
+
+  it('calls onActionClick when item is clicked', () => {
+    const editAction = createEditAction()
+    const items = getMenuItems([editAction], mockOnActionClick, allAllowedPermissions)
+
+    items[0].onClick()
+
+    expect(mockOnActionClick).toHaveBeenCalledTimes(1)
+    expect(mockOnActionClick).toHaveBeenCalledWith(editAction)
+  })
+
+  it('respects disabled prop on individual actions', () => {
+    const actions: TActionUnion[] = [createEditAction({ disabled: true }), createDeleteAction({ disabled: false })]
+
+    const items = getMenuItems(actions, mockOnActionClick, allAllowedPermissions)
+
+    expect(items[0].disabled).toBe(true)
+    expect(items[1].disabled).toBe(false)
+  })
+
+  it('respects danger prop on actions', () => {
+    const actions: TActionUnion[] = [createEditAction({ danger: false }), createDeleteAction({ danger: true })]
+
+    const items = getMenuItems(actions, mockOnActionClick, allAllowedPermissions)
+
+    expect(items[0].danger).toBe(false)
+    expect(items[1].danger).toBe(true)
+  })
+})
+
+describe('getMenuItems - permissions', () => {
+  const mockOnActionClick = jest.fn()
+
+  beforeEach(() => {
+    mockOnActionClick.mockClear()
+  })
+
+  const createEditAction = (overrides = {}): TActionUnion => ({
+    type: 'edit',
+    props: {
+      text: 'Edit',
+      cluster: 'my-cluster',
+      namespace: 'default',
+      apiVersion: 'v1',
+      plural: 'pods',
+      name: 'my-pod',
+      ...overrides,
+    },
+  })
+
+  const createDeleteAction = (overrides = {}): TActionUnion => ({
+    type: 'delete',
+    props: {
+      text: 'Delete',
+      endpoint: '/api/delete',
+      name: 'pod-1',
+      ...overrides,
+    },
+  })
+
   const createEditLabelsAction = (overrides = {}): TActionUnion => ({
     type: 'editLabels',
     props: {
       text: 'Edit Labels',
-      icon: 'TagsOutlined',
       reqIndex: '0',
       jsonPathToLabels: '.metadata.labels',
       endpoint: '/api/labels',
@@ -171,6 +249,70 @@ describe('getMenuItems', () => {
       modalTitle: 'Edit Labels',
       ...overrides,
     },
+  })
+
+  describe('permission-based disabling', () => {
+    it('disables edit action when canUpdate is false', () => {
+      const actions: TActionUnion[] = [createEditAction()]
+      const permissions: TActionsPermissions = { canUpdate: false }
+
+      const items = getMenuItems(actions, mockOnActionClick, permissions)
+
+      expect(items[0].disabled).toBe(true)
+    })
+
+    it('enables edit action when canUpdate is true', () => {
+      const actions: TActionUnion[] = [createEditAction()]
+      const permissions: TActionsPermissions = { canUpdate: true }
+
+      const items = getMenuItems(actions, mockOnActionClick, permissions)
+
+      expect(items[0].disabled).toBe(false)
+    })
+
+    it('disables delete action when canDelete is false', () => {
+      const actions: TActionUnion[] = [createDeleteAction()]
+      const permissions: TActionsPermissions = { canDelete: false }
+
+      const items = getMenuItems(actions, mockOnActionClick, permissions)
+
+      expect(items[0].disabled).toBe(true)
+    })
+
+    it('enables delete action when canDelete is true', () => {
+      const actions: TActionUnion[] = [createDeleteAction()]
+      const permissions: TActionsPermissions = { canDelete: true }
+
+      const items = getMenuItems(actions, mockOnActionClick, permissions)
+
+      expect(items[0].disabled).toBe(false)
+    })
+
+    it('disables editLabels action when canPatch is false', () => {
+      const actions: TActionUnion[] = [createEditLabelsAction()]
+      const permissions: TActionsPermissions = { canPatch: false }
+
+      const items = getMenuItems(actions, mockOnActionClick, permissions)
+
+      expect(items[0].disabled).toBe(true)
+    })
+
+    it('enables editLabels action when canPatch is true', () => {
+      const actions: TActionUnion[] = [createEditLabelsAction()]
+      const permissions: TActionsPermissions = { canPatch: true }
+
+      const items = getMenuItems(actions, mockOnActionClick, permissions)
+
+      expect(items[0].disabled).toBe(false)
+    })
+  })
+})
+
+describe('getMenuItems - more permissions', () => {
+  const mockOnActionClick = jest.fn()
+
+  beforeEach(() => {
+    mockOnActionClick.mockClear()
   })
 
   const createCordonAction = (overrides = {}): TActionUnion => ({
@@ -245,109 +387,7 @@ describe('getMenuItems', () => {
     },
   })
 
-  const allAllowedPermissions: TActionsPermissions = {
-    canUpdate: true,
-    canPatch: true,
-    canDelete: true,
-    canCreate: true,
-    canGet: true,
-  }
-
-  it('creates menu items from actions array', () => {
-    const actions: TActionUnion[] = [createEditAction(), createDeleteAction()]
-
-    const items = getMenuItems(actions, mockOnActionClick, allAllowedPermissions)
-
-    expect(items).toHaveLength(2)
-    expect(items[0].key).toBe('edit-0')
-    expect(items[0].label).toBe('Edit')
-    expect(items[1].key).toBe('delete-1')
-    expect(items[1].label).toBe('Delete')
-  })
-
-  it('calls onActionClick when item is clicked', () => {
-    const editAction = createEditAction()
-    const items = getMenuItems([editAction], mockOnActionClick, allAllowedPermissions)
-
-    items[0].onClick()
-
-    expect(mockOnActionClick).toHaveBeenCalledTimes(1)
-    expect(mockOnActionClick).toHaveBeenCalledWith(editAction)
-  })
-
-  it('respects disabled prop on individual actions', () => {
-    const actions: TActionUnion[] = [createEditAction({ disabled: true }), createDeleteAction({ disabled: false })]
-
-    const items = getMenuItems(actions, mockOnActionClick, allAllowedPermissions)
-
-    expect(items[0].disabled).toBe(true)
-    expect(items[1].disabled).toBe(false)
-  })
-
-  it('respects danger prop on actions', () => {
-    const actions: TActionUnion[] = [createEditAction({ danger: false }), createDeleteAction({ danger: true })]
-
-    const items = getMenuItems(actions, mockOnActionClick, allAllowedPermissions)
-
-    expect(items[0].danger).toBe(false)
-    expect(items[1].danger).toBe(true)
-  })
-
-  describe('permission-based disabling', () => {
-    it('disables edit action when canUpdate is false', () => {
-      const actions: TActionUnion[] = [createEditAction()]
-      const permissions: TActionsPermissions = { canUpdate: false }
-
-      const items = getMenuItems(actions, mockOnActionClick, permissions)
-
-      expect(items[0].disabled).toBe(true)
-    })
-
-    it('enables edit action when canUpdate is true', () => {
-      const actions: TActionUnion[] = [createEditAction()]
-      const permissions: TActionsPermissions = { canUpdate: true }
-
-      const items = getMenuItems(actions, mockOnActionClick, permissions)
-
-      expect(items[0].disabled).toBe(false)
-    })
-
-    it('disables delete action when canDelete is false', () => {
-      const actions: TActionUnion[] = [createDeleteAction()]
-      const permissions: TActionsPermissions = { canDelete: false }
-
-      const items = getMenuItems(actions, mockOnActionClick, permissions)
-
-      expect(items[0].disabled).toBe(true)
-    })
-
-    it('enables delete action when canDelete is true', () => {
-      const actions: TActionUnion[] = [createDeleteAction()]
-      const permissions: TActionsPermissions = { canDelete: true }
-
-      const items = getMenuItems(actions, mockOnActionClick, permissions)
-
-      expect(items[0].disabled).toBe(false)
-    })
-
-    it('disables editLabels action when canPatch is false', () => {
-      const actions: TActionUnion[] = [createEditLabelsAction()]
-      const permissions: TActionsPermissions = { canPatch: false }
-
-      const items = getMenuItems(actions, mockOnActionClick, permissions)
-
-      expect(items[0].disabled).toBe(true)
-    })
-
-    it('enables editLabels action when canPatch is true', () => {
-      const actions: TActionUnion[] = [createEditLabelsAction()]
-      const permissions: TActionsPermissions = { canPatch: true }
-
-      const items = getMenuItems(actions, mockOnActionClick, permissions)
-
-      expect(items[0].disabled).toBe(false)
-    })
-
+  describe('permission-based disabling continued', () => {
     it('disables editAnnotations action when canPatch is false', () => {
       const action: TActionUnion = {
         type: 'editAnnotations',
@@ -492,7 +532,53 @@ describe('getMenuItems', () => {
 
       expect(items[0].disabled).toBe(false)
     })
+  })
+})
 
+describe('getMenuItems - permission edge cases', () => {
+  const mockOnActionClick = jest.fn()
+
+  beforeEach(() => {
+    mockOnActionClick.mockClear()
+  })
+
+  const createEditAction = (overrides = {}): TActionUnion => ({
+    type: 'edit',
+    props: {
+      text: 'Edit',
+      cluster: 'my-cluster',
+      namespace: 'default',
+      apiVersion: 'v1',
+      plural: 'pods',
+      name: 'my-pod',
+      ...overrides,
+    },
+  })
+
+  const createDeleteAction = (overrides = {}): TActionUnion => ({
+    type: 'delete',
+    props: {
+      text: 'Delete',
+      endpoint: '/api/delete',
+      name: 'pod-1',
+      ...overrides,
+    },
+  })
+
+  const createEditLabelsAction = (overrides = {}): TActionUnion => ({
+    type: 'editLabels',
+    props: {
+      text: 'Edit Labels',
+      reqIndex: '0',
+      jsonPathToLabels: '.metadata.labels',
+      endpoint: '/api/labels',
+      pathToValue: '/metadata/labels',
+      modalTitle: 'Edit Labels',
+      ...overrides,
+    },
+  })
+
+  describe('permission edge cases', () => {
     it('disables actions when permissions object is empty', () => {
       const actions: TActionUnion[] = [createEditAction(), createDeleteAction(), createEditLabelsAction()]
 
@@ -718,11 +804,7 @@ describe('getRequiredPermissions', () => {
 
     const required = getRequiredPermissions(actions)
 
-    expect(required).toEqual([
-      { verb: 'update' },
-      { verb: 'create', subresource: 'eviction' },
-      { verb: 'delete' },
-    ])
+    expect(required).toEqual([{ verb: 'update' }, { verb: 'create', subresource: 'eviction' }, { verb: 'delete' }])
   })
 
   it('returns empty array for empty actions', () => {

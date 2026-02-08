@@ -73,6 +73,141 @@ export const buildEvictBody = (data: TEvictModalData) => {
   }
 }
 
+const handleEditAction = (
+  action: Extract<TActionUnion, { type: 'edit' }>,
+  ctx: TParseContext,
+  fullPath: string,
+  navigate: ReturnType<typeof useNavigate>,
+) => {
+  const clusterPrepared = parseAll({ text: action.props.cluster, ...ctx })
+  const namespacePrepared = action.props.namespace ? parseAll({ text: action.props.namespace, ...ctx }) : undefined
+  const syntheticProjectPrepared = action.props.syntheticProject
+    ? parseAll({ text: action.props.syntheticProject, ...ctx })
+    : undefined
+  const apiGroupPrepared = action.props.apiGroup ? parseAll({ text: action.props.apiGroup, ...ctx }) : undefined
+  const apiVersionPrepared = parseAll({ text: action.props.apiVersion, ...ctx })
+  const pluralPrepared = parseAll({ text: action.props.plural, ...ctx })
+  const namePrepared = parseAll({ text: action.props.name, ...ctx })
+  const baseprefixPrepared = action.props.baseprefix ? parseAll({ text: action.props.baseprefix, ...ctx }) : undefined
+
+  const url = buildEditUrl(
+    {
+      ...action.props,
+      cluster: clusterPrepared,
+      namespace: namespacePrepared,
+      syntheticProject: syntheticProjectPrepared,
+      apiGroup: apiGroupPrepared,
+      apiVersion: apiVersionPrepared,
+      plural: pluralPrepared,
+      name: namePrepared,
+      baseprefix: baseprefixPrepared,
+    },
+    fullPath,
+  )
+  navigate(url)
+}
+
+const handleDeleteAction = (
+  action: Extract<TActionUnion, { type: 'delete' }>,
+  ctx: TParseContext,
+  setDeleteModalData: (data: TDeleteModalData) => void,
+) => {
+  const endpointPrepared = parseAll({ text: action.props.endpoint, ...ctx })
+  const namePrepared = parseAll({ text: action.props.name, ...ctx })
+  const redirectToPrepared = action.props.redirectTo ? parseAll({ text: action.props.redirectTo, ...ctx }) : undefined
+
+  setDeleteModalData({
+    name: namePrepared,
+    endpoint: endpointPrepared,
+    redirectTo: redirectToPrepared,
+  })
+}
+
+const handlePatchActions = (
+  action: Extract<TActionUnion, { type: 'cordon' | 'uncordon' | 'suspend' | 'resume' }>,
+  ctx: TParseContext,
+  onSuccess: (label: string) => void,
+  onError: (label: string, error: unknown) => void,
+) => {
+  const actionLabel = action.props.text || action.type
+  const endpointPrepared = parseAll({ text: action.props.endpoint, ...ctx })
+  const pathToValuePrepared = parseAll({ text: action.props.pathToValue, ...ctx })
+  const valuePrepared = parseValueIfString(action.props.value, ctx)
+
+  patchEntryWithReplaceOp({
+    endpoint: endpointPrepared,
+    pathToValue: pathToValuePrepared,
+    body: valuePrepared,
+  })
+    .then(() => onSuccess(actionLabel))
+    .catch(error => {
+      onError(actionLabel, error)
+      // eslint-disable-next-line no-console
+      console.error(error)
+    })
+}
+
+const handleRolloutRestartAction = (
+  action: Extract<TActionUnion, { type: 'rolloutRestart' }>,
+  ctx: TParseContext,
+  onSuccess: (label: string) => void,
+  onError: (label: string, error: unknown) => void,
+) => {
+  const actionLabel = action.props.text || 'Rollout restart'
+  const endpointPrepared = parseAll({ text: action.props.endpoint, ...ctx })
+  const annotationKeyPrepared = action.props.annotationKey
+    ? parseAll({ text: action.props.annotationKey, ...ctx })
+    : 'kubectl.kubernetes.io/restartedAt'
+  const timestampPrepared = action.props.timestamp
+    ? parseAll({ text: action.props.timestamp, ...ctx })
+    : new Date().toISOString()
+
+  patchEntryWithMergePatch({
+    endpoint: endpointPrepared,
+    body: {
+      spec: {
+        template: {
+          metadata: {
+            annotations: {
+              [annotationKeyPrepared]: timestampPrepared,
+            },
+          },
+        },
+      },
+    },
+  })
+    .then(() => onSuccess(actionLabel))
+    .catch(error => {
+      onError(actionLabel, error)
+      // eslint-disable-next-line no-console
+      console.error(error)
+    })
+}
+
+const handleOpenKubeletConfigAction = (
+  action: Extract<TActionUnion, { type: 'openKubeletConfig' }>,
+  ctx: TParseContext,
+  setActiveAction: (action: TActionUnion) => void,
+  setModalOpen: (open: boolean) => void,
+) => {
+  const urlPrepared = parseAll({ text: action.props.url, ...ctx })
+  const modalTitlePrepared = action.props.modalTitle ? parseAll({ text: action.props.modalTitle, ...ctx }) : undefined
+  const modalDescriptionTextPrepared = action.props.modalDescriptionText
+    ? parseAll({ text: action.props.modalDescriptionText, ...ctx })
+    : undefined
+
+  setActiveAction({
+    ...action,
+    props: {
+      ...action.props,
+      url: urlPrepared,
+      modalTitle: modalTitlePrepared,
+      modalDescriptionText: modalDescriptionTextPrepared,
+    },
+  })
+  setModalOpen(true)
+}
+
 export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TUseActionsDropdownHandlersParams) => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -93,23 +228,27 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
   }
 
   const showSuccess = (actionLabel: string) => {
+    invalidateMultiQuery()
     notificationApi.success({
       message: `${actionLabel} successful`,
       placement: 'bottomRight',
     })
   }
 
-  const showError = (actionLabel: string, error: unknown) => {
-    const description =
-      error instanceof AxiosError
-        ? error.response?.data?.message || error.message
-        : error instanceof Error
-          ? error.message
-          : 'Unknown error'
+  const getErrorDescription = (error: unknown): string => {
+    if (error instanceof AxiosError) {
+      return error.response?.data?.message || error.message
+    }
+    if (error instanceof Error) {
+      return error.message
+    }
+    return 'Unknown error'
+  }
 
+  const showError = (actionLabel: string, error: unknown) => {
     notificationApi.error({
       message: `${actionLabel} failed`,
-      description,
+      description: getErrorDescription(error),
       placement: 'bottomRight',
     })
   }
@@ -118,53 +257,12 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
 
   const handleActionClick = (action: TActionUnion) => {
     if (action.type === 'edit') {
-      const clusterPrepared = parseAll({ text: action.props.cluster, replaceValues, multiQueryData })
-      const namespacePrepared = action.props.namespace
-        ? parseAll({ text: action.props.namespace, replaceValues, multiQueryData })
-        : undefined
-      const syntheticProjectPrepared = action.props.syntheticProject
-        ? parseAll({ text: action.props.syntheticProject, replaceValues, multiQueryData })
-        : undefined
-      const apiGroupPrepared = action.props.apiGroup
-        ? parseAll({ text: action.props.apiGroup, replaceValues, multiQueryData })
-        : undefined
-      const apiVersionPrepared = parseAll({ text: action.props.apiVersion, replaceValues, multiQueryData })
-      const pluralPrepared = parseAll({ text: action.props.plural, replaceValues, multiQueryData })
-      const namePrepared = parseAll({ text: action.props.name, replaceValues, multiQueryData })
-      const baseprefixPrepared = action.props.baseprefix
-        ? parseAll({ text: action.props.baseprefix, replaceValues, multiQueryData })
-        : undefined
-
-      const url = buildEditUrl(
-        {
-          ...action.props,
-          cluster: clusterPrepared,
-          namespace: namespacePrepared,
-          syntheticProject: syntheticProjectPrepared,
-          apiGroup: apiGroupPrepared,
-          apiVersion: apiVersionPrepared,
-          plural: pluralPrepared,
-          name: namePrepared,
-          baseprefix: baseprefixPrepared,
-        },
-        fullPath,
-      )
-      navigate(url)
+      handleEditAction(action, ctx, fullPath, navigate)
       return
     }
 
     if (action.type === 'delete') {
-      const endpointPrepared = parseAll({ text: action.props.endpoint, replaceValues, multiQueryData })
-      const namePrepared = parseAll({ text: action.props.name, replaceValues, multiQueryData })
-      const redirectToPrepared = action.props.redirectTo
-        ? parseAll({ text: action.props.redirectTo, replaceValues, multiQueryData })
-        : undefined
-
-      setDeleteModalData({
-        name: namePrepared,
-        endpoint: endpointPrepared,
-        redirectTo: redirectToPrepared,
-      })
+      handleDeleteAction(action, ctx, setDeleteModalData)
       return
     }
 
@@ -174,63 +272,12 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
       action.type === 'suspend' ||
       action.type === 'resume'
     ) {
-      const actionLabel = action.props.text || action.type
-      const endpointPrepared = parseAll({ text: action.props.endpoint, replaceValues, multiQueryData })
-      const pathToValuePrepared = parseAll({ text: action.props.pathToValue, replaceValues, multiQueryData })
-      const valuePrepared = parseValueIfString(action.props.value, ctx)
-
-      patchEntryWithReplaceOp({
-        endpoint: endpointPrepared,
-        pathToValue: pathToValuePrepared,
-        body: valuePrepared,
-      })
-        .then(() => {
-          invalidateMultiQuery()
-          showSuccess(actionLabel)
-        })
-        .catch(error => {
-          showError(actionLabel, error)
-          // eslint-disable-next-line no-console
-          console.error(error)
-        })
-
+      handlePatchActions(action, ctx, showSuccess, showError)
       return
     }
 
     if (action.type === 'rolloutRestart') {
-      const actionLabel = action.props.text || 'Rollout restart'
-      const endpointPrepared = parseAll({ text: action.props.endpoint, replaceValues, multiQueryData })
-      const annotationKeyPrepared = action.props.annotationKey
-        ? parseAll({ text: action.props.annotationKey, replaceValues, multiQueryData })
-        : 'kubectl.kubernetes.io/restartedAt'
-      const timestampPrepared = action.props.timestamp
-        ? parseAll({ text: action.props.timestamp, replaceValues, multiQueryData })
-        : new Date().toISOString()
-
-      patchEntryWithMergePatch({
-        endpoint: endpointPrepared,
-        body: {
-          spec: {
-            template: {
-              metadata: {
-                annotations: {
-                  [annotationKeyPrepared]: timestampPrepared,
-                },
-              },
-            },
-          },
-        },
-      })
-        .then(() => {
-          invalidateMultiQuery()
-          showSuccess(actionLabel)
-        })
-        .catch(error => {
-          showError(actionLabel, error)
-          // eslint-disable-next-line no-console
-          console.error(error)
-        })
-
+      handleRolloutRestartAction(action, ctx, showSuccess, showError)
       return
     }
 
@@ -241,9 +288,7 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
     }
 
     if (action.type === 'openKubeletConfig') {
-      const urlPrepared = parseAll({ text: action.props.url, replaceValues, multiQueryData })
-      const target = action.props.target ?? '_blank'
-      window.open(urlPrepared, target)
+      handleOpenKubeletConfigAction(action, ctx, setActiveAction, setModalOpen)
       return
     }
 
@@ -255,16 +300,13 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
     if (!evictModalData) return
 
     setIsEvictLoading(true)
-
     const body = buildEvictBody(evictModalData)
+    const evictLabel = `Evict ${evictModalData.name}`
 
     createNewEntry({ endpoint: evictModalData.endpoint, body })
-      .then(() => {
-        invalidateMultiQuery()
-        showSuccess(`Evict ${evictModalData.name}`)
-      })
+      .then(() => showSuccess(evictLabel))
       .catch(error => {
-        showError(`Evict ${evictModalData.name}`, error)
+        showError(evictLabel, error)
         // eslint-disable-next-line no-console
         console.error(error)
       })

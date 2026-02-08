@@ -64,7 +64,7 @@ beforeEach(() => {
 /* ------------------------------------------------------------------ */
 /*  Tests                                                              */
 /* ------------------------------------------------------------------ */
-describe('useActionsDropdownPermissions', () => {
+describe('useActionsDropdownPermissions - manual override', () => {
   describe('manual permissions override', () => {
     it('returns manual permissions when provided, skipping RBAC checks', () => {
       const manualPermissions: TActionsPermissions = { canUpdate: true, canPatch: false, canDelete: true }
@@ -85,7 +85,9 @@ describe('useActionsDropdownPermissions', () => {
       })
     })
   })
+})
 
+describe('useActionsDropdownPermissions - computed permissions', () => {
   describe('computed permissions via permissionContext', () => {
     it('calls usePermissions with correct verbs for edit/patch/delete actions', () => {
       mockUsePermissions.mockImplementation((params: { verb: string }) => {
@@ -119,9 +121,7 @@ describe('useActionsDropdownPermissions', () => {
         }),
       )
 
-      const updateCall = mockUsePermissions.mock.calls.find(
-        (call: { verb: string }[]) => call[0].verb === 'update',
-      )
+      const updateCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'update')
       expect(updateCall).toBeDefined()
       expect(updateCall[0].cluster).toBe('my-cluster')
       expect(updateCall[0].plural).toBe('pods')
@@ -138,9 +138,7 @@ describe('useActionsDropdownPermissions', () => {
         }),
       )
 
-      const updateCall = mockUsePermissions.mock.calls.find(
-        (call: { verb: string }[]) => call[0].verb === 'update',
-      )
+      const updateCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'update')
       expect(updateCall[0].namespace).toBe('default')
     })
   })
@@ -157,9 +155,7 @@ describe('useActionsDropdownPermissions', () => {
         }),
       )
 
-      const createCall = mockUsePermissions.mock.calls.find(
-        (call: { verb: string }[]) => call[0].verb === 'create',
-      )
+      const createCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'create')
       expect(createCall).toBeDefined()
       expect(createCall[0].subresource).toBe('eviction')
       expect(createCall[0].enabler).toBe(true)
@@ -176,9 +172,7 @@ describe('useActionsDropdownPermissions', () => {
         }),
       )
 
-      const getCall = mockUsePermissions.mock.calls.find(
-        (call: { verb: string }[]) => call[0].verb === 'get',
-      )
+      const getCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'get')
       expect(getCall).toBeDefined()
       expect(getCall[0].subresource).toBe('proxy')
       expect(getCall[0].enabler).toBe(true)
@@ -246,9 +240,7 @@ describe('useActionsDropdownPermissions', () => {
         }),
       )
 
-      const updateCall = mockUsePermissions.mock.calls.find(
-        (call: { verb: string }[]) => call[0].verb === 'update',
-      )
+      const updateCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'update')
       expect(updateCall[0].enabler).toBe(false)
     })
 
@@ -263,22 +255,18 @@ describe('useActionsDropdownPermissions', () => {
         }),
       )
 
-      const updateCall = mockUsePermissions.mock.calls.find(
-        (call: { verb: string }[]) => call[0].verb === 'update',
-      )
-      const patchCall = mockUsePermissions.mock.calls.find(
-        (call: { verb: string }[]) => call[0].verb === 'patch',
-      )
-      const deleteCall = mockUsePermissions.mock.calls.find(
-        (call: { verb: string }[]) => call[0].verb === 'delete',
-      )
+      const updateCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'update')
+      const patchCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'patch')
+      const deleteCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'delete')
 
       expect(updateCall[0].enabler).toBe(true)
       expect(patchCall[0].enabler).toBe(false)
       expect(deleteCall[0].enabler).toBe(false)
     })
   })
+})
 
+describe('useActionsDropdownPermissions - permission values', () => {
   describe('computed permission values', () => {
     it('returns undefined for verbs not required by any action', () => {
       mockUsePermissions.mockReturnValue(permissionResult(true))

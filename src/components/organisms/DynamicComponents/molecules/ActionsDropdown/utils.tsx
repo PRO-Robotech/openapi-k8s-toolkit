@@ -3,18 +3,9 @@ import { Tooltip } from 'antd'
 import type { TPermissionVerb } from 'localTypes/permissions'
 import { parseAll } from '../utils'
 import { TActionUnion, TEditActionProps, TActionsPermissions } from '../../types/ActionsDropdown'
-import { LabelsModal } from '../AggregatedCounterCard/molecules/LabelsModal'
-import { AnnotationsModal } from '../AggregatedCounterCard/molecules/AnnotationsModal'
-import { TaintsModal } from '../AggregatedCounterCard/molecules/TaintsModal'
-import { TolerationsModal } from '../AggregatedCounterCard/molecules/TolerationsModal'
 import { renderAntIcon } from '../AntdIcons/utils'
 import { renderIcon as renderBase64Icon } from '../AggregatedCounterCard/utils'
 import { Styled } from './styled'
-
-type TModalExtraProps = {
-  open: boolean
-  onClose: () => void
-}
 
 type TVisibilityContext = {
   replaceValues: Record<string, string | undefined>
@@ -51,7 +42,10 @@ export const getRequiredPermissions = (actions: TActionUnion[]): TRequiredPermis
 const UNDEFINED_FALLBACK = 'Undefined with no fallback'
 const isMeaningfulValue = (value: string): boolean => value.length > 0 && value !== '-' && value !== UNDEFINED_FALLBACK
 
-export const getVisibleActions = (actions: TActionUnion[], { replaceValues, multiQueryData }: TVisibilityContext): TActionUnion[] => {
+export const getVisibleActions = (
+  actions: TActionUnion[],
+  { replaceValues, multiQueryData }: TVisibilityContext,
+): TActionUnion[] => {
   return actions.filter(action => {
     const condition = action.props.visibleWhen
 
@@ -72,9 +66,9 @@ export const getVisibleActions = (actions: TActionUnion[], { replaceValues, mult
       return true
     }
 
-    const expectedValues = (Array.isArray(condition.valueToCompare) ? condition.valueToCompare : [condition.valueToCompare]).map(
-      value => parseAll({ text: value, replaceValues, multiQueryData }),
-    )
+    const expectedValues = (
+      Array.isArray(condition.valueToCompare) ? condition.valueToCompare : [condition.valueToCompare]
+    ).map(value => parseAll({ text: value, replaceValues, multiQueryData }))
     const matches = expectedValues.includes(currentValue)
 
     return condition.criteria === 'equals' ? matches : !matches
@@ -100,43 +94,6 @@ export const buildEditUrl = (props: TEditActionProps, fullPath: string): string 
   ].filter(Boolean)
 
   return `/${parts.join('/')}?backlink=${backlink}`
-}
-
-export const renderActionModal = (action: TActionUnion, extraProps: TModalExtraProps): React.ReactNode => {
-  switch (action.type) {
-    case 'edit':
-      return null
-
-    case 'editLabels':
-      return <LabelsModal {...action.props} {...extraProps} />
-
-    case 'editAnnotations':
-      return <AnnotationsModal {...action.props} {...extraProps} />
-
-    case 'editTaints':
-      return <TaintsModal {...action.props} {...extraProps} />
-
-    case 'editTolerations':
-      return <TolerationsModal {...action.props} {...extraProps} />
-
-    case 'delete':
-      // Delete modal is handled separately in ActionsDropdown component
-      return null
-    case 'cordon':
-    case 'uncordon':
-    case 'suspend':
-    case 'resume':
-    case 'rolloutRestart':
-    case 'evict':
-    case 'openKubeletConfig':
-      return null
-
-    default: {
-      // eslint-disable-next-line no-underscore-dangle
-      const _exhaustive: never = action
-      return _exhaustive
-    }
-  }
 }
 
 const getActionIcon = (action: TActionUnion): React.ReactNode => {

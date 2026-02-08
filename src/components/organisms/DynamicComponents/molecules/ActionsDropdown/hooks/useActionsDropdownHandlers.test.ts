@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { renderHook, act } from '@testing-library/react'
+import { useActionsDropdownHandlers } from './useActionsDropdownHandlers'
 import { TActionUnion } from '../../../types/ActionsDropdown'
 
 /* ------------------------------------------------------------------ */
@@ -44,11 +45,6 @@ jest.mock('api/forms', () => ({
   patchEntryWithMergePatch: (...args: unknown[]) => mockPatchEntryWithMergePatch(...args),
 }))
 
-const mockWindowOpen = jest.fn()
-const originalWindowOpen = window.open
-
-import { useActionsDropdownHandlers } from './useActionsDropdownHandlers'
-
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
@@ -62,17 +58,12 @@ beforeEach(() => {
   mockCreateNewEntry.mockResolvedValue({})
   mockPatchEntryWithReplaceOp.mockResolvedValue({})
   mockPatchEntryWithMergePatch.mockResolvedValue({})
-  window.open = mockWindowOpen
-})
-
-afterAll(() => {
-  window.open = originalWindowOpen
 })
 
 /* ------------------------------------------------------------------ */
 /*  Tests                                                              */
 /* ------------------------------------------------------------------ */
-describe('useActionsDropdownHandlers', () => {
+describe('useActionsDropdownHandlers - edit and delete', () => {
   describe('edit action', () => {
     it('navigates to the edit form URL', () => {
       const editAction: TActionUnion = {
@@ -179,7 +170,9 @@ describe('useActionsDropdownHandlers', () => {
       expect(result.current.deleteModalData).toBeNull()
     })
   })
+})
 
+describe('useActionsDropdownHandlers - patch actions', () => {
   describe('cordon/uncordon/suspend/resume actions', () => {
     const cordonAction: TActionUnion = {
       type: 'cordon',
@@ -214,9 +207,7 @@ describe('useActionsDropdownHandlers', () => {
         result.current.handleActionClick(cordonAction)
       })
 
-      expect(mockNotificationSuccess).toHaveBeenCalledWith(
-        expect.objectContaining({ message: 'Cordon successful' }),
-      )
+      expect(mockNotificationSuccess).toHaveBeenCalledWith(expect.objectContaining({ message: 'Cordon successful' }))
       expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['multi'] })
     })
 
@@ -229,12 +220,12 @@ describe('useActionsDropdownHandlers', () => {
         result.current.handleActionClick(cordonAction)
       })
 
-      expect(mockNotificationError).toHaveBeenCalledWith(
-        expect.objectContaining({ message: 'Cordon failed' }),
-      )
+      expect(mockNotificationError).toHaveBeenCalledWith(expect.objectContaining({ message: 'Cordon failed' }))
     })
   })
+})
 
+describe('useActionsDropdownHandlers - rollout restart', () => {
   describe('rolloutRestart action', () => {
     const rolloutRestartAction: TActionUnion = {
       type: 'rolloutRestart',
@@ -254,9 +245,7 @@ describe('useActionsDropdownHandlers', () => {
       expect(mockPatchEntryWithMergePatch).toHaveBeenCalledTimes(1)
       const callArg = mockPatchEntryWithMergePatch.mock.calls[0][0]
       expect(callArg.endpoint).toBe('/api/clusters/my-cluster/deployments/my-deploy')
-      expect(callArg.body.spec.template.metadata.annotations).toHaveProperty([
-        'kubectl.kubernetes.io/restartedAt',
-      ])
+      expect(callArg.body.spec.template.metadata.annotations).toHaveProperty(['kubectl.kubernetes.io/restartedAt'])
     })
 
     it('uses custom annotationKey when provided', () => {
@@ -293,7 +282,9 @@ describe('useActionsDropdownHandlers', () => {
       )
     })
   })
+})
 
+describe('useActionsDropdownHandlers - evict action', () => {
   describe('evict action', () => {
     const evictAction: TActionUnion = {
       type: 'evict',
@@ -381,9 +372,7 @@ describe('useActionsDropdownHandlers', () => {
         result.current.handleEvictConfirm()
       })
 
-      expect(mockNotificationError).toHaveBeenCalledWith(
-        expect.objectContaining({ message: 'Evict my-pod failed' }),
-      )
+      expect(mockNotificationError).toHaveBeenCalledWith(expect.objectContaining({ message: 'Evict my-pod failed' }))
       expect(result.current.evictModalData).toBeNull()
       expect(result.current.isEvictLoading).toBe(false)
     })
@@ -415,9 +404,11 @@ describe('useActionsDropdownHandlers', () => {
       expect(mockCreateNewEntry).not.toHaveBeenCalled()
     })
   })
+})
 
+describe('useActionsDropdownHandlers - openKubeletConfig', () => {
   describe('openKubeletConfig action', () => {
-    it('opens URL in new tab by default', () => {
+    it('opens modal with parsed URL', () => {
       const action: TActionUnion = {
         type: 'openKubeletConfig',
         props: {
@@ -432,16 +423,24 @@ describe('useActionsDropdownHandlers', () => {
         result.current.handleActionClick(action)
       })
 
-      expect(mockWindowOpen).toHaveBeenCalledWith('/api/clusters/my-cluster/proxy/configz', '_blank')
+      expect(result.current.modalOpen).toBe(true)
+      expect(result.current.activeAction).toEqual({
+        type: 'openKubeletConfig',
+        props: {
+          text: 'Kubelet Config',
+          url: '/api/clusters/my-cluster/proxy/configz',
+        },
+      })
     })
 
-    it('respects custom target', () => {
+    it('parses optional modal fields', () => {
       const action: TActionUnion = {
         type: 'openKubeletConfig',
         props: {
           text: 'Kubelet Config',
-          url: '/api/kubelet',
-          target: '_self',
+          url: '/api/clusters/{2}/proxy/configz',
+          modalTitle: 'Kubelet Config: {2}',
+          modalDescriptionText: 'Read-only config for cluster {2}',
         },
       }
 
@@ -451,10 +450,20 @@ describe('useActionsDropdownHandlers', () => {
         result.current.handleActionClick(action)
       })
 
-      expect(mockWindowOpen).toHaveBeenCalledWith('/api/kubelet', '_self')
+      expect(result.current.activeAction).toEqual({
+        type: 'openKubeletConfig',
+        props: {
+          text: 'Kubelet Config',
+          url: '/api/clusters/my-cluster/proxy/configz',
+          modalTitle: 'Kubelet Config: my-cluster',
+          modalDescriptionText: 'Read-only config for cluster my-cluster',
+        },
+      })
     })
   })
+})
 
+describe('useActionsDropdownHandlers - modal actions', () => {
   describe('modal actions (editLabels, editAnnotations, etc.)', () => {
     it('opens modal for editLabels action', () => {
       const action: TActionUnion = {
