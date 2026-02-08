@@ -119,9 +119,7 @@ describe('useActionsDropdownPermissions', () => {
         }),
       )
 
-      const updateCall = mockUsePermissions.mock.calls.find(
-        (call: { verb: string }[]) => call[0].verb === 'update',
-      )
+      const updateCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'update')
       expect(updateCall).toBeDefined()
       expect(updateCall[0].cluster).toBe('my-cluster')
       expect(updateCall[0].plural).toBe('pods')
@@ -138,9 +136,7 @@ describe('useActionsDropdownPermissions', () => {
         }),
       )
 
-      const updateCall = mockUsePermissions.mock.calls.find(
-        (call: { verb: string }[]) => call[0].verb === 'update',
-      )
+      const updateCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'update')
       expect(updateCall[0].namespace).toBe('default')
     })
   })
@@ -157,9 +153,7 @@ describe('useActionsDropdownPermissions', () => {
         }),
       )
 
-      const createCall = mockUsePermissions.mock.calls.find(
-        (call: { verb: string }[]) => call[0].verb === 'create',
-      )
+      const createCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'create')
       expect(createCall).toBeDefined()
       expect(createCall[0].subresource).toBe('eviction')
       expect(createCall[0].enabler).toBe(true)
@@ -176,9 +170,7 @@ describe('useActionsDropdownPermissions', () => {
         }),
       )
 
-      const getCall = mockUsePermissions.mock.calls.find(
-        (call: { verb: string }[]) => call[0].verb === 'get',
-      )
+      const getCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'get')
       expect(getCall).toBeDefined()
       expect(getCall[0].subresource).toBe('proxy')
       expect(getCall[0].enabler).toBe(true)
@@ -246,9 +238,7 @@ describe('useActionsDropdownPermissions', () => {
         }),
       )
 
-      const updateCall = mockUsePermissions.mock.calls.find(
-        (call: { verb: string }[]) => call[0].verb === 'update',
-      )
+      const updateCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'update')
       expect(updateCall[0].enabler).toBe(false)
     })
 
@@ -263,15 +253,9 @@ describe('useActionsDropdownPermissions', () => {
         }),
       )
 
-      const updateCall = mockUsePermissions.mock.calls.find(
-        (call: { verb: string }[]) => call[0].verb === 'update',
-      )
-      const patchCall = mockUsePermissions.mock.calls.find(
-        (call: { verb: string }[]) => call[0].verb === 'patch',
-      )
-      const deleteCall = mockUsePermissions.mock.calls.find(
-        (call: { verb: string }[]) => call[0].verb === 'delete',
-      )
+      const updateCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'update')
+      const patchCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'patch')
+      const deleteCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'delete')
 
       expect(updateCall[0].enabler).toBe(true)
       expect(patchCall[0].enabler).toBe(false)

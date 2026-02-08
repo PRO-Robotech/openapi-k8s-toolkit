@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import { TActionUnion, TActionsPermissions, TEditActionProps } from '../../types/ActionsDropdown'
 import { buildEditUrl, getMenuItems, getRequiredPermissions, getVisibleActions } from './utils'
 
@@ -718,11 +719,7 @@ describe('getRequiredPermissions', () => {
 
     const required = getRequiredPermissions(actions)
 
-    expect(required).toEqual([
-      { verb: 'update' },
-      { verb: 'create', subresource: 'eviction' },
-      { verb: 'delete' },
-    ])
+    expect(required).toEqual([{ verb: 'update' }, { verb: 'create', subresource: 'eviction' }, { verb: 'delete' }])
   })
 
   it('returns empty array for empty actions', () => {

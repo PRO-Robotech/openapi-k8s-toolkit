@@ -1,6 +1,8 @@
+/* eslint-disable max-lines-per-function */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { renderHook, act } from '@testing-library/react'
 import { TActionUnion } from '../../../types/ActionsDropdown'
+import { useActionsDropdownHandlers } from './useActionsDropdownHandlers'
 
 /* ------------------------------------------------------------------ */
 /*  Mocks                                                              */
@@ -46,8 +48,6 @@ jest.mock('api/forms', () => ({
 
 const mockWindowOpen = jest.fn()
 const originalWindowOpen = window.open
-
-import { useActionsDropdownHandlers } from './useActionsDropdownHandlers'
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -214,9 +214,7 @@ describe('useActionsDropdownHandlers', () => {
         result.current.handleActionClick(cordonAction)
       })
 
-      expect(mockNotificationSuccess).toHaveBeenCalledWith(
-        expect.objectContaining({ message: 'Cordon successful' }),
-      )
+      expect(mockNotificationSuccess).toHaveBeenCalledWith(expect.objectContaining({ message: 'Cordon successful' }))
       expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['multi'] })
     })
 
@@ -229,9 +227,7 @@ describe('useActionsDropdownHandlers', () => {
         result.current.handleActionClick(cordonAction)
       })
 
-      expect(mockNotificationError).toHaveBeenCalledWith(
-        expect.objectContaining({ message: 'Cordon failed' }),
-      )
+      expect(mockNotificationError).toHaveBeenCalledWith(expect.objectContaining({ message: 'Cordon failed' }))
     })
   })
 
@@ -254,9 +250,7 @@ describe('useActionsDropdownHandlers', () => {
       expect(mockPatchEntryWithMergePatch).toHaveBeenCalledTimes(1)
       const callArg = mockPatchEntryWithMergePatch.mock.calls[0][0]
       expect(callArg.endpoint).toBe('/api/clusters/my-cluster/deployments/my-deploy')
-      expect(callArg.body.spec.template.metadata.annotations).toHaveProperty([
-        'kubectl.kubernetes.io/restartedAt',
-      ])
+      expect(callArg.body.spec.template.metadata.annotations).toHaveProperty(['kubectl.kubernetes.io/restartedAt'])
     })
 
     it('uses custom annotationKey when provided', () => {
@@ -381,9 +375,7 @@ describe('useActionsDropdownHandlers', () => {
         result.current.handleEvictConfirm()
       })
 
-      expect(mockNotificationError).toHaveBeenCalledWith(
-        expect.objectContaining({ message: 'Evict my-pod failed' }),
-      )
+      expect(mockNotificationError).toHaveBeenCalledWith(expect.objectContaining({ message: 'Evict my-pod failed' }))
       expect(result.current.evictModalData).toBeNull()
       expect(result.current.isEvictLoading).toBe(false)
     })

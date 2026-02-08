@@ -51,7 +51,10 @@ export const getRequiredPermissions = (actions: TActionUnion[]): TRequiredPermis
 const UNDEFINED_FALLBACK = 'Undefined with no fallback'
 const isMeaningfulValue = (value: string): boolean => value.length > 0 && value !== '-' && value !== UNDEFINED_FALLBACK
 
-export const getVisibleActions = (actions: TActionUnion[], { replaceValues, multiQueryData }: TVisibilityContext): TActionUnion[] => {
+export const getVisibleActions = (
+  actions: TActionUnion[],
+  { replaceValues, multiQueryData }: TVisibilityContext,
+): TActionUnion[] => {
   return actions.filter(action => {
     const condition = action.props.visibleWhen
 
@@ -72,9 +75,9 @@ export const getVisibleActions = (actions: TActionUnion[], { replaceValues, mult
       return true
     }
 
-    const expectedValues = (Array.isArray(condition.valueToCompare) ? condition.valueToCompare : [condition.valueToCompare]).map(
-      value => parseAll({ text: value, replaceValues, multiQueryData }),
-    )
+    const expectedValues = (
+      Array.isArray(condition.valueToCompare) ? condition.valueToCompare : [condition.valueToCompare]
+    ).map(value => parseAll({ text: value, replaceValues, multiQueryData }))
     const matches = expectedValues.includes(currentValue)
 
     return condition.criteria === 'equals' ? matches : !matches

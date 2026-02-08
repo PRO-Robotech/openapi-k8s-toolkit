@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
@@ -104,8 +105,8 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
       error instanceof AxiosError
         ? error.response?.data?.message || error.message
         : error instanceof Error
-          ? error.message
-          : 'Unknown error'
+        ? error.message
+        : 'Unknown error'
 
     notificationApi.error({
       message: `${actionLabel} failed`,
@@ -191,7 +192,7 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
         .catch(error => {
           showError(actionLabel, error)
           // eslint-disable-next-line no-console
-          console.error(error)
+          // console.error(error)
         })
 
       return
@@ -266,7 +267,7 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
       .catch(error => {
         showError(`Evict ${evictModalData.name}`, error)
         // eslint-disable-next-line no-console
-        console.error(error)
+        // console.error(error)
       })
       .finally(() => {
         setIsEvictLoading(false)
