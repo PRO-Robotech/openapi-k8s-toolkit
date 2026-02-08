@@ -144,6 +144,7 @@ export const Default: Story = {
     buttonText: 'Actions',
     buttonVariant: 'default',
     containerStyle: {},
+    permissions: { canUpdate: true, canPatch: true, canDelete: true, canCreate: true, canGet: true },
     actions: [
       {
         type: 'edit',
@@ -436,6 +437,256 @@ export const WithPermissions: Story = {
       },
     },
     partsOfUrl: ['openapi-ui', 'default'],
+    theme: 'light',
+  },
+}
+
+/**
+ * Node detail page — includes editTaints, cordon/uncordon, and openKubeletConfig.
+ */
+export const NodeActions: Story = {
+  args: {
+    id: 'node-actions',
+    buttonText: 'Actions',
+    buttonVariant: 'default',
+    containerStyle: {},
+    permissions: { canUpdate: true, canPatch: true, canDelete: true, canCreate: true, canGet: true },
+    actions: [
+      {
+        type: 'edit',
+        props: {
+          text: 'Edit',
+          icon: 'EditOutlined',
+          cluster: 'default',
+          apiVersion: 'v1',
+          plural: 'nodes',
+          name: 'worker-node-01',
+          baseprefix: '/openapi-ui',
+        },
+      },
+      {
+        type: 'editTaints',
+        props: {
+          text: 'Edit Taints',
+          icon: 'WarningOutlined',
+          reqIndex: '0',
+          jsonPathToArray: '.spec.taints',
+          endpoint: '/api/clusters/default/k8s/api/v1/nodes/worker-node-01',
+          pathToValue: '/spec/taints',
+          modalTitle: 'Edit Taints',
+          editModalWidth: 800,
+          notificationSuccessMessage: 'Taints updated',
+          notificationSuccessMessageDescription: 'Taints have been updated successfully',
+          cols: [6, 6, 6, 6],
+        },
+      },
+      {
+        type: 'cordon',
+        props: {
+          text: 'Cordon',
+          icon: 'StopOutlined',
+          endpoint: '/api/clusters/default/k8s/api/v1/nodes/worker-node-01',
+          pathToValue: '/spec/unschedulable',
+          value: true,
+        },
+      },
+      {
+        type: 'uncordon',
+        props: {
+          text: 'Uncordon',
+          icon: 'CheckCircleOutlined',
+          endpoint: '/api/clusters/default/k8s/api/v1/nodes/worker-node-01',
+          pathToValue: '/spec/unschedulable',
+          value: false,
+        },
+      },
+      {
+        type: 'openKubeletConfig',
+        props: {
+          text: 'Kubelet Config',
+          icon: 'SettingOutlined',
+          url: '/api/clusters/default/k8s/api/v1/nodes/worker-node-01/proxy/configz',
+          target: '_blank',
+        },
+      },
+      {
+        type: 'delete',
+        props: {
+          text: 'Delete',
+          icon: 'DeleteOutlined',
+          endpoint: '/api/clusters/default/k8s/api/v1/nodes/worker-node-01',
+          name: 'worker-node-01',
+          redirectTo: '/openapi-ui/default/builtin-table/nodes',
+        },
+      },
+    ],
+
+    isLoading: false,
+    isError: false,
+    errors: [],
+    multiQueryData: {
+      req0: {
+        metadata: {
+          name: 'worker-node-01',
+          labels: { 'kubernetes.io/os': 'linux', 'node-role.kubernetes.io/worker': '' },
+        },
+        spec: {
+          taints: [{ key: 'node-role.kubernetes.io/control-plane', effect: 'NoSchedule' }],
+          unschedulable: false,
+        },
+      },
+    },
+    partsOfUrl: ['openapi-ui', 'default', 'builtin-table', 'nodes', 'worker-node-01'],
+    theme: 'light',
+  },
+}
+
+/**
+ * Pod detail page — includes evict action.
+ */
+export const PodActions: Story = {
+  args: {
+    id: 'pod-actions',
+    buttonText: 'Actions',
+    buttonVariant: 'default',
+    containerStyle: {},
+    permissions: { canUpdate: true, canPatch: true, canDelete: true, canCreate: true, canGet: true },
+    actions: [
+      {
+        type: 'edit',
+        props: {
+          text: 'Edit',
+          icon: 'EditOutlined',
+          cluster: 'default',
+          namespace: 'kube-system',
+          apiVersion: 'v1',
+          plural: 'pods',
+          name: 'coredns-abc123',
+          baseprefix: '/openapi-ui',
+        },
+      },
+      {
+        type: 'evict',
+        props: {
+          text: 'Evict',
+          icon: 'DisconnectOutlined',
+          endpoint: '/api/clusters/default/k8s/api/v1/namespaces/kube-system/pods/coredns-abc123/eviction',
+          name: 'coredns-abc123',
+          namespace: 'kube-system',
+          apiVersion: 'policy/v1',
+          gracePeriodSeconds: 30,
+        },
+      },
+      {
+        type: 'delete',
+        props: {
+          text: 'Delete',
+          icon: 'DeleteOutlined',
+          endpoint: '/api/clusters/default/k8s/api/v1/namespaces/kube-system/pods/coredns-abc123',
+          name: 'coredns-abc123',
+        },
+      },
+    ],
+
+    isLoading: false,
+    isError: false,
+    errors: [],
+    multiQueryData: {
+      req0: {
+        metadata: {
+          name: 'coredns-abc123',
+          namespace: 'kube-system',
+          labels: { 'k8s-app': 'kube-dns' },
+        },
+      },
+    },
+    partsOfUrl: ['openapi-ui', 'default', 'kube-system', 'pods', 'coredns-abc123'],
+    theme: 'light',
+  },
+}
+
+/**
+ * Deployment detail page — includes suspend/resume and rolloutRestart.
+ */
+export const DeploymentActions: Story = {
+  args: {
+    id: 'deployment-actions',
+    buttonText: 'Actions',
+    buttonVariant: 'default',
+    containerStyle: {},
+    permissions: { canUpdate: true, canPatch: true, canDelete: true, canCreate: true, canGet: true },
+    actions: [
+      {
+        type: 'edit',
+        props: {
+          text: 'Edit',
+          icon: 'EditOutlined',
+          cluster: 'default',
+          namespace: 'production',
+          apiVersion: 'apps/v1',
+          plural: 'deployments',
+          name: 'nginx-deployment',
+          baseprefix: '/openapi-ui',
+        },
+      },
+      {
+        type: 'suspend',
+        props: {
+          text: 'Suspend',
+          icon: 'PauseCircleOutlined',
+          endpoint: '/api/clusters/default/k8s/apis/apps/v1/namespaces/production/deployments/nginx-deployment',
+          pathToValue: '/spec/paused',
+          value: true,
+        },
+      },
+      {
+        type: 'resume',
+        props: {
+          text: 'Resume',
+          icon: 'PlayCircleOutlined',
+          endpoint: '/api/clusters/default/k8s/apis/apps/v1/namespaces/production/deployments/nginx-deployment',
+          pathToValue: '/spec/paused',
+          value: false,
+        },
+      },
+      {
+        type: 'rolloutRestart',
+        props: {
+          text: 'Rollout Restart',
+          icon: 'ReloadOutlined',
+          endpoint: '/api/clusters/default/k8s/apis/apps/v1/namespaces/production/deployments/nginx-deployment',
+        },
+      },
+      {
+        type: 'delete',
+        props: {
+          text: 'Delete',
+          icon: 'DeleteOutlined',
+          endpoint: '/api/clusters/default/k8s/apis/apps/v1/namespaces/production/deployments/nginx-deployment',
+          name: 'nginx-deployment',
+          redirectTo: '/openapi-ui/default/builtin-table/deployments',
+        },
+      },
+    ],
+
+    isLoading: false,
+    isError: false,
+    errors: [],
+    multiQueryData: {
+      req0: {
+        metadata: {
+          name: 'nginx-deployment',
+          namespace: 'production',
+          labels: { app: 'nginx' },
+          annotations: {},
+        },
+        spec: {
+          replicas: 3,
+          paused: false,
+        },
+      },
+    },
+    partsOfUrl: ['openapi-ui', 'default', 'production', 'deployments', 'nginx-deployment'],
     theme: 'light',
   },
 }

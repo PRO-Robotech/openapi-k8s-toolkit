@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { checkPermission } from 'api/permissions'
+import type { TPermissionVerb } from 'localTypes/permissions'
 
 export const usePermissions = ({
   cluster,
   namespace,
   apiGroup,
   plural,
+  subresource,
   verb,
   name,
   refetchInterval,
@@ -15,13 +17,14 @@ export const usePermissions = ({
   apiGroup?: string
   plural: string
   namespace?: string
+  subresource?: string
   name?: string
-  verb: 'create' | 'delete' | 'patch' | 'update'
+  verb: TPermissionVerb
   refetchInterval?: number | false
   enabler?: boolean
 }) => {
   return useQuery({
-    queryKey: ['usePermissions', cluster, namespace, apiGroup, plural, verb, name],
+    queryKey: ['usePermissions', cluster, namespace, apiGroup, plural, subresource, verb, name],
     queryFn: async () =>
       (
         await checkPermission({
@@ -30,6 +33,7 @@ export const usePermissions = ({
             namespace,
             apiGroup,
             plural,
+            subresource,
             verb,
           },
         })

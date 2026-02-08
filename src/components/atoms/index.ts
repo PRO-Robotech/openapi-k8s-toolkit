@@ -6,6 +6,8 @@ export { DeleteModal } from './DeleteModal'
 export type { TDeleteModalProps } from './DeleteModal'
 export { DeleteModalMany } from './DeleteModalMany'
 export type { TDeleteModalManyProps } from './DeleteModalMany'
+export { ConfirmModal } from './ConfirmModal'
+export type { TConfirmModalProps } from './ConfirmModal'
 export {
   DeleteIcon,
   EditIcon,
