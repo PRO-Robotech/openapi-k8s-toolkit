@@ -25,24 +25,39 @@ export const getPrefillValuesWithForces = ({
   apiVersion?: string
   apiGroup?: string
 }): any => {
-  if (!forcedKind) {
+  if (typeof prefillValues !== 'object' || prefillValues === null) {
     return prefillValues
   }
 
-  const newValues = { ...prefillValues }
+  const newValues = { ...prefillValues } as Record<string, any>
 
-  if (typeof newValues === 'object' && newValues !== null) {
+  if (forcedKind) {
     if ('kind' in newValues) {
       delete newValues.kind
     }
     if ('apiVersion' in newValues) {
       delete newValues.apiVersion
     }
+
+    newValues.kind = forcedKind
+    if (apiVersion) {
+      newValues.apiVersion = `${apiGroup ? `${apiGroup}/` : ''}${apiVersion}`
+    }
   }
 
-  return {
-    kind: forcedKind,
-    apiVersion: `${apiGroup ? `${apiGroup}/` : ''}${apiVersion}`,
-    ...newValues,
+  const orderedValues: Record<string, any> = {}
+  if ('kind' in newValues) {
+    orderedValues.kind = newValues.kind
   }
+  if ('apiVersion' in newValues) {
+    orderedValues.apiVersion = newValues.apiVersion
+  }
+
+  Object.keys(newValues).forEach(key => {
+    if (key !== 'kind' && key !== 'apiVersion') {
+      orderedValues[key] = newValues[key]
+    }
+  })
+
+  return orderedValues
 }

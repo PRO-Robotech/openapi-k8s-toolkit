@@ -262,3 +262,32 @@ export const PermissionsDenied: Story = {
     },
   },
 }
+
+export const UnorderedPrefillValues: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-yaml-editor-unordered-prefill',
+    forcedKind: undefined,
+    multiQueryData: {
+      req0: {
+        metadata: {
+          name: 'unordered-demo',
+          namespace: 'default',
+        },
+        spec: {
+          containers: [
+            {
+              name: 'demo',
+              image: 'nginx:1.27',
+            },
+          ],
+        },
+        kind: 'Pod',
+        labels: {
+          team: 'platform',
+        },
+        apiVersion: 'v1',
+      },
+    },
+  },
+}

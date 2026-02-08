@@ -56,8 +56,8 @@ describe('getDataByPath', () => {
 })
 
 describe('getPrefillValuesWithForces', () => {
-  test('returns original value when forcedKind is not provided', () => {
-    const prefillValues = { a: 1, kind: 'Old', apiVersion: 'old/v1' }
+  test('moves kind and apiVersion to the top when forcedKind is not provided', () => {
+    const prefillValues = { a: 1, kind: 'Old', b: 2, apiVersion: 'old/v1' }
 
     const res = getPrefillValuesWithForces({
       prefillValues,
@@ -66,8 +66,13 @@ describe('getPrefillValuesWithForces', () => {
       apiVersion: 'v1',
     })
 
-    // function returns the same reference in this branch
-    expect(res).toBe(prefillValues)
+    expect(res).toEqual({
+      kind: 'Old',
+      apiVersion: 'old/v1',
+      a: 1,
+      b: 2,
+    })
+    expect(Object.keys(res)).toEqual(['kind', 'apiVersion', 'a', 'b'])
   })
 
   test('overwrites kind and apiVersion and preserves other fields', () => {
@@ -125,5 +130,22 @@ describe('getPrefillValuesWithForces', () => {
       apiVersion: 'v1',
       foo: 'bar',
     })
+  })
+
+  test('does not add apiVersion when forcedKind exists but apiVersion is missing', () => {
+    const prefillValues = { apiVersion: 'old/v1', foo: 'bar' }
+
+    const res = getPrefillValuesWithForces({
+      prefillValues,
+      forcedKind: 'Service',
+      apiGroup: 'apps',
+      apiVersion: undefined,
+    })
+
+    expect(res).toEqual({
+      kind: 'Service',
+      foo: 'bar',
+    })
+    expect(Object.keys(res)).toEqual(['kind', 'foo'])
   })
 })
