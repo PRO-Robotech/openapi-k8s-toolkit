@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import { TActionUnion, TActionsPermissions, TEditActionProps } from '../../types/ActionsDropdown'
 import { buildEditUrl, getMenuItems, getRequiredPermissions, getVisibleActions } from './utils'
 

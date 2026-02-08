@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
@@ -308,7 +309,7 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TU
       .catch(error => {
         showError(evictLabel, error)
         // eslint-disable-next-line no-console
-        console.error(error)
+        // console.error(error)
       })
       .finally(() => {
         setIsEvictLoading(false)
