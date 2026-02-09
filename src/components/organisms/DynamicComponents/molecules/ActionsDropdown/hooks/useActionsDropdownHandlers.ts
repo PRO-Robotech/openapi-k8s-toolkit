@@ -144,7 +144,7 @@ const handlePatchActions = (
     .catch(error => {
       onError(actionLabel, error)
       // eslint-disable-next-line no-console
-      console.error(error)
+      // console.error(error)
     })
 }
 
