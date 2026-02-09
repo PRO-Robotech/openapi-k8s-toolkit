@@ -80,6 +80,10 @@ const meta: Meta<TArgs> = {
       control: 'object',
       description: 'data.containerStyle – wrapper div style around counter + edit button',
     },
+    readOnly: {
+      control: 'boolean',
+      description: 'data.readOnly (hides edit controls when true)',
+    },
     endpoint: {
       control: 'text',
       description:
@@ -151,6 +155,7 @@ const meta: Meta<TArgs> = {
       inputLabel: args.inputLabel,
       inputLabelStyle: args.inputLabelStyle,
       containerStyle: args.containerStyle,
+      readOnly: args.readOnly,
       endpoint: args.endpoint,
       pathToValue: args.pathToValue,
       editModalWidth: args.editModalWidth,
@@ -221,6 +226,7 @@ export const Default: Story = {
     inputLabel: 'Taints',
     inputLabelStyle: undefined,
     containerStyle: { fontSize: 14 },
+    readOnly: undefined,
     endpoint: '/api/mock/taints',
     pathToValue: '.spec.taints',
     editModalWidth: 720,
@@ -290,5 +296,13 @@ export const NoPatchPermission: Story = {
     permissions: {
       canPatch: false,
     },
+  },
+}
+
+export const ReadOnly: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-taints-readonly',
+    readOnly: true as any, // matches `readOnly?: true` in the type map
   },
 }

@@ -3,7 +3,7 @@ export type TStatusTextProps = {
   values: string[] // array of reqsJsonPath
   criteriaSuccess: 'equals' | 'notEquals'
   criteriaError: 'equals' | 'notEquals'
-  stategySuccess?: 'some' | 'every' // every - default
+  strategySuccess?: 'some' | 'every' // every - default
   strategyError?: 'some' | 'every' // every - default
   valueToCompareSuccess: unknown[]
   valueToCompareError: unknown[]
