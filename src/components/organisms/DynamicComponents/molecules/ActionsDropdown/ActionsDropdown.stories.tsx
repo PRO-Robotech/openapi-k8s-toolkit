@@ -506,7 +506,6 @@ export const NodeActions: Story = {
           text: 'Kubelet Config',
           icon: 'SettingOutlined',
           url: '/api/clusters/default/k8s/api/v1/nodes/worker-node-01/proxy/configz',
-          target: '_blank',
         },
       },
       {

@@ -5,8 +5,9 @@ import { ConfirmModal, DeleteModal } from 'components/atoms'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
-import { renderActionModal, getMenuItems, getVisibleActions } from './utils'
+import { getMenuItems, getVisibleActions } from './utils'
 import { useActionsDropdownPermissions, useActionsDropdownHandlers } from './hooks'
+import { renderActionModal } from './renderActionModal'
 import { Styled } from './styled'
 
 export const ActionsDropdown: FC<{
