@@ -35,6 +35,7 @@ export const ConfirmModal: FC<TConfirmModalProps> = ({
       confirmLoading={confirmLoading}
       okButtonProps={{ danger }}
       width={width}
+      centered
     >
       {children}
     </Modal>

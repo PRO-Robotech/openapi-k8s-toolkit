@@ -160,3 +160,13 @@ export const Disabled: Story = {
     disabled: true,
   },
 }
+
+export const ExternalLink: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-antd-link-external',
+    text: 'Open Kubernetes docs',
+    href: 'https://kubernetes.io/docs/',
+    target: '_blank',
+  },
+}

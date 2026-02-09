@@ -29,6 +29,7 @@ export type TTaintsViewProps = {
   text: string
   errorText: string
   style?: CSSProperties
+  readOnly?: true
   containerStyle?: CSSProperties
 }
 

@@ -43,6 +43,10 @@ const meta: Meta<TArgs> = {
       control: 'text',
       description: 'data.errorText (shown when root is missing or invalid)',
     },
+    readOnly: {
+      control: 'boolean',
+      description: 'data.readOnly (hides edit controls when true)',
+    },
     containerStyle: { control: 'object', description: 'data.containerStyle' },
     notificationSuccessMessage: {
       control: 'text',
@@ -109,6 +113,7 @@ const meta: Meta<TArgs> = {
       jsonPathToObj: args.jsonPathToObj,
       text: args.text,
       errorText: args.errorText,
+      readOnly: args.readOnly,
       containerStyle: args.containerStyle,
       notificationSuccessMessage: args.notificationSuccessMessage,
       notificationSuccessMessageDescription: args.notificationSuccessMessageDescription,
@@ -177,6 +182,7 @@ export const Default: Story = {
     jsonPathToObj: '.data.annotations', // -> jsonpath: "$.data.annotations"
     text: 'Annotations: ~counter~ items',
     errorText: 'No annotations found',
+    readOnly: undefined,
     containerStyle: {
       padding: 12,
       border: '1px solid #eee',
@@ -269,5 +275,13 @@ export const NoAnnotations: Story = {
         },
       },
     },
+  },
+}
+
+export const ReadOnly: Story = {
+  args: {
+    ...Default.args!,
+    id: 'example-annotations-readonly',
+    readOnly: true as any, // matches `readOnly?: true` in the type map
   },
 }

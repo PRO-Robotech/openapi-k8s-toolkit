@@ -28,6 +28,7 @@ export type TTolerationsModalProps = {
 export type TTolerationsViewProps = {
   text: string
   errorText: string
+  readOnly?: true
   containerStyle?: CSSProperties
 }
 

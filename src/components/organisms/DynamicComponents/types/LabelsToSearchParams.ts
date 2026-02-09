@@ -8,4 +8,5 @@ export type TLabelsToSearchParamsProps = {
   textLink?: string
   errorText: string
   maxTextLength?: number
+  renderLabelsAsRows?: boolean
 } & Omit<LinkProps, 'id' | 'children' | 'href'>

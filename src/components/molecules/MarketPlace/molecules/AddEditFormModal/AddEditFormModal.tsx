@@ -117,6 +117,7 @@ export const AddEditFormModal: FC<TAddEditFormModalProps> = ({
       open={isOpen !== false}
       onCancel={() => setIsOpen(false)}
       onOk={() => submit()}
+      centered
     >
       <Form<TMarketPlacePanel> form={form} name="control-hooks" initialValues={{ ...defaultValues }}>
         <Form.Item label="Name" name="name">

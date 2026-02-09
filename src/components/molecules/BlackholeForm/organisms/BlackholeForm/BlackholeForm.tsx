@@ -1321,6 +1321,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
             </Typography.Text>
           }
           cancelButtonProps={{ style: { display: 'none' } }}
+          centered
         >
           An error has occurred: {error?.response?.data?.message}
         </Modal>
@@ -1333,6 +1334,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
           // onClose={() => setIsDebugModalOpen(false)}
           title="Debug for properties"
           width="90vw"
+          centered
         >
           <Styled.DebugContainer $designNewLayoutHeight={designNewLayoutHeight}>
             <Suspense fallback={<div>Loading...</div>}>

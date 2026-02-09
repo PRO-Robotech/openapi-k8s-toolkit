@@ -2,7 +2,7 @@ export const getResult = ({
   valuesPrepared,
   criteriaSuccess,
   criteriaError,
-  stategySuccess,
+  strategySuccess,
   strategyError,
   valueToCompareSuccess,
   valueToCompareError,
@@ -13,7 +13,7 @@ export const getResult = ({
   valuesPrepared: string[]
   criteriaSuccess: 'equals' | 'notEquals'
   criteriaError: 'equals' | 'notEquals'
-  stategySuccess?: 'some' | 'every'
+  strategySuccess?: 'some' | 'every'
   strategyError?: 'some' | 'every'
   valueToCompareSuccess: unknown[]
   valueToCompareError: unknown[]
@@ -23,7 +23,7 @@ export const getResult = ({
 }): { type: 'success' | 'danger' | 'warning'; text: string } => {
   let success = false
 
-  if (stategySuccess === 'some') {
+  if (strategySuccess === 'some') {
     success =
       criteriaSuccess === 'equals'
         ? valuesPrepared.some(v => valueToCompareSuccess.includes(v))
