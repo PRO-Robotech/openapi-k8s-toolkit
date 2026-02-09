@@ -73,7 +73,9 @@ export type TEvictActionProps = TActionBaseProps & {
 
 export type TOpenKubeletConfigActionProps = TActionBaseProps & {
   url: string
-  target?: '_blank' | '_self'
+  modalTitle?: string
+  modalDescriptionText?: string
+  editModalWidth?: number | string
 }
 
 export type TActionUnion =

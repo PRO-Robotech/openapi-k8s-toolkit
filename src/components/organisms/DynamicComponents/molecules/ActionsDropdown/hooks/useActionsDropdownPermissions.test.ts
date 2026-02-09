@@ -64,7 +64,7 @@ beforeEach(() => {
 /* ------------------------------------------------------------------ */
 /*  Tests                                                              */
 /* ------------------------------------------------------------------ */
-describe('useActionsDropdownPermissions', () => {
+describe('useActionsDropdownPermissions - manual override', () => {
   describe('manual permissions override', () => {
     it('returns manual permissions when provided, skipping RBAC checks', () => {
       const manualPermissions: TActionsPermissions = { canUpdate: true, canPatch: false, canDelete: true }
@@ -85,7 +85,9 @@ describe('useActionsDropdownPermissions', () => {
       })
     })
   })
+})
 
+describe('useActionsDropdownPermissions - computed permissions', () => {
   describe('computed permissions via permissionContext', () => {
     it('calls usePermissions with correct verbs for edit/patch/delete actions', () => {
       mockUsePermissions.mockImplementation((params: { verb: string }) => {
@@ -262,7 +264,9 @@ describe('useActionsDropdownPermissions', () => {
       expect(deleteCall[0].enabler).toBe(false)
     })
   })
+})
 
+describe('useActionsDropdownPermissions - permission values', () => {
   describe('computed permission values', () => {
     it('returns undefined for verbs not required by any action', () => {
       mockUsePermissions.mockReturnValue(permissionResult(true))
