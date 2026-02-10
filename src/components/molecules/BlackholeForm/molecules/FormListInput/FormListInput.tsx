@@ -1,8 +1,10 @@
+/* eslint-disable max-lines-per-function */
 /* eslint-disable no-unneeded-ternary */
 /* eslint-disable no-nested-ternary */
 import React, { FC, useEffect, useRef } from 'react'
 import jp from 'jsonpath'
 import { Flex, Typography, Tooltip, Select, Form, Button } from 'antd'
+import { QuestionCircleOutlined } from '@ant-design/icons'
 import _ from 'lodash'
 import { TFormName, TPersistedControls, TUrlParams } from 'localTypes/form'
 import { TListInputCustomProps } from 'localTypes/formExtensions'
@@ -19,6 +21,7 @@ import {
   useUpdateIsTouchedPersisted,
 } from '../../organisms/BlackholeForm/context'
 import { resolveFormPath, normalizeNameToPath, listItemBasePath } from './utils'
+import { getRequiredRule } from '../helpers/validation'
 
 type TFormListInputProps = {
   name: TFormName
@@ -76,6 +79,13 @@ export const FormListInput: FC<TFormListInputProps> = ({
   const rawRelatedFieldValue = Form.useWatch(relatedPath, form)
   const relatedFieldValue = relatedPath ? rawRelatedFieldValue : undefined
   const relatedTouched = relatedPath ? form.isFieldTouched(relatedPath) : '~'
+  const isWaitingForRelatedValue = Boolean(relatedPath && !rawRelatedFieldValue)
+  const relatedPathLabel = relatedPath?.join('.')
+  const relatedValueTooltip = relatedPathLabel
+    ? isWaitingForRelatedValue
+      ? `Please select ${relatedPathLabel} first`
+      : `Depends on ${relatedPathLabel}`
+    : undefined
 
   // to prevent circular callback onvaluechange call
   const hasFiredRef = useRef(false)
@@ -252,19 +262,27 @@ export const FormListInput: FC<TFormListInputProps> = ({
       <ResetedFormItem
         key={arrKey !== undefined ? arrKey : Array.isArray(name) ? name.slice(-1)[0] : name}
         name={arrName || fixedName}
-        rules={[{ required: forceNonRequired === false && required?.includes(getStringByName(name)) }]}
+        rules={[getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name)]}
         validateTrigger="onBlur"
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
       >
-        <Select
-          mode={customProps.mode}
-          placeholder="Select"
-          options={uniqueOptions}
-          filterOption={filterSelectOptions}
-          disabled={relatedPath && !rawRelatedFieldValue}
-          allowClear
-          showSearch
-        />
+        <Flex gap={8} align="center">
+          <Select
+            mode={customProps.mode}
+            placeholder="Select"
+            options={uniqueOptions}
+            filterOption={filterSelectOptions}
+            disabled={isWaitingForRelatedValue}
+            allowClear
+            showSearch
+            style={{ width: '100%' }}
+          />
+          {relatedValueTooltip && (
+            <Tooltip title={relatedValueTooltip}>
+              <QuestionCircleOutlined />
+            </Tooltip>
+          )}
+        </Flex>
       </ResetedFormItem>
     </HiddenContainer>
   )

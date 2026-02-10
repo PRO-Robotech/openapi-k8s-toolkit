@@ -134,6 +134,21 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
     }
   }, [modeData])
 
+  const applyForceViewMode = useCallback(
+    (forceViewMode?: TPrepareFormRes['forceViewMode']) => {
+      if (!modeData || !forceViewMode) return
+
+      if (forceViewMode === 'Manual') {
+        modeData.onChange('Manual')
+        modeData.onDisabled()
+        return
+      }
+
+      modeData.onChange('OpenAPI')
+    },
+    [modeData],
+  )
+
   const forcedCustomizationId = customizationId ? mappingData?.items?.[0]?.spec?.mappings?.[customizationId] : undefined
   const hasMatchingOverride = Boolean(
     customizationId && overridesData?.items?.some(item => item?.spec?.customizationId === customizationId),
@@ -151,6 +166,10 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
     : undefined
 
   useEffect(() => {
+    if (!cluster) {
+      setIsLoading(false)
+      return
+    }
     if (!isResolutionReady) return
     if (customizationId && !resolvedCustomizationId) return
 
@@ -169,8 +188,13 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
         if (data.result === 'error') {
           setIsError(data.error)
           console.warn(data.error)
-          fallbackToManualMode()
+          if (data.forceViewMode) {
+            applyForceViewMode(data.forceViewMode)
+          } else {
+            fallbackToManualMode()
+          }
         } else {
+          applyForceViewMode(data.forceViewMode)
           setPreparedData({
             properties: data.properties,
             required: data.required || [],
@@ -191,7 +215,15 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
       .finally(() => {
         setIsLoading(false)
       })
-  }, [cluster, data, customizationId, resolvedCustomizationId, isResolutionReady, fallbackToManualMode])
+  }, [
+    cluster,
+    data,
+    customizationId,
+    resolvedCustomizationId,
+    isResolutionReady,
+    fallbackToManualMode,
+    applyForceViewMode,
+  ])
 
   if (isLoading) {
     return <Spin />

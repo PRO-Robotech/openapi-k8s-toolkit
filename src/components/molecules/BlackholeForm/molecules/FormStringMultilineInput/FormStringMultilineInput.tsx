@@ -10,6 +10,7 @@ import { PersistedCheckbox, HiddenContainer, ResetedFormItem, CustomSizeTitle } 
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
 import { toBase64, fromBase64 } from './helpers'
 import { Styled } from './styled'
+import { getRequiredRule } from '../helpers/validation'
 
 type TFormStringMultilineInputProps = {
   name: TFormName
@@ -91,7 +92,7 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
       <ResetedFormItem
         key={arrKey !== undefined ? arrKey : Array.isArray(name) ? name.slice(-1)[0] : name}
         name={arrName || fixedName}
-        rules={[{ required: forceNonRequired === false && required?.includes(getStringByName(name)) }]}
+        rules={[getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name)]}
         validateTrigger="onBlur"
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
         style={{

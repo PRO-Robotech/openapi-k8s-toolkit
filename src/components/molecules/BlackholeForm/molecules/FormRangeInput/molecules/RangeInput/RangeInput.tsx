@@ -8,6 +8,7 @@ import { getStringByName } from 'utils/getStringByName'
 import { MinusIcon, feedbackIcons } from 'components/atoms'
 import { PersistedCheckbox, HiddenContainer, ResetedFormItem, CustomSizeTitle } from '../../../../atoms'
 import { useDesignNewLayout } from '../../../../organisms/BlackholeForm/context'
+import { getRequiredRule } from '../../../helpers/validation'
 
 export type TRangeInputProps = {
   name: TFormName
@@ -83,7 +84,7 @@ export const RangeInput: FC<TRangeInputProps> = ({
           <ResetedFormItem
             key={arrKey !== undefined ? arrKey : Array.isArray(name) ? name.slice(-1)[0] : name}
             name={arrName || name}
-            rules={[{ required: forceNonRequired === false && required?.includes(getStringByName(name)) }]}
+            rules={[getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name)]}
             validateTrigger="onBlur"
             hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
           >
@@ -100,7 +101,7 @@ export const RangeInput: FC<TRangeInputProps> = ({
           <ResetedFormItem
             key={arrKey !== undefined ? arrKey : Array.isArray(name) ? name.slice(-1)[0] : name}
             name={arrName || name}
-            rules={[{ required: forceNonRequired === false && required?.includes(getStringByName(name)) }]}
+            rules={[getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name)]}
             validateTrigger="onBlur"
             hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
           >

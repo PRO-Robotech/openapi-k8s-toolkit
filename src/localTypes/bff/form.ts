@@ -30,6 +30,7 @@ export type TPrepareFormRes =
       error: string | undefined
       kind: string | undefined
       fallbackToManualMode: true
+      forceViewMode?: 'OpenAPI' | 'Manual'
       isNamespaced: boolean
     }
   | {
@@ -44,6 +45,7 @@ export type TPrepareFormRes =
       sortPaths: string[][] | undefined
       kind: string | undefined
       isNamespaced: boolean
+      forceViewMode?: 'OpenAPI' | 'Manual'
       formPrefills?: TFormPrefill
       namespacesData?: string[]
     }
