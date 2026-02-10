@@ -77,10 +77,10 @@ const meta: Meta<TArgs> = {
       description:
         'Optional: data.standalone – if true, card behaves as a standalone marketplace view instead of being embedded in a larger layout',
     },
-    forceAddedMode: {
+    addedMode: {
       control: 'boolean',
       description:
-        'Optional: data.forceAddedMode – force the card to behave as if resources are already “added” (implementation detail of the MarketPlace molecule)',
+        'Optional: data.addedMode – force the card to behave as if resources are already “added” (implementation detail of the MarketPlace molecule)',
     },
     showZeroResources: {
       control: 'boolean',
@@ -101,7 +101,7 @@ const meta: Meta<TArgs> = {
       marketplaceKind: args.marketplaceKind,
       baseprefix: args.baseprefix,
       standalone: args.standalone,
-      forceAddedMode: args.forceAddedMode,
+      addedMode: args.addedMode,
       showZeroResources: args.showZeroResources,
     }
 
@@ -154,7 +154,7 @@ export const Default: Story = {
     marketplaceKind: 'MarketplacePanel',
     baseprefix: '/openapi-ui',
     standalone: false,
-    forceAddedMode: false,
+    addedMode: false,
     showZeroResources: false,
   },
 }

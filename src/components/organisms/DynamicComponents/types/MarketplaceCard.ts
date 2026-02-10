@@ -8,6 +8,6 @@ export type TMarketplaceCardProps = {
   marketplaceKind: string
   baseprefix?: string
   standalone?: boolean
-  forceAddedMode?: boolean
+  addedMode?: boolean
   showZeroResources?: boolean
 }

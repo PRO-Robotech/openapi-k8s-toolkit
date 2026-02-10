@@ -86,7 +86,7 @@ describe('BlackholeFormProvider', () => {
       },
     })
 
-    render(<BlackholeFormProvider {...(baseProps as any)} modeData={{ current: 'Auto', onChange, onDisabled }} />)
+    render(<BlackholeFormProvider {...(baseProps as any)} modeData={{ current: 'OpenAPI', onChange, onDisabled }} />)
 
     expect(await screen.findByText('prepare failed')).toBeInTheDocument()
     expect(onChange).toHaveBeenCalledWith('Manual')
@@ -103,7 +103,7 @@ describe('BlackholeFormProvider', () => {
     })
 
     const Harness = () => {
-      const [current, setCurrent] = React.useState<'Auto' | 'Manual'>('Auto')
+      const [current, setCurrent] = React.useState<'OpenAPI' | 'Manual'>('OpenAPI')
       const modeData = {
         current,
         onChange: (v: string) => setCurrent(v as any),
@@ -127,23 +127,11 @@ describe('BlackholeFormProvider', () => {
     expect(await screen.findByText('network down')).toBeInTheDocument()
   })
 
-  test('cluster empty: still does not explode (basic smoke)', async () => {
-    mockPost.mockResolvedValue({
-      data: {
-        result: 'ok',
-        properties: { spec: { type: 'object' } },
-        required: [],
-        expandedPaths: [],
-        persistedPaths: [],
-        kind: 'Deployment',
-      },
-    })
-
+  test('cluster empty: skips prepareFormProps request', async () => {
     render(<BlackholeFormProvider {...(baseProps as any)} cluster="" />)
 
-    // Should still handle response
     await waitFor(() => {
-      expect(screen.queryByTestId('blackhole-form')).toBeInTheDocument()
+      expect(mockPost).not.toHaveBeenCalled()
     })
   })
 })
