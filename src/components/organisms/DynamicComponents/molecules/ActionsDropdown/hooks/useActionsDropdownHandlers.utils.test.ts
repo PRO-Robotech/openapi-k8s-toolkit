@@ -3,6 +3,8 @@ import {
   parseValueIfString,
   buildEvictModalData,
   buildEvictBody,
+  buildDeleteChildrenData,
+  stripMetadataForRerun,
   TParseContext,
   TEvictModalData,
 } from './useActionsDropdownHandlers'
@@ -287,5 +289,177 @@ describe('buildEvictBody', () => {
     const body = buildEvictBody(data)
 
     expect(body.apiVersion).toBe('policy/v1beta1')
+  })
+})
+
+describe('buildDeleteChildrenData', () => {
+  it('parses children JSON with reqs placeholders and resolves URL placeholders', () => {
+    const ctx: TParseContext = {
+      replaceValues: { '2': 'default', '3': 'my-namespace' },
+      multiQueryData: {
+        req0: {
+          items: [
+            {
+              status: {
+                active: [{ name: 'active-job-1' }],
+              },
+            },
+          ],
+        },
+      },
+    }
+
+    const action = {
+      type: 'deleteChildren' as const,
+      props: {
+        text: 'Delete Active Job',
+        childResourceName: 'Jobs',
+        children:
+          "[{\"name\":\"{reqs[0]['items','0','status','active','0','name']['-']}\",\"endpoint\":\"/api/clusters/{2}/k8s/apis/batch/v1/namespaces/{3}/jobs/{reqs[0]['items','0','status','active','0','name']['-']}\"}]",
+      },
+    }
+
+    const result = buildDeleteChildrenData(action, ctx)
+
+    expect(result.childResourceName).toBe('Jobs')
+    expect(result.children).toEqual([
+      {
+        name: 'active-job-1',
+        endpoint: '/api/clusters/default/k8s/apis/batch/v1/namespaces/my-namespace/jobs/active-job-1',
+      },
+    ])
+  })
+
+  it('throws when children value is not valid JSON', () => {
+    const ctx: TParseContext = {
+      replaceValues: {},
+      multiQueryData: {},
+    }
+
+    const action = {
+      type: 'deleteChildren' as const,
+      props: {
+        text: 'Delete Children',
+        childResourceName: 'Jobs',
+        children: 'not-json',
+      },
+    }
+
+    expect(() => buildDeleteChildrenData(action, ctx)).toThrow('Could not parse children data')
+  })
+})
+
+describe('stripMetadataForRerun', () => {
+  it('removes job-managed selector and labels while preserving user metadata', () => {
+    const source = {
+      metadata: {
+        name: 'actions-test-job',
+        namespace: 'default',
+        labels: {
+          app: 'demo',
+          'controller-uid': 'uid-1',
+          'job-name': 'actions-test-job',
+          'batch.kubernetes.io/controller-uid': 'uid-1',
+          'batch.kubernetes.io/job-name': 'actions-test-job',
+        },
+        annotations: {
+          'test/annotation': 'value',
+        },
+      },
+      spec: {
+        selector: {
+          matchLabels: {
+            'batch.kubernetes.io/controller-uid': 'uid-1',
+          },
+        },
+        manualSelector: true,
+        template: {
+          metadata: {
+            labels: {
+              app: 'demo',
+              'controller-uid': 'uid-1',
+              'job-name': 'actions-test-job',
+              'batch.kubernetes.io/controller-uid': 'uid-1',
+              'batch.kubernetes.io/job-name': 'actions-test-job',
+            },
+          },
+          spec: {
+            restartPolicy: 'Never',
+            containers: [{ name: 'main', image: 'busybox' }],
+          },
+        },
+      },
+      status: {
+        succeeded: 1,
+      },
+    } as Record<string, unknown>
+
+    const result = stripMetadataForRerun(source, 'actions-test-job')
+
+    expect(result.status).toBeUndefined()
+    expect(result.metadata).toEqual({
+      namespace: 'default',
+      labels: { app: 'demo' },
+      annotations: { 'test/annotation': 'value' },
+      generateName: 'actions-test-job-rerun-',
+    })
+    expect((result.spec as Record<string, unknown>).selector).toBeUndefined()
+    expect((result.spec as Record<string, unknown>).manualSelector).toBeUndefined()
+    expect(result.spec).toEqual({
+      template: {
+        metadata: {
+          labels: { app: 'demo' },
+        },
+        spec: {
+          restartPolicy: 'Never',
+          containers: [{ name: 'main', image: 'busybox' }],
+        },
+      },
+    })
+  })
+
+  it('supports spec-only input shape (CCO reqs[0][spec])', () => {
+    const sourceSpecOnly = {
+      selector: {
+        matchLabels: {
+          'batch.kubernetes.io/controller-uid': 'uid-1',
+        },
+      },
+      manualSelector: true,
+      template: {
+        metadata: {
+          labels: {
+            app: 'demo',
+            'controller-uid': 'uid-1',
+            'job-name': 'actions-test-job',
+            'batch.kubernetes.io/controller-uid': 'uid-1',
+            'batch.kubernetes.io/job-name': 'actions-test-job',
+          },
+        },
+        spec: {
+          restartPolicy: 'Never',
+          containers: [{ name: 'main', image: 'busybox' }],
+        },
+      },
+    } as Record<string, unknown>
+
+    const result = stripMetadataForRerun(sourceSpecOnly, 'actions-test-job')
+
+    expect(result.metadata).toEqual({
+      generateName: 'actions-test-job-rerun-',
+    })
+    expect((result.spec as Record<string, unknown>).selector).toBeUndefined()
+    expect((result.spec as Record<string, unknown>).manualSelector).toBeUndefined()
+    expect(result.spec).toEqual({
+      template: {
+        metadata: {
+          labels: { app: 'demo' },
+        },
+        spec: {
+          restartPolicy: 'Never',
+          containers: [{ name: 'main', image: 'busybox' }],
+        },
+      },
+    })
   })
 })

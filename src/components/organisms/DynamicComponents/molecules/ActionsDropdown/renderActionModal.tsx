@@ -41,6 +41,14 @@ export const renderActionModal = (action: TActionUnion, extraProps: TModalExtraP
     case 'openKubeletConfig':
       return <OpenKubeletConfigModal {...extraProps} props={action.props} />
 
+    case 'scale':
+    case 'triggerRun':
+    case 'deleteChildren':
+    case 'rerunLast':
+    case 'drain':
+    case 'rollback':
+      return null
+
     default: {
       // eslint-disable-next-line no-underscore-dangle
       const _exhaustive: never = action
