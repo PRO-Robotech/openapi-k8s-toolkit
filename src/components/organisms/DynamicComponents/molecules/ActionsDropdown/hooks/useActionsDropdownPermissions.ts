@@ -1,11 +1,11 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { usePermissions } from 'hooks/usePermissions'
 import type { TPermissionVerb } from 'localTypes/permissions'
 import { parseAll } from '../../utils'
 import type { TActionUnion, TActionsPermissions, TPermissionContext } from '../../../types/ActionsDropdown'
 import { ACTION_REQUIRED_PERMISSIONS } from '../permissionsMap'
 
-const MAX_PERMISSION_SLOTS = 20
+const MAX_PERMISSION_SLOTS = 10
 
 type TPermissionSlot = {
   cluster: string
@@ -148,12 +148,14 @@ export const useActionsDropdownPermissions = ({
 
   const slotResults = [result0, result1, result2, result3, result4, result5, result6, result7, result8, result9]
 
-  if (truncatedActionsCount > 0) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      `[ActionsDropdown] Permission slot limit (${MAX_PERMISSION_SLOTS}) reached; ${truncatedActionsCount} action(s) permission checks were skipped.`,
-    )
-  }
+  useEffect(() => {
+    if (truncatedActionsCount > 0) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[ActionsDropdown] Permission slot limit (${MAX_PERMISSION_SLOTS}) reached; ${truncatedActionsCount} action(s) permission checks were skipped.`,
+      )
+    }
+  }, [truncatedActionsCount])
 
   if (permissions) {
     return permissions
