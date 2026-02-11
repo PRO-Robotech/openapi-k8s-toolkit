@@ -5,7 +5,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 
 import { parseAll } from 'components/organisms/DynamicComponents/molecules/utils'
-import { prepareDataForManageableSidebar } from './utils'
+import { collectLinksWithResourcesList, prepareDataForManageableSidebar } from './utils'
 
 /**
  * Mock Link to a simple <a> so we can assert href + text.
@@ -33,6 +33,7 @@ const simpleTemplate = (template: string, replaceValues: Record<string, string |
 const link = (key: string, label: string, linkStr?: string, children?: any[]) =>
   ({ key, label, link: linkStr, children }) as any
 
+// eslint-disable-next-line max-lines-per-function
 describe('prepareDataForManageableSidebar', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -99,7 +100,7 @@ describe('prepareDataForManageableSidebar', () => {
 
     const item = res!.menuItems[0] as any
     expect(item.key).toBe('cluster')
-    expect(item.internalMetaLink).toBe('/clusters/c1')
+    expect(item.internalMetaLink).toBeUndefined()
     expect(React.isValidElement(item.label)).toBe(true)
 
     render(<>{item.label}</>)
@@ -259,5 +260,175 @@ describe('prepareDataForManageableSidebar', () => {
       replaceValues,
       multiQueryData: { req0: { id: '123' } },
     })
+  })
+
+  test('creates dynamic children from resourcesList and templates child links with resourceName', () => {
+    const data = [
+      {
+        id: 'main',
+        menuItems: [
+          {
+            key: 'instances',
+            label: 'Instances',
+            resourcesList: {
+              cluster: '{clusterName}',
+              apiGroup: 'in-cloud.io',
+              apiVersion: 'v1alpha1',
+              plural: 'instances',
+              namespace: '{namespace}',
+              linkToResource: '/openapi-ui/{clusterName}/{namespace}/factory/instance-details/{resourceName}',
+              jsonPathToName: '.metadata.name',
+            },
+          },
+        ],
+      },
+    ] as any
+
+    const replaceValues = { clusterName: 'c1', namespace: 'ns1' }
+
+    const res = prepareDataForManageableSidebar({
+      data,
+      replaceValues,
+      pathname: '/openapi-ui/c1/ns1/factory/instance-details/instance-a',
+      idToCompare: 'main',
+      resourcesListData: {
+        instances: {
+          items: [{ metadata: { name: 'instance-a' } }, { metadata: { name: 'instance-b' } }],
+        },
+      },
+    })
+
+    expect(res).toBeDefined()
+
+    const root = res!.menuItems[0] as any
+    expect(root.key).toBe('instances')
+    expect(Array.isArray(root.children)).toBe(true)
+    expect(root.children).toHaveLength(2)
+
+    render(<>{root.children[0].label}</>)
+    const first = screen.getByTestId('router-link')
+    expect(first).toHaveAttribute('href', '/openapi-ui/c1/ns1/factory/instance-details/instance-a')
+    expect(first).toHaveTextContent('instance-a')
+
+    // matched branch should include parent + generated child key
+    expect(res!.selectedKeys[0]).toBe('instances')
+    expect(res!.selectedKeys[1]).toContain('instances-instance-a')
+  })
+
+  test('skips resourcesList child when jsonPathToName does not resolve', () => {
+    const data = [
+      {
+        id: 'main',
+        menuItems: [
+          {
+            key: 'instances',
+            label: 'Instances',
+            resourcesList: {
+              cluster: '{clusterName}',
+              apiGroup: 'in-cloud.io',
+              apiVersion: 'v1alpha1',
+              plural: 'instances',
+              namespace: '{namespace}',
+              linkToResource: '/openapi-ui/{clusterName}/{namespace}/factory/instance-details/{resourceName}',
+              jsonPathToName: '.metadata.name',
+            },
+          },
+        ],
+      },
+    ] as any
+
+    const res = prepareDataForManageableSidebar({
+      data,
+      replaceValues: { clusterName: 'c1', namespace: 'ns1' },
+      pathname: '/x',
+      idToCompare: 'main',
+      resourcesListData: {
+        instances: {
+          items: [{ metadata: {} }],
+        },
+      },
+    })
+
+    const root = res!.menuItems[0] as any
+    expect(root.children).toBeUndefined()
+  })
+})
+
+describe('collectLinksWithResourcesList', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    parseAllMock.mockImplementation(({ text, replaceValues }: any) => simpleTemplate(String(text), replaceValues ?? {}))
+  })
+
+  test('collects resourcesList entries from nested menu items and builds nodePath', () => {
+    const items = [
+      {
+        key: 'root',
+        label: 'Root',
+        children: [
+          {
+            key: 'instances',
+            label: 'Instances',
+            resourcesList: {
+              cluster: '{clusterName}',
+              apiGroup: 'in-cloud.io',
+              apiVersion: 'v1alpha1',
+              plural: 'instances',
+              namespace: '{namespace}',
+              linkToResource: '/openapi-ui/{clusterName}/{namespace}/factory/instance-details/{resourceName}',
+              jsonPathToName: '.metadata.name',
+            },
+          },
+        ],
+      },
+    ] as any
+
+    const result = collectLinksWithResourcesList({
+      items,
+      replaceValues: { clusterName: 'c1', namespace: 'ns1' },
+      multiQueryData: {},
+      isEnabled: true,
+    })
+
+    expect(result).toEqual([
+      {
+        nodePath: 'root/instances',
+        k8sParams: {
+          cluster: 'c1',
+          apiGroup: 'in-cloud.io',
+          apiVersion: 'v1alpha1',
+          plural: 'instances',
+          namespace: 'ns1',
+          isEnabled: true,
+        },
+      },
+    ])
+  })
+
+  test('marks query as disabled when required templated fields are empty', () => {
+    const items = [
+      {
+        key: 'instances',
+        label: 'Instances',
+        resourcesList: {
+          cluster: '{clusterName}',
+          apiVersion: 'v1alpha1',
+          plural: 'instances',
+          linkToResource: '/x/{resourceName}',
+          jsonPathToName: '.metadata.name',
+        },
+      },
+    ] as any
+
+    const result = collectLinksWithResourcesList({
+      items,
+      replaceValues: { clusterName: undefined },
+      multiQueryData: {},
+      isEnabled: true,
+    })
+
+    expect(result).toHaveLength(1)
+    expect(result[0].k8sParams.isEnabled).toBe(false)
+    expect(result[0].k8sParams.cluster).toBe('')
   })
 })

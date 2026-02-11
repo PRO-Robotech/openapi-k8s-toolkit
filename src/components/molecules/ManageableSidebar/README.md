@@ -38,6 +38,20 @@ Files:
 This means sidebar templates can resolve:
 - parts-of-url placeholders via `replaceValues` (for example `{0}`, `{1}`)
 - multi-query placeholders via `multiQueryData` (for example `req0`-based templates supported by `parseAll`)
+- dynamic `resourcesList` placeholders, including `{resourceName}` for generated child links
+
+## Dynamic Children (`resourcesList`)
+
+Each `menuItems[]` node may define:
+- `resourcesList.cluster`
+- `resourcesList.apiGroup` (optional)
+- `resourcesList.apiVersion`
+- `resourcesList.plural`
+- `resourcesList.namespace` (optional)
+- `resourcesList.linkToResource`
+- `resourcesList.jsonPathToName`
+
+When present, the provider fetches resources via `useK8sSmartResource` (one fetcher per `resourcesList` entry), extracts each item name via `jsonPathToName`, and generates children under that node, linking each child with `linkToResource` templated using the extracted `{resourceName}`.
 
 ## Selection Behavior
 
@@ -45,6 +59,8 @@ This means sidebar templates can resolve:
 - exact internal link match against `pathname`
 - exact internal link match against `pathname + searchParams` (when provided)
 - tag matching via `keysAndTags` + `currentTags`
+
+`internalMetaLink` is used internally for matching and removed from final menu items before render.
 
 For nested items, selected keys include the full ancestor path.
 

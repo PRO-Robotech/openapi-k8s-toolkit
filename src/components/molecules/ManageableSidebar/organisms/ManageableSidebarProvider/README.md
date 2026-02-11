@@ -23,7 +23,15 @@ From `types.ts`:
 - `key: string`
 - `label: string`
 - `link?: string`
+- `resourcesList?: { cluster: string; apiGroup?: string; apiVersion: string; plural: string; namespace?: string; linkToResource: string; jsonPathToName: string }`
 - `children?: TLink[]`
+
+`resourcesList` behavior:
+- Provider fetches via `useK8sSmartResource` using templated GVR fields (`cluster/apiGroup/apiVersion/plural/namespace`), one fetcher per `resourcesList` entry.
+- For each returned list item, `jsonPathToName` extracts item name.
+- A child item is generated under this node:
+  - `label = extracted name`
+  - `link = linkToResource` with `{resourceName}` + regular placeholders resolved
 
 ## `prepareDataForManageableSidebar(...)`
 
@@ -46,6 +54,7 @@ Return:
 - Builds `internalMetaLink` per node for matching.
 - Parses `label` and `link` with:
   - `parseAll({ text, replaceValues, multiQueryData })`
+- If `resourcesList` is defined, appends generated children from fetched list data.
 
 2. `getLabel(...)`
 - If node has link and key is in `externalKeys`, returns `<a>` with `window.open(...)`.
@@ -61,6 +70,7 @@ Return:
 
 4. Selection output
 - Collected `React.Key[]` is converted to `string[]` as `selectedKeys`.
+- Internal `internalMetaLink` is stripped from final returned `menuItems` before rendering.
 
 ## Provider Early Returns
 
