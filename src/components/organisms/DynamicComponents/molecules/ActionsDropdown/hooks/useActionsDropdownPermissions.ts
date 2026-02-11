@@ -5,7 +5,7 @@ import { parseAll } from '../../utils'
 import type { TActionUnion, TActionsPermissions, TPermissionContext } from '../../../types/ActionsDropdown'
 import { ACTION_REQUIRED_PERMISSIONS } from '../permissionsMap'
 
-const MAX_PERMISSION_SLOTS = 10
+const MAX_PERMISSION_SLOTS = 20
 
 type TPermissionSlot = {
   cluster: string
@@ -74,15 +74,20 @@ export const useActionsDropdownPermissions = ({
 }: TUseActionsDropdownPermissionsParams): TActionsPermissions => {
   const shouldCheckPermissions = !permissions
 
-  const { slots, mappings } = useMemo(() => {
+  const { slots, mappings, truncatedActionsCount } = useMemo(() => {
     if (!shouldCheckPermissions || isMultiQueryLoading) {
-      return { slots: [] as TPermissionSlot[], mappings: [] as TActionSlotMapping[] }
+      return {
+        slots: [] as TPermissionSlot[],
+        mappings: [] as TActionSlotMapping[],
+        truncatedActionsCount: 0,
+      }
     }
 
     const parseCtx: TParseContext = { replaceValues, multiQueryData }
     const uniqueSlots: TPermissionSlot[] = []
     const cacheKeyToIndex = new Map<string, number>()
     const actionMappings: TActionSlotMapping[] = []
+    let truncated = 0
 
     actions.forEach((action, index) => {
       const actionKey = `${action.type}-${index}`
@@ -113,6 +118,7 @@ export const useActionsDropdownPermissions = ({
       let slotIndex = cacheKeyToIndex.get(cacheKey)
       if (slotIndex === undefined) {
         if (uniqueSlots.length >= MAX_PERMISSION_SLOTS) {
+          truncated += 1
           return
         }
         slotIndex = uniqueSlots.length
@@ -123,7 +129,7 @@ export const useActionsDropdownPermissions = ({
       actionMappings.push({ actionKey, slotIndex })
     })
 
-    return { slots: uniqueSlots, mappings: actionMappings }
+    return { slots: uniqueSlots, mappings: actionMappings, truncatedActionsCount: truncated }
   }, [shouldCheckPermissions, isMultiQueryLoading, actions, replaceValues, multiQueryData])
 
   const enabled = shouldCheckPermissions && !isMultiQueryLoading
@@ -141,6 +147,13 @@ export const useActionsDropdownPermissions = ({
   const result9 = usePermissionSlot(slots[9], enabled && slots.length > 9)
 
   const slotResults = [result0, result1, result2, result3, result4, result5, result6, result7, result8, result9]
+
+  if (truncatedActionsCount > 0) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[ActionsDropdown] Permission slot limit (${MAX_PERMISSION_SLOTS}) reached; ${truncatedActionsCount} action(s) permission checks were skipped.`,
+    )
+  }
 
   if (permissions) {
     return permissions
