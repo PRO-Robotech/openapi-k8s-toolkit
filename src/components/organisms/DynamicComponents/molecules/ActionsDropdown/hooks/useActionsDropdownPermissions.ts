@@ -1,11 +1,9 @@
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { usePermissions } from 'hooks/usePermissions'
 import type { TPermissionVerb } from 'localTypes/permissions'
 import { parseAll } from '../../utils'
 import type { TActionUnion, TActionsPermissions, TPermissionContext } from '../../../types/ActionsDropdown'
 import { ACTION_REQUIRED_PERMISSIONS } from '../permissionsMap'
-
-const MAX_PERMISSION_SLOTS = 10
 
 type TPermissionSlot = {
   cluster: string
@@ -52,17 +50,26 @@ type TActionSlotMapping = {
   slotIndex: number
 }
 
-const usePermissionSlot = (slot: TPermissionSlot | undefined, enabled: boolean) => {
-  return usePermissions({
-    cluster: slot?.cluster ?? '',
-    namespace: slot?.namespace,
-    apiGroup: slot?.apiGroup,
-    plural: slot?.plural ?? '',
-    subresource: slot?.subresource,
-    verb: slot?.verb ?? 'get',
-    refetchInterval: false,
-    enabler: enabled && !!slot,
-  })
+const useManyPermissions = (slots: TPermissionSlot[], enabled: boolean) => {
+  const results: ReturnType<typeof usePermissions>[] = []
+
+  // rules-of-hooks safe: fixed loop count, no conditional exits.
+  for (let i = 0; i < slots.length; i++) {
+    const slot = slots[i]
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    results[i] = usePermissions({
+      cluster: slot.cluster,
+      namespace: slot.namespace,
+      apiGroup: slot.apiGroup,
+      plural: slot.plural,
+      subresource: slot.subresource,
+      verb: slot.verb,
+      refetchInterval: false,
+      enabler: enabled,
+    })
+  }
+
+  return results
 }
 
 export const useActionsDropdownPermissions = ({
@@ -74,12 +81,11 @@ export const useActionsDropdownPermissions = ({
 }: TUseActionsDropdownPermissionsParams): TActionsPermissions => {
   const shouldCheckPermissions = !permissions
 
-  const { slots, mappings, truncatedActionsCount } = useMemo(() => {
+  const { slots, mappings } = useMemo(() => {
     if (!shouldCheckPermissions || isMultiQueryLoading) {
       return {
         slots: [] as TPermissionSlot[],
         mappings: [] as TActionSlotMapping[],
-        truncatedActionsCount: 0,
       }
     }
 
@@ -87,7 +93,6 @@ export const useActionsDropdownPermissions = ({
     const uniqueSlots: TPermissionSlot[] = []
     const cacheKeyToIndex = new Map<string, number>()
     const actionMappings: TActionSlotMapping[] = []
-    let truncated = 0
 
     actions.forEach((action, index) => {
       const actionKey = `${action.type}-${index}`
@@ -117,10 +122,6 @@ export const useActionsDropdownPermissions = ({
 
       let slotIndex = cacheKeyToIndex.get(cacheKey)
       if (slotIndex === undefined) {
-        if (uniqueSlots.length >= MAX_PERMISSION_SLOTS) {
-          truncated += 1
-          return
-        }
         slotIndex = uniqueSlots.length
         uniqueSlots.push({ ...slotData, cacheKey })
         cacheKeyToIndex.set(cacheKey, slotIndex)
@@ -129,33 +130,12 @@ export const useActionsDropdownPermissions = ({
       actionMappings.push({ actionKey, slotIndex })
     })
 
-    return { slots: uniqueSlots, mappings: actionMappings, truncatedActionsCount: truncated }
+    return { slots: uniqueSlots, mappings: actionMappings }
   }, [shouldCheckPermissions, isMultiQueryLoading, actions, replaceValues, multiQueryData])
 
   const enabled = shouldCheckPermissions && !isMultiQueryLoading
 
-  // Fixed-slot hook calls — must always be called in the same order
-  const result0 = usePermissionSlot(slots[0], enabled && slots.length > 0)
-  const result1 = usePermissionSlot(slots[1], enabled && slots.length > 1)
-  const result2 = usePermissionSlot(slots[2], enabled && slots.length > 2)
-  const result3 = usePermissionSlot(slots[3], enabled && slots.length > 3)
-  const result4 = usePermissionSlot(slots[4], enabled && slots.length > 4)
-  const result5 = usePermissionSlot(slots[5], enabled && slots.length > 5)
-  const result6 = usePermissionSlot(slots[6], enabled && slots.length > 6)
-  const result7 = usePermissionSlot(slots[7], enabled && slots.length > 7)
-  const result8 = usePermissionSlot(slots[8], enabled && slots.length > 8)
-  const result9 = usePermissionSlot(slots[9], enabled && slots.length > 9)
-
-  const slotResults = [result0, result1, result2, result3, result4, result5, result6, result7, result8, result9]
-
-  useEffect(() => {
-    if (truncatedActionsCount > 0) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        `[ActionsDropdown] Permission slot limit (${MAX_PERMISSION_SLOTS}) reached; ${truncatedActionsCount} action(s) permission checks were skipped.`,
-      )
-    }
-  }, [truncatedActionsCount])
+  const slotResults = useManyPermissions(slots, enabled)
 
   if (permissions) {
     return permissions
