@@ -227,8 +227,6 @@ const handlePatchActions = (
     .then(() => onSuccess(actionLabel))
     .catch(error => {
       onError(actionLabel, error)
-      // eslint-disable-next-line no-console
-      console.error(error)
     })
 }
 
@@ -264,8 +262,6 @@ const handleRolloutRestartAction = (
     .then(() => onSuccess(actionLabel))
     .catch(error => {
       onError(actionLabel, error)
-      // eslint-disable-next-line no-console
-      console.error(error)
     })
 }
 
@@ -414,8 +410,6 @@ const useScaleHandlers = (ctx: TParseContext, { showSuccess, showError }: TNotif
       .then(() => showSuccess(scaleLabel))
       .catch(error => {
         showError(scaleLabel, error)
-        // eslint-disable-next-line no-console
-        console.error(error)
       })
       .finally(() => {
         setIsScaleLoading(false)
@@ -446,8 +440,6 @@ const useEvictHandlers = ({ showSuccess, showError }: TNotificationCallbacks) =>
       .then(() => showSuccess(evictLabel))
       .catch(error => {
         showError(evictLabel, error)
-        // eslint-disable-next-line no-console
-        // console.error(error)
       })
       .finally(() => {
         setIsEvictLoading(false)
@@ -502,8 +494,6 @@ const useRerunHandlers = (
       .then(() => showSuccess(rerunLabel))
       .catch(error => {
         showError(rerunLabel, error)
-        // eslint-disable-next-line no-console
-        console.error(error)
       })
       .finally(() => {
         setIsRerunLoading(false)
@@ -562,8 +552,6 @@ const fireTriggerRunAction = (
     .then(() => showSuccess(triggerLabel))
     .catch(error => {
       showError(triggerLabel, error)
-      // eslint-disable-next-line no-console
-      console.error(error)
     })
 }
 
