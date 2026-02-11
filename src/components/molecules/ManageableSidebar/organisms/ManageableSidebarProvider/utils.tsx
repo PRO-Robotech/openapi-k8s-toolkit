@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { ItemType } from 'antd/es/menu/interface'
-import { prepareTemplate } from 'utils/prepareTemplate'
+import { parseAll } from 'components/organisms/DynamicComponents/molecules/utils'
 import { TLink } from './types'
 
 const getLabel = ({
@@ -10,14 +10,16 @@ const getLabel = ({
   key,
   externalKeys,
   replaceValues,
+  multiQueryData,
 }: {
   preparedLink?: string
   label: string
   key: string
   externalKeys?: string[]
   replaceValues: Record<string, string | undefined>
+  multiQueryData: Record<string, unknown>
 }): string | JSX.Element => {
-  const preparedLabel = prepareTemplate({ template: label, replaceValues })
+  const preparedLabel = parseAll({ text: label, replaceValues, multiQueryData })
   if (preparedLink) {
     if (externalKeys && externalKeys.includes(key)) {
       return (
@@ -45,22 +47,25 @@ const getLabel = ({
 const mapLinksFromRaw = ({
   rawLinks,
   replaceValues,
+  multiQueryData,
   externalKeys,
 }: {
   rawLinks: TLink[]
   replaceValues: Record<string, string | undefined>
+  multiQueryData: Record<string, unknown>
   externalKeys?: string[]
 }): (ItemType & { internalMetaLink?: string })[] => {
   return rawLinks.map(({ key, label, link, children }) => {
-    const preparedLink = link ? prepareTemplate({ template: link, replaceValues }) : undefined
+    const preparedLink = link ? parseAll({ text: link, replaceValues, multiQueryData }) : undefined
     return {
       key,
-      label: getLabel({ preparedLink, label, key, externalKeys, replaceValues }),
+      label: getLabel({ preparedLink, label, key, externalKeys, replaceValues, multiQueryData }),
       internalMetaLink: preparedLink,
       children: children
         ? mapLinksFromRaw({
             rawLinks: children,
             replaceValues,
+            multiQueryData,
             externalKeys,
           })
         : undefined,
@@ -139,6 +144,7 @@ const findMatchingItems = ({
 export const prepareDataForManageableSidebar = ({
   data,
   replaceValues,
+  multiQueryData = {},
   pathname,
   searchParams,
   idToCompare,
@@ -147,6 +153,7 @@ export const prepareDataForManageableSidebar = ({
 }: {
   data: { id: string; menuItems: TLink[]; keysAndTags?: Record<string, string[]>; externalKeys?: string[] }[]
   replaceValues: Record<string, string | undefined>
+  multiQueryData?: Record<string, unknown>
   pathname: string
   searchParams?: string
   idToCompare: string
@@ -163,13 +170,14 @@ export const prepareDataForManageableSidebar = ({
 
   const preparedCurrentTags =
     currentTags && currentTags.length > 0
-      ? currentTags.map(el => prepareTemplate({ template: el, replaceValues }))
+      ? currentTags.map(el => parseAll({ text: el, replaceValues, multiQueryData }))
       : undefined
 
   const result = {
     menuItems: mapLinksFromRaw({
       rawLinks: foundData.menuItems,
       replaceValues,
+      multiQueryData,
       externalKeys: foundData.externalKeys,
     }),
   }

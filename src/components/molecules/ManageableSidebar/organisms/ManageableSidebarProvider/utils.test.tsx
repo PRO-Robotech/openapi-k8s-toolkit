@@ -4,7 +4,7 @@ import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 
-import { prepareTemplate } from 'utils/prepareTemplate'
+import { parseAll } from 'components/organisms/DynamicComponents/molecules/utils'
 import { prepareDataForManageableSidebar } from './utils'
 
 /**
@@ -19,16 +19,16 @@ jest.mock('react-router-dom', () => ({
 }))
 
 /**
- * Mock prepareTemplate with predictable {{key}} replacement.
+ * Mock parseAll with predictable {key} replacement.
  */
-jest.mock('utils/prepareTemplate', () => ({
-  prepareTemplate: jest.fn(),
+jest.mock('components/organisms/DynamicComponents/molecules/utils', () => ({
+  parseAll: jest.fn(),
 }))
 
-const prepareTemplateMock = prepareTemplate as jest.Mock
+const parseAllMock = parseAll as jest.Mock
 
 const simpleTemplate = (template: string, replaceValues: Record<string, string | undefined>) =>
-  template.replace(/\{\{(\w+)\}\}/g, (_, k) => String(replaceValues[k] ?? ''))
+  template.replace(/\{(\w+)\}/g, (_, k) => String(replaceValues[k] ?? ''))
 
 const link = (key: string, label: string, linkStr?: string, children?: any[]) =>
   ({ key, label, link: linkStr, children }) as any
@@ -36,8 +36,9 @@ const link = (key: string, label: string, linkStr?: string, children?: any[]) =>
 describe('prepareDataForManageableSidebar', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    prepareTemplateMock.mockImplementation(({ template, replaceValues }: any) =>
-      simpleTemplate(String(template), replaceValues ?? {}),
+    parseAllMock.mockImplementation(({ text, replaceValues }: any) =>
+      // This unit test only needs deterministic parts-of-url behavior.
+      simpleTemplate(String(text), replaceValues ?? {}),
     )
   })
 
@@ -81,7 +82,7 @@ describe('prepareDataForManageableSidebar', () => {
     const data = [
       {
         id: 'main',
-        menuItems: [link('cluster', 'Cluster {{c}}', '/clusters/{{c}}')],
+        menuItems: [link('cluster', 'Cluster {c}', '/clusters/{c}')],
       },
     ] as any
 
@@ -112,7 +113,7 @@ describe('prepareDataForManageableSidebar', () => {
     const data = [
       {
         id: 'main',
-        menuItems: [link('leaf', 'Hello {{name}}')],
+        menuItems: [link('leaf', 'Hello {name}')],
       },
     ] as any
 
@@ -138,7 +139,7 @@ describe('prepareDataForManageableSidebar', () => {
       {
         id: 'main',
         externalKeys: ['docs'],
-        menuItems: [link('docs', 'Docs', '/docs/{{v}}')],
+        menuItems: [link('docs', 'Docs', '/docs/{v}')],
       },
     ] as any
 
@@ -246,15 +247,17 @@ describe('prepareDataForManageableSidebar', () => {
       replaceValues,
       pathname: '/no-match',
       idToCompare: 'main',
-      currentTags: ['env-{{env}}'],
+      currentTags: ['env-{env}'],
+      multiQueryData: { req0: { id: '123' } },
     })
 
     expect(res!.selectedKeys).toEqual(['node'])
 
-    // ensure prepareTemplate was used for currentTags too
-    expect(prepareTemplateMock).toHaveBeenCalledWith({
-      template: 'env-{{env}}',
+    // ensure parseAll was used for currentTags too and gets multiQueryData
+    expect(parseAllMock).toHaveBeenCalledWith({
+      text: 'env-{env}',
       replaceValues,
+      multiQueryData: { req0: { id: '123' } },
     })
   })
 })

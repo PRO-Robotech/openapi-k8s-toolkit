@@ -12,6 +12,7 @@ export type TManageableSidebarProviderProps = {
   plural: string
   isEnabled?: boolean
   replaceValues: Record<string, string | undefined>
+  multiQueryData?: Record<string, unknown>
   pathname: string
   searchParams?: string
   idToCompare: string
@@ -28,6 +29,7 @@ export const ManageableSidebarProvider: FC<TManageableSidebarProviderProps> = ({
   plural,
   isEnabled,
   replaceValues,
+  multiQueryData,
   pathname,
   searchParams,
   idToCompare,
@@ -73,6 +75,7 @@ export const ManageableSidebarProvider: FC<TManageableSidebarProviderProps> = ({
   const result = prepareDataForManageableSidebar({
     data: parsedData,
     replaceValues,
+    multiQueryData,
     pathname,
     searchParams,
     idToCompare,
