@@ -26,6 +26,7 @@ import {
 // -----------------------------
 let resetedFormListFields: Array<{ key: number; name: number }> = [{ key: 1, name: 0 }]
 let resetedFormListErrors: any[] = []
+let resetedFormListLastRules: any[] | undefined
 const addFn = jest.fn()
 const removeFn = jest.fn()
 
@@ -132,6 +133,7 @@ jest.mock('../../molecules', () => ({
 jest.mock('./styled', () => {
   const ResetedFormList = (props: any) => {
     const { children, name, rules } = props
+    resetedFormListLastRules = rules
     return (
       <div data-testid="reseted-form-list" data-list-name={JSON.stringify(name)} data-has-rules={String(!!rules)}>
         {typeof children === 'function'
@@ -170,6 +172,7 @@ beforeEach(() => {
 
   resetedFormListFields = [{ key: 1, name: 0 }]
   resetedFormListErrors = []
+  resetedFormListLastRules = undefined
 
   // CRUCIAL: safe default per-call implementation for recursion
   getSortedPropertyKeysMock.mockImplementation(({ properties }: any) => Object.keys(properties ?? {}))
@@ -315,6 +318,27 @@ describe('getArrayFormItemFromSwagger', () => {
     expect(screen.getByTestId('reseted-form-list')).toBeInTheDocument()
     expect(screen.getByTestId('reseted-form-list')).toHaveAttribute('data-has-rules', 'true')
     expect(screen.getByTestId('string-input')).toBeInTheDocument()
+  })
+
+  test('required array validator returns pretty-printed message', async () => {
+    const el = getArrayFormItemFromSwagger({
+      schema: { type: 'array', items: { type: 'string' } } as any,
+      name: ['spec', 'names'] as any,
+      required: ['names'],
+      forceNonRequired: false,
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+
+    const validator = resetedFormListLastRules?.[0]?.validator
+    expect(typeof validator).toBe('function')
+    await expect(validator({}, undefined)).rejects.toThrow('Please enter spec.names')
   })
 
   test('array of numbers routes to FormNumberInput', () => {

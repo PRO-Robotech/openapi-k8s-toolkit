@@ -6,7 +6,7 @@ describe('getResult', () => {
     valuesPrepared: ['a', 'b'],
     criteriaSuccess: 'equals' as const,
     criteriaError: 'equals' as const,
-    stategySuccess: undefined as any,
+    strategySuccess: undefined as any,
     strategyError: undefined as any,
     valueToCompareSuccess: ['a', 'b', 'c'] as unknown[],
     valueToCompareError: ['x', 'y'] as unknown[],
@@ -15,11 +15,11 @@ describe('getResult', () => {
     fallbackText: 'WARN',
   }
 
-  test('returns success when stategySuccess="some" and criteriaSuccess="equals" and any value matches', () => {
+  test('returns success when strategySuccess="some" and criteriaSuccess="equals" and any value matches', () => {
     const res = getResult({
       ...base,
       valuesPrepared: ['nope', 'a'],
-      stategySuccess: 'some',
+      strategySuccess: 'some',
       criteriaSuccess: 'equals',
       valueToCompareSuccess: ['a'],
     })
@@ -27,11 +27,11 @@ describe('getResult', () => {
     expect(res).toEqual({ type: 'success', text: 'OK' })
   })
 
-  test('returns success when stategySuccess="some" and criteriaSuccess="notEquals" and any value does NOT match', () => {
+  test('returns success when strategySuccess="some" and criteriaSuccess="notEquals" and any value does NOT match', () => {
     const res = getResult({
       ...base,
       valuesPrepared: ['a', 'b'],
-      stategySuccess: 'some',
+      strategySuccess: 'some',
       criteriaSuccess: 'notEquals',
       valueToCompareSuccess: ['a'], // "b" is not included -> some(!includes) => true
     })
@@ -39,11 +39,11 @@ describe('getResult', () => {
     expect(res).toEqual({ type: 'success', text: 'OK' })
   })
 
-  test('defaults to "every" for success strategy when stategySuccess is undefined', () => {
+  test('defaults to "every" for success strategy when strategySuccess is undefined', () => {
     const resAllMatch = getResult({
       ...base,
       valuesPrepared: ['a', 'b'],
-      stategySuccess: undefined,
+      strategySuccess: undefined,
       criteriaSuccess: 'equals',
       valueToCompareSuccess: ['a', 'b', 'c'],
     })
@@ -53,7 +53,7 @@ describe('getResult', () => {
     const resNotAllMatch = getResult({
       ...base,
       valuesPrepared: ['a', 'b'],
-      stategySuccess: undefined,
+      strategySuccess: undefined,
       criteriaSuccess: 'equals',
       valueToCompareSuccess: ['a'], // "b" missing -> every(includes) => false
     })
@@ -67,7 +67,7 @@ describe('getResult', () => {
       valuesPrepared: ['x', 'zzz'],
       // make success definitely false
       criteriaSuccess: 'equals',
-      stategySuccess: 'every',
+      strategySuccess: 'every',
       valueToCompareSuccess: ['a'],
       // error condition
       strategyError: 'some',
@@ -84,7 +84,7 @@ describe('getResult', () => {
       valuesPrepared: ['x', 'y'],
       // make success false
       criteriaSuccess: 'equals',
-      stategySuccess: 'every',
+      strategySuccess: 'every',
       valueToCompareSuccess: ['a'],
       // error should succeed via default every
       strategyError: undefined,
@@ -101,7 +101,7 @@ describe('getResult', () => {
       valuesPrepared: ['a', 'b'],
       // success false
       criteriaSuccess: 'equals',
-      stategySuccess: 'every',
+      strategySuccess: 'every',
       valueToCompareSuccess: ['a'], // missing "b"
       // error false
       strategyError: 'every',
@@ -116,7 +116,7 @@ describe('getResult', () => {
     const res = getResult({
       ...base,
       valuesPrepared: [],
-      stategySuccess: undefined,
+      strategySuccess: undefined,
       criteriaSuccess: 'equals',
       valueToCompareSuccess: [],
     })

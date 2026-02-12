@@ -4,6 +4,7 @@ import { TFormName, TNamespaceData } from 'localTypes/form'
 import { MinusIcon, feedbackIcons } from 'components/atoms'
 import { CustomSizeTitle, HiddenContainer, ResetedFormItem } from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
+import { getRequiredRule } from '../helpers/validation'
 
 type TFormNamespaceInputProps = {
   name: TFormName
@@ -40,7 +41,7 @@ export const FormNamespaceInput: FC<TFormNamespaceInputProps> = ({
       </Flex>
       <ResetedFormItem
         name={name}
-        rules={[{ required: true }]}
+        rules={[getRequiredRule(true, name)]}
         validateTrigger="onBlur"
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
       >

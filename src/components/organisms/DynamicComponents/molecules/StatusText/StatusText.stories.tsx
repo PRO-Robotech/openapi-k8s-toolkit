@@ -41,10 +41,10 @@ const meta: Meta<TArgs> = {
       control: { type: 'radio' },
       description: 'data.criteriaError – how to compare values with valueToCompareError',
     },
-    stategySuccess: {
+    strategySuccess: {
       options: ['some', 'every'],
       control: { type: 'radio' },
-      description: 'data.stategySuccess – aggregation strategy for success (default: every)',
+      description: 'data.strategySuccess – aggregation strategy for success (default: every)',
     },
     strategyError: {
       options: ['some', 'every'],
@@ -70,16 +70,6 @@ const meta: Meta<TArgs> = {
     fallbackText: {
       control: 'text',
       description: 'data.fallbackText – shown when neither success nor error condition matches',
-    },
-
-    // Typography.Text props (subset)
-    strong: {
-      control: 'boolean',
-      description: 'Typography.Text strong',
-    },
-    underline: {
-      control: 'boolean',
-      description: 'Typography.Text underline',
     },
 
     // provider knobs
@@ -108,15 +98,13 @@ const meta: Meta<TArgs> = {
       values: args.values,
       criteriaSuccess: args.criteriaSuccess,
       criteriaError: args.criteriaError,
-      stategySuccess: args.stategySuccess,
+      strategySuccess: args.strategySuccess,
       strategyError: args.strategyError,
       valueToCompareSuccess: args.valueToCompareSuccess,
       valueToCompareError: args.valueToCompareError,
       successText: args.successText,
       errorText: args.errorText,
       fallbackText: args.fallbackText,
-      strong: args.strong,
-      underline: args.underline,
     }
 
     return (
@@ -166,15 +154,13 @@ export const DefaultSuccess: Story = {
     values: ["{reqsJsonPath[0]['.data.phase']['-']}"],
     criteriaSuccess: 'equals',
     criteriaError: 'equals',
-    stategySuccess: 'every',
+    strategySuccess: 'every',
     strategyError: 'every',
     valueToCompareSuccess: ['Running'],
     valueToCompareError: ['Failed'],
     successText: 'Pod is healthy (phase: Running)',
     errorText: 'Pod is failing',
     fallbackText: 'Pod is in a transitional state',
-    strong: true,
-    underline: false,
 
     // providers
     isLoading: false,

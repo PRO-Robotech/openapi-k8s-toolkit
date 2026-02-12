@@ -31,6 +31,7 @@ export const Annotations: FC<{ data: TDynamicComponentsAppTypeMap['Annotations']
     modalDescriptionTextStyle,
     inputLabel,
     inputLabelStyle,
+    readOnly,
     containerStyle,
     endpoint,
     pathToValue,
@@ -87,11 +88,11 @@ export const Annotations: FC<{ data: TDynamicComponentsAppTypeMap['Annotations']
   // Permission gating for patch-based edit:
   // 1) canPatch: Manual permissions override hook result if provided.
   // 2) shouldGateEdit: True when permissions or permissionContext are provided; otherwise don't gate.
-  // 3) canSubmitEdit: Allow save when gating is off or canPatch === true.
+  // 3) canSubmitEdit: Allow save when not readOnly and either gating is off or canPatch === true.
   const canPatch = permissions?.canPatch ?? patchPermission.data?.status.allowed
   const shouldGateEdit = Boolean(permissions || permissionContext)
-  const canOpenEdit = true
-  const canSubmitEdit = !shouldGateEdit || canPatch === true
+  const canOpenEdit = !readOnly
+  const canSubmitEdit = !readOnly && (!shouldGateEdit || canPatch === true)
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>

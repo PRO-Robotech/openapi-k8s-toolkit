@@ -28,6 +28,7 @@ export type TAnnotationsModalProps = {
 export type TAnnotationsViewProps = {
   text: string
   errorText: string
+  readOnly?: true
   containerStyle?: CSSProperties
 }
 

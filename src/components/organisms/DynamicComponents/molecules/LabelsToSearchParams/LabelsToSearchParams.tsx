@@ -5,6 +5,7 @@
 import React, { FC } from 'react'
 import jp from 'jsonpath'
 import { Typography, Popover, Flex } from 'antd'
+import { SearchOutlined } from '@ant-design/icons'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
@@ -25,6 +26,7 @@ export const LabelsToSearchParams: FC<{
     textLink,
     errorText,
     maxTextLength,
+    renderLabelsAsRows,
     ...linkProps
   } = data
 
@@ -66,27 +68,44 @@ export const LabelsToSearchParams: FC<{
       console.log(errorArrayOfObjects)
       // return <div>{errorArrayOfObjects}</div>
       return (
-        <Typography.Link href={linkPrefixPrepared} {...linkProps}>
+        <Typography.Text>
           {errorText}
           {children}
-        </Typography.Link>
+        </Typography.Text>
       )
     }
     console.log('Not a valid data structure')
     // return <div>Not a valid data structure</div>      return (
     return (
-      <Typography.Link href={linkPrefixPrepared} {...linkProps}>
+      <Typography.Text>
         {errorText}
         {children}
-      </Typography.Link>
+      </Typography.Text>
     )
   }
 
   const labels = Object.entries(labelsRaw)
     .map(([key, value]) => `${key}=${value}`)
     .join(',')
+  const labelsRows = Object.entries(labelsRaw).map(([key, value]) => `${key}=${value}`)
   const labelsEncoded = encodeURIComponent(labels)
   const hrefPrepared = `${linkPrefixPrepared}${labelsEncoded}`
+
+  if (renderLabelsAsRows) {
+    return (
+      <Flex align="flex-start" gap={8}>
+        <SearchOutlined style={{ marginTop: 4 }} />
+        <Flex vertical>
+          {labelsRows.map((row, index) => (
+            <Typography.Link key={row} href={hrefPrepared} {...linkProps}>
+              {index < labelsRows.length - 1 ? `${row},` : row}
+            </Typography.Link>
+          ))}
+          {children}
+        </Flex>
+      </Flex>
+    )
+  }
 
   if (maxTextLength && !textLink) {
     const truncatedLabels = maxTextLength ? truncate(labels, maxTextLength) : labels

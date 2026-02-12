@@ -150,6 +150,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
   const [resolvedHiddenPaths, setResolvedHiddenPaths] = useState<TFormName[]>([])
 
   const blockedPathsRef = useRef<Set<string>>(new Set())
+  const manualBlockedPathsRef = useRef<Set<string>>(new Set())
   const overflowRef = useRef<HTMLDivElement | null>(null)
   const valuesToYamlReqId = useRef(0)
   const yamlToValuesReqId = useRef(0)
@@ -669,6 +670,10 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
               const path = JSON.parse(bk) as (string | number)[]
               if (isPrefix(path, removedPrefix)) blockedPathsRef.current.delete(bk)
             }
+            for (const bk of [...manualBlockedPathsRef.current]) {
+              const path = JSON.parse(bk) as (string | number)[]
+              if (isPrefix(path, removedPrefix)) manualBlockedPathsRef.current.delete(bk)
+            }
           }
         }
       }
@@ -836,6 +841,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
         // Unblock paths that reappeared in the new YAML-derived data
         const dataPathSet = new Set(getAllPathsFromObj(data as Record<string, unknown>).map(p => pathKey(p)))
         blockedPathsRef.current.forEach(k => {
+          if (manualBlockedPathsRef.current.has(k)) return
           if (dataPathSet.has(k)) blockedPathsRef.current.delete(k)
         })
 
@@ -1108,31 +1114,34 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
     setProperties(newProperties)
 
     // 1) Initialize the value under the added field
-    const fullPath = [...arrPath, name] as TFormName
-    const currentValue = form.getFieldValue(fullPath)
+    const fullPath = [...arrPath, name] as (string | number)[]
+    const fullPathKey = pathKey(fullPath)
+    blockedPathsRef.current.delete(fullPathKey)
+    manualBlockedPathsRef.current.delete(fullPathKey)
+    const currentValue = form.getFieldValue(fullPath as TFormName)
     if (currentValue === undefined) {
       if (type === 'string' || type === 'multilineString' || type === 'multilineStringBase64') {
-        form.setFieldValue(fullPath as any, '')
+        form.setFieldValue(fullPath as TFormName, '')
       } else if (type === 'number' || type === 'integer') {
-        form.setFieldValue(fullPath as any, 0)
+        form.setFieldValue(fullPath as TFormName, 0)
       } else if (type === 'array') {
-        form.setFieldValue(fullPath as any, [])
+        form.setFieldValue(fullPath as TFormName, [])
       } else if (type === 'rangeInputCpu' || type === 'rangeInputMemory') {
-        form.setFieldValue(fullPath as any, 0)
+        form.setFieldValue(fullPath as TFormName, 0)
       } else if (type === 'listInput') {
-        form.setFieldValue(fullPath as any, undefined)
+        form.setFieldValue(fullPath as TFormName, undefined)
       } else {
         // object / unknown -> make it an object
-        form.setFieldValue(fullPath as any, {})
+        form.setFieldValue(fullPath as TFormName, {})
       }
     }
 
     // 2) Auto-mark for persist
     setPersistedKeys(prev => {
       const seen = new Set(prev.map(x => JSON.stringify(x)))
-      const k = JSON.stringify(fullPath)
+      const k = JSON.stringify(fullPath as TFormName)
       if (seen.has(k)) return prev
-      return [...prev, fullPath]
+      return [...prev, fullPath as TFormName]
     })
 
     // 3) Trigger YAML update to ensure new field is properly handled
@@ -1141,15 +1150,27 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
 
   const removeField = ({ path }: { path: TFormName }) => {
     const arrPath = Array.isArray(path) ? path : [path]
-    // const pathWithProperties = arrPath.flatMap(el => [el, 'properties']).slice(0, -1)
-    const modifiedProperties = _.cloneDeep(properties)
-    // /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-    // const result = _.unset(modifiedProperties, pathWithProperties)
 
     blockedPathsRef.current.add(pathKey(arrPath))
+    manualBlockedPathsRef.current.add(pathKey(arrPath))
     form.setFieldValue(arrPath as any, undefined)
 
-    setProperties(modifiedProperties)
+    // Remove stale UI state for the deleted subtree right away
+    setExpandedKeys(prev =>
+      prev.filter(p => {
+        const full = Array.isArray(p) ? p : [p]
+        return !isPrefix(full, arrPath)
+      }),
+    )
+    setPersistedKeys(prev =>
+      prev.filter(p => {
+        const full = Array.isArray(p) ? p : [p]
+        return !isPrefix(full, arrPath)
+      }),
+    )
+
+    // Prune schema immediately so the field disappears without waiting for YAML sync
+    setProperties(prevProps => pruneAdditionalForValues(prevProps, form.getFieldsValue(true), blockedPathsRef))
     onValuesChangeCallback()
   }
 
@@ -1300,6 +1321,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
             </Typography.Text>
           }
           cancelButtonProps={{ style: { display: 'none' } }}
+          centered
         >
           An error has occurred: {error?.response?.data?.message}
         </Modal>
@@ -1312,6 +1334,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
           // onClose={() => setIsDebugModalOpen(false)}
           title="Debug for properties"
           width="90vw"
+          centered
         >
           <Styled.DebugContainer $designNewLayoutHeight={designNewLayoutHeight}>
             <Suspense fallback={<div>Loading...</div>}>
