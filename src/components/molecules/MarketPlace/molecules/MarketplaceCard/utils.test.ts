@@ -61,18 +61,12 @@ describe('nav path helpers', () => {
     const originalPathname = window.location.pathname
 
     beforeEach(() => {
-      // Make backlink deterministic
-      Object.defineProperty(window, 'location', {
-        value: { ...window.location, pathname: '/current/page' },
-        writable: true,
-      })
+      // Make backlink deterministic without redefining window.location
+      window.history.pushState({}, '', '/current/page')
     })
 
     afterAll(() => {
-      Object.defineProperty(window, 'location', {
-        value: { ...window.location, pathname: originalPathname },
-        writable: true,
-      })
+      window.history.pushState({}, '', originalPathname)
     })
 
     test('returns direct path when type is direct and pathToNav provided', () => {

@@ -37,15 +37,6 @@ describe('useVNCClient', () => {
     for (const key of Object.keys(listeners)) {
       delete listeners[key]
     }
-
-    // Ensure a sane window.location for URL building
-    Object.defineProperty(window, 'location', {
-      value: {
-        protocol: 'http:',
-        host: 'localhost',
-      },
-      writable: true,
-    })
   })
 
   it('returns "not configured" state when required options are missing', () => {
