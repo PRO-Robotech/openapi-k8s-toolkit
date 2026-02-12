@@ -24,14 +24,16 @@ const baseParams = {
   isMultiQueryLoading: false,
 }
 
+const permCtx = { cluster: '{2}', plural: 'pods' }
+
 const editAction: TActionUnion = {
   type: 'edit',
-  props: { text: 'Edit', cluster: 'c', apiVersion: 'v1', plural: 'pods', name: 'p' },
+  props: { text: 'Edit', cluster: 'c', apiVersion: 'v1', plural: 'pods', name: 'p', permissionContext: permCtx },
 }
 
 const deleteAction: TActionUnion = {
   type: 'delete',
-  props: { text: 'Delete', endpoint: '/api/delete', name: 'p' },
+  props: { text: 'Delete', endpoint: '/api/delete', name: 'p', permissionContext: permCtx },
 }
 
 const editLabelsAction: TActionUnion = {
@@ -43,17 +45,18 @@ const editLabelsAction: TActionUnion = {
     endpoint: '/api/labels',
     pathToValue: '/metadata/labels',
     modalTitle: 'Edit Labels',
+    permissionContext: permCtx,
   },
 }
 
 const evictAction: TActionUnion = {
   type: 'evict',
-  props: { text: 'Evict', endpoint: '/api/evict', name: 'p' },
+  props: { text: 'Evict', endpoint: '/api/evict', name: 'p', permissionContext: permCtx },
 }
 
 const openKubeletConfigAction: TActionUnion = {
   type: 'openKubeletConfig',
-  props: { text: 'Kubelet Config', url: '/api/kubelet' },
+  props: { text: 'Kubelet Config', url: '/api/kubelet', permissionContext: { cluster: '{2}', plural: 'nodes' } },
 }
 
 beforeEach(() => {
@@ -65,244 +68,272 @@ beforeEach(() => {
 /*  Tests                                                              */
 /* ------------------------------------------------------------------ */
 describe('useActionsDropdownPermissions - manual override', () => {
-  describe('manual permissions override', () => {
-    it('returns manual permissions when provided, skipping RBAC checks', () => {
-      const manualPermissions: TActionsPermissions = { canUpdate: true, canPatch: false, canDelete: true }
+  it('returns manual permissions when provided, skipping RBAC checks', () => {
+    const manualPermissions: TActionsPermissions = { 'edit-0': true, 'editLabels-1': false, 'delete-2': true }
 
-      const { result } = renderHook(() =>
-        useActionsDropdownPermissions({
-          ...baseParams,
-          actions: [editAction, editLabelsAction, deleteAction],
-          permissions: manualPermissions,
-          permissionContext: { cluster: '{2}', plural: 'pods' },
-        }),
-      )
+    const { result } = renderHook(() =>
+      useActionsDropdownPermissions({
+        ...baseParams,
+        actions: [editAction, editLabelsAction, deleteAction],
+        permissions: manualPermissions,
+      }),
+    )
 
-      expect(result.current).toEqual(manualPermissions)
-      // All usePermissions calls should have enabler: false
-      mockUsePermissions.mock.calls.forEach(call => {
-        expect(call[0].enabler).toBe(false)
-      })
+    expect(result.current).toEqual(manualPermissions)
+    // All usePermissions calls should have enabler: false
+    mockUsePermissions.mock.calls.forEach(call => {
+      expect(call[0].enabler).toBe(false)
     })
   })
 })
 
-describe('useActionsDropdownPermissions - computed permissions', () => {
-  describe('computed permissions via permissionContext', () => {
-    it('calls usePermissions with correct verbs for edit/patch/delete actions', () => {
-      mockUsePermissions.mockImplementation((params: { verb: string }) => {
-        if (params.verb === 'update') return permissionResult(true)
-        if (params.verb === 'patch') return permissionResult(false)
-        if (params.verb === 'delete') return permissionResult(true)
-        return permissionResult(undefined)
-      })
-
-      const { result } = renderHook(() =>
-        useActionsDropdownPermissions({
-          ...baseParams,
-          actions: [editAction, editLabelsAction, deleteAction],
-          permissionContext: { cluster: '{2}', plural: 'pods' },
-        }),
-      )
-
-      expect(result.current.canUpdate).toBe(true)
-      expect(result.current.canPatch).toBe(false)
-      expect(result.current.canDelete).toBe(true)
+describe('useActionsDropdownPermissions - per-action permissions', () => {
+  it('computes per-action permissions using each action permissionContext', () => {
+    mockUsePermissions.mockImplementation((params: { verb: string }) => {
+      if (params.verb === 'update') return permissionResult(true)
+      if (params.verb === 'patch') return permissionResult(false)
+      if (params.verb === 'delete') return permissionResult(true)
+      return permissionResult(undefined)
     })
 
-    it('passes cluster and plural from permissionContext with interpolation', () => {
-      mockUsePermissions.mockReturnValue(permissionResult(true))
+    const { result } = renderHook(() =>
+      useActionsDropdownPermissions({
+        ...baseParams,
+        actions: [editAction, editLabelsAction, deleteAction],
+      }),
+    )
 
-      renderHook(() =>
-        useActionsDropdownPermissions({
-          ...baseParams,
-          actions: [editAction],
-          permissionContext: { cluster: '{2}', plural: 'pods' },
-        }),
-      )
-
-      const updateCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'update')
-      expect(updateCall).toBeDefined()
-      expect(updateCall[0].cluster).toBe('my-cluster')
-      expect(updateCall[0].plural).toBe('pods')
-    })
-
-    it('passes namespace from permissionContext when provided', () => {
-      mockUsePermissions.mockReturnValue(permissionResult(true))
-
-      renderHook(() =>
-        useActionsDropdownPermissions({
-          ...baseParams,
-          actions: [editAction],
-          permissionContext: { cluster: '{2}', namespace: '{1}', plural: 'pods' },
-        }),
-      )
-
-      const updateCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'update')
-      expect(updateCall[0].namespace).toBe('default')
-    })
+    expect(result.current['edit-0']).toBe(true)
+    expect(result.current['editLabels-1']).toBe(false)
+    expect(result.current['delete-2']).toBe(true)
   })
 
-  describe('subresource-specific permissions', () => {
-    it('passes eviction subresource for evict action (create verb)', () => {
-      mockUsePermissions.mockReturnValue(permissionResult(true))
+  it('passes cluster and plural from per-action permissionContext with interpolation', () => {
+    mockUsePermissions.mockReturnValue(permissionResult(true))
 
-      renderHook(() =>
-        useActionsDropdownPermissions({
-          ...baseParams,
-          actions: [evictAction],
-          permissionContext: { cluster: '{2}', plural: 'pods' },
-        }),
-      )
+    renderHook(() =>
+      useActionsDropdownPermissions({
+        ...baseParams,
+        actions: [editAction],
+      }),
+    )
 
-      const createCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'create')
-      expect(createCall).toBeDefined()
-      expect(createCall[0].subresource).toBe('eviction')
-      expect(createCall[0].enabler).toBe(true)
-    })
-
-    it('passes proxy subresource for openKubeletConfig action (get verb)', () => {
-      mockUsePermissions.mockReturnValue(permissionResult(true))
-
-      renderHook(() =>
-        useActionsDropdownPermissions({
-          ...baseParams,
-          actions: [openKubeletConfigAction],
-          permissionContext: { cluster: '{2}', plural: 'nodes' },
-        }),
-      )
-
-      const getCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'get')
-      expect(getCall).toBeDefined()
-      expect(getCall[0].subresource).toBe('proxy')
-      expect(getCall[0].enabler).toBe(true)
-    })
-
-    it('does not pass subresource for standard actions', () => {
-      mockUsePermissions.mockReturnValue(permissionResult(true))
-
-      renderHook(() =>
-        useActionsDropdownPermissions({
-          ...baseParams,
-          actions: [editAction, editLabelsAction, deleteAction],
-          permissionContext: { cluster: '{2}', plural: 'pods' },
-        }),
-      )
-
-      const callsWithSubresource = mockUsePermissions.mock.calls.filter(
-        (call: { subresource?: string }[]) => call[0].subresource !== undefined,
-      )
-      expect(callsWithSubresource).toHaveLength(0)
-    })
+    // Find the enabled call (the one with enabler: true)
+    const enabledCall = mockUsePermissions.mock.calls.find((call: { enabler: boolean }[]) => call[0].enabler === true)
+    expect(enabledCall).toBeDefined()
+    expect(enabledCall[0].cluster).toBe('my-cluster')
+    expect(enabledCall[0].plural).toBe('pods')
   })
 
-  describe('permission check enablement', () => {
-    it('disables permission checks while multiQuery is loading', () => {
-      const { result } = renderHook(() =>
-        useActionsDropdownPermissions({
-          ...baseParams,
-          isMultiQueryLoading: true,
-          actions: [editAction],
-          permissionContext: { cluster: '{2}', plural: 'pods' },
-        }),
-      )
+  it('passes namespace from permissionContext when provided', () => {
+    const actionWithNs: TActionUnion = {
+      type: 'edit',
+      props: {
+        text: 'Edit',
+        cluster: 'c',
+        apiVersion: 'v1',
+        plural: 'pods',
+        name: 'p',
+        permissionContext: { cluster: '{2}', namespace: '{1}', plural: 'pods' },
+      },
+    }
 
-      // All hooks should have enabler: false
-      mockUsePermissions.mock.calls.forEach(call => {
-        expect(call[0].enabler).toBe(false)
-      })
+    mockUsePermissions.mockReturnValue(permissionResult(true))
 
-      // Computed permissions should be undefined (not yet resolved)
-      expect(result.current.canUpdate).toBeUndefined()
+    renderHook(() =>
+      useActionsDropdownPermissions({
+        ...baseParams,
+        actions: [actionWithNs],
+      }),
+    )
+
+    const enabledCall = mockUsePermissions.mock.calls.find((call: { enabler: boolean }[]) => call[0].enabler === true)
+    expect(enabledCall[0].namespace).toBe('default')
+  })
+
+  it('deduplicates identical permission checks across actions', () => {
+    // cordon and uncordon both need 'patch' on the same resource
+    const cordonAction: TActionUnion = {
+      type: 'cordon',
+      props: {
+        text: 'Cordon',
+        endpoint: '/api/cordon',
+        pathToValue: '/spec/unschedulable',
+        value: true,
+        permissionContext: permCtx,
+      },
+    }
+    const uncordonAction: TActionUnion = {
+      type: 'uncordon',
+      props: {
+        text: 'Uncordon',
+        endpoint: '/api/uncordon',
+        pathToValue: '/spec/unschedulable',
+        value: false,
+        permissionContext: permCtx,
+      },
+    }
+
+    mockUsePermissions.mockReturnValue(permissionResult(true))
+
+    const { result } = renderHook(() =>
+      useActionsDropdownPermissions({
+        ...baseParams,
+        actions: [cordonAction, uncordonAction],
+      }),
+    )
+
+    // Both actions should share the same permission result
+    expect(result.current['cordon-0']).toBe(true)
+    expect(result.current['uncordon-1']).toBe(true)
+
+    // Only one enabled permission call (deduplicated)
+    const enabledCalls = mockUsePermissions.mock.calls.filter(
+      (call: { enabler: boolean }[]) => call[0].enabler === true,
+    )
+    expect(enabledCalls).toHaveLength(1)
+  })
+
+  it('supports cross-resource permissions (different permissionContext per action)', () => {
+    const scaleAction: TActionUnion = {
+      type: 'scale',
+      props: {
+        text: 'Scale',
+        endpoint: '/api/scale',
+        currentReplicas: '3',
+        name: 'my-deploy',
+        permissionContext: { cluster: '{2}', plural: 'deployments', subresource: 'scale' },
+      },
+    }
+    const triggerRunAction: TActionUnion = {
+      type: 'triggerRun',
+      props: {
+        text: 'Trigger Run',
+        createEndpoint: '/api/jobs',
+        cronJobName: 'my-cron',
+        jobTemplate: "{reqs[0]['spec','jobTemplate']}",
+        permissionContext: { cluster: '{2}', plural: 'jobs' },
+      },
+    }
+
+    mockUsePermissions.mockImplementation((params: { verb: string; plural: string }) => {
+      if (params.plural === 'deployments' && params.verb === 'update') return permissionResult(true)
+      if (params.plural === 'jobs' && params.verb === 'create') return permissionResult(false)
+      return permissionResult(undefined)
     })
 
-    it('disables permission checks when permissionContext is not provided', () => {
-      renderHook(() =>
-        useActionsDropdownPermissions({
-          ...baseParams,
-          actions: [editAction],
-        }),
-      )
+    const { result } = renderHook(() =>
+      useActionsDropdownPermissions({
+        ...baseParams,
+        actions: [scaleAction, triggerRunAction],
+      }),
+    )
 
-      // All hooks should have enabler: false because context is invalid
-      mockUsePermissions.mock.calls.forEach(call => {
-        expect(call[0].enabler).toBe(false)
-      })
-    })
-
-    it('disables permission checks when cluster resolves to dash placeholder', () => {
-      renderHook(() =>
-        useActionsDropdownPermissions({
-          ...baseParams,
-          replaceValues: { '2': undefined },
-          actions: [editAction],
-          permissionContext: { cluster: '{2}', plural: 'pods' },
-        }),
-      )
-
-      const updateCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'update')
-      expect(updateCall[0].enabler).toBe(false)
-    })
-
-    it('only enables hooks for verbs required by the actions', () => {
-      mockUsePermissions.mockReturnValue(permissionResult(true))
-
-      renderHook(() =>
-        useActionsDropdownPermissions({
-          ...baseParams,
-          actions: [editAction], // only needs 'update'
-          permissionContext: { cluster: '{2}', plural: 'pods' },
-        }),
-      )
-
-      const updateCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'update')
-      const patchCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'patch')
-      const deleteCall = mockUsePermissions.mock.calls.find((call: { verb: string }[]) => call[0].verb === 'delete')
-
-      expect(updateCall[0].enabler).toBe(true)
-      expect(patchCall[0].enabler).toBe(false)
-      expect(deleteCall[0].enabler).toBe(false)
-    })
+    expect(result.current['scale-0']).toBe(true)
+    expect(result.current['triggerRun-1']).toBe(false)
   })
 })
 
-describe('useActionsDropdownPermissions - permission values', () => {
-  describe('computed permission values', () => {
-    it('returns undefined for verbs not required by any action', () => {
-      mockUsePermissions.mockReturnValue(permissionResult(true))
+describe('useActionsDropdownPermissions - subresource permissions', () => {
+  it('passes eviction subresource for evict action (create verb)', () => {
+    mockUsePermissions.mockReturnValue(permissionResult(true))
 
-      const { result } = renderHook(() =>
-        useActionsDropdownPermissions({
-          ...baseParams,
-          actions: [editAction], // only needs 'update'
-          permissionContext: { cluster: '{2}', plural: 'pods' },
-        }),
-      )
+    renderHook(() =>
+      useActionsDropdownPermissions({
+        ...baseParams,
+        actions: [evictAction],
+      }),
+    )
 
-      expect(result.current.canUpdate).toBe(true)
-      expect(result.current.canPatch).toBeUndefined()
-      expect(result.current.canDelete).toBeUndefined()
-      expect(result.current.canCreate).toBeUndefined()
-      expect(result.current.canGet).toBeUndefined()
+    const enabledCall = mockUsePermissions.mock.calls.find((call: { enabler: boolean }[]) => call[0].enabler === true)
+    expect(enabledCall).toBeDefined()
+    expect(enabledCall[0].verb).toBe('create')
+    expect(enabledCall[0].subresource).toBe('eviction')
+  })
+
+  it('passes proxy subresource for openKubeletConfig action (get verb)', () => {
+    mockUsePermissions.mockReturnValue(permissionResult(true))
+
+    renderHook(() =>
+      useActionsDropdownPermissions({
+        ...baseParams,
+        actions: [openKubeletConfigAction],
+      }),
+    )
+
+    const enabledCall = mockUsePermissions.mock.calls.find((call: { enabler: boolean }[]) => call[0].enabler === true)
+    expect(enabledCall).toBeDefined()
+    expect(enabledCall[0].verb).toBe('get')
+    expect(enabledCall[0].subresource).toBe('proxy')
+  })
+})
+
+describe('useActionsDropdownPermissions - enablement', () => {
+  it('disables permission checks while multiQuery is loading', () => {
+    const { result } = renderHook(() =>
+      useActionsDropdownPermissions({
+        ...baseParams,
+        isMultiQueryLoading: true,
+        actions: [editAction],
+      }),
+    )
+
+    mockUsePermissions.mock.calls.forEach(call => {
+      expect(call[0].enabler).toBe(false)
     })
 
-    it('returns canCreate for evict and canGet for openKubeletConfig', () => {
-      mockUsePermissions.mockImplementation((params: { verb: string }) => {
-        if (params.verb === 'create') return permissionResult(true)
-        if (params.verb === 'get') return permissionResult(false)
-        return permissionResult(undefined)
-      })
+    // No keys should be set in computed permissions
+    expect(Object.keys(result.current)).toHaveLength(0)
+  })
 
-      const { result } = renderHook(() =>
-        useActionsDropdownPermissions({
-          ...baseParams,
-          actions: [evictAction, openKubeletConfigAction],
-          permissionContext: { cluster: '{2}', plural: 'pods' },
-        }),
-      )
+  it('skips actions without permissionContext', () => {
+    const actionWithoutCtx: TActionUnion = {
+      type: 'edit',
+      props: { text: 'Edit', cluster: 'c', apiVersion: 'v1', plural: 'pods', name: 'p' },
+    }
 
-      expect(result.current.canCreate).toBe(true)
-      expect(result.current.canGet).toBe(false)
+    mockUsePermissions.mockReturnValue(permissionResult(true))
+
+    const { result } = renderHook(() =>
+      useActionsDropdownPermissions({
+        ...baseParams,
+        actions: [actionWithoutCtx],
+      }),
+    )
+
+    // No enabled permission calls
+    mockUsePermissions.mock.calls.forEach(call => {
+      expect(call[0].enabler).toBe(false)
+    })
+
+    // No permission result for the action
+    expect(result.current['edit-0']).toBeUndefined()
+  })
+
+  it('disables permission checks when cluster resolves to dash placeholder', () => {
+    const actionWithBadCluster: TActionUnion = {
+      type: 'edit',
+      props: {
+        text: 'Edit',
+        cluster: 'c',
+        apiVersion: 'v1',
+        plural: 'pods',
+        name: 'p',
+        permissionContext: { cluster: '{99}', plural: 'pods' },
+      },
+    }
+
+    renderHook(() =>
+      useActionsDropdownPermissions({
+        ...baseParams,
+        replaceValues: {},
+        actions: [actionWithBadCluster],
+      }),
+    )
+
+    // All hooks should have enabler: false because context is invalid
+    mockUsePermissions.mock.calls.forEach(call => {
+      expect(call[0].enabler).toBe(false)
     })
   })
 })

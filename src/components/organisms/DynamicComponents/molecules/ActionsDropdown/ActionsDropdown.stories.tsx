@@ -49,11 +49,7 @@ const meta: Meta<TArgs> = {
       control: 'object',
       description: 'data.permissions ({ canUpdate, canPatch, canDelete } - manual override, takes priority)',
     },
-    permissionContext: {
-      control: 'object',
-      description:
-        'data.permissionContext ({ cluster, namespace?, apiGroup?, plural } - for automatic permission checking)',
-    },
+    // permissionContext is now per-action (on each action.props.permissionContext)
 
     // provider knobs
     isLoading: {
@@ -91,7 +87,6 @@ const meta: Meta<TArgs> = {
       containerStyle: args.containerStyle,
       actions: args.actions,
       permissions: args.permissions,
-      permissionContext: args.permissionContext,
     }
 
     return (
@@ -144,7 +139,7 @@ export const Default: Story = {
     buttonText: 'Actions',
     buttonVariant: 'default',
     containerStyle: {},
-    permissions: { canUpdate: true, canPatch: true, canDelete: true, canCreate: true, canGet: true },
+    permissions: { 'edit-0': true, 'editLabels-1': true, 'editAnnotations-2': true, 'delete-3': true },
     actions: [
       {
         type: 'edit',
@@ -418,9 +413,10 @@ export const WithPermissions: Story = {
       },
     ],
     permissions: {
-      canUpdate: true,
-      canPatch: false,
-      canDelete: false,
+      'edit-0': true,
+      'editLabels-1': false,
+      'editAnnotations-2': false,
+      'delete-3': false,
     },
 
     isLoading: false,
@@ -450,7 +446,14 @@ export const NodeActions: Story = {
     buttonText: 'Actions',
     buttonVariant: 'default',
     containerStyle: {},
-    permissions: { canUpdate: true, canPatch: true, canDelete: true, canCreate: true, canGet: true },
+    permissions: {
+      'edit-0': true,
+      'editTaints-1': true,
+      'cordon-2': true,
+      'uncordon-3': true,
+      'openKubeletConfig-4': true,
+      'delete-5': true,
+    },
     actions: [
       {
         type: 'edit',
@@ -549,7 +552,7 @@ export const PodActions: Story = {
     buttonText: 'Actions',
     buttonVariant: 'default',
     containerStyle: {},
-    permissions: { canUpdate: true, canPatch: true, canDelete: true, canCreate: true, canGet: true },
+    permissions: { 'edit-0': true, 'evict-1': true, 'delete-2': true },
     actions: [
       {
         type: 'edit',
@@ -613,7 +616,7 @@ export const DeploymentActions: Story = {
     buttonText: 'Actions',
     buttonVariant: 'default',
     containerStyle: {},
-    permissions: { canUpdate: true, canPatch: true, canDelete: true, canCreate: true, canGet: true },
+    permissions: { 'edit-0': true, 'suspend-1': true, 'resume-2': true, 'rolloutRestart-3': true, 'delete-4': true },
     actions: [
       {
         type: 'edit',

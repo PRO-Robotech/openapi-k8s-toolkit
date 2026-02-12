@@ -1,99 +1,152 @@
+import { useMemo } from 'react'
 import { usePermissions } from 'hooks/usePermissions'
+import type { TPermissionVerb } from 'localTypes/permissions'
 import { parseAll } from '../../utils'
-import { getRequiredPermissions } from '../utils'
 import type { TActionUnion, TActionsPermissions, TPermissionContext } from '../../../types/ActionsDropdown'
+import { ACTION_REQUIRED_PERMISSIONS } from '../permissionsMap'
+
+type TPermissionSlot = {
+  cluster: string
+  namespace?: string
+  apiGroup?: string
+  plural: string
+  subresource?: string
+  verb: TPermissionVerb
+  cacheKey: string
+}
+
+type TParseContext = {
+  replaceValues: Record<string, string | undefined>
+  multiQueryData: Record<string, unknown>
+}
+
+const buildCacheKey = (slot: Omit<TPermissionSlot, 'cacheKey'>): string =>
+  `${slot.cluster}|${slot.namespace ?? ''}|${slot.apiGroup ?? ''}|${slot.plural}|${slot.subresource ?? ''}|${slot.verb}`
+
+const parsePermissionContext = (
+  ctx: TPermissionContext,
+  parseCtx: TParseContext,
+): { cluster: string; namespace?: string; apiGroup?: string; plural: string; subresource?: string } => ({
+  cluster: parseAll({ text: ctx.cluster, ...parseCtx }),
+  namespace: ctx.namespace ? parseAll({ text: ctx.namespace, ...parseCtx }) : undefined,
+  apiGroup: ctx.apiGroup ? parseAll({ text: ctx.apiGroup, ...parseCtx }) : undefined,
+  plural: parseAll({ text: ctx.plural, ...parseCtx }),
+  subresource: ctx.subresource ? parseAll({ text: ctx.subresource, ...parseCtx }) : undefined,
+})
+
+const isValidContext = (parsed: { cluster: string; plural: string }): boolean =>
+  !!parsed.cluster && parsed.cluster !== '-' && !!parsed.plural && parsed.plural !== '-'
 
 type TUseActionsDropdownPermissionsParams = {
   actions: TActionUnion[]
   permissions?: TActionsPermissions
-  permissionContext?: TPermissionContext
   replaceValues: Record<string, string | undefined>
   multiQueryData: Record<string, unknown>
   isMultiQueryLoading: boolean
 }
 
+type TActionSlotMapping = {
+  actionKey: string
+  slotIndex: number
+}
+
+const useManyPermissions = (slots: TPermissionSlot[], enabled: boolean) => {
+  const results: ReturnType<typeof usePermissions>[] = []
+
+  // rules-of-hooks safe: fixed loop count, no conditional exits.
+  for (let i = 0; i < slots.length; i++) {
+    const slot = slots[i]
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    results[i] = usePermissions({
+      cluster: slot.cluster,
+      namespace: slot.namespace,
+      apiGroup: slot.apiGroup,
+      plural: slot.plural,
+      subresource: slot.subresource,
+      verb: slot.verb,
+      refetchInterval: false,
+      enabler: enabled,
+    })
+  }
+
+  return results
+}
+
 export const useActionsDropdownPermissions = ({
   actions,
   permissions,
-  permissionContext,
   replaceValues,
   multiQueryData,
   isMultiQueryLoading,
 }: TUseActionsDropdownPermissionsParams): TActionsPermissions => {
-  const permissionContextPrepared = permissionContext
-    ? {
-        cluster: parseAll({ text: permissionContext.cluster, replaceValues, multiQueryData }),
-        namespace: permissionContext.namespace
-          ? parseAll({ text: permissionContext.namespace, replaceValues, multiQueryData })
-          : undefined,
-        apiGroup: permissionContext.apiGroup
-          ? parseAll({ text: permissionContext.apiGroup, replaceValues, multiQueryData })
-          : undefined,
-        plural: parseAll({ text: permissionContext.plural, replaceValues, multiQueryData }),
-      }
-    : undefined
-
-  const isPermissionContextValid =
-    !!permissionContextPrepared &&
-    !isMultiQueryLoading &&
-    !!permissionContextPrepared.cluster &&
-    permissionContextPrepared.cluster !== '-' &&
-    !!permissionContextPrepared.plural &&
-    permissionContextPrepared.plural !== '-'
-
   const shouldCheckPermissions = !permissions
-  const requiredPermissions = shouldCheckPermissions ? getRequiredPermissions(actions) : []
-  const requiredVerbs = new Set(requiredPermissions.map(permission => permission.verb))
 
-  const getSubresourceForVerb = (verb: string): string | undefined =>
-    requiredPermissions.find(p => p.verb === verb && p.subresource)?.subresource
+  const { slots, mappings } = useMemo(() => {
+    if (!shouldCheckPermissions || isMultiQueryLoading) {
+      return {
+        slots: [] as TPermissionSlot[],
+        mappings: [] as TActionSlotMapping[],
+      }
+    }
 
-  const permissionBaseParams = {
-    cluster: permissionContextPrepared?.cluster || '',
-    namespace: permissionContextPrepared?.namespace,
-    apiGroup: permissionContextPrepared?.apiGroup,
-    plural: permissionContextPrepared?.plural || '',
-    refetchInterval: false as const,
+    const parseCtx: TParseContext = { replaceValues, multiQueryData }
+    const uniqueSlots: TPermissionSlot[] = []
+    const cacheKeyToIndex = new Map<string, number>()
+    const actionMappings: TActionSlotMapping[] = []
+
+    actions.forEach((action, index) => {
+      const actionKey = `${action.type}-${index}`
+      const permCtx = action.props.permissionContext
+
+      if (!permCtx) {
+        return
+      }
+
+      const parsed = parsePermissionContext(permCtx, parseCtx)
+      if (!isValidContext(parsed)) {
+        return
+      }
+
+      const requiredPerm = ACTION_REQUIRED_PERMISSIONS[action.type]
+      const subresource = requiredPerm.subresource ?? parsed.subresource
+
+      const slotData = {
+        cluster: parsed.cluster,
+        namespace: parsed.namespace,
+        apiGroup: parsed.apiGroup,
+        plural: parsed.plural,
+        subresource,
+        verb: requiredPerm.verb,
+      }
+      const cacheKey = buildCacheKey(slotData)
+
+      let slotIndex = cacheKeyToIndex.get(cacheKey)
+      if (slotIndex === undefined) {
+        slotIndex = uniqueSlots.length
+        uniqueSlots.push({ ...slotData, cacheKey })
+        cacheKeyToIndex.set(cacheKey, slotIndex)
+      }
+
+      actionMappings.push({ actionKey, slotIndex })
+    })
+
+    return { slots: uniqueSlots, mappings: actionMappings }
+  }, [shouldCheckPermissions, isMultiQueryLoading, actions, replaceValues, multiQueryData])
+
+  const enabled = shouldCheckPermissions && !isMultiQueryLoading
+
+  const slotResults = useManyPermissions(slots, enabled)
+
+  if (permissions) {
+    return permissions
   }
 
-  const updatePermission = usePermissions({
-    ...permissionBaseParams,
-    verb: 'update',
-    subresource: getSubresourceForVerb('update'),
-    enabler: shouldCheckPermissions && isPermissionContextValid && requiredVerbs.has('update'),
-  })
-  const patchPermission = usePermissions({
-    ...permissionBaseParams,
-    verb: 'patch',
-    subresource: getSubresourceForVerb('patch'),
-    enabler: shouldCheckPermissions && isPermissionContextValid && requiredVerbs.has('patch'),
-  })
-  const deletePermission = usePermissions({
-    ...permissionBaseParams,
-    verb: 'delete',
-    subresource: getSubresourceForVerb('delete'),
-    enabler: shouldCheckPermissions && isPermissionContextValid && requiredVerbs.has('delete'),
-  })
-  const createPermission = usePermissions({
-    ...permissionBaseParams,
-    verb: 'create',
-    subresource: getSubresourceForVerb('create'),
-    enabler: shouldCheckPermissions && isPermissionContextValid && requiredVerbs.has('create'),
-  })
-  const getPermission = usePermissions({
-    ...permissionBaseParams,
-    verb: 'get',
-    subresource: getSubresourceForVerb('get'),
-    enabler: shouldCheckPermissions && isPermissionContextValid && requiredVerbs.has('get'),
+  const computed: TActionsPermissions = {}
+
+  mappings.forEach(mapping => {
+    const result = slotResults[mapping.slotIndex]
+    computed[mapping.actionKey] = result?.data?.status?.allowed
   })
 
-  const computedPermissions: TActionsPermissions = {
-    canUpdate: requiredVerbs.has('update') ? updatePermission.data?.status.allowed : undefined,
-    canPatch: requiredVerbs.has('patch') ? patchPermission.data?.status.allowed : undefined,
-    canDelete: requiredVerbs.has('delete') ? deletePermission.data?.status.allowed : undefined,
-    canCreate: requiredVerbs.has('create') ? createPermission.data?.status.allowed : undefined,
-    canGet: requiredVerbs.has('get') ? getPermission.data?.status.allowed : undefined,
-  }
-
-  return permissions ?? computedPermissions
+  return computed
 }

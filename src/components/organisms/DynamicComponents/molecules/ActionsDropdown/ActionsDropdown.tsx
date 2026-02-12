@@ -1,27 +1,21 @@
 import { FC, ReactElement } from 'react'
 import { Dropdown, Button, Spin, Tooltip } from 'antd'
 import { DownOutlined, MoreOutlined, WarningOutlined } from '@ant-design/icons'
-import { ConfirmModal, DeleteModal } from 'components/atoms'
+import { ConfirmModal, DeleteModal, DeleteModalMany } from 'components/atoms'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { getMenuItems, getVisibleActions } from './utils'
 import { useActionsDropdownPermissions, useActionsDropdownHandlers } from './hooks'
 import { renderActionModal } from './renderActionModal'
+import { ScaleModal } from './modals/ScaleModal'
 import { Styled } from './styled'
 
 export const ActionsDropdown: FC<{
   data: TDynamicComponentsAppTypeMap['ActionsDropdown']
   children?: ReactElement | ReactElement[]
 }> = ({ data, children }) => {
-  const {
-    buttonText = 'Actions',
-    buttonVariant = 'default',
-    containerStyle,
-    actions,
-    permissions,
-    permissionContext,
-  } = data
+  const { buttonText = 'Actions', buttonVariant = 'default', containerStyle, actions, permissions } = data
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryError, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
@@ -31,18 +25,18 @@ export const ActionsDropdown: FC<{
     return acc
   }, {})
   const safeMultiQueryData = multiQueryData ?? {}
-  const visibleActions = getVisibleActions(actions, {
-    replaceValues,
-    multiQueryData: safeMultiQueryData,
-  })
 
   const effectivePermissions = useActionsDropdownPermissions({
-    actions: visibleActions,
+    actions,
     permissions,
-    permissionContext,
     replaceValues,
     multiQueryData: safeMultiQueryData,
     isMultiQueryLoading,
+  })
+
+  const visibleActions = getVisibleActions(actions, {
+    replaceValues,
+    multiQueryData: safeMultiQueryData,
   })
 
   const {
@@ -52,11 +46,21 @@ export const ActionsDropdown: FC<{
     deleteModalData,
     evictModalData,
     isEvictLoading,
+    scaleModalData,
+    isScaleLoading,
+    deleteChildrenModalData,
+    rerunModalData,
+    isRerunLoading,
     handleActionClick,
     handleCloseModal,
     handleDeleteModalClose,
     handleEvictConfirm,
     handleEvictCancel,
+    handleScaleConfirm,
+    handleScaleCancel,
+    handleDeleteChildrenClose,
+    handleRerunConfirm,
+    handleRerunCancel,
   } = useActionsDropdownHandlers({
     replaceValues,
     multiQueryData: safeMultiQueryData,
@@ -118,7 +122,7 @@ export const ActionsDropdown: FC<{
 
       {evictModalData && (
         <ConfirmModal
-          title={`Evict «${evictModalData.name}?»`}
+          title={`Evict \u00AB${evictModalData.name}?\u00BB`}
           onConfirm={handleEvictConfirm}
           onClose={handleEvictCancel}
           confirmText="Evict"
@@ -126,6 +130,33 @@ export const ActionsDropdown: FC<{
           danger
         >
           This will evict the pod. It may be blocked by PodDisruptionBudget.
+        </ConfirmModal>
+      )}
+
+      {scaleModalData && (
+        <ScaleModal
+          open
+          currentReplicas={scaleModalData.currentReplicas}
+          name={scaleModalData.name}
+          onConfirm={handleScaleConfirm}
+          onClose={handleScaleCancel}
+          isLoading={isScaleLoading}
+        />
+      )}
+
+      {deleteChildrenModalData && (
+        <DeleteModalMany data={deleteChildrenModalData.children} onClose={handleDeleteChildrenClose} />
+      )}
+
+      {rerunModalData && (
+        <ConfirmModal
+          title={`Rerun job "${rerunModalData.sourceName}"?`}
+          onConfirm={handleRerunConfirm}
+          onClose={handleRerunCancel}
+          confirmText="Rerun"
+          confirmLoading={isRerunLoading}
+        >
+          This will create a new Job with the same spec.
         </ConfirmModal>
       )}
 

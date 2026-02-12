@@ -15,6 +15,14 @@ export type TActionVisibility = {
   valueToCompare?: string | string[]
 }
 
+export type TPermissionContext = {
+  cluster: string
+  namespace?: string
+  apiGroup?: string
+  plural: string
+  subresource?: string
+}
+
 export type TActionBaseProps = {
   icon?: TAntIconName
   iconBase64Encoded?: string
@@ -23,6 +31,7 @@ export type TActionBaseProps = {
   tooltip?: string
   danger?: boolean
   visibleWhen?: TActionVisibility
+  permissionContext?: TPermissionContext
 }
 
 export type TEditActionProps = TActionBaseProps & {
@@ -78,6 +87,42 @@ export type TOpenKubeletConfigActionProps = TActionBaseProps & {
   editModalWidth?: number | string
 }
 
+export type TScaleActionProps = TActionBaseProps & {
+  endpoint: string
+  currentReplicas: string
+  name: string
+  namespace?: string
+  apiVersion?: string
+}
+
+export type TTriggerRunActionProps = TActionBaseProps & {
+  createEndpoint: string
+  cronJobName: string
+  jobTemplate: string
+}
+
+export type TDeleteChildrenActionProps = TActionBaseProps & {
+  children: string
+  childResourceName: string
+}
+
+export type TRerunLastActionProps = TActionBaseProps & {
+  createEndpoint: string
+  sourceJobSpec: string
+  sourceJobName: string
+}
+
+export type TDrainActionProps = TActionBaseProps & {
+  bffEndpoint: string
+  nodeName: string
+}
+
+export type TRollbackActionProps = TActionBaseProps & {
+  bffEndpoint: string
+  resourceName: string
+  resourceEndpoint: string
+}
+
 export type TActionUnion =
   | { type: 'edit'; props: TEditActionProps }
   | { type: 'editLabels'; props: TEditLabelsActionProps }
@@ -92,22 +137,15 @@ export type TActionUnion =
   | { type: 'rolloutRestart'; props: TRolloutRestartActionProps }
   | { type: 'evict'; props: TEvictActionProps }
   | { type: 'openKubeletConfig'; props: TOpenKubeletConfigActionProps }
+  | { type: 'scale'; props: TScaleActionProps }
+  | { type: 'triggerRun'; props: TTriggerRunActionProps }
+  | { type: 'deleteChildren'; props: TDeleteChildrenActionProps }
+  | { type: 'rerunLast'; props: TRerunLastActionProps }
+  | { type: 'drain'; props: TDrainActionProps }
+  | { type: 'rollback'; props: TRollbackActionProps }
 
-export type TActionsPermissions = {
-  canUpdate?: boolean // For 'edit' action
-  canPatch?: boolean // For 'editLabels', 'editAnnotations', 'editTaints', 'editTolerations' actions
-  canDelete?: boolean // For 'delete' action
-  canGet?: boolean // For 'get' action
-  canCreate?: boolean // For 'create' action
-}
-
-export type TPermissionContext = {
-  cluster: string
-  namespace?: string
-  apiGroup?: string
-  plural: string
-  subresource?: string
-}
+/** Per-action permission map. Key = "${actionType}-${index}", value = whether action is allowed. */
+export type TActionsPermissions = Record<string, boolean | undefined>
 
 export type TActionsDropdownProps = {
   id: number | string
@@ -115,8 +153,6 @@ export type TActionsDropdownProps = {
   buttonVariant?: 'default' | 'icon'
   containerStyle?: CSSProperties
   actions: TActionUnion[]
-  /** Manual permission override. Takes priority over permissionContext. */
+  /** Manual permission override. Takes priority over per-action permissionContext. */
   permissions?: TActionsPermissions
-  /** Resource context for automatic permission checking. */
-  permissionContext?: TPermissionContext
 }
