@@ -1,8 +1,8 @@
+/* eslint-disable no-nested-ternary */
 /* eslint-disable no-console */
 /* eslint-disable react/no-array-index-key */
-import React, { FC, useState, useRef } from 'react'
+import React, { FC, useState } from 'react'
 import { Flex, Button, notification } from 'antd'
-import type { InputRef } from 'antd'
 import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons'
 import { Spoiler } from 'spoiled'
 import { TDynamicComponentsAppTypeMap } from '../../types'
@@ -18,6 +18,8 @@ export const SecretBase64Plain: FC<{ data: TDynamicComponentsAppTypeMap['SecretB
     id,
     base64Value,
     plainTextValue,
+    multiline,
+    multilineRows,
     containerStyle,
     inputContainerStyle,
     flexProps,
@@ -27,7 +29,6 @@ export const SecretBase64Plain: FC<{ data: TDynamicComponentsAppTypeMap['SecretB
   } = data
 
   const [hidden, setHidden] = useState(true)
-  const inputRef = useRef<InputRef | null>(null)
 
   const [notificationApi, contextHolder] = notification.useNotification()
 
@@ -86,41 +87,43 @@ export const SecretBase64Plain: FC<{ data: TDynamicComponentsAppTypeMap['SecretB
     }
   }
 
+  const handleInputClick = async (e: React.MouseEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (hidden) {
+      return
+    }
+
+    e.currentTarget.focus()
+    e.currentTarget.select()
+    await copyToClipboard()
+  }
+
+  const useNiceLooking = !!niceLooking && !multiline
+  const shownValue = useNiceLooking ? decodedText : hidden ? '' : decodedText
+  const computedMultilineRows = Math.min(12, Math.max(3, decodedText.split(/\r\n|\r|\n/).length))
+  const resolvedMultilineRows =
+    typeof multilineRows === 'number' && Number.isFinite(multilineRows)
+      ? Math.min(30, Math.max(1, Math.floor(multilineRows)))
+      : computedMultilineRows
+
   return (
     <div style={containerStyle}>
       <Styled.NotificationOverrides />
       <Flex gap={8} {...flexProps}>
         <Styled.NoSelect style={inputContainerStyle}>
-          {niceLooking ? (
+          {useNiceLooking ? (
             <Spoiler theme={theme} hidden={hidden}>
-              <Styled.DisabledInput
-                $hidden={hidden}
-                ref={inputRef}
-                onClick={() => {
-                  if (!hidden) {
-                    inputRef.current?.focus({
-                      cursor: 'all',
-                    })
-                    copyToClipboard()
-                  }
-                }}
-                value={decodedText}
-              />
+              <Styled.DisabledInput $hidden={hidden} onClick={handleInputClick} value={shownValue} readOnly />
             </Spoiler>
-          ) : (
-            <Styled.DisabledInput
+          ) : multiline ? (
+            <Styled.DisabledTextArea
               $hidden={hidden}
-              ref={inputRef}
-              onClick={() => {
-                if (!hidden) {
-                  inputRef.current?.focus({
-                    cursor: 'all',
-                  })
-                  copyToClipboard()
-                }
-              }}
-              value={hidden ? '' : decodedText}
+              onClick={handleInputClick}
+              value={shownValue}
+              rows={resolvedMultilineRows}
+              readOnly
             />
+          ) : (
+            <Styled.DisabledInput $hidden={hidden} onClick={handleInputClick} value={shownValue} readOnly />
           )}
         </Styled.NoSelect>
         <Button type="text" onClick={() => setHidden(!hidden)}>

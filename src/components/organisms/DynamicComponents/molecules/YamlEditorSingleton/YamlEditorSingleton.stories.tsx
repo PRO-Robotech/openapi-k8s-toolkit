@@ -254,6 +254,48 @@ export const ReadOnly: Story = {
   },
 }
 
+export const WithManagedFields: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-yaml-editor-managed-fields',
+    multiQueryData: {
+      req0: {
+        apiVersion: 'v1',
+        kind: 'Pod',
+        metadata: {
+          name: 'managed-fields-demo',
+          namespace: 'default',
+          managedFields: [
+            {
+              manager: 'kubectl-client-side-apply',
+              operation: 'Update',
+              apiVersion: 'v1',
+              time: '2026-02-12T10:00:00Z',
+              fieldsType: 'FieldsV1',
+              fieldsV1: {
+                'f:metadata': {
+                  'f:labels': {
+                    '.': {},
+                    'f:app': {},
+                  },
+                },
+              },
+            },
+          ],
+        },
+        spec: {
+          containers: [
+            {
+              name: 'demo',
+              image: 'nginx:1.27',
+            },
+          ],
+        },
+      },
+    },
+  },
+}
+
 export const PermissionsDenied: Story = {
   args: {
     ...Default.args,
