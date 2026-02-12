@@ -31,6 +31,8 @@ const meta: Meta<TArgs> = {
     id: { control: 'text', description: 'data.id' },
     base64Value: { control: 'text', description: 'data.base64Value' },
     plainTextValue: { control: 'text', description: 'data.plainTextValue' },
+    multiline: { control: 'boolean', description: 'data.multiline' },
+    multilineRows: { control: 'number', description: 'data.multilineRows' },
     containerStyle: { control: 'object', description: 'data.containerStyle' },
     inputContainerStyle: { control: 'object', description: 'data.inputContainerStyle' },
     flexProps: { control: 'object', description: 'data.flexProps' },
@@ -66,6 +68,8 @@ const meta: Meta<TArgs> = {
               id: args.id,
               base64Value: args.base64Value,
               plainTextValue: args.plainTextValue,
+              multiline: args.multiline,
+              multilineRows: args.multilineRows,
               containerStyle: args.containerStyle,
               inputContainerStyle: args.inputContainerStyle,
               flexProps: args.flexProps,
@@ -87,6 +91,8 @@ const meta: Meta<TArgs> = {
             id: args.id,
             base64Value: args.base64Value,
             plainTextValue: args.plainTextValue,
+            multiline: args.multiline,
+            multilineRows: args.multilineRows,
             containerStyle: args.containerStyle,
             inputContainerStyle: args.inputContainerStyle,
             flexProps: args.flexProps,
@@ -176,6 +182,17 @@ export const NiceLooking: Story = {
   args: {
     ...Default.args,
     niceLooking: true,
+  },
+}
+
+export const Multiline: Story = {
+  args: {
+    ...Default.args,
+    multiline: true,
+    multilineRows: 6,
+    inputContainerStyle: {
+      minWidth: '400px',
+    },
   },
 }
 
