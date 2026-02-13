@@ -90,7 +90,7 @@ describe('BlackholeFormProvider', () => {
 
     expect(await screen.findByText('prepare failed')).toBeInTheDocument()
     expect(onChange).toHaveBeenCalledWith('Manual')
-    expect(onDisabled).toHaveBeenCalled()
+    expect(onDisabled).not.toHaveBeenCalled()
   })
 
   test('backend result=error: renders YamlEditorSingleton when parent updates mode to Manual', async () => {
