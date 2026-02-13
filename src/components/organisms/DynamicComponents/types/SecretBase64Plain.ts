@@ -3,10 +3,16 @@ import { FlexProps } from 'antd'
 
 export type TSecretBase64PlainProps = {
   id: number | string
-  base64Value?: string // reqs | one of required
-  plainTextValue?: string // reqs | one of required
+  type?: 'base64' | 'plain'
+  value?: string // primary single-value input
+  reqIndex?: string
+  jsonPathToSecrets?: string
+  base64Value?: string // deprecated: use value + type='base64'
+  plainTextValue?: string // deprecated: use value + type='plain'
   multiline?: boolean
   multilineRows?: number
+  textStyle?: CSSProperties
+  emptyText?: string
   containerStyle?: CSSProperties
   inputContainerStyle?: CSSProperties
   flexProps?: Omit<FlexProps, 'children'>

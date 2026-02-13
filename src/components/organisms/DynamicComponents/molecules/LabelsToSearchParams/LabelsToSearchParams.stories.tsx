@@ -36,7 +36,7 @@ const meta: Meta<TArgs> = {
     },
     linkPrefix: {
       control: 'text',
-      description: 'data.linkPrefix (URL prefix; labels are encoded and appended as query part)',
+      description: 'data.linkPrefix (base URL; component appends `?labels=` and encoded labels)',
     },
     textLink: {
       control: 'text',
@@ -45,6 +45,12 @@ const meta: Meta<TArgs> = {
     errorText: {
       control: 'text',
       description: 'data.errorText (shown as plain text when labels structure is invalid / missing)',
+    },
+    errorMode: {
+      control: 'radio',
+      options: ['errorText', 'default'],
+      description:
+        "data.errorMode ('errorText' shows plain error text; 'default' renders linkPrefix without labels selectors)",
     },
     maxTextLength: {
       control: 'number',
@@ -95,6 +101,7 @@ const meta: Meta<TArgs> = {
       linkPrefix: rest.linkPrefix,
       textLink: rest.textLink,
       errorText: rest.errorText,
+      errorMode: rest.errorMode,
       maxTextLength: rest.maxTextLength,
       renderLabelsAsRows: rest.renderLabelsAsRows,
       underline,
@@ -147,9 +154,10 @@ export const Default: Story = {
     id: 'example-labels-to-search-params',
     reqIndex: '0',
     jsonPathToLabels: '.data.metadata.labels', // -> "$.data.metadata.labels"
-    linkPrefix: '/workloads?labels=',
+    linkPrefix: '/workloads',
     textLink: undefined,
     errorText: 'Unable to build labels filter',
+    errorMode: 'errorText',
     maxTextLength: 40,
     renderLabelsAsRows: false,
     underline: true,
@@ -224,6 +232,15 @@ export const MissingLabelsFallback: Story = {
       },
     },
     errorText: 'Labels are unavailable',
+  },
+}
+
+export const MissingLabelsDefaultLinkFallback: Story = {
+  args: {
+    ...MissingLabelsFallback.args,
+    id: 'example-labels-to-search-params-missing-default-link',
+    errorMode: 'default',
+    textLink: 'Open workloads',
   },
 }
 
