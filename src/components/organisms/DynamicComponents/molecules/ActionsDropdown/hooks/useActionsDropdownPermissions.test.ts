@@ -1,21 +1,36 @@
-import { renderHook } from '@testing-library/react'
+import React from 'react'
+import { renderHook, waitFor } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { TActionUnion, TActionsPermissions } from '../../../types/ActionsDropdown'
 import { useActionsDropdownPermissions } from './useActionsDropdownPermissions'
 
 /* ------------------------------------------------------------------ */
-/*  Mock usePermissions                                                */
+/*  Mock checkPermission                                               */
 /* ------------------------------------------------------------------ */
-const mockUsePermissions = jest.fn()
-jest.mock('hooks/usePermissions', () => ({
-  usePermissions: (...args: unknown[]) => mockUsePermissions(...args),
+const mockCheckPermission = jest.fn()
+jest.mock('api/permissions', () => ({
+  checkPermission: (...args: unknown[]) => mockCheckPermission(...args),
 }))
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
-const permissionResult = (allowed?: boolean) => ({
+const makeClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: 0,
+        staleTime: 0,
+      },
+    },
+  })
+
+const wrapper = ({ children }: { children: React.ReactNode }) =>
+  React.createElement(QueryClientProvider, { client: makeClient() }, children)
+
+const checkPermissionResponse = (allowed?: boolean) => ({
   data: allowed !== undefined ? { status: { allowed } } : undefined,
-  isLoading: false,
 })
 
 const baseParams = {
@@ -61,7 +76,7 @@ const openKubeletConfigAction: TActionUnion = {
 
 beforeEach(() => {
   jest.clearAllMocks()
-  mockUsePermissions.mockReturnValue(permissionResult(undefined))
+  mockCheckPermission.mockResolvedValue(checkPermissionResponse(undefined))
 })
 
 /* ------------------------------------------------------------------ */
@@ -71,61 +86,68 @@ describe('useActionsDropdownPermissions - manual override', () => {
   it('returns manual permissions when provided, skipping RBAC checks', () => {
     const manualPermissions: TActionsPermissions = { 'edit-0': true, 'editLabels-1': false, 'delete-2': true }
 
-    const { result } = renderHook(() =>
-      useActionsDropdownPermissions({
-        ...baseParams,
-        actions: [editAction, editLabelsAction, deleteAction],
-        permissions: manualPermissions,
-      }),
+    const { result } = renderHook(
+      () =>
+        useActionsDropdownPermissions({
+          ...baseParams,
+          actions: [editAction, editLabelsAction, deleteAction],
+          permissions: manualPermissions,
+        }),
+      { wrapper },
     )
 
     expect(result.current).toEqual(manualPermissions)
-    // All usePermissions calls should have enabler: false
-    mockUsePermissions.mock.calls.forEach(call => {
-      expect(call[0].enabler).toBe(false)
-    })
+    expect(mockCheckPermission).not.toHaveBeenCalled()
   })
 })
 
 describe('useActionsDropdownPermissions - per-action permissions', () => {
-  it('computes per-action permissions using each action permissionContext', () => {
-    mockUsePermissions.mockImplementation((params: { verb: string }) => {
-      if (params.verb === 'update') return permissionResult(true)
-      if (params.verb === 'patch') return permissionResult(false)
-      if (params.verb === 'delete') return permissionResult(true)
-      return permissionResult(undefined)
+  it('computes per-action permissions using each action permissionContext', async () => {
+    mockCheckPermission.mockImplementation(({ body }: { body: { verb: string } }) => {
+      if (body.verb === 'update') return Promise.resolve(checkPermissionResponse(true))
+      if (body.verb === 'patch') return Promise.resolve(checkPermissionResponse(false))
+      if (body.verb === 'delete') return Promise.resolve(checkPermissionResponse(true))
+      return Promise.resolve(checkPermissionResponse(undefined))
     })
 
-    const { result } = renderHook(() =>
-      useActionsDropdownPermissions({
-        ...baseParams,
-        actions: [editAction, editLabelsAction, deleteAction],
-      }),
+    const { result } = renderHook(
+      () =>
+        useActionsDropdownPermissions({
+          ...baseParams,
+          actions: [editAction, editLabelsAction, deleteAction],
+        }),
+      { wrapper },
     )
 
-    expect(result.current['edit-0']).toBe(true)
-    expect(result.current['editLabels-1']).toBe(false)
-    expect(result.current['delete-2']).toBe(true)
+    await waitFor(() => {
+      expect(result.current['edit-0']).toBe(true)
+      expect(result.current['editLabels-1']).toBe(false)
+      expect(result.current['delete-2']).toBe(true)
+    })
   })
 
-  it('passes cluster and plural from per-action permissionContext with interpolation', () => {
-    mockUsePermissions.mockReturnValue(permissionResult(true))
+  it('passes cluster and plural from per-action permissionContext with interpolation', async () => {
+    mockCheckPermission.mockResolvedValue(checkPermissionResponse(true))
 
-    renderHook(() =>
-      useActionsDropdownPermissions({
-        ...baseParams,
-        actions: [editAction],
-      }),
+    renderHook(
+      () =>
+        useActionsDropdownPermissions({
+          ...baseParams,
+          actions: [editAction],
+        }),
+      { wrapper },
     )
 
-    // Find the enabled call (the one with enabler: true)
-    const enabledCall = mockUsePermissions.mock.calls.find((call: { enabler: boolean }[]) => call[0].enabler === true)
-    expect(enabledCall).toBeDefined()
-    expect(enabledCall[0].cluster).toBe('my-cluster')
-    expect(enabledCall[0].plural).toBe('pods')
+    await waitFor(() => {
+      expect(mockCheckPermission).toHaveBeenCalled()
+    })
+
+    const call = mockCheckPermission.mock.calls[0][0]
+    expect(call.cluster).toBe('my-cluster')
+    expect(call.body.plural).toBe('pods')
   })
 
-  it('passes namespace from permissionContext when provided', () => {
+  it('passes namespace from permissionContext when provided', async () => {
     const actionWithNs: TActionUnion = {
       type: 'edit',
       props: {
@@ -138,21 +160,26 @@ describe('useActionsDropdownPermissions - per-action permissions', () => {
       },
     }
 
-    mockUsePermissions.mockReturnValue(permissionResult(true))
+    mockCheckPermission.mockResolvedValue(checkPermissionResponse(true))
 
-    renderHook(() =>
-      useActionsDropdownPermissions({
-        ...baseParams,
-        actions: [actionWithNs],
-      }),
+    renderHook(
+      () =>
+        useActionsDropdownPermissions({
+          ...baseParams,
+          actions: [actionWithNs],
+        }),
+      { wrapper },
     )
 
-    const enabledCall = mockUsePermissions.mock.calls.find((call: { enabler: boolean }[]) => call[0].enabler === true)
-    expect(enabledCall[0].namespace).toBe('default')
+    await waitFor(() => {
+      expect(mockCheckPermission).toHaveBeenCalled()
+    })
+
+    const call = mockCheckPermission.mock.calls[0][0]
+    expect(call.body.namespace).toBe('default')
   })
 
-  it('deduplicates identical permission checks across actions', () => {
-    // cordon and uncordon both need 'patch' on the same resource
+  it('deduplicates identical permission checks across actions', async () => {
     const cordonAction: TActionUnion = {
       type: 'cordon',
       props: {
@@ -174,27 +201,27 @@ describe('useActionsDropdownPermissions - per-action permissions', () => {
       },
     }
 
-    mockUsePermissions.mockReturnValue(permissionResult(true))
+    mockCheckPermission.mockResolvedValue(checkPermissionResponse(true))
 
-    const { result } = renderHook(() =>
-      useActionsDropdownPermissions({
-        ...baseParams,
-        actions: [cordonAction, uncordonAction],
-      }),
+    const { result } = renderHook(
+      () =>
+        useActionsDropdownPermissions({
+          ...baseParams,
+          actions: [cordonAction, uncordonAction],
+        }),
+      { wrapper },
     )
 
-    // Both actions should share the same permission result
-    expect(result.current['cordon-0']).toBe(true)
-    expect(result.current['uncordon-1']).toBe(true)
+    await waitFor(() => {
+      expect(result.current['cordon-0']).toBe(true)
+      expect(result.current['uncordon-1']).toBe(true)
+    })
 
-    // Only one enabled permission call (deduplicated)
-    const enabledCalls = mockUsePermissions.mock.calls.filter(
-      (call: { enabler: boolean }[]) => call[0].enabler === true,
-    )
-    expect(enabledCalls).toHaveLength(1)
+    // Only one API call (deduplicated — same cluster/plural/verb)
+    expect(mockCheckPermission).toHaveBeenCalledTimes(1)
   })
 
-  it('supports cross-resource permissions (different permissionContext per action)', () => {
+  it('supports cross-resource permissions (different permissionContext per action)', async () => {
     const scaleAction: TActionUnion = {
       type: 'scale',
       props: {
@@ -216,73 +243,85 @@ describe('useActionsDropdownPermissions - per-action permissions', () => {
       },
     }
 
-    mockUsePermissions.mockImplementation((params: { verb: string; plural: string }) => {
-      if (params.plural === 'deployments' && params.verb === 'update') return permissionResult(true)
-      if (params.plural === 'jobs' && params.verb === 'create') return permissionResult(false)
-      return permissionResult(undefined)
+    mockCheckPermission.mockImplementation(({ body }: { body: { verb: string; plural: string } }) => {
+      if (body.plural === 'deployments' && body.verb === 'update') return Promise.resolve(checkPermissionResponse(true))
+      if (body.plural === 'jobs' && body.verb === 'create') return Promise.resolve(checkPermissionResponse(false))
+      return Promise.resolve(checkPermissionResponse(undefined))
     })
 
-    const { result } = renderHook(() =>
-      useActionsDropdownPermissions({
-        ...baseParams,
-        actions: [scaleAction, triggerRunAction],
-      }),
+    const { result } = renderHook(
+      () =>
+        useActionsDropdownPermissions({
+          ...baseParams,
+          actions: [scaleAction, triggerRunAction],
+        }),
+      { wrapper },
     )
 
-    expect(result.current['scale-0']).toBe(true)
-    expect(result.current['triggerRun-1']).toBe(false)
+    await waitFor(() => {
+      expect(result.current['scale-0']).toBe(true)
+      expect(result.current['triggerRun-1']).toBe(false)
+    })
   })
 })
 
 describe('useActionsDropdownPermissions - subresource permissions', () => {
-  it('passes eviction subresource for evict action (create verb)', () => {
-    mockUsePermissions.mockReturnValue(permissionResult(true))
+  it('passes eviction subresource for evict action (create verb)', async () => {
+    mockCheckPermission.mockResolvedValue(checkPermissionResponse(true))
 
-    renderHook(() =>
-      useActionsDropdownPermissions({
-        ...baseParams,
-        actions: [evictAction],
-      }),
+    renderHook(
+      () =>
+        useActionsDropdownPermissions({
+          ...baseParams,
+          actions: [evictAction],
+        }),
+      { wrapper },
     )
 
-    const enabledCall = mockUsePermissions.mock.calls.find((call: { enabler: boolean }[]) => call[0].enabler === true)
-    expect(enabledCall).toBeDefined()
-    expect(enabledCall[0].verb).toBe('create')
-    expect(enabledCall[0].subresource).toBe('eviction')
+    await waitFor(() => {
+      expect(mockCheckPermission).toHaveBeenCalled()
+    })
+
+    const call = mockCheckPermission.mock.calls[0][0]
+    expect(call.body.verb).toBe('create')
+    expect(call.body.subresource).toBe('eviction')
   })
 
-  it('passes proxy subresource for openKubeletConfig action (get verb)', () => {
-    mockUsePermissions.mockReturnValue(permissionResult(true))
+  it('passes proxy subresource for openKubeletConfig action (get verb)', async () => {
+    mockCheckPermission.mockResolvedValue(checkPermissionResponse(true))
 
-    renderHook(() =>
-      useActionsDropdownPermissions({
-        ...baseParams,
-        actions: [openKubeletConfigAction],
-      }),
+    renderHook(
+      () =>
+        useActionsDropdownPermissions({
+          ...baseParams,
+          actions: [openKubeletConfigAction],
+        }),
+      { wrapper },
     )
 
-    const enabledCall = mockUsePermissions.mock.calls.find((call: { enabler: boolean }[]) => call[0].enabler === true)
-    expect(enabledCall).toBeDefined()
-    expect(enabledCall[0].verb).toBe('get')
-    expect(enabledCall[0].subresource).toBe('proxy')
+    await waitFor(() => {
+      expect(mockCheckPermission).toHaveBeenCalled()
+    })
+
+    const call = mockCheckPermission.mock.calls[0][0]
+    expect(call.body.verb).toBe('get')
+    expect(call.body.subresource).toBe('proxy')
   })
 })
 
 describe('useActionsDropdownPermissions - enablement', () => {
   it('disables permission checks while multiQuery is loading', () => {
-    const { result } = renderHook(() =>
-      useActionsDropdownPermissions({
-        ...baseParams,
-        isMultiQueryLoading: true,
-        actions: [editAction],
-      }),
+    const { result } = renderHook(
+      () =>
+        useActionsDropdownPermissions({
+          ...baseParams,
+          isMultiQueryLoading: true,
+          actions: [editAction],
+        }),
+      { wrapper },
     )
 
-    mockUsePermissions.mock.calls.forEach(call => {
-      expect(call[0].enabler).toBe(false)
-    })
-
-    // No keys should be set in computed permissions
+    expect(mockCheckPermission).not.toHaveBeenCalled()
     expect(Object.keys(result.current)).toHaveLength(0)
   })
 
@@ -292,21 +331,18 @@ describe('useActionsDropdownPermissions - enablement', () => {
       props: { text: 'Edit', cluster: 'c', apiVersion: 'v1', plural: 'pods', name: 'p' },
     }
 
-    mockUsePermissions.mockReturnValue(permissionResult(true))
+    mockCheckPermission.mockResolvedValue(checkPermissionResponse(true))
 
-    const { result } = renderHook(() =>
-      useActionsDropdownPermissions({
-        ...baseParams,
-        actions: [actionWithoutCtx],
-      }),
+    const { result } = renderHook(
+      () =>
+        useActionsDropdownPermissions({
+          ...baseParams,
+          actions: [actionWithoutCtx],
+        }),
+      { wrapper },
     )
 
-    // No enabled permission calls
-    mockUsePermissions.mock.calls.forEach(call => {
-      expect(call[0].enabler).toBe(false)
-    })
-
-    // No permission result for the action
+    expect(mockCheckPermission).not.toHaveBeenCalled()
     expect(result.current['edit-0']).toBeUndefined()
   })
 
@@ -323,17 +359,16 @@ describe('useActionsDropdownPermissions - enablement', () => {
       },
     }
 
-    renderHook(() =>
-      useActionsDropdownPermissions({
-        ...baseParams,
-        replaceValues: {},
-        actions: [actionWithBadCluster],
-      }),
+    renderHook(
+      () =>
+        useActionsDropdownPermissions({
+          ...baseParams,
+          replaceValues: {},
+          actions: [actionWithBadCluster],
+        }),
+      { wrapper },
     )
 
-    // All hooks should have enabler: false because context is invalid
-    mockUsePermissions.mock.calls.forEach(call => {
-      expect(call[0].enabler).toBe(false)
-    })
+    expect(mockCheckPermission).not.toHaveBeenCalled()
   })
 })
