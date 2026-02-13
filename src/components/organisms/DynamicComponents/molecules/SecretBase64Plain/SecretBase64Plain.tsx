@@ -2,7 +2,8 @@
 /* eslint-disable no-console */
 /* eslint-disable react/no-array-index-key */
 import React, { FC, useState } from 'react'
-import { Flex, Button, notification } from 'antd'
+import jp from 'jsonpath'
+import { Flex, Button, notification, Typography } from 'antd'
 import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons'
 import { Spoiler } from 'spoiled'
 import { TDynamicComponentsAppTypeMap } from '../../types'
@@ -11,15 +12,22 @@ import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/p
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
 import { parseAll } from '../utils'
 import { Styled } from './styled'
+import { decodeIfBase64, resolveMultilineRows } from './utils'
 
 export const SecretBase64Plain: FC<{ data: TDynamicComponentsAppTypeMap['SecretBase64Plain'] }> = ({ data }) => {
   const {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     id,
+    type,
+    value,
+    reqIndex,
+    jsonPathToSecrets,
     base64Value,
     plainTextValue,
     multiline,
     multilineRows,
+    textStyle,
+    emptyText,
     containerStyle,
     inputContainerStyle,
     flexProps,
@@ -29,6 +37,7 @@ export const SecretBase64Plain: FC<{ data: TDynamicComponentsAppTypeMap['SecretB
   } = data
 
   const [hidden, setHidden] = useState(true)
+  const [hiddenByKey, setHiddenByKey] = useState<Record<string, boolean>>({})
 
   const [notificationApi, contextHolder] = notification.useNotification()
 
@@ -55,17 +64,26 @@ export const SecretBase64Plain: FC<{ data: TDynamicComponentsAppTypeMap['SecretB
   }, {})
 
   const parsedText = parseAll({
-    text: base64Value || plainTextValue || 'Oneof required',
+    text: value ?? base64Value ?? plainTextValue ?? 'Value required',
     replaceValues,
     multiQueryData,
   })
+  const emptyTextPrepared: string | undefined =
+    typeof emptyText === 'string' && emptyText.length > 0
+      ? parseAll({
+          text: emptyText,
+          replaceValues,
+          multiQueryData,
+        })
+      : undefined
 
-  const decodedText = base64Value ? atob(parsedText) : parsedText
+  const shouldDecodeSingle = type === 'base64' ? true : type === 'plain' ? false : base64Value !== undefined
+  const decodedText = decodeIfBase64(parsedText, shouldDecodeSingle)
 
-  const copyToClipboard = async () => {
+  const copyToClipboard = async (valueToCopy: string) => {
     try {
-      if (decodedText !== null && decodedText !== undefined) {
-        await navigator.clipboard.writeText(decodedText)
+      if (valueToCopy !== null && valueToCopy !== undefined) {
+        await navigator.clipboard.writeText(valueToCopy)
         notificationApi.info({
           // message: `Copied: ${decodedText.substring(0, 5)}...`,
           message: notificationText || 'Text copied to clipboard',
@@ -87,49 +105,139 @@ export const SecretBase64Plain: FC<{ data: TDynamicComponentsAppTypeMap['SecretB
     }
   }
 
-  const handleInputClick = async (e: React.MouseEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    if (hidden) {
+  const handleInputClick = async (
+    e: React.MouseEvent<HTMLInputElement | HTMLTextAreaElement>,
+    isHidden: boolean,
+    valueToCopy: string,
+  ) => {
+    if (isHidden) {
       return
     }
 
     e.currentTarget.focus()
     e.currentTarget.select()
-    await copyToClipboard()
+    await copyToClipboard(valueToCopy)
   }
 
   const useNiceLooking = !!niceLooking && !multiline
-  const shownValue = useNiceLooking ? decodedText : hidden ? '' : decodedText
-  const computedMultilineRows = Math.min(12, Math.max(3, decodedText.split(/\r\n|\r|\n/).length))
-  const resolvedMultilineRows =
-    typeof multilineRows === 'number' && Number.isFinite(multilineRows)
-      ? Math.min(30, Math.max(1, Math.floor(multilineRows)))
-      : computedMultilineRows
 
-  return (
-    <div style={containerStyle}>
-      <Styled.NotificationOverrides />
+  const renderSecretField = ({
+    value,
+    isHidden,
+    onToggle,
+  }: {
+    value: string
+    isHidden: boolean
+    onToggle: () => void
+  }) => {
+    const shownValue = useNiceLooking ? value : isHidden ? '' : value
+    const resolvedMultilineRows = resolveMultilineRows(value, multilineRows)
+
+    return (
       <Flex gap={8} {...flexProps}>
         <Styled.NoSelect style={inputContainerStyle}>
           {useNiceLooking ? (
-            <Spoiler theme={theme} hidden={hidden}>
-              <Styled.DisabledInput $hidden={hidden} onClick={handleInputClick} value={shownValue} readOnly />
+            <Spoiler theme={theme} hidden={isHidden}>
+              <Styled.DisabledInput
+                $hidden={isHidden}
+                onClick={e => handleInputClick(e, isHidden, value)}
+                value={shownValue}
+                readOnly
+              />
             </Spoiler>
           ) : multiline ? (
             <Styled.DisabledTextArea
-              $hidden={hidden}
-              onClick={handleInputClick}
+              $hidden={isHidden}
+              onClick={e => handleInputClick(e, isHidden, value)}
               value={shownValue}
               rows={resolvedMultilineRows}
               readOnly
             />
           ) : (
-            <Styled.DisabledInput $hidden={hidden} onClick={handleInputClick} value={shownValue} readOnly />
+            <Styled.DisabledInput
+              $hidden={isHidden}
+              onClick={e => handleInputClick(e, isHidden, value)}
+              value={shownValue}
+              readOnly
+            />
           )}
         </Styled.NoSelect>
-        <Button type="text" onClick={() => setHidden(!hidden)}>
-          {hidden ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+        <Button type="text" onClick={onToggle}>
+          {isHidden ? <EyeOutlined /> : <EyeInvisibleOutlined />}
         </Button>
       </Flex>
+    )
+  }
+
+  if (reqIndex && jsonPathToSecrets) {
+    const reqIndexPrepared = parseAll({ text: reqIndex, replaceValues, multiQueryData })
+    const jsonPathToSecretsPrepared = parseAll({ text: jsonPathToSecrets, replaceValues, multiQueryData })
+    const jsonRoot = multiQueryData[`req${reqIndexPrepared}`]
+
+    if (jsonRoot === undefined) {
+      return <div>No root for json path</div>
+    }
+
+    const pathResults = jp.query(jsonRoot || {}, `$${jsonPathToSecretsPrepared}`)
+    const objectToRender =
+      pathResults.find(item => item !== null && typeof item === 'object' && !Array.isArray(item)) || null
+    const secretsEntries = objectToRender ? Object.entries(objectToRender as Record<string, unknown>) : []
+
+    if (secretsEntries.length === 0) {
+      return (
+        <div style={containerStyle}>
+          <Styled.NotificationOverrides />
+          {emptyTextPrepared && <Typography.Text style={textStyle}>{emptyTextPrepared}</Typography.Text>}
+          {contextHolder}
+        </div>
+      )
+    }
+
+    return (
+      <div style={containerStyle}>
+        <Styled.NotificationOverrides />
+        <Flex vertical gap={8}>
+          {secretsEntries.map(([key, rawValue]) => {
+            const parsedValue = parseAll({
+              text: typeof rawValue === 'string' ? rawValue : String(rawValue),
+              replaceValues,
+              multiQueryData,
+            })
+            const shouldDecodeObject = type !== 'plain'
+            const secretValue = decodeIfBase64(parsedValue, shouldDecodeObject)
+            const hiddenForKey = hiddenByKey[key] ?? true
+
+            return (
+              <div key={key}>
+                <Typography.Text strong style={textStyle}>
+                  {key}
+                </Typography.Text>
+                {renderSecretField({
+                  value: secretValue,
+                  isHidden: hiddenForKey,
+                  onToggle: () =>
+                    setHiddenByKey(prevState => ({
+                      ...prevState,
+                      [key]: !(prevState[key] ?? true),
+                    })),
+                })}
+              </div>
+            )
+          })}
+        </Flex>
+        {contextHolder}
+      </div>
+    )
+  }
+
+  return (
+    <div style={containerStyle}>
+      <Styled.NotificationOverrides />
+      {renderSecretField({
+        value: decodedText,
+        isHidden: hidden,
+        onToggle: () => setHidden(!hidden),
+      })}
       {contextHolder}
     </div>
   )
