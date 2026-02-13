@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { usePermissions } from 'hooks/usePermissions'
+import { useQueries } from '@tanstack/react-query'
+import { checkPermission } from 'api/permissions'
 import type { TPermissionVerb } from 'localTypes/permissions'
 import { parseAll } from '../../utils'
 import type { TActionUnion, TActionsPermissions, TPermissionContext } from '../../../types/ActionsDropdown'
@@ -50,26 +51,36 @@ type TActionSlotMapping = {
   slotIndex: number
 }
 
-const useManyPermissions = (slots: TPermissionSlot[], enabled: boolean) => {
-  const results: ReturnType<typeof usePermissions>[] = []
-
-  // rules-of-hooks safe: fixed loop count, no conditional exits.
-  for (let i = 0; i < slots.length; i++) {
-    const slot = slots[i]
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    results[i] = usePermissions({
-      cluster: slot.cluster,
-      namespace: slot.namespace,
-      apiGroup: slot.apiGroup,
-      plural: slot.plural,
-      subresource: slot.subresource,
-      verb: slot.verb,
-      refetchInterval: false,
-      enabler: enabled,
-    })
-  }
-
-  return results
+const useManyPermissions = (slots: readonly TPermissionSlot[], enabled: boolean) => {
+  return useQueries({
+    queries: slots.map(slot => ({
+      queryKey: [
+        'usePermissions',
+        slot.cluster,
+        slot.namespace,
+        slot.apiGroup,
+        slot.plural,
+        slot.subresource,
+        slot.verb,
+        undefined,
+      ],
+      queryFn: async () =>
+        (
+          await checkPermission({
+            cluster: slot.cluster,
+            body: {
+              namespace: slot.namespace,
+              apiGroup: slot.apiGroup,
+              plural: slot.plural,
+              subresource: slot.subresource,
+              verb: slot.verb,
+            },
+          })
+        ).data,
+      refetchInterval: false as const,
+      enabled,
+    })),
+  })
 }
 
 export const useActionsDropdownPermissions = ({
