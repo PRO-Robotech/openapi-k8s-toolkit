@@ -6,6 +6,7 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
+import { isExternalHref } from './utils'
 
 export const AntdLink: FC<{ data: TDynamicComponentsAppTypeMap['antdLink']; children?: any }> = ({
   data,
@@ -27,6 +28,7 @@ export const AntdLink: FC<{ data: TDynamicComponentsAppTypeMap['antdLink']; chil
   const textPrepared = parseAll({ text, replaceValues, multiQueryData })
 
   const hrefPrepared = parseAll({ text: href, replaceValues, multiQueryData })
+  const isExternal = isExternalHref(hrefPrepared)
 
   if (isMultiqueryLoading) {
     return <div>Loading multiquery</div>
@@ -36,6 +38,10 @@ export const AntdLink: FC<{ data: TDynamicComponentsAppTypeMap['antdLink']; chil
     <Typography.Link
       href={hrefPrepared}
       onClick={e => {
+        if (isExternal) {
+          return
+        }
+
         e.preventDefault()
         navigate(hrefPrepared)
       }}

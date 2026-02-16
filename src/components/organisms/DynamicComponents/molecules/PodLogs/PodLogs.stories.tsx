@@ -57,6 +57,23 @@ const meta: Meta<TArgs> = {
       description:
         'Optional: data.substractHeight – pixels to subtract from available height when computing log viewer height (defaults to ~383)',
     },
+    tailLines: {
+      control: 'number',
+      description: 'Optional: data.tailLines – limit to last N lines of logs',
+    },
+    sinceSeconds: {
+      control: 'number',
+      description: 'Optional: data.sinceSeconds – only return logs from the last N seconds',
+    },
+    sinceTime: {
+      control: 'text',
+      description:
+        'Optional: data.sinceTime – only return logs after this RFC3339 timestamp (e.g., "2024-01-01T00:00:00Z"). Takes precedence over sinceSeconds.',
+    },
+    limitBytes: {
+      control: 'number',
+      description: 'Optional: data.limitBytes – maximum bytes of log data to return',
+    },
   },
 
   render: args => {
@@ -67,6 +84,10 @@ const meta: Meta<TArgs> = {
       namespace: args.namespace,
       podName: args.podName,
       substractHeight: args.substractHeight,
+      tailLines: args.tailLines,
+      sinceSeconds: args.sinceSeconds,
+      sinceTime: args.sinceTime,
+      limitBytes: args.limitBytes,
     }
 
     return (
@@ -114,5 +135,23 @@ export const Default: Story = {
     namespace: 'my-namespace',
     podName: 'my-pod',
     substractHeight: 340 + 35 + 8,
+    tailLines: undefined,
+    sinceSeconds: undefined,
+    sinceTime: undefined,
+    limitBytes: undefined,
+  },
+}
+
+export const WithFilters: Story = {
+  args: {
+    id: 'filtered-pod-logs',
+    cluster: 'my-cluster',
+    namespace: 'my-namespace',
+    podName: 'my-pod',
+    substractHeight: 340 + 35 + 8,
+    tailLines: 100,
+    sinceSeconds: 3600,
+    sinceTime: undefined,
+    limitBytes: undefined,
   },
 }

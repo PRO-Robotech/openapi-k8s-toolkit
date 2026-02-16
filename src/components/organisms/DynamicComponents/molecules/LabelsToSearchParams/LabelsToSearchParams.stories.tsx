@@ -36,7 +36,7 @@ const meta: Meta<TArgs> = {
     },
     linkPrefix: {
       control: 'text',
-      description: 'data.linkPrefix (URL prefix; labels are encoded and appended as query part)',
+      description: 'data.linkPrefix (base URL; component appends `?labels=` and encoded labels)',
     },
     textLink: {
       control: 'text',
@@ -44,11 +44,21 @@ const meta: Meta<TArgs> = {
     },
     errorText: {
       control: 'text',
-      description: 'data.errorText (shown when labels structure is invalid / missing)',
+      description: 'data.errorText (shown as plain text when labels structure is invalid / missing)',
+    },
+    errorMode: {
+      control: 'radio',
+      options: ['errorText', 'default'],
+      description:
+        "data.errorMode ('errorText' shows plain error text; 'default' renders linkPrefix without labels selectors)",
     },
     maxTextLength: {
       control: 'number',
       description: 'data.maxTextLength (truncate rendered text; full labels in Popover)',
+    },
+    renderLabelsAsRows: {
+      control: 'boolean',
+      description: 'data.renderLabelsAsRows (render labels as multiline `key=value,` rows; disables Popover)',
     },
 
     // Typography.Link props (from LinkProps, minus id/children/href)
@@ -91,7 +101,9 @@ const meta: Meta<TArgs> = {
       linkPrefix: rest.linkPrefix,
       textLink: rest.textLink,
       errorText: rest.errorText,
+      errorMode: rest.errorMode,
       maxTextLength: rest.maxTextLength,
+      renderLabelsAsRows: rest.renderLabelsAsRows,
       underline,
       target,
     }
@@ -142,10 +154,12 @@ export const Default: Story = {
     id: 'example-labels-to-search-params',
     reqIndex: '0',
     jsonPathToLabels: '.data.metadata.labels', // -> "$.data.metadata.labels"
-    linkPrefix: '/workloads?labels=',
+    linkPrefix: '/workloads',
     textLink: undefined,
-    errorText: 'View resources',
+    errorText: 'Unable to build labels filter',
+    errorMode: 'errorText',
     maxTextLength: 40,
+    renderLabelsAsRows: false,
     underline: true,
     target: '_blank',
 
@@ -202,6 +216,41 @@ export const InvalidStructureFallback: Story = {
         },
       },
     },
+  },
+}
+
+export const MissingLabelsFallback: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-labels-to-search-params-missing',
+    jsonPathToLabels: '.data.metadata.labels',
+    multiQueryData: {
+      req0: {
+        data: {
+          metadata: {},
+        },
+      },
+    },
+    errorText: 'Labels are unavailable',
+  },
+}
+
+export const MissingLabelsDefaultLinkFallback: Story = {
+  args: {
+    ...MissingLabelsFallback.args,
+    id: 'example-labels-to-search-params-missing-default-link',
+    errorMode: 'default',
+    textLink: 'Open workloads',
+  },
+}
+
+export const RenderLabelsAsRows: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-labels-to-search-params-rows',
+    renderLabelsAsRows: true,
+    textLink: 'This is ignored when renderLabelsAsRows is true',
+    maxTextLength: 12,
   },
 }
 

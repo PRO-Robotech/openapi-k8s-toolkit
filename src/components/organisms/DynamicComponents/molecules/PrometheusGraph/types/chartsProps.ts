@@ -39,6 +39,21 @@ type TBaseFormatterProps = {
   formatTimestamp?: (v: unknown) => string
 }
 
+type TMatrixTableColumnsConfig = {
+  series?: boolean // shown by default
+  min?: boolean // shown by default
+  max?: boolean // shown by default
+  mean?: boolean
+  current?: boolean // shown by default
+  currentTs?: boolean // shown by default
+}
+
+type TVectorTableColumnsConfig = {
+  id?: boolean // shown by default
+  value?: boolean // shown by default
+  timestamp?: boolean // shown by default
+}
+
 export type TMatrixToLineSingleProps = TBaseContainerSizeProps &
   TBasePromQueryProps &
   TBaseRangeProps &
@@ -70,7 +85,10 @@ export type TMatrixToReducedBarProps = TBaseContainerSizeProps &
   TBaseModeProps &
   TBaseFormatterProps
 
-export type TMatrixToTableRowsProps = TBasePromQueryProps & TBaseRangeProps & TBaseTitleProps & TBaseFormatterProps
+export type TMatrixToTableRowsProps = TBasePromQueryProps &
+  TBaseRangeProps &
+  TBaseTitleProps &
+  TBaseFormatterProps & { tableColumns?: TMatrixTableColumnsConfig }
 
 export type TVectorToBarVerticalProps = TBaseContainerSizeProps & TBasePromQueryProps & TBaseFormatterProps
 
@@ -78,7 +96,9 @@ export type TVectorToBarHorizontalProps = TBaseContainerSizeProps & TBasePromQue
 
 export type TVectorToPieProps = TBaseContainerSizeProps & TBasePromQueryProps & TBaseFormatterProps
 
-export type TVectorToTableRowsProps = TBasePromQueryProps & TBaseTitleProps & TBaseFormatterProps
+export type TVectorToTableRowsProps = TBasePromQueryProps &
+  TBaseTitleProps &
+  TBaseFormatterProps & { tableColumns?: TVectorTableColumnsConfig }
 
 export type TVectorToBarGaugeProps = TBaseContainerSizeProps &
   TBasePromQueryProps &

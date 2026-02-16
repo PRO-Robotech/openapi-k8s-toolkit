@@ -4,12 +4,14 @@
 import React, { FC, useEffect, useState, useRef, useCallback } from 'react'
 import { theme as antdtheme, notification, Flex, Button, Modal, Typography } from 'antd'
 import Editor from '@monaco-editor/react'
+import type * as monaco from 'monaco-editor'
 import * as yaml from 'yaml'
 import { useNavigate } from 'react-router-dom'
 import { TRequestError } from 'localTypes/api'
 import { TJSON } from 'localTypes/JSON'
 import { createNewEntry, updateEntry } from 'api/forms'
 import { Styled } from './styled'
+import { collapseManagedFieldsInEditor } from './utils'
 
 type TYamlEditorSingletonProps = {
   theme: 'light' | 'dark'
@@ -25,10 +27,12 @@ type TYamlEditorSingletonProps = {
   designNewLayoutHeight?: number
   openNotification?: boolean
   readOnly?: boolean
+  canEdit?: boolean
 }
 
 const NOTIFICATION_KEY = 'yaml-data-changed' // Single static key = only one notification
 
+// eslint-disable-next-line max-lines-per-function
 export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
   theme,
   cluster,
@@ -43,6 +47,7 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
   designNewLayoutHeight,
   openNotification,
   readOnly = false,
+  canEdit,
 }) => {
   const { token } = antdtheme.useToken()
   const navigate = useNavigate()
@@ -57,6 +62,13 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
   const latestPrefillYamlRef = useRef<string | null>(null)
   // before applying any data yaml is empty
   const firstLoadRef = useRef(true)
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
+
+  const collapseManagedFieldsIfNeeded = useCallback(() => {
+    const editor = editorRef.current
+    if (!editor) return
+    collapseManagedFieldsInEditor(editor)
+  }, [])
 
   // Unified reload function — closes notification + applies latest data
   const handleReload = useCallback(() => {
@@ -115,6 +127,13 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
 
     latestPrefillYamlRef.current = nextYaml
   }, [prefillValuesSchema, openNotificationYamlChanged])
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      collapseManagedFieldsIfNeeded()
+    }, 0)
+    return () => clearTimeout(id)
+  }, [yamlData, collapseManagedFieldsIfNeeded])
 
   const onSubmit = () => {
     setIsLoading(true)
@@ -180,6 +199,12 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
           width="100%"
           height={designNewLayoutHeight || '75vh'}
           value={yamlData}
+          onMount={editor => {
+            editorRef.current = editor
+            setTimeout(() => {
+              collapseManagedFieldsIfNeeded()
+            }, 0)
+          }}
           onChange={value => {
             if (!readOnly) {
               setYamlData(value || '')
@@ -195,7 +220,7 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
       {!readOnly && (
         <Styled.ControlsRowContainer $bgColor={token.colorPrimaryBg} $designNewLayout={designNewLayout}>
           <Flex gap={designNewLayout ? 10 : 16} align="center">
-            <Button type="primary" onClick={onSubmit} loading={isLoading}>
+            <Button type="primary" onClick={onSubmit} loading={isLoading} disabled={canEdit === false}>
               Submit
             </Button>
             {backlink && <Button onClick={() => navigate(backlink)}>Cancel</Button>}
@@ -214,6 +239,7 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
             </Typography.Text>
           }
           cancelButtonProps={{ style: { display: 'none' } }}
+          centered
         >
           An error has occurred: {error?.response?.data?.message}
         </Modal>

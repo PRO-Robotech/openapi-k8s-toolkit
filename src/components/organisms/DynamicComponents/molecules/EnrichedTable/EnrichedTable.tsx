@@ -16,8 +16,9 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
+import { serializeLabelsWithNoEncoding } from '../../utils/EnrichedTable'
 import { parseAll } from '../utils'
-import { serializeLabelsWithNoEncoding } from './utils'
+import { isValidLabelSelectorObject } from './utils'
 
 export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTable']; children?: any }> = ({
   data,
@@ -104,6 +105,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     cluster: clusterPrepared,
     verb: 'create',
     refetchInterval: false,
+    enabler: Boolean(dataForControlsPrepared && clusterPrepared && !isMultiqueryLoading),
   })
 
   const fetchUrlPrepared = fetchUrl ? parseAll({ text: fetchUrl, replaceValues, multiQueryData }) : undefined
@@ -139,8 +141,10 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
       ? _.get(root || {}, labelSelectorFull.pathToLabels)
       : jp.query(root || {}, `$${labelSelectorFull.pathToLabels}`)[0]
 
-    const serializedLabels = serializeLabelsWithNoEncoding(value)
-    if (serializedLabels.length > 0) sParams.set('labelSelector', serializedLabels)
+    if (isValidLabelSelectorObject(value)) {
+      const serializedLabels = serializeLabelsWithNoEncoding(value)
+      if (serializedLabels.length > 0) sParams.set('labelSelector', serializedLabels)
+    }
   }
 
   if (fieldSelector) {

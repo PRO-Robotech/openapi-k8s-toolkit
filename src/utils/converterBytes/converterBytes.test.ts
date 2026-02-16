@@ -70,6 +70,11 @@ describe('byte utils', () => {
       expect(num).toBe('1.5')
     })
 
+    it('can format without unit when showUnit=false', () => {
+      const result = convertBytes(1500, 'kB', { format: true, showUnit: false, precision: 1, locale: 'en-US' })
+      expect(result).toBe('1.5')
+    })
+
     it('falls back to GB and logs when unit is unknown', () => {
       const result = convertBytes(1_000_000_000, 'unknown' as any)
       expect(consoleErrorSpy).toHaveBeenCalledWith('Unknown unit: "unknown"')
@@ -115,6 +120,12 @@ describe('byte utils', () => {
       expect(result.endsWith(' GiB')).toBe(true)
       const numeric = parseFloat(result.split(' ')[0])
       expect(numeric).toBeCloseTo(1.15, 2)
+    })
+
+    it('auto-scales without unit when showUnit=false', () => {
+      const result = formatBytesAuto(1_234_567_890, { precision: 2, locale: 'en-US', showUnit: false })
+      expect(result.includes(' ')).toBe(false)
+      expect(parseFloat(result)).toBeCloseTo(1.23, 2)
     })
 
     it('keeps small values in bytes for SI', () => {

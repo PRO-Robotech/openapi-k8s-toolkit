@@ -385,13 +385,13 @@ export const getEnrichedColumnsWithControls = ({
                     label: 'Edit',
                     key: 'edit',
                     // icon: editIcon || <EditOutlined size={12} />,
-                    disabled: value?.permissions && value.permissions.canUpdate ? !value.permissions?.canUpdate : false,
+                    disabled: value?.permissions ? !value.permissions.canUpdate : true,
                   },
                   {
                     label: 'Delete',
                     key: 'delete',
                     // icon: deleteIcon || <DeleteOutlined size={12} />,
-                    disabled: value?.permissions && value.permissions.canDelete ? !value.permissions?.canDelete : false,
+                    disabled: value?.permissions ? !value.permissions.canDelete : true,
                   },
                 ],
                 onClick: ({ key, domEvent }) => {

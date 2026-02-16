@@ -42,6 +42,10 @@ const meta: Meta<TArgs> = {
       control: 'text',
       description: 'data.errorText (shown when root is missing/invalid or parsing fails)',
     },
+    readOnly: {
+      control: 'boolean',
+      description: 'data.readOnly (hides edit controls when true)',
+    },
     containerStyle: { control: 'object', description: 'data.containerStyle' },
     notificationSuccessMessage: {
       control: 'text',
@@ -81,6 +85,14 @@ const meta: Meta<TArgs> = {
       control: 'object',
       description: 'data.cols [key, value, effect, operator, actions] (AntD grid spans, length 5)',
     },
+    permissions: {
+      control: 'object',
+      description: 'data.permissions (optional; { canPatch?: boolean } manual override)',
+    },
+    permissionContext: {
+      control: 'object',
+      description: 'data.permissionContext (optional; auto permission check context)',
+    },
 
     // provider knobs
     isLoading: {
@@ -109,6 +121,7 @@ const meta: Meta<TArgs> = {
       jsonPathToArray: args.jsonPathToArray,
       text: args.text,
       errorText: args.errorText,
+      readOnly: args.readOnly,
       containerStyle: args.containerStyle,
       notificationSuccessMessage: args.notificationSuccessMessage,
       notificationSuccessMessageDescription: args.notificationSuccessMessageDescription,
@@ -121,6 +134,8 @@ const meta: Meta<TArgs> = {
       pathToValue: args.pathToValue,
       editModalWidth: args.editModalWidth,
       cols: args.cols,
+      permissions: args.permissions,
+      permissionContext: args.permissionContext,
     }
 
     return (
@@ -171,6 +186,7 @@ export const Default: Story = {
     jsonPathToArray: '.data.spec.tolerations', // jsonpath -> "$.data.spec.tolerations"
     text: 'Tolerations: ~counter~ items',
     errorText: 'No tolerations found',
+    readOnly: undefined,
     containerStyle: {
       padding: 12,
       border: '1px solid #eee',
@@ -187,6 +203,9 @@ export const Default: Story = {
     pathToValue: '/spec/template/spec/tolerations',
     editModalWidth: 720,
     cols: [6, 6, 4, 4, 4], // example AntD grid spans
+    permissions: {
+      canPatch: true,
+    },
 
     // providers
     isLoading: false,
@@ -229,5 +248,23 @@ export const LoadingMultiQuery: Story = {
   args: {
     ...Default.args,
     isLoading: true,
+  },
+}
+
+export const NoPatchPermission: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-tolerations-no-patch-permission',
+    permissions: {
+      canPatch: false,
+    },
+  },
+}
+
+export const ReadOnly: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-tolerations-readonly',
+    readOnly: true as any, // matches `readOnly?: true` in the type map
   },
 }

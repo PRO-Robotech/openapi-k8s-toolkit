@@ -15,6 +15,11 @@ type TExtraArgs = {
   state: 'success' | 'loading' | 'error'
   formatter?: 'bytes' | 'cores'
   dateFormatter?: TDateFormatOptions
+  tableColumns?: {
+    id?: boolean
+    value?: boolean
+    timestamp?: boolean
+  }
 }
 
 const buildFormatValue = (formatter?: TExtraArgs['formatter']) => {
@@ -85,9 +90,6 @@ const loadingHandler = http.get('http://localhost:9090/api/v1/query', async () =
   return HttpResponse.json({})
 })
 
-const errorHandler = http.get('http://localhost:9090/api/v1/query', () =>
-  HttpResponse.json({ status: 'error', errorType: 'internal', error: 'boom' }, { status: 500 }),
-)
 
 const meta: Meta<typeof VectorToTableRows> = {
   title: 'Factory/Prometheus Internal/Vector/ToTableRows',
@@ -101,14 +103,19 @@ const meta: Meta<typeof VectorToTableRows> = {
     state: { control: 'radio', options: ['success', 'loading', 'error'] },
     formatter: { control: 'radio', options: ['bytes', 'cores'] },
     dateFormatter: { control: 'object' },
+    tableColumns: { control: 'object' },
   } as any,
 
   render: (args: any) => {
-    const { query, title, theme, formatter, dateFormatter } = args as TExtraArgs & { query?: string; title?: string }
+    const { query, title, theme, formatter, dateFormatter, tableColumns } = args as TExtraArgs & {
+      query?: string
+      title?: string
+    }
 
     const data = {
       query,
       title,
+      ...(tableColumns ? { tableColumns } : {}),
       ...(formatter ? { formatter } : {}),
       ...(dateFormatter ? { dateFormatter } : {}),
     }
@@ -122,6 +129,7 @@ const meta: Meta<typeof VectorToTableRows> = {
               title={title}
               formatValue={buildFormatValue(formatter)}
               formatTimestamp={buildFormatTimestamp(dateFormatter)}
+              tableColumns={tableColumns}
             />
           </div>
         </SmartProvider>
@@ -154,6 +162,7 @@ export const Success: TStory = {
     query: 'container_memory_usage_bytes_success',
     formatter: 'bytes',
     dateFormatter: { style: 'time', seconds: true },
+    tableColumns: { id: true, value: true, timestamp: true },
     title: 'Vector → Table',
     theme: 'light',
     state: 'success',
@@ -172,24 +181,3 @@ export const Loading: TStory = {
   parameters: { msw: { handlers: [loadingHandler] } },
 }
 
-export const Error: TStory = {
-  args: {
-    query: 'container_memory_usage_bytes_error',
-    formatter: 'bytes',
-    title: 'Vector → Table',
-    theme: 'light',
-    state: 'error',
-  },
-  parameters: { msw: { handlers: [errorHandler] } },
-}
-
-export const DarkTheme: TStory = {
-  args: {
-    query: 'container_memory_usage_bytes_dark',
-    formatter: 'bytes',
-    title: 'Vector → Table',
-    theme: 'dark',
-    state: 'success',
-  },
-  parameters: { msw: { handlers: [successHandler] } },
-}

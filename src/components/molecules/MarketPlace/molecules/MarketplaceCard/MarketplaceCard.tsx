@@ -40,7 +40,7 @@ export const MarketplaceCard: FC<TMarketplaceCardProps> = ({
   onEditClick,
   addedMode,
   standalone,
-  showZeroResources,
+  showZeroResources = false,
 }) => {
   const { useToken } = theme
   const { token } = useToken()
@@ -82,11 +82,20 @@ export const MarketplaceCard: FC<TMarketplaceCardProps> = ({
     namespace,
     apiGroup,
     apiVersion: apiVersion || '',
-    plural: type,
-    isEnabled: Boolean(apiVersion && addedMode && type !== 'direct'),
+    plural: plural || '',
+    isEnabled: Boolean(apiVersion && plural && addedMode && type !== 'direct'),
   })
 
-  if (addedMode && (k8sListError || type === 'direct') && !showZeroResources) {
+  const isAddedMode = Boolean(addedMode)
+  const isDirectType = type === 'direct'
+  const hasK8sListError = Boolean(k8sListError)
+
+  // In added mode these cannot be counted reliably.
+  const isUncountable = isAddedMode && (hasK8sListError || isDirectType)
+  const itemsCount = k8sList?.items?.length ?? 0
+  const isCountableZero = isAddedMode && !isUncountable && itemsCount === 0
+
+  if (showZeroResources === false && (isUncountable || isCountableZero)) {
     return null
   }
 
@@ -120,7 +129,7 @@ export const MarketplaceCard: FC<TMarketplaceCardProps> = ({
         </Flex>
         <Styled.OverflowContainer>
           <Styled.TitleContainer>
-            {name} {addedMode && <span>x{k8sList?.items?.length}</span>}
+            {name} {addedMode && <span>x{itemsCount}</span>}
           </Styled.TitleContainer>
           <Styled.TagsContainer>
             {tags.map(tag => (

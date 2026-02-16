@@ -50,7 +50,7 @@ const meta: Meta<TArgs> = {
     },
     listPodTemplatesNs: {
       control: 'text',
-      description: 'Optional: data.listPodTemplatesNs – namespace to fetch v1/PodTemplates for profiles',
+      description: 'data.listPodTemplatesNs – namespace to fetch v1/PodTemplates (required)',
     },
     substractHeight: {
       control: 'number',
@@ -112,6 +112,7 @@ export const Default: Story = {
     id: 'example-node-terminal',
     cluster: 'my-cluster',
     nodeName: 'worker-node-1',
+    listPodTemplatesNs: 'incloud-web',
     substractHeight: 340,
   },
 }

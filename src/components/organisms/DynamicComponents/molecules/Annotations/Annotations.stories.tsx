@@ -43,6 +43,10 @@ const meta: Meta<TArgs> = {
       control: 'text',
       description: 'data.errorText (shown when root is missing or invalid)',
     },
+    readOnly: {
+      control: 'boolean',
+      description: 'data.readOnly (hides edit controls when true)',
+    },
     containerStyle: { control: 'object', description: 'data.containerStyle' },
     notificationSuccessMessage: {
       control: 'text',
@@ -79,6 +83,14 @@ const meta: Meta<TArgs> = {
       control: 'object',
       description: 'data.cols [keyCol, valueCol, actionsCol] (AntD grid spans, length 3)',
     },
+    permissions: {
+      control: 'object',
+      description: 'data.permissions (optional; { canPatch?: boolean } manual override)',
+    },
+    permissionContext: {
+      control: 'object',
+      description: 'data.permissionContext (optional; auto permission check context)',
+    },
 
     // provider knobs
     isLoading: { control: 'boolean', description: 'useMultiQuery.isLoading' },
@@ -101,6 +113,7 @@ const meta: Meta<TArgs> = {
       jsonPathToObj: args.jsonPathToObj,
       text: args.text,
       errorText: args.errorText,
+      readOnly: args.readOnly,
       containerStyle: args.containerStyle,
       notificationSuccessMessage: args.notificationSuccessMessage,
       notificationSuccessMessageDescription: args.notificationSuccessMessageDescription,
@@ -113,6 +126,8 @@ const meta: Meta<TArgs> = {
       pathToValue: args.pathToValue,
       editModalWidth: args.editModalWidth,
       cols: args.cols,
+      permissions: args.permissions,
+      permissionContext: args.permissionContext,
     }
 
     return (
@@ -167,6 +182,7 @@ export const Default: Story = {
     jsonPathToObj: '.data.annotations', // -> jsonpath: "$.data.annotations"
     text: 'Annotations: ~counter~ items',
     errorText: 'No annotations found',
+    readOnly: undefined,
     containerStyle: {
       padding: 12,
       border: '1px solid #eee',
@@ -183,6 +199,9 @@ export const Default: Story = {
     pathToValue: '/metadata/annotations',
     editModalWidth: 720,
     cols: [8, 12, 4],
+    permissions: {
+      canPatch: true,
+    },
 
     // providers
     isLoading: false,
@@ -191,12 +210,10 @@ export const Default: Story = {
     multiQueryData: {
       req0: {
         data: {
-          annotations: [
-            {
-              'example.com/foo': 'bar',
-              'example.com/hello': 'world',
-            },
-          ],
+          annotations: {
+            'example.com/foo': 'bar',
+            'example.com/hello': 'world',
+          },
         },
       },
     },
@@ -209,7 +226,7 @@ export const Default: Story = {
  */
 export const MissingRoot: Story = {
   args: {
-    ...Default.args,
+    ...Default.args!,
     multiQueryData: {
       // no req0 -> jsonRoot === undefined
     },
@@ -221,7 +238,7 @@ export const MissingRoot: Story = {
  */
 export const Loading: Story = {
   args: {
-    ...Default.args,
+    ...Default.args!,
     isLoading: true,
   },
 }
@@ -231,8 +248,40 @@ export const Loading: Story = {
  */
 export const ProviderError: Story = {
   args: {
-    ...Default.args,
+    ...Default.args!,
     isError: true,
     errors: [{ message: 'Failed to fetch data for annotations' }],
+  },
+}
+
+export const NoPatchPermission: Story = {
+  args: {
+    ...Default.args!,
+    id: 'example-annotations-no-patch-permission',
+    permissions: {
+      canPatch: false,
+    },
+  },
+}
+
+export const NoAnnotations: Story = {
+  args: {
+    ...Default.args!,
+    id: 'example-annotations-empty',
+    multiQueryData: {
+      req0: {
+        data: {
+          annotations: {},
+        },
+      },
+    },
+  },
+}
+
+export const ReadOnly: Story = {
+  args: {
+    ...Default.args!,
+    id: 'example-annotations-readonly',
+    readOnly: true as any, // matches `readOnly?: true` in the type map
   },
 }

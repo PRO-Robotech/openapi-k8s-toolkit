@@ -1,0 +1,1 @@
+export { EnrichedTableModal } from './EnrichedTableModal'

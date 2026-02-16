@@ -1,69 +1,34 @@
 /* eslint-disable max-classes-per-file */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { serializeLabels, serializeLabelsWithNoEncoding } from './utils'
+import { isValidLabelSelectorObject } from './utils'
 
-describe('serializeLabels', () => {
-  test('returns error for non-plain objects', () => {
-    expect(serializeLabels(undefined)).toBe('Expected a plain object')
-    expect(serializeLabels(null)).toBe('Expected a plain object')
-    expect(serializeLabels([])).toBe('Expected a plain object')
-    expect(serializeLabels('x' as any)).toBe('Expected a plain object')
-    expect(serializeLabels(1 as any)).toBe('Expected a plain object')
+describe('isValidLabelSelectorObject', () => {
+  test('returns true for plain object with string and number values', () => {
+    expect(isValidLabelSelectorObject({ app: 'web', replicas: 2 })).toBe(true)
+  })
+
+  test('returns false for missing selector values', () => {
+    expect(isValidLabelSelectorObject(undefined)).toBe(false)
+    expect(isValidLabelSelectorObject(null)).toBe(false)
+  })
+
+  test('returns false for non-plain objects', () => {
+    expect(isValidLabelSelectorObject([])).toBe(false)
+    expect(isValidLabelSelectorObject('a=b')).toBe(false)
+    expect(isValidLabelSelectorObject(123)).toBe(false)
 
     class X {
       a = 1
     }
-    expect(serializeLabels(new X() as any)).toBe('Expected a plain object')
+    expect(isValidLabelSelectorObject(new X())).toBe(false)
   })
 
-  test('returns error when any value is not string or number', () => {
-    expect(serializeLabels({ a: true } as any)).toBe('All values must be string or number')
-    expect(serializeLabels({ a: 'ok', b: {} } as any)).toBe('All values must be string or number')
-    expect(serializeLabels({ a: 'ok', b: null } as any)).toBe('All values must be string or number')
+  test('returns false for empty plain object', () => {
+    expect(isValidLabelSelectorObject({})).toBe(false)
   })
 
-  test('serializes and URL-encodes key=value pairs joined by commas', () => {
-    const input = { app: 'web', tier: 2 }
-
-    const res = serializeLabels(input)
-
-    // Actual raw string before encoding would be: "app=web,tier=2"
-    expect(res).toBe(encodeURIComponent('app=web,tier=2'))
-  })
-
-  test('encoding handles spaces and special characters', () => {
-    const input = { 'my key': 'hello world', a: 'x/y' }
-
-    const raw = 'my key=hello world,a=x/y'
-    expect(serializeLabels(input)).toBe(encodeURIComponent(raw))
-  })
-
-  test('empty object serializes to empty string', () => {
-    expect(serializeLabels({})).toBe('')
-  })
-})
-
-describe('serializeLabelsWithNoEncoding', () => {
-  test('returns error for non-plain objects', () => {
-    expect(serializeLabelsWithNoEncoding(undefined)).toBe('Expected a plain object')
-    expect(serializeLabelsWithNoEncoding(null)).toBe('Expected a plain object')
-    expect(serializeLabelsWithNoEncoding([])).toBe('Expected a plain object')
-
-    class X {
-      a = 1
-    }
-    expect(serializeLabelsWithNoEncoding(new X() as any)).toBe('Expected a plain object')
-  })
-
-  test('returns error when any value is not string or number', () => {
-    expect(serializeLabelsWithNoEncoding({ a: true } as any)).toBe('All values must be string or number')
-  })
-
-  test('serializes key=value pairs joined by commas without encoding', () => {
-    expect(serializeLabelsWithNoEncoding({ app: 'web', tier: 2 })).toBe('app=web,tier=2')
-  })
-
-  test('empty object serializes to empty string', () => {
-    expect(serializeLabelsWithNoEncoding({})).toBe('')
+  test('returns false when any value is not string or number', () => {
+    expect(isValidLabelSelectorObject({ app: true })).toBe(false)
+    expect(isValidLabelSelectorObject({ app: 'web', meta: { nested: true } })).toBe(false)
+    expect(isValidLabelSelectorObject({ app: 'web', count: null })).toBe(false)
   })
 })

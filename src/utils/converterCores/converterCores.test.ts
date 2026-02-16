@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 // utilts.test.ts (or whatever name you use)
 import { convertCores, formatCoresAuto, toCores, convertCompute, parseCoresWithUnit } from './converterCores'
 
@@ -65,6 +66,11 @@ describe('core-units helpers (core/mcore/ucore/ncore)', () => {
       expect(normalize(String(result))).toBe('500mcore')
     })
 
+    it('can format without unit when showUnit=false', () => {
+      const result = convertCores(0.5, 'm', { format: true, showUnit: false, precision: 0 })
+      expect(String(result)).toBe('500')
+    })
+
     // it('defaults to "core" when unit is unknown and logs an error', () => {
     //   const result = convertCores(2, 'something-weird', { format: true, precision: 2 })
     //   expect(normalize(String(result))).toBe('2core')
@@ -105,6 +111,12 @@ describe('core-units helpers (core/mcore/ucore/ncore)', () => {
     it('uses ncore for cores < 1e-6', () => {
       const result = formatCoresAuto(1e-7) // 0.0000001 core -> 100 ncore
       expect(normalize(result)).toBe('100ncore')
+    })
+
+    it('can auto-scale without unit when showUnit=false', () => {
+      const result = formatCoresAuto(0.25, { showUnit: false, precision: 0 })
+      expect(result.includes(' ')).toBe(false)
+      expect(parseFloat(result)).toBeCloseTo(250, 2)
     })
 
     it('returns "infinite" and logs error for non-finite input', () => {

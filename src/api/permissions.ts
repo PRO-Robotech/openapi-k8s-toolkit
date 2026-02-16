@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from 'axios'
+import type { TPermissionVerb } from 'localTypes/permissions'
 
 export const checkPermission = async ({
   cluster,
@@ -8,9 +9,10 @@ export const checkPermission = async ({
   body: {
     apiGroup?: string
     plural: string
-    verb: 'get' | 'list' | 'watch' | 'create' | 'delete' | 'patch' | 'update'
+    verb: TPermissionVerb
     namespace?: string
     name?: string
+    subresource?: string
   }
 }): Promise<
   AxiosResponse<{
@@ -26,6 +28,7 @@ export const checkPermission = async ({
       resourceAttributes: {
         ...(body.apiGroup ? { group: body.apiGroup } : {}),
         resource: body.plural,
+        ...(body.subresource ? { subresource: body.subresource } : {}),
         verb: body.verb,
         ...(body.namespace ? { namespace: body.namespace } : {}),
         ...(body.name ? { name: body.name } : {}),

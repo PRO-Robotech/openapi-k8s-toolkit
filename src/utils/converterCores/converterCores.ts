@@ -77,10 +77,12 @@ export const convertCores: (cores: number, unit: TCoreUnitInput, opts?: TCoreCon
 
   if (!opts?.format) return value
 
-  return `${value.toLocaleString(opts.locale, {
+  const formatted = value.toLocaleString(opts.locale, {
     minimumFractionDigits: 0,
     maximumFractionDigits: opts?.precision ?? 2,
-  })} ${canon}`
+  })
+
+  return opts?.showUnit === false ? formatted : `${formatted} ${canon}`
 }
 
 /**
@@ -91,10 +93,10 @@ export const convertCores: (cores: number, unit: TCoreUnitInput, opts?: TCoreCon
  * - 1e-6 <= cores < 1e-3 -> ucore
  * - cores < 1e-6      -> ncore
  */
-export const formatCoresAuto: (cores: number, options?: { precision?: number; locale?: string }) => string = (
-  cores,
-  { precision = 2, locale } = {},
-) => {
+export const formatCoresAuto: (
+  cores: number,
+  options?: { precision?: number; locale?: string; showUnit?: boolean },
+) => string = (cores, { precision = 2, locale, showUnit } = {}) => {
   if (!Number.isFinite(cores)) {
     console.error('cores must be a finite number')
     return 'infinite'
@@ -119,7 +121,7 @@ export const formatCoresAuto: (cores: number, options?: { precision?: number; lo
     targetUnit = 'ncore'
   }
 
-  return String(convertCores(cores, targetUnit, { format: true, precision, locale }))
+  return String(convertCores(cores, targetUnit, { format: true, precision, locale, showUnit }))
 }
 
 /** Internal helper: convert value in given unit -> cores (number). */

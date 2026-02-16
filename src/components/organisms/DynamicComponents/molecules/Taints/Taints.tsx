@@ -5,12 +5,13 @@ import React, { FC, useState } from 'react'
 import jp from 'jsonpath'
 import { notification, Flex, Button } from 'antd'
 import { EditIcon } from 'components/atoms'
+import { usePermissions } from 'hooks/usePermissions'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
-import { EditModal } from './molecules'
-import { getItemsInside } from './utils'
+import { TaintsEditModal } from '../../atoms'
+import { getTaintsItemsInside } from '../../utils/Taints'
 
 export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children?: any }> = ({ data, children }) => {
   const {
@@ -33,6 +34,9 @@ export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children
     pathToValue,
     editModalWidth,
     cols,
+    readOnly,
+    permissions,
+    permissionContext,
   } = data
 
   const [api, contextHolder] = notification.useNotification()
@@ -40,6 +44,53 @@ export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
+
+  const safeMultiQueryData = multiQueryData || {}
+
+  const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
+    acc[index.toString()] = value
+    return acc
+  }, {})
+
+  const permissionContextPrepared = permissionContext
+    ? {
+        cluster: parseAll({ text: permissionContext.cluster, replaceValues, multiQueryData: safeMultiQueryData }),
+        namespace: permissionContext.namespace
+          ? parseAll({ text: permissionContext.namespace, replaceValues, multiQueryData: safeMultiQueryData })
+          : undefined,
+        apiGroup: permissionContext.apiGroup
+          ? parseAll({ text: permissionContext.apiGroup, replaceValues, multiQueryData: safeMultiQueryData })
+          : undefined,
+        plural: parseAll({ text: permissionContext.plural, replaceValues, multiQueryData: safeMultiQueryData }),
+      }
+    : undefined
+
+  const isPermissionContextValid =
+    !!permissionContextPrepared &&
+    !isMultiQueryLoading &&
+    !!permissionContextPrepared.cluster &&
+    permissionContextPrepared.cluster !== '-' &&
+    !!permissionContextPrepared.plural &&
+    permissionContextPrepared.plural !== '-'
+
+  const patchPermission = usePermissions({
+    cluster: permissionContextPrepared?.cluster || '',
+    namespace: permissionContextPrepared?.namespace,
+    apiGroup: permissionContextPrepared?.apiGroup,
+    plural: permissionContextPrepared?.plural || '',
+    verb: 'patch',
+    refetchInterval: false,
+    enabler: isPermissionContextValid,
+  })
+
+  // Permission gating for patch-based edit:
+  // 1) canPatch: Manual permissions override hook result if provided.
+  // 2) shouldGateEdit: True when permissions or permissionContext are provided; otherwise don't gate.
+  // 3) canSubmitEdit: Allow save when not readOnly and either gating is off or canPatch === true.
+  const canPatch = permissions?.canPatch ?? patchPermission.data?.status.allowed
+  const shouldGateEdit = Boolean(permissions || permissionContext)
+  const canOpenEdit = !readOnly
+  const canSubmitEdit = !readOnly && (!shouldGateEdit || canPatch === true)
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
@@ -54,11 +105,6 @@ export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children
     )
   }
 
-  const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
-    acc[index.toString()] = value
-    return acc
-  }, {})
-
   const jsonRoot = multiQueryData[`req${reqIndex}`]
 
   if (jsonRoot === undefined) {
@@ -68,7 +114,7 @@ export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children
 
   const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToArray}`)
 
-  const { counter, taints, error: errorArrayOfObjects } = getItemsInside(anythingForNow)
+  const { counter, taints, error: errorArrayOfObjects } = getTaintsItemsInside(anythingForNow)
 
   const notificationSuccessMessagePrepared = notificationSuccessMessage
     ? parseAll({
@@ -111,33 +157,38 @@ export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children
         <div style={containerStyle}>
           <Flex align="center" gap={8}>
             {errorText}{' '}
-            <Button
-              type="text"
-              size="small"
-              onClick={e => {
-                e.stopPropagation()
-                setOpen(true)
-              }}
-              icon={<EditIcon />}
-            />
+            {canOpenEdit && (
+              <Button
+                type="text"
+                size="small"
+                onClick={e => {
+                  e.stopPropagation()
+                  setOpen(true)
+                }}
+                icon={<EditIcon />}
+              />
+            )}
           </Flex>
         </div>
         {contextHolder}
-        <EditModal
-          open={open}
-          close={() => setOpen(false)}
-          values={taints}
-          openNotificationSuccess={openNotificationSuccess}
-          modalTitle={modalTitlePrepared}
-          modalDescriptionText={modalDescriptionTextPrepared}
-          inputLabel={inputLabelPrepared}
-          endpoint={endpointPrepared}
-          pathToValue={pathToValuePrepared}
-          editModalWidth={editModalWidth}
-          cols={cols}
-          modalDescriptionTextStyle={modalDescriptionTextStyle}
-          inputLabelStyle={inputLabelStyle}
-        />
+        {canOpenEdit && (
+          <TaintsEditModal
+            open={open}
+            close={() => setOpen(false)}
+            values={taints}
+            openNotificationSuccess={openNotificationSuccess}
+            disableSubmit={!canSubmitEdit}
+            modalTitle={modalTitlePrepared}
+            modalDescriptionText={modalDescriptionTextPrepared}
+            modalDescriptionTextStyle={modalDescriptionTextStyle}
+            inputLabel={inputLabelPrepared}
+            inputLabelStyle={inputLabelStyle}
+            endpoint={endpointPrepared}
+            pathToValue={pathToValuePrepared}
+            editModalWidth={editModalWidth}
+            cols={cols}
+          />
+        )}
       </>
     )
   }
@@ -151,34 +202,39 @@ export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children
       <div style={containerStyle}>
         <Flex align="center" gap={8}>
           {parsedTextWithCounter}
-          <Button
-            type="text"
-            size="small"
-            onClick={e => {
-              e.stopPropagation()
-              setOpen(true)
-            }}
-            icon={<EditIcon />}
-          />
+          {canOpenEdit && (
+            <Button
+              type="text"
+              size="small"
+              onClick={e => {
+                e.stopPropagation()
+                setOpen(true)
+              }}
+              icon={<EditIcon />}
+            />
+          )}
         </Flex>
         {children}
       </div>
       {contextHolder}
-      <EditModal
-        open={open}
-        close={() => setOpen(false)}
-        values={taints}
-        openNotificationSuccess={openNotificationSuccess}
-        modalTitle={modalTitlePrepared}
-        modalDescriptionText={modalDescriptionTextPrepared}
-        inputLabel={inputLabelPrepared}
-        endpoint={endpointPrepared}
-        pathToValue={pathToValuePrepared}
-        editModalWidth={editModalWidth}
-        cols={cols}
-        modalDescriptionTextStyle={modalDescriptionTextStyle}
-        inputLabelStyle={inputLabelStyle}
-      />
+      {canOpenEdit && (
+        <TaintsEditModal
+          open={open}
+          close={() => setOpen(false)}
+          values={taints}
+          openNotificationSuccess={openNotificationSuccess}
+          disableSubmit={!canSubmitEdit}
+          modalTitle={modalTitlePrepared}
+          modalDescriptionText={modalDescriptionTextPrepared}
+          inputLabel={inputLabelPrepared}
+          endpoint={endpointPrepared}
+          pathToValue={pathToValuePrepared}
+          editModalWidth={editModalWidth}
+          cols={cols}
+          modalDescriptionTextStyle={modalDescriptionTextStyle}
+          inputLabelStyle={inputLabelStyle}
+        />
+      )}
     </>
   )
 }

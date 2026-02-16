@@ -1,10 +1,10 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable no-console */
 import React, { FC, useEffect, useState, useRef } from 'react'
-import { Flex, Result, Spin } from 'antd'
+import { Result, Spin, notification } from 'antd'
 import Editor from '@monaco-editor/react'
 import type * as monaco from 'monaco-editor'
-import { Spacer, PauseCircleIcon, ResumeCircleIcon } from 'components/atoms'
+import { PauseCircleIcon, ResumeCircleIcon } from 'components/atoms'
 import { Styled } from './styled'
 
 type TMonacoEditorProps = {
@@ -15,6 +15,10 @@ type TMonacoEditorProps = {
   theme: 'dark' | 'light'
   substractHeight: number
   previous: boolean
+  tailLines?: number
+  sinceSeconds?: number
+  sinceTime?: string
+  limitBytes?: number
 }
 
 export const MonacoEditor: FC<TMonacoEditorProps> = ({
@@ -25,7 +29,12 @@ export const MonacoEditor: FC<TMonacoEditorProps> = ({
   theme,
   substractHeight,
   previous,
+  tailLines,
+  sinceSeconds,
+  sinceTime,
+  limitBytes,
 }) => {
+  const [notificationApi, contextHolder] = notification.useNotification()
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<Event>()
   const [isTerminalVisible, setIsTerminalVisible] = useState<boolean>(false)
@@ -34,6 +43,7 @@ export const MonacoEditor: FC<TMonacoEditorProps> = ({
 
   const socketRef = useRef<WebSocket | null>(null)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
+  const shownErrorsRef = useRef<Set<string>>(new Set())
 
   const [editorReady, setEditorReady] = useState<boolean>(false)
 
@@ -70,7 +80,7 @@ export const MonacoEditor: FC<TMonacoEditorProps> = ({
       socket.send(
         JSON.stringify({
           type: 'init',
-          payload: { namespace, podName, container, previous },
+          payload: { namespace, podName, container, previous, tailLines, sinceSeconds, sinceTime, limitBytes },
         }),
       )
       console.log(`[${namespace}/${podName}]: WebSocket Client Connected`)
@@ -86,6 +96,20 @@ export const MonacoEditor: FC<TMonacoEditorProps> = ({
         if (data.payload) {
           appendContent(data.payload)
         }
+      }
+      if (data.type === 'error') {
+        const errorKey = data.payload
+        if (!shownErrorsRef.current.has(errorKey)) {
+          shownErrorsRef.current.add(errorKey)
+          notificationApi.error({
+            message: 'Log fetch error',
+            description: data.payload,
+            placement: 'bottomRight',
+            duration: 10,
+            style: { maxWidth: 400 },
+          })
+        }
+        console.error('Log fetch error from server:', data.payload)
       }
     }
 
@@ -103,12 +127,16 @@ export const MonacoEditor: FC<TMonacoEditorProps> = ({
         socket.close()
       }
     }
-  }, [endpoint, namespace, podName, container, previous, editorReady])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [endpoint, namespace, podName, container, previous, tailLines, sinceSeconds, sinceTime, limitBytes, editorReady])
+
+  const isDark = theme === 'dark'
 
   return (
     <>
-      <Styled.VisibilityContainer $isVisible={isTerminalVisible}>
-        <Flex justify="start" align="center" gap={16}>
+      {contextHolder}
+      <Styled.CustomCard $isVisible={isTerminalVisible}>
+        <Styled.StreamingBar $isVisible={isTerminalVisible} $isDark={isDark}>
           <Styled.CursorPointerDiv
             onClick={() => {
               if (isPaused) {
@@ -130,20 +158,17 @@ export const MonacoEditor: FC<TMonacoEditorProps> = ({
           >
             {isPaused ? <ResumeCircleIcon /> : <PauseCircleIcon />}
           </Styled.CursorPointerDiv>
-          <div>{isPaused ? 'Not streaming events' : 'Streaming events'}</div>
-        </Flex>
-      </Styled.VisibilityContainer>
-      <Spacer $space={16} $samespace />
-      <Styled.CustomCard $isVisible={isTerminalVisible}>
+          <div>{isPaused ? 'Not streaming events' : 'Streaming events...'}</div>
+        </Styled.StreamingBar>
         <Styled.FullWidthDiv>
           <Editor
             defaultLanguage="plaintext"
             language="plaintext"
             width="100%"
             height={`calc(100vh - ${substractHeight}px)`}
-            theme={theme === 'dark' ? 'vs-dark' : theme === undefined ? 'vs-dark' : 'vs'}
+            theme={isDark ? 'vs-dark' : 'vs'}
             options={{
-              theme: theme === 'dark' ? 'vs-dark' : theme === undefined ? 'vs-dark' : 'vs',
+              theme: isDark ? 'vs-dark' : 'vs',
               readOnly: true,
             }}
             onMount={handleEditorDidMount}

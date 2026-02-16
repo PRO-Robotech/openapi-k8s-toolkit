@@ -13,6 +13,7 @@ import { PlusIcon } from 'components/atoms'
 import { deepMerge } from 'utils/deepMerge'
 import { getSortedPropertyKeys } from './helpers/getSortedPropertyKeys'
 import { ResetedFormItem, ArrayInsideContainer, HiddenContainer } from '../../atoms'
+import { prettyFieldPath } from '../../molecules/helpers/validation'
 import {
   FormNamespaceInput,
   FormStringInput,
@@ -430,7 +431,7 @@ export const getArrayFormItemFromSwagger = ({
                   {
                     validator: async (_, value) => {
                       if (!value || value.length < 1) {
-                        return Promise.reject(new Error('Field is required'))
+                        return Promise.reject(new Error(`Please enter ${prettyFieldPath(name)}`))
                       }
                     },
                   },

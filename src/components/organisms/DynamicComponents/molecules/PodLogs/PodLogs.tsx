@@ -9,7 +9,7 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
 import { parseAll } from '../utils'
-import { getRunningContainerNames } from './utils'
+import { getContainerNames } from './utils'
 
 export const PodLogs: FC<{ data: TDynamicComponentsAppTypeMap['PodLogs']; children?: any }> = ({
   data,
@@ -26,6 +26,10 @@ export const PodLogs: FC<{ data: TDynamicComponentsAppTypeMap['PodLogs']; childr
     namespace,
     podName,
     substractHeight,
+    tailLines,
+    sinceSeconds,
+    sinceTime,
+    limitBytes,
     ...props
   } = data
 
@@ -102,7 +106,7 @@ export const PodLogs: FC<{ data: TDynamicComponentsAppTypeMap['PodLogs']; childr
     return <>No Pod Info</>
   }
 
-  const { containers, initContainers } = getRunningContainerNames(podInfo)
+  const { containers, initContainers } = getContainerNames(podInfo)
 
   return (
     <>
@@ -115,6 +119,10 @@ export const PodLogs: FC<{ data: TDynamicComponentsAppTypeMap['PodLogs']; childr
         theme={theme}
         substractHeight={substractHeight || 340 + 35 + 8}
         rawPodInfo={podInfo}
+        tailLines={tailLines}
+        sinceSeconds={sinceSeconds}
+        sinceTime={sinceTime}
+        limitBytes={limitBytes}
         {...props}
       />
       {children}

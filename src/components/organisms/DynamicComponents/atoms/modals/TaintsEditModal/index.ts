@@ -1,0 +1,1 @@
+export { TaintsEditModal } from './TaintsEditModal'

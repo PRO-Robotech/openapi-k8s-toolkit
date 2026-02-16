@@ -8,6 +8,7 @@ import {
   AntdCol,
   AntdTabs,
   AntdButton,
+  AntdIcons,
   PartsOfUrl,
   MultiQuery,
   ParsedText,
@@ -42,6 +43,13 @@ import {
   TogglerSegmented,
   VMVNC,
   PrometheusGraph,
+  DefaultIframe,
+  DropdownRedirect,
+  CopyButton,
+  AggregatedCounterCard,
+  Base64Icon,
+  UsageGraphCard,
+  ActionsDropdown,
 } from './molecules'
 import { TDynamicComponentsAppTypeMap } from './types'
 
@@ -55,6 +63,7 @@ export const DynamicComponents: TRendererComponents<TDynamicComponentsAppTypeMap
   antdCol: AntdCol,
   antdTabs: AntdTabs,
   antdButton: AntdButton,
+  antdIcons: AntdIcons,
   partsOfUrl: PartsOfUrl,
   multiQuery: MultiQuery,
   parsedText: ParsedText,
@@ -88,4 +97,11 @@ export const DynamicComponents: TRendererComponents<TDynamicComponentsAppTypeMap
   TogglerSegmented,
   VMVNC,
   PrometheusGraph,
+  DefaultIframe,
+  DropdownRedirect,
+  CopyButton,
+  AggregatedCounterCard,
+  Base64Icon,
+  UsageGraphCard,
+  ActionsDropdown,
 }

@@ -30,13 +30,13 @@ type TProgressContainerProps = {
 }
 
 const ProgressContainer = styled.div<TProgressContainerProps>`
-  margin-top: calc(${({ $substractHeight }) => $substractHeight}px - 100vh);
+  width: 100%;
   height: calc(100vh - ${({ $substractHeight }) => $substractHeight}px);
   display: flex;
-  flex-flow: column;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
 `
 
 export const Styled = {

@@ -19,13 +19,23 @@ const CustomCard = styled.div<TCustomCardProps>`
   }
 `
 
-type TVisibilityContainerProps = {
+const EditorWrapper = styled.div`
+  position: relative;
+  width: 100%;
+`
+
+type TStreamingBarProps = {
   $isVisible?: boolean
+  $isDark?: boolean
 }
 
-const VisibilityContainer = styled.div<TVisibilityContainerProps>`
+const StreamingBar = styled.div<TStreamingBarProps>`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px;
+  background-color: ${({ $isDark }) => ($isDark ? '#1e1e1e' : '#fffffe')};
   visibility: ${({ $isVisible }) => ($isVisible ? 'visible' : 'hidden')};
-  margin-top: -51px;
 `
 
 export const CursorPointerDiv = styled.div`
@@ -36,6 +46,7 @@ export const CursorPointerDiv = styled.div`
 export const Styled = {
   FullWidthDiv,
   CustomCard,
-  VisibilityContainer,
+  EditorWrapper,
+  StreamingBar,
   CursorPointerDiv,
 }

@@ -6,8 +6,8 @@ import jp from 'jsonpath'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
+import { getKeyCounterItemsInside } from '../../utils/KeyCounter'
 import { parseAll } from '../utils'
-import { getItemsInside } from './utils'
 
 export const KeyCounter: FC<{ data: TDynamicComponentsAppTypeMap['KeyCounter']; children?: any }> = ({
   data,
@@ -53,7 +53,7 @@ export const KeyCounter: FC<{ data: TDynamicComponentsAppTypeMap['KeyCounter']; 
 
   const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToObj}`)
 
-  const { counter, error: errorArrayOfObjects } = getItemsInside(anythingForNow)
+  const { counter, error: errorArrayOfObjects } = getKeyCounterItemsInside(anythingForNow)
 
   if (errorArrayOfObjects) {
     console.log(`Key Counter: ${id}: ${errorArrayOfObjects}`)

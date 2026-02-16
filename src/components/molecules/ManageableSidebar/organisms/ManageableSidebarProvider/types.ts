@@ -1,7 +1,18 @@
+export type TResourcesList = {
+  cluster: string
+  apiGroup?: string
+  apiVersion: string
+  plural: string
+  namespace?: string
+  linkToResource: string
+  jsonPathToName: string
+}
+
 export type TLink = {
   key: string
   label: string
   link?: string
+  resourcesList?: TResourcesList
   children?: TLink[]
 }
 

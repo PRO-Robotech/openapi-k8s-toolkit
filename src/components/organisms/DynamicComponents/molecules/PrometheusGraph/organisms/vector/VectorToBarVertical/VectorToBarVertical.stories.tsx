@@ -59,9 +59,6 @@ const loadingHandler = http.get('http://localhost:9090/api/v1/query', async () =
   return HttpResponse.json({})
 })
 
-const errorHandler = http.get('http://localhost:9090/api/v1/query', () =>
-  HttpResponse.json({ status: 'error', errorType: 'internal', error: 'boom' }, { status: 500 }),
-)
 
 const meta: Meta<typeof VectorToBarVertical> = {
   title: 'Factory/Prometheus Internal/Vector/ToBar/Vertical',
@@ -131,22 +128,3 @@ export const Loading: TStory = {
   parameters: { msw: { handlers: [loadingHandler] } },
 }
 
-export const Error: TStory = {
-  args: {
-    query: 'container_memory_usage_bytes_error',
-    formatter: 'bytes',
-    theme: 'light',
-    state: 'error',
-  },
-  parameters: { msw: { handlers: [errorHandler] } },
-}
-
-export const DarkTheme: TStory = {
-  args: {
-    query: 'container_memory_usage_bytes_dark',
-    formatter: 'bytes',
-    theme: 'dark',
-    state: 'success',
-  },
-  parameters: { msw: { handlers: [successHandler] } },
-}

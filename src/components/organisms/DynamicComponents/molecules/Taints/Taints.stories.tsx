@@ -80,6 +80,10 @@ const meta: Meta<TArgs> = {
       control: 'object',
       description: 'data.containerStyle – wrapper div style around counter + edit button',
     },
+    readOnly: {
+      control: 'boolean',
+      description: 'data.readOnly (hides edit controls when true)',
+    },
     endpoint: {
       control: 'text',
       description:
@@ -97,6 +101,14 @@ const meta: Meta<TArgs> = {
     cols: {
       control: 'object',
       description: 'data.cols – column spans for EditModal grid (4 numbers)',
+    },
+    permissions: {
+      control: 'object',
+      description: 'data.permissions (optional; { canPatch?: boolean } manual override)',
+    },
+    permissionContext: {
+      control: 'object',
+      description: 'data.permissionContext (optional; auto permission check context)',
     },
 
     // provider knobs
@@ -143,10 +155,13 @@ const meta: Meta<TArgs> = {
       inputLabel: args.inputLabel,
       inputLabelStyle: args.inputLabelStyle,
       containerStyle: args.containerStyle,
+      readOnly: args.readOnly,
       endpoint: args.endpoint,
       pathToValue: args.pathToValue,
       editModalWidth: args.editModalWidth,
       cols: args.cols,
+      permissions: args.permissions,
+      permissionContext: args.permissionContext,
     }
 
     return (
@@ -211,10 +226,14 @@ export const Default: Story = {
     inputLabel: 'Taints',
     inputLabelStyle: undefined,
     containerStyle: { fontSize: 14 },
+    readOnly: undefined,
     endpoint: '/api/mock/taints',
     pathToValue: '.spec.taints',
     editModalWidth: 720,
     cols: [6, 6, 6, 6], // 4 columns for your EditModal layout
+    permissions: {
+      canPatch: true,
+    },
 
     // providers
     isLoading: false,
@@ -267,5 +286,23 @@ export const NoRootForJsonPath: Story = {
     multiQueryData: {
       // no req99 -> triggers "No root for json path"
     },
+  },
+}
+
+export const NoPatchPermission: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-taints-no-patch-permission',
+    permissions: {
+      canPatch: false,
+    },
+  },
+}
+
+export const ReadOnly: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-taints-readonly',
+    readOnly: true as any, // matches `readOnly?: true` in the type map
   },
 }

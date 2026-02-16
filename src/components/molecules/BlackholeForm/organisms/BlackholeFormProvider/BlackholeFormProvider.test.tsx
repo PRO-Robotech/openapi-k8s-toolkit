@@ -10,6 +10,14 @@ import { BlackholeFormProvider } from './BlackholeFormProvider'
 jest.mock('axios')
 const mockPost = axios.post as unknown as jest.Mock
 
+jest.mock('hooks/useK8sSmartResource', () => ({
+  useK8sSmartResource: () => ({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+  }),
+}))
+
 jest.mock('../BlackholeForm', () => ({
   BlackholeForm: (props: any) => (
     <div data-testid="blackhole-form">
@@ -25,6 +33,12 @@ jest.mock('../../../YamlEditorSingleton', () => ({
 const baseProps = {
   theme: 'light' as const,
   cluster: 'c1',
+  forcingCustomization: {
+    baseApiGroup: 'front.in-cloud.io',
+    baseApiVersion: 'v1alpha1',
+    cfoMappingPlural: 'cfomappings',
+    cfoMappinResourceName: 'default',
+  },
   urlParams: {} as any,
   urlParamsForPermissions: { apiGroup: 'apps', plural: 'deployments' },
   data: {
@@ -72,11 +86,11 @@ describe('BlackholeFormProvider', () => {
       },
     })
 
-    render(<BlackholeFormProvider {...(baseProps as any)} modeData={{ current: 'Auto', onChange, onDisabled }} />)
+    render(<BlackholeFormProvider {...(baseProps as any)} modeData={{ current: 'OpenAPI', onChange, onDisabled }} />)
 
     expect(await screen.findByText('prepare failed')).toBeInTheDocument()
     expect(onChange).toHaveBeenCalledWith('Manual')
-    expect(onDisabled).toHaveBeenCalled()
+    expect(onDisabled).not.toHaveBeenCalled()
   })
 
   test('backend result=error: renders YamlEditorSingleton when parent updates mode to Manual', async () => {
@@ -89,7 +103,7 @@ describe('BlackholeFormProvider', () => {
     })
 
     const Harness = () => {
-      const [current, setCurrent] = React.useState<'Auto' | 'Manual'>('Auto')
+      const [current, setCurrent] = React.useState<'OpenAPI' | 'Manual'>('OpenAPI')
       const modeData = {
         current,
         onChange: (v: string) => setCurrent(v as any),
@@ -113,23 +127,11 @@ describe('BlackholeFormProvider', () => {
     expect(await screen.findByText('network down')).toBeInTheDocument()
   })
 
-  test('cluster empty: still does not explode (basic smoke)', async () => {
-    mockPost.mockResolvedValue({
-      data: {
-        result: 'ok',
-        properties: { spec: { type: 'object' } },
-        required: [],
-        expandedPaths: [],
-        persistedPaths: [],
-        kind: 'Deployment',
-      },
-    })
-
+  test('cluster empty: skips prepareFormProps request', async () => {
     render(<BlackholeFormProvider {...(baseProps as any)} cluster="" />)
 
-    // Should still handle response
     await waitFor(() => {
-      expect(screen.queryByTestId('blackhole-form')).toBeInTheDocument()
+      expect(mockPost).not.toHaveBeenCalled()
     })
   })
 })

@@ -63,9 +63,6 @@ const loadingHandler = http.get('http://localhost:9090/api/v1/query', async () =
   return HttpResponse.json({})
 })
 
-const errorHandler = http.get('http://localhost:9090/api/v1/query', () =>
-  HttpResponse.json({ status: 'error', errorType: 'internal', error: 'boom' }, { status: 500 }),
-)
 
 const meta: Meta<typeof VectorToGaugeRadial> = {
   title: 'Factory/Prometheus Internal/Vector/ToGaugeRadial',
@@ -170,22 +167,3 @@ export const Loading: TStory = {
   parameters: { msw: { handlers: [loadingHandler] } },
 }
 
-export const Error: TStory = {
-  args: {
-    ...Default.args,
-    query: 'up_error',
-    state: 'error',
-  },
-  parameters: { msw: { handlers: [errorHandler] } },
-}
-
-export const DarkTheme: TStory = {
-  args: {
-    ...Default.args,
-    query: 'up_success_dark',
-    theme: 'dark',
-    state: 'success',
-    valueMode: '0.7',
-  },
-  parameters: { msw: { handlers: [successHandler('0.7')] } },
-}

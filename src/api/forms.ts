@@ -75,6 +75,21 @@ export const patchEntryWithReplaceOp = async <T>({
   return axios.patch<T>(endpoint, replaceOp, config)
 }
 
+export const patchEntryWithMergePatch = async <T>({
+  endpoint,
+  body,
+}: {
+  endpoint: string
+  body: unknown
+}): Promise<AxiosResponse<T>> => {
+  return axios.patch(endpoint, JSON.stringify(body), {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/merge-patch+json',
+    },
+  })
+}
+
 export const patchEntryWithDeleteOp = async <T>({
   endpoint,
   pathToValue,

@@ -71,6 +71,14 @@ const meta: Meta<TArgs> = {
       control: 'boolean',
       description: 'data.readOnly (passed through to underlying Editor via {...props})',
     },
+    permissions: {
+      control: 'object',
+      description: 'data.permissions (optional; { canUpdate?: boolean } manual override)',
+    },
+    permissionContext: {
+      control: 'object',
+      description: 'data.permissionContext (optional; auto permission check context)',
+    },
 
     // provider knobs
     isLoading: {
@@ -106,6 +114,8 @@ const meta: Meta<TArgs> = {
       pathToData: args.pathToData,
       substractHeight: args.substractHeight,
       readOnly: args.readOnly,
+      permissions: args.permissions,
+      permissionContext: args.permissionContext,
     }
 
     return (
@@ -163,6 +173,10 @@ export const Default: Story = {
     pathToData: undefined,
     substractHeight: 340,
     readOnly: false,
+    permissions: {
+      canUpdate: true,
+    },
+    permissionContext: undefined,
 
     // providers
     isLoading: false,
@@ -237,5 +251,85 @@ export const ReadOnly: Story = {
   args: {
     ...Default.args,
     readOnly: true,
+  },
+}
+
+export const WithManagedFields: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-yaml-editor-managed-fields',
+    multiQueryData: {
+      req0: {
+        apiVersion: 'v1',
+        kind: 'Pod',
+        metadata: {
+          name: 'managed-fields-demo',
+          namespace: 'default',
+          managedFields: [
+            {
+              manager: 'kubectl-client-side-apply',
+              operation: 'Update',
+              apiVersion: 'v1',
+              time: '2026-02-12T10:00:00Z',
+              fieldsType: 'FieldsV1',
+              fieldsV1: {
+                'f:metadata': {
+                  'f:labels': {
+                    '.': {},
+                    'f:app': {},
+                  },
+                },
+              },
+            },
+          ],
+        },
+        spec: {
+          containers: [
+            {
+              name: 'demo',
+              image: 'nginx:1.27',
+            },
+          ],
+        },
+      },
+    },
+  },
+}
+
+export const PermissionsDenied: Story = {
+  args: {
+    ...Default.args,
+    permissions: {
+      canUpdate: false,
+    },
+  },
+}
+
+export const UnorderedPrefillValues: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-yaml-editor-unordered-prefill',
+    forcedKind: undefined,
+    multiQueryData: {
+      req0: {
+        metadata: {
+          name: 'unordered-demo',
+          namespace: 'default',
+        },
+        spec: {
+          containers: [
+            {
+              name: 'demo',
+              image: 'nginx:1.27',
+            },
+          ],
+        },
+        kind: 'Pod',
+        labels: {
+          team: 'platform',
+        },
+        apiVersion: 'v1',
+      },
+    },
   },
 }

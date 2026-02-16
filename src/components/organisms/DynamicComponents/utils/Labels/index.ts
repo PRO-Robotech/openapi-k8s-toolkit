@@ -1,0 +1,1 @@
+export { parseLabelsArrayOfAny } from './parseLabelsArrayOfAny'

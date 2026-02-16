@@ -7,12 +7,14 @@ import jp from 'jsonpath'
 import { useNavigate } from 'react-router-dom'
 import { Popover, notification, Flex, Button } from 'antd'
 import { UncontrolledSelect, CursorPointerTag, CursorPointerTagMinContent, EditIcon, Spacer } from 'components/atoms'
+import { usePermissions } from 'hooks/usePermissions'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
-import { EditModal } from './molecules'
-import { parseArrayOfAny, truncate } from './utils'
+import { LabelsEditModal } from '../../atoms'
+import { parseLabelsArrayOfAny } from '../../utils/Labels'
+import { truncate } from '../../utils/truncate'
 
 export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children?: any }> = ({ data, children }) => {
   const {
@@ -43,6 +45,8 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
     pathToValue,
     editModalWidth,
     paddingContainerEnd,
+    permissions,
+    permissionContext,
   } = data
 
   const [api, contextHolder] = notification.useNotification()
@@ -53,6 +57,53 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
+
+  const safeMultiQueryData = multiQueryData || {}
+
+  const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
+    acc[index.toString()] = value
+    return acc
+  }, {})
+
+  const permissionContextPrepared = permissionContext
+    ? {
+        cluster: parseAll({ text: permissionContext.cluster, replaceValues, multiQueryData: safeMultiQueryData }),
+        namespace: permissionContext.namespace
+          ? parseAll({ text: permissionContext.namespace, replaceValues, multiQueryData: safeMultiQueryData })
+          : undefined,
+        apiGroup: permissionContext.apiGroup
+          ? parseAll({ text: permissionContext.apiGroup, replaceValues, multiQueryData: safeMultiQueryData })
+          : undefined,
+        plural: parseAll({ text: permissionContext.plural, replaceValues, multiQueryData: safeMultiQueryData }),
+      }
+    : undefined
+
+  const isPermissionContextValid =
+    !!permissionContextPrepared &&
+    !isMultiQueryLoading &&
+    !!permissionContextPrepared.cluster &&
+    permissionContextPrepared.cluster !== '-' &&
+    !!permissionContextPrepared.plural &&
+    permissionContextPrepared.plural !== '-'
+
+  const patchPermission = usePermissions({
+    cluster: permissionContextPrepared?.cluster || '',
+    namespace: permissionContextPrepared?.namespace,
+    apiGroup: permissionContextPrepared?.apiGroup,
+    plural: permissionContextPrepared?.plural || '',
+    verb: 'patch',
+    refetchInterval: false,
+    enabler: isPermissionContextValid,
+  })
+
+  // Permission gating for patch-based edit:
+  // 1) canPatch: Manual permissions override hook result if provided.
+  // 2) shouldGateEdit: True when permissions or permissionContext are provided; otherwise don't gate.
+  // 3) canSubmitEdit: Allow save when not readOnly and either gating is off or canPatch === true.
+  const canPatch = permissions?.canPatch ?? patchPermission.data?.status.allowed
+  const shouldGateEdit = Boolean(permissions || permissionContext)
+  const canOpenEdit = !readOnly
+  const canSubmitEdit = !readOnly && (!shouldGateEdit || canPatch === true)
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
@@ -67,11 +118,6 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
     )
   }
 
-  const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
-    acc[index.toString()] = value
-    return acc
-  }, {})
-
   const jsonRoot = multiQueryData[`req${reqIndex}`]
 
   if (jsonRoot === undefined) {
@@ -80,7 +126,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
 
   const anythingForNow = jp.query(jsonRoot || {}, `$${jsonPathToLabels}`)
 
-  const { data: labelsRaw, error: errorArrayOfObjects } = parseArrayOfAny(anythingForNow)
+  const { data: labelsRaw, error: errorArrayOfObjects } = parseLabelsArrayOfAny(anythingForNow)
 
   const notificationSuccessMessagePrepared = notificationSuccessMessage
     ? parseAll({
@@ -119,7 +165,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
 
   const EmptySelect = (
     <div style={containerStyle}>
-      {!readOnly && !verticalViewList && (
+      {canOpenEdit && !verticalViewList && (
         <Flex justify="flex-end">
           <Button
             type="text"
@@ -149,7 +195,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
           isCursorPointer
         />
       )}
-      {!readOnly && verticalViewList && (
+      {canOpenEdit && verticalViewList && (
         <>
           <Spacer $space={8} $samespace />
           <Flex justify="flex-start">
@@ -170,23 +216,26 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
       )}
       {children}
       {contextHolder}
-      <EditModal
-        open={open}
-        close={() => setOpen(false)}
-        // values={labelsRaw}
-        openNotificationSuccess={openNotificationSuccess}
-        modalTitle={modalTitlePrepared}
-        modalDescriptionText={modalDescriptionTextPrepared}
-        inputLabel={inputLabelPrepared}
-        maxEditTagTextLength={maxEditTagTextLength}
-        allowClearEditSelect={allowClearEditSelect}
-        endpoint={endpointPrepared}
-        pathToValue={pathToValuePrepared}
-        editModalWidth={editModalWidth}
-        paddingContainerEnd={paddingContainerEnd}
-        modalDescriptionTextStyle={modalDescriptionTextStyle}
-        inputLabelStyle={inputLabelStyle}
-      />
+      {canOpenEdit && (
+        <LabelsEditModal
+          open={open}
+          close={() => setOpen(false)}
+          // values={labelsRaw}
+          openNotificationSuccess={openNotificationSuccess}
+          disableSubmit={!canSubmitEdit}
+          modalTitle={modalTitlePrepared}
+          modalDescriptionText={modalDescriptionTextPrepared}
+          modalDescriptionTextStyle={modalDescriptionTextStyle}
+          inputLabel={inputLabelPrepared}
+          inputLabelStyle={inputLabelStyle}
+          maxEditTagTextLength={maxEditTagTextLength}
+          allowClearEditSelect={allowClearEditSelect}
+          endpoint={endpointPrepared}
+          pathToValue={pathToValuePrepared}
+          editModalWidth={editModalWidth}
+          paddingContainerEnd={paddingContainerEnd}
+        />
+      )}
     </div>
   )
 
@@ -203,7 +252,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
 
   return (
     <div style={containerStyle}>
-      {!readOnly && !verticalViewList && (
+      {canOpenEdit && !verticalViewList && (
         <Flex justify="flex-end">
           <Button
             type="text"
@@ -297,7 +346,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
           // isCursorPointer
         />
       )}
-      {!readOnly && verticalViewList && (
+      {canOpenEdit && verticalViewList && (
         <>
           <Spacer $space={8} $samespace />
           <Flex justify="flex-start">
@@ -318,23 +367,26 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
       )}
       {children}
       {contextHolder}
-      <EditModal
-        open={open}
-        close={() => setOpen(false)}
-        values={labelsRaw}
-        openNotificationSuccess={openNotificationSuccess}
-        modalTitle={modalTitlePrepared}
-        modalDescriptionText={modalDescriptionTextPrepared}
-        inputLabel={inputLabelPrepared}
-        maxEditTagTextLength={maxEditTagTextLength}
-        allowClearEditSelect={allowClearEditSelect}
-        endpoint={endpointPrepared}
-        pathToValue={pathToValuePrepared}
-        editModalWidth={editModalWidth}
-        paddingContainerEnd={paddingContainerEnd}
-        modalDescriptionTextStyle={modalDescriptionTextStyle}
-        inputLabelStyle={inputLabelStyle}
-      />
+      {canOpenEdit && (
+        <LabelsEditModal
+          open={open}
+          close={() => setOpen(false)}
+          values={labelsRaw}
+          openNotificationSuccess={openNotificationSuccess}
+          disableSubmit={!canSubmitEdit}
+          modalTitle={modalTitlePrepared}
+          modalDescriptionText={modalDescriptionTextPrepared}
+          modalDescriptionTextStyle={modalDescriptionTextStyle}
+          inputLabel={inputLabelPrepared}
+          inputLabelStyle={inputLabelStyle}
+          maxEditTagTextLength={maxEditTagTextLength}
+          allowClearEditSelect={allowClearEditSelect}
+          endpoint={endpointPrepared}
+          pathToValue={pathToValuePrepared}
+          editModalWidth={editModalWidth}
+          paddingContainerEnd={paddingContainerEnd}
+        />
+      )}
     </div>
   )
 }
