@@ -26,6 +26,8 @@ export const SecretBase64Plain: FC<{ data: TDynamicComponentsAppTypeMap['SecretB
     plainTextValue,
     multiline,
     multilineRows,
+    shownByDefault,
+    hideEye,
     textStyle,
     emptyText,
     containerStyle,
@@ -36,7 +38,8 @@ export const SecretBase64Plain: FC<{ data: TDynamicComponentsAppTypeMap['SecretB
     notificationWidth,
   } = data
 
-  const [hidden, setHidden] = useState(true)
+  const hiddenDefault = !shownByDefault
+  const [hidden, setHidden] = useState(hiddenDefault)
   const [hiddenByKey, setHiddenByKey] = useState<Record<string, boolean>>({})
 
   const [notificationApi, contextHolder] = notification.useNotification()
@@ -130,41 +133,44 @@ export const SecretBase64Plain: FC<{ data: TDynamicComponentsAppTypeMap['SecretB
     isHidden: boolean
     onToggle: () => void
   }) => {
-    const shownValue = useNiceLooking ? value : isHidden ? '' : value
+    const effectiveHidden = hideEye ? false : isHidden
+    const shownValue = useNiceLooking ? value : effectiveHidden ? '' : value
     const resolvedMultilineRows = resolveMultilineRows(value, multilineRows)
 
     return (
       <Flex gap={8} {...flexProps}>
         <Styled.NoSelect style={inputContainerStyle}>
           {useNiceLooking ? (
-            <Spoiler theme={theme} hidden={isHidden}>
+            <Spoiler theme={theme} hidden={effectiveHidden}>
               <Styled.DisabledInput
-                $hidden={isHidden}
-                onClick={e => handleInputClick(e, isHidden, value)}
+                $hidden={effectiveHidden}
+                onClick={e => handleInputClick(e, effectiveHidden, value)}
                 value={shownValue}
                 readOnly
               />
             </Spoiler>
           ) : multiline ? (
             <Styled.DisabledTextArea
-              $hidden={isHidden}
-              onClick={e => handleInputClick(e, isHidden, value)}
+              $hidden={effectiveHidden}
+              onClick={e => handleInputClick(e, effectiveHidden, value)}
               value={shownValue}
               rows={resolvedMultilineRows}
               readOnly
             />
           ) : (
             <Styled.DisabledInput
-              $hidden={isHidden}
-              onClick={e => handleInputClick(e, isHidden, value)}
+              $hidden={effectiveHidden}
+              onClick={e => handleInputClick(e, effectiveHidden, value)}
               value={shownValue}
               readOnly
             />
           )}
         </Styled.NoSelect>
-        <Button type="text" onClick={onToggle}>
-          {isHidden ? <EyeOutlined /> : <EyeInvisibleOutlined />}
-        </Button>
+        {!hideEye && (
+          <Button type="text" onClick={onToggle}>
+            {isHidden ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+          </Button>
+        )}
       </Flex>
     )
   }
@@ -205,7 +211,7 @@ export const SecretBase64Plain: FC<{ data: TDynamicComponentsAppTypeMap['SecretB
             })
             const shouldDecodeObject = type !== 'plain'
             const secretValue = decodeIfBase64(parsedValue, shouldDecodeObject)
-            const hiddenForKey = hiddenByKey[key] ?? true
+            const hiddenForKey = hiddenByKey[key] ?? hiddenDefault
 
             return (
               <div key={key}>
@@ -218,7 +224,7 @@ export const SecretBase64Plain: FC<{ data: TDynamicComponentsAppTypeMap['SecretB
                   onToggle: () =>
                     setHiddenByKey(prevState => ({
                       ...prevState,
-                      [key]: !(prevState[key] ?? true),
+                      [key]: !(prevState[key] ?? hiddenDefault),
                     })),
                 })}
               </div>

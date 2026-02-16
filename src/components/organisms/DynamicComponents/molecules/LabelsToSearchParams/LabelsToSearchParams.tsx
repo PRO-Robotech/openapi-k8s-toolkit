@@ -19,6 +19,13 @@ export const LabelsToSearchParams: FC<{
   data: TDynamicComponentsAppTypeMap['LabelsToSearchParams']
   children?: any
 }> = ({ data, children }) => {
+  const renderWithSearchIcon = (content: React.ReactNode) => (
+    <Flex align="flex-start" gap={8}>
+      <SearchOutlined style={{ marginTop: 4 }} />
+      {content}
+    </Flex>
+  )
+
   const {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     id,
@@ -80,19 +87,19 @@ export const LabelsToSearchParams: FC<{
           navigate,
         })
 
-      return (
+      return renderWithSearchIcon(
         <Typography.Link href={linkPrefixPrepared} onClick={handleDefaultFallbackLinkClick} {...linkProps}>
           {fallbackText}
           {children}
-        </Typography.Link>
+        </Typography.Link>,
       )
     }
 
-    return (
+    return renderWithSearchIcon(
       <Typography.Text>
         {errorText}
         {children}
-      </Typography.Text>
+      </Typography.Text>,
     )
   }
 
@@ -121,20 +128,17 @@ export const LabelsToSearchParams: FC<{
     })
 
   if (renderLabelsAsRows) {
-    return (
-      <Flex align="flex-start" gap={8}>
-        <SearchOutlined style={{ marginTop: 4 }} />
-        <Flex vertical>
-          <Typography.Link href={hrefPrepared} onClick={handleLinkClick} {...linkProps}>
-            {labelsRows.map((row, index) => (
-              <span key={`${row}-${index}`} style={{ display: 'block' }}>
-                {index < labelsRows.length - 1 ? `${row},` : row}
-              </span>
-            ))}
-          </Typography.Link>
-          {children}
-        </Flex>
-      </Flex>
+    return renderWithSearchIcon(
+      <Flex vertical>
+        <Typography.Link href={hrefPrepared} onClick={handleLinkClick} {...linkProps}>
+          {labelsRows.map((row, index) => (
+            <span key={`${row}-${index}`} style={{ display: 'block' }}>
+              {index < labelsRows.length - 1 ? `${row},` : row}
+            </span>
+          ))}
+        </Typography.Link>
+        {children}
+      </Flex>,
     )
   }
 
@@ -151,10 +155,12 @@ export const LabelsToSearchParams: FC<{
           </Flex>
         }
       >
-        <Typography.Link href={hrefPrepared} onClick={handleLinkClick} {...linkProps}>
-          {truncatedLabels}
-          {children}
-        </Typography.Link>
+        {renderWithSearchIcon(
+          <Typography.Link href={hrefPrepared} onClick={handleLinkClick} {...linkProps}>
+            {truncatedLabels}
+            {children}
+          </Typography.Link>,
+        )}
       </Popover>
     )
   }
@@ -172,18 +178,20 @@ export const LabelsToSearchParams: FC<{
           </Flex>
         }
       >
-        <Typography.Link href={hrefPrepared} onClick={handleLinkClick} {...linkProps}>
-          {truncatedTextLink}
-          {children}
-        </Typography.Link>
+        {renderWithSearchIcon(
+          <Typography.Link href={hrefPrepared} onClick={handleLinkClick} {...linkProps}>
+            {truncatedTextLink}
+            {children}
+          </Typography.Link>,
+        )}
       </Popover>
     )
   }
 
-  return (
+  return renderWithSearchIcon(
     <Typography.Link href={hrefPrepared} onClick={handleLinkClick} {...linkProps}>
       {textLink || labels}
       {children}
-    </Typography.Link>
+    </Typography.Link>,
   )
 }

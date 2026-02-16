@@ -82,8 +82,8 @@ export const MarketplaceCard: FC<TMarketplaceCardProps> = ({
     namespace,
     apiGroup,
     apiVersion: apiVersion || '',
-    plural: type,
-    isEnabled: Boolean(apiVersion && addedMode && type !== 'direct'),
+    plural: plural || '',
+    isEnabled: Boolean(apiVersion && plural && addedMode && type !== 'direct'),
   })
 
   const isAddedMode = Boolean(addedMode)
