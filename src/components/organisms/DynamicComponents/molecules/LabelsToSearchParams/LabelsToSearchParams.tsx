@@ -6,17 +6,26 @@ import React, { FC } from 'react'
 import jp from 'jsonpath'
 import { Typography, Popover, Flex } from 'antd'
 import { SearchOutlined } from '@ant-design/icons'
+import { useNavigate } from 'react-router-dom'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { truncate } from '../../utils/truncate'
 import { parseAll } from '../utils'
 import { parseLabelsArrayOfAny } from '../../utils/Labels'
+import { handleLabelsToSearchParamsLinkClick } from './utils'
 
 export const LabelsToSearchParams: FC<{
   data: TDynamicComponentsAppTypeMap['LabelsToSearchParams']
   children?: any
 }> = ({ data, children }) => {
+  const renderWithSearchIcon = (content: React.ReactNode) => (
+    <Flex align="flex-start" gap={8}>
+      <SearchOutlined style={{ marginTop: 4 }} />
+      {content}
+    </Flex>
+  )
+
   const {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     id,
@@ -25,10 +34,12 @@ export const LabelsToSearchParams: FC<{
     linkPrefix,
     textLink,
     errorText,
+    errorMode = 'errorText',
     maxTextLength,
     renderLabelsAsRows,
     ...linkProps
   } = data
+  const navigate = useNavigate()
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
@@ -62,26 +73,45 @@ export const LabelsToSearchParams: FC<{
   const { data: labelsRaw, error: errorArrayOfObjects } = parseLabelsArrayOfAny(anythingForNow)
 
   const linkPrefixPrepared = parseAll({ text: linkPrefix, replaceValues, multiQueryData })
+  const labelsPrefixPrepared = linkPrefixPrepared.includes('?')
+    ? `${linkPrefixPrepared}${linkPrefixPrepared.endsWith('?') || linkPrefixPrepared.endsWith('&') ? '' : '&'}labels=`
+    : `${linkPrefixPrepared}?labels=`
+
+  const renderErrorFallback = () => {
+    if (errorMode === 'default') {
+      const fallbackText = textLink || errorText
+      const handleDefaultFallbackLinkClick = (e: React.MouseEvent<HTMLElement>) =>
+        handleLabelsToSearchParamsLinkClick({
+          e,
+          hrefPrepared: linkPrefixPrepared,
+          navigate,
+        })
+
+      return renderWithSearchIcon(
+        <Typography.Link href={linkPrefixPrepared} onClick={handleDefaultFallbackLinkClick} {...linkProps}>
+          {fallbackText}
+          {children}
+        </Typography.Link>,
+      )
+    }
+
+    return renderWithSearchIcon(
+      <Typography.Text>
+        {errorText}
+        {children}
+      </Typography.Text>,
+    )
+  }
 
   if (!labelsRaw) {
     if (errorArrayOfObjects) {
       console.log(errorArrayOfObjects)
       // return <div>{errorArrayOfObjects}</div>
-      return (
-        <Typography.Text>
-          {errorText}
-          {children}
-        </Typography.Text>
-      )
+      return renderErrorFallback()
     }
     console.log('Not a valid data structure')
-    // return <div>Not a valid data structure</div>      return (
-    return (
-      <Typography.Text>
-        {errorText}
-        {children}
-      </Typography.Text>
-    )
+    // return <div>Not a valid data structure</div>
+    return renderErrorFallback()
   }
 
   const labels = Object.entries(labelsRaw)
@@ -89,21 +119,26 @@ export const LabelsToSearchParams: FC<{
     .join(',')
   const labelsRows = Object.entries(labelsRaw).map(([key, value]) => `${key}=${value}`)
   const labelsEncoded = encodeURIComponent(labels)
-  const hrefPrepared = `${linkPrefixPrepared}${labelsEncoded}`
+  const hrefPrepared = `${labelsPrefixPrepared}${labelsEncoded}`
+  const handleLinkClick = (e: React.MouseEvent<HTMLElement>) =>
+    handleLabelsToSearchParamsLinkClick({
+      e,
+      hrefPrepared,
+      navigate,
+    })
 
   if (renderLabelsAsRows) {
-    return (
-      <Flex align="flex-start" gap={8}>
-        <SearchOutlined style={{ marginTop: 4 }} />
-        <Flex vertical>
+    return renderWithSearchIcon(
+      <Flex vertical>
+        <Typography.Link href={hrefPrepared} onClick={handleLinkClick} {...linkProps}>
           {labelsRows.map((row, index) => (
-            <Typography.Link key={row} href={hrefPrepared} {...linkProps}>
+            <span key={`${row}-${index}`} style={{ display: 'block' }}>
               {index < labelsRows.length - 1 ? `${row},` : row}
-            </Typography.Link>
+            </span>
           ))}
-          {children}
-        </Flex>
-      </Flex>
+        </Typography.Link>
+        {children}
+      </Flex>,
     )
   }
 
@@ -120,10 +155,12 @@ export const LabelsToSearchParams: FC<{
           </Flex>
         }
       >
-        <Typography.Link href={hrefPrepared} {...linkProps}>
-          {truncatedLabels}
-          {children}
-        </Typography.Link>
+        {renderWithSearchIcon(
+          <Typography.Link href={hrefPrepared} onClick={handleLinkClick} {...linkProps}>
+            {truncatedLabels}
+            {children}
+          </Typography.Link>,
+        )}
       </Popover>
     )
   }
@@ -141,18 +178,20 @@ export const LabelsToSearchParams: FC<{
           </Flex>
         }
       >
-        <Typography.Link href={hrefPrepared} {...linkProps}>
-          {truncatedTextLink}
-          {children}
-        </Typography.Link>
+        {renderWithSearchIcon(
+          <Typography.Link href={hrefPrepared} onClick={handleLinkClick} {...linkProps}>
+            {truncatedTextLink}
+            {children}
+          </Typography.Link>,
+        )}
       </Popover>
     )
   }
 
-  return (
-    <Typography.Link href={hrefPrepared} {...linkProps}>
+  return renderWithSearchIcon(
+    <Typography.Link href={hrefPrepared} onClick={handleLinkClick} {...linkProps}>
       {textLink || labels}
       {children}
-    </Typography.Link>
+    </Typography.Link>,
   )
 }

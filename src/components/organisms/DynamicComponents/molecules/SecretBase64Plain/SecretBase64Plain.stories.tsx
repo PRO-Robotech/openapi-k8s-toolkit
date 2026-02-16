@@ -29,8 +29,16 @@ const meta: Meta<TArgs> = {
   // Expose *inner* fields as top-level controls
   argTypes: {
     id: { control: 'text', description: 'data.id' },
-    base64Value: { control: 'text', description: 'data.base64Value' },
-    plainTextValue: { control: 'text', description: 'data.plainTextValue' },
+    type: { options: ['base64', 'plain'], control: { type: 'radio' }, description: 'data.type' },
+    value: { control: 'text', description: 'data.value' },
+    reqIndex: { control: 'text', description: 'data.reqIndex' },
+    jsonPathToSecrets: { control: 'text', description: 'data.jsonPathToSecrets' },
+    multiline: { control: 'boolean', description: 'data.multiline' },
+    multilineRows: { control: 'number', description: 'data.multilineRows' },
+    shownByDefault: { control: 'boolean', description: 'data.shownByDefault' },
+    hideEye: { control: 'boolean', description: 'data.hideEye' },
+    textStyle: { control: 'object', description: 'data.textStyle' },
+    emptyText: { control: 'text', description: 'data.emptyText' },
     containerStyle: { control: 'object', description: 'data.containerStyle' },
     inputContainerStyle: { control: 'object', description: 'data.inputContainerStyle' },
     flexProps: { control: 'object', description: 'data.flexProps' },
@@ -64,8 +72,16 @@ const meta: Meta<TArgs> = {
           <SecretBase64Plain
             data={{
               id: args.id,
-              base64Value: args.base64Value,
-              plainTextValue: args.plainTextValue,
+              type: args.type,
+              value: args.value,
+              reqIndex: args.reqIndex,
+              jsonPathToSecrets: args.jsonPathToSecrets,
+              multiline: args.multiline,
+              multilineRows: args.multilineRows,
+              shownByDefault: args.shownByDefault,
+              hideEye: args.hideEye,
+              textStyle: args.textStyle,
+              emptyText: args.emptyText,
               containerStyle: args.containerStyle,
               inputContainerStyle: args.inputContainerStyle,
               flexProps: args.flexProps,
@@ -85,8 +101,16 @@ const meta: Meta<TArgs> = {
           type: 'SecretBase64Plain',
           data: {
             id: args.id,
-            base64Value: args.base64Value,
-            plainTextValue: args.plainTextValue,
+            type: args.type,
+            value: args.value,
+            reqIndex: args.reqIndex,
+            jsonPathToSecrets: args.jsonPathToSecrets,
+            multiline: args.multiline,
+            multilineRows: args.multilineRows,
+            shownByDefault: args.shownByDefault,
+            hideEye: args.hideEye,
+            textStyle: args.textStyle,
+            emptyText: args.emptyText,
             containerStyle: args.containerStyle,
             inputContainerStyle: args.inputContainerStyle,
             flexProps: args.flexProps,
@@ -115,7 +139,10 @@ type Story = StoryObj<TArgs>
 export const Default: Story = {
   args: {
     id: 'example-secterbase64',
-    base64Value: "{reqsJsonPath[0]['.data.block.base64value']['-']}",
+    type: 'base64',
+    value: "{reqsJsonPath[0]['.data.block.base64value']['-']}",
+    shownByDefault: false,
+    hideEye: false,
 
     // providers
     isLoading: false,
@@ -167,8 +194,8 @@ export const FlexGap: Story = {
 export const PlainText: Story = {
   args: {
     ...Default.args,
-    base64Value: undefined,
-    plainTextValue: "{reqsJsonPath[0]['.data.block.plainTextValue']['-']}",
+    type: 'plain',
+    value: "{reqsJsonPath[0]['.data.block.plainTextValue']['-']}",
   },
 }
 
@@ -179,10 +206,186 @@ export const NiceLooking: Story = {
   },
 }
 
+export const ShownByDefault: Story = {
+  args: {
+    ...Default.args,
+    shownByDefault: true,
+  },
+}
+
+export const WithoutEye: Story = {
+  args: {
+    ...Default.args,
+    hideEye: true,
+  },
+}
+
+export const Multiline: Story = {
+  args: {
+    ...Default.args,
+    multiline: true,
+    multilineRows: 6,
+    inputContainerStyle: {
+      minWidth: '400px',
+    },
+  },
+}
+
+export const MultilineWithMultipleLinesValue: Story = {
+  args: {
+    ...Default.args,
+    type: 'plain',
+    value: "{reqsJsonPath[0]['.data.block.plainTextValue']['-']}",
+    multiline: true,
+    multilineRows: 6,
+    inputContainerStyle: {
+      minWidth: '400px',
+    },
+    multiQueryData: {
+      req0: {
+        data: {
+          block: {
+            plainTextValue: `
+            First line
+            Second line
+            Third line`,
+          },
+        },
+      },
+    },
+  },
+}
+
 export const CustomNotification: Story = {
   args: {
     ...Default.args,
     notificationText: 'Some custom text',
     notificationWidth: '600px',
+  },
+}
+
+export const FromSecretsObject: Story = {
+  args: {
+    ...Default.args,
+    type: 'base64',
+    value: undefined,
+    reqIndex: '0',
+    jsonPathToSecrets: '.data.secretData',
+    multiQueryData: {
+      req0: {
+        data: {
+          secretData: {
+            username: 'YWRtaW4=',
+            password: 'cGFzc3dvcmQ=',
+            token: 'dG9rZW4tMTIz',
+          },
+        },
+      },
+    },
+  },
+}
+
+export const FromSecretsObjectPlain: Story = {
+  args: {
+    ...Default.args,
+    type: 'plain',
+    value: undefined,
+    reqIndex: '0',
+    jsonPathToSecrets: '.data.secretDataPlain',
+    multiQueryData: {
+      req0: {
+        data: {
+          secretDataPlain: {
+            username: 'admin',
+            password: 'password',
+            token: 'token-123',
+          },
+        },
+      },
+    },
+  },
+}
+
+export const FromSecretsObjectMultiline: Story = {
+  args: {
+    ...Default.args,
+    type: 'plain',
+    value: undefined,
+    multiline: true,
+    multilineRows: 5,
+    reqIndex: '0',
+    jsonPathToSecrets: '.data.secretDataMultiline',
+    inputContainerStyle: {
+      minWidth: '400px',
+    },
+    multiQueryData: {
+      req0: {
+        data: {
+          secretDataMultiline: {
+            cert: `-----BEGIN CERT-----
+line-1
+line-2
+-----END CERT-----`,
+            config: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sample`,
+          },
+        },
+      },
+    },
+  },
+}
+
+export const FromSecretsObjectWithStyledTitle: Story = {
+  args: {
+    ...FromSecretsObjectPlain.args,
+    textStyle: {
+      color: '#1677ff',
+      fontSize: 14,
+      letterSpacing: 0.3,
+    },
+  },
+}
+
+export const FromSecretsObjectEmpty: Story = {
+  args: {
+    ...Default.args,
+    type: 'plain',
+    value: undefined,
+    emptyText: 'No secret entries found for this object',
+    reqIndex: '0',
+    jsonPathToSecrets: '.data.secretDataEmpty',
+    multiQueryData: {
+      req0: {
+        data: {
+          secretDataEmpty: {},
+        },
+      },
+    },
+  },
+}
+
+export const FromSecretsObjectEmptyWithStyleNoCustomText: Story = {
+  args: {
+    ...FromSecretsObjectEmpty.args,
+    textStyle: {
+      color: '#d46b08',
+      fontSize: 13,
+      fontWeight: 600,
+    },
+    emptyText: undefined,
+  },
+}
+
+export const FromSecretsObjectEmptyWithStyle: Story = {
+  args: {
+    ...FromSecretsObjectEmpty.args,
+    textStyle: {
+      color: '#d46b08',
+      fontSize: 13,
+      fontWeight: 600,
+    },
+    emptyText: 'No secrets to display (styled empty state)',
   },
 }

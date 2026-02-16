@@ -1,7 +1,7 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable max-lines-per-function */
 /* eslint-disable no-console */
-import React, { FC, useState, useEffect, ReactNode, useCallback } from 'react'
+import React, { FC, useState, useEffect, ReactNode, useCallback, useRef } from 'react'
 import { Alert, Spin } from 'antd'
 import axios, { AxiosError } from 'axios'
 import { TJSON } from 'localTypes/JSON'
@@ -103,6 +103,7 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
   const [isLoading, setIsLoading] = useState(true)
   const [isNamespaced, setIsNamespaced] = useState<boolean>(false)
   const [isError, setIsError] = useState<false | string | ReactNode>(false)
+  const hasAppliedBackendModeRef = useRef(false)
 
   const { data: overridesData, isLoading: overridesLoading } = useK8sSmartResource<TCustomFormsOverridesResponse>({
     cluster,
@@ -128,23 +129,24 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
   })
 
   const fallbackToManualMode = useCallback(() => {
-    if (modeData) {
-      modeData.onChange('Manual')
-      modeData.onDisabled()
-    }
+    if (!modeData || hasAppliedBackendModeRef.current) return
+
+    modeData.onChange('Manual')
+    hasAppliedBackendModeRef.current = true
   }, [modeData])
 
   const applyForceViewMode = useCallback(
     (forceViewMode?: TPrepareFormRes['forceViewMode']) => {
-      if (!modeData || !forceViewMode) return
+      if (!modeData || !forceViewMode || hasAppliedBackendModeRef.current) return
 
       if (forceViewMode === 'Manual') {
         modeData.onChange('Manual')
-        modeData.onDisabled()
+        hasAppliedBackendModeRef.current = true
         return
       }
 
       modeData.onChange('OpenAPI')
+      hasAppliedBackendModeRef.current = true
     },
     [modeData],
   )
