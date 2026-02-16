@@ -112,7 +112,6 @@ export const getMenuItems = (
     disabled: action.props.disabled || isActionDisabledByPermission(actionKey, permissions),
     danger: action.props.danger,
     onClick: () => {
-      console.log('[ActionsDropdown] menu item clicked, actionKey:', actionKey, 'type:', action.type, 'disabled:', action.props.disabled)
       onActionClick(action)
     },
   }))

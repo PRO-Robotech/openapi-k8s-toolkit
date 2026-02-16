@@ -525,12 +525,9 @@ const useDrainHandlers = (ctx: TParseContext, { showSuccess, showError }: TNotif
   const [isDrainLoading, setIsDrainLoading] = useState(false)
 
   const handleDrainAction = (action: Extract<TActionUnion, { type: 'drain' }>) => {
-    console.log('[ActionsDropdown] handleDrainAction called, props:', JSON.stringify(action.props))
     const bffEndpointPrepared = parseAll({ text: action.props.bffEndpoint, ...ctx })
     const nodeNamePrepared = parseAll({ text: action.props.nodeName, ...ctx })
-    console.log('[ActionsDropdown] drain parsed:', { bffEndpointPrepared, nodeNamePrepared })
     setDrainModalData({ bffEndpoint: bffEndpointPrepared, nodeName: nodeNamePrepared })
-    console.log('[ActionsDropdown] setDrainModalData called')
   }
 
   const handleDrainConfirm = () => {
@@ -707,8 +704,10 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TP
     useEvictHandlers(notificationCallbacks)
   const { rerunModalData, isRerunLoading, handleRerunLastAction, handleRerunConfirm, handleRerunCancel } =
     useRerunHandlers(ctx, multiQueryData, notificationCallbacks)
-  const { drainModalData, isDrainLoading, handleDrainAction, handleDrainConfirm, handleDrainCancel } =
-    useDrainHandlers(ctx, notificationCallbacks)
+  const { drainModalData, isDrainLoading, handleDrainAction, handleDrainConfirm, handleDrainCancel } = useDrainHandlers(
+    ctx,
+    notificationCallbacks,
+  )
   const { rollbackModalData, isRollbackLoading, handleRollbackAction, handleRollbackConfirm, handleRollbackCancel } =
     useRollbackHandlers(ctx, notificationCallbacks)
 
@@ -729,7 +728,6 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TP
   }
 
   const handleActionClick = (action: TActionUnion) => {
-    console.log('[ActionsDropdown] handleActionClick called, action.type:', action.type, 'action:', JSON.stringify(action))
     if (action.type === 'edit') {
       handleEditAction(action, ctx, fullPath, navigate)
       return
@@ -787,9 +785,7 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TP
     }
 
     if (action.type === 'drain') {
-      console.log('[ActionsDropdown] drain branch hit, calling handleDrainAction')
       handleDrainAction(action)
-      console.log('[ActionsDropdown] handleDrainAction returned')
       return
     }
 

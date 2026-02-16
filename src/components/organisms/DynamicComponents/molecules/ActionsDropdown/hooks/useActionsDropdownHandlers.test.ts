@@ -565,13 +565,10 @@ describe('useActionsDropdownHandlers - drain action', () => {
     })
 
     expect(mockAxiosPost).toHaveBeenCalledTimes(1)
-    expect(mockAxiosPost).toHaveBeenCalledWith(
-      '/api/clusters/my-cluster/openapi-bff/actions/drain',
-      {
-        nodeName: 'my-node',
-        apiPath: '/api/v1/nodes/my-node',
-      },
-    )
+    expect(mockAxiosPost).toHaveBeenCalledWith('/api/clusters/my-cluster/openapi-bff/actions/drain', {
+      nodeName: 'my-node',
+      apiPath: '/api/v1/nodes/my-node',
+    })
   })
 
   it('handleDrainConfirm shows success and clears modal on resolve', async () => {
@@ -607,9 +604,7 @@ describe('useActionsDropdownHandlers - drain action', () => {
       result.current.handleDrainConfirm()
     })
 
-    expect(mockNotificationError).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'Drain my-node failed' }),
-    )
+    expect(mockNotificationError).toHaveBeenCalledWith(expect.objectContaining({ message: 'Drain my-node failed' }))
     expect(result.current.drainModalData).toBeNull()
     expect(result.current.isDrainLoading).toBe(false)
   })
@@ -681,13 +676,10 @@ describe('useActionsDropdownHandlers - rollback action', () => {
     })
 
     expect(mockAxiosPost).toHaveBeenCalledTimes(1)
-    expect(mockAxiosPost).toHaveBeenCalledWith(
-      '/api/clusters/my-cluster/openapi-bff/actions/rollback',
-      {
-        resourceEndpoint: '/apis/apps/v1/namespaces/default/deployments/my-deploy',
-        resourceName: 'my-deploy',
-      },
-    )
+    expect(mockAxiosPost).toHaveBeenCalledWith('/api/clusters/my-cluster/openapi-bff/actions/rollback', {
+      resourceEndpoint: '/apis/apps/v1/namespaces/default/deployments/my-deploy',
+      resourceName: 'my-deploy',
+    })
   })
 
   it('handleRollbackConfirm shows success and clears modal on resolve', async () => {
