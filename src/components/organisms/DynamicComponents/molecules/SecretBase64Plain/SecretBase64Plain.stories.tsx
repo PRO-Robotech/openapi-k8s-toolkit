@@ -35,6 +35,8 @@ const meta: Meta<TArgs> = {
     jsonPathToSecrets: { control: 'text', description: 'data.jsonPathToSecrets' },
     multiline: { control: 'boolean', description: 'data.multiline' },
     multilineRows: { control: 'number', description: 'data.multilineRows' },
+    shownByDefault: { control: 'boolean', description: 'data.shownByDefault' },
+    hideEye: { control: 'boolean', description: 'data.hideEye' },
     textStyle: { control: 'object', description: 'data.textStyle' },
     emptyText: { control: 'text', description: 'data.emptyText' },
     containerStyle: { control: 'object', description: 'data.containerStyle' },
@@ -76,6 +78,8 @@ const meta: Meta<TArgs> = {
               jsonPathToSecrets: args.jsonPathToSecrets,
               multiline: args.multiline,
               multilineRows: args.multilineRows,
+              shownByDefault: args.shownByDefault,
+              hideEye: args.hideEye,
               textStyle: args.textStyle,
               emptyText: args.emptyText,
               containerStyle: args.containerStyle,
@@ -103,6 +107,8 @@ const meta: Meta<TArgs> = {
             jsonPathToSecrets: args.jsonPathToSecrets,
             multiline: args.multiline,
             multilineRows: args.multilineRows,
+            shownByDefault: args.shownByDefault,
+            hideEye: args.hideEye,
             textStyle: args.textStyle,
             emptyText: args.emptyText,
             containerStyle: args.containerStyle,
@@ -135,6 +141,8 @@ export const Default: Story = {
     id: 'example-secterbase64',
     type: 'base64',
     value: "{reqsJsonPath[0]['.data.block.base64value']['-']}",
+    shownByDefault: false,
+    hideEye: false,
 
     // providers
     isLoading: false,
@@ -195,6 +203,20 @@ export const NiceLooking: Story = {
   args: {
     ...Default.args,
     niceLooking: true,
+  },
+}
+
+export const ShownByDefault: Story = {
+  args: {
+    ...Default.args,
+    shownByDefault: true,
+  },
+}
+
+export const WithoutEye: Story = {
+  args: {
+    ...Default.args,
+    hideEye: true,
   },
 }
 

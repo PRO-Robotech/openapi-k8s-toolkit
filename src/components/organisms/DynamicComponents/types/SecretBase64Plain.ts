@@ -11,6 +11,8 @@ export type TSecretBase64PlainProps = {
   plainTextValue?: string // deprecated: use value + type='plain'
   multiline?: boolean
   multilineRows?: number
+  shownByDefault?: boolean
+  hideEye?: boolean
   textStyle?: CSSProperties
   emptyText?: string
   containerStyle?: CSSProperties
