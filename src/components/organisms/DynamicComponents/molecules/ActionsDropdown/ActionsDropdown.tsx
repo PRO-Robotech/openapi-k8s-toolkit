@@ -51,6 +51,10 @@ export const ActionsDropdown: FC<{
     deleteChildrenModalData,
     rerunModalData,
     isRerunLoading,
+    drainModalData,
+    isDrainLoading,
+    rollbackModalData,
+    isRollbackLoading,
     handleActionClick,
     handleCloseModal,
     handleDeleteModalClose,
@@ -61,6 +65,10 @@ export const ActionsDropdown: FC<{
     handleDeleteChildrenClose,
     handleRerunConfirm,
     handleRerunCancel,
+    handleDrainConfirm,
+    handleDrainCancel,
+    handleRollbackConfirm,
+    handleRollbackCancel,
   } = useActionsDropdownHandlers({
     replaceValues,
     multiQueryData: safeMultiQueryData,
@@ -157,6 +165,32 @@ export const ActionsDropdown: FC<{
           confirmLoading={isRerunLoading}
         >
           This will create a new Job with the same spec.
+        </ConfirmModal>
+      )}
+
+      {drainModalData && (
+        <ConfirmModal
+          title={`Drain node \u00AB${drainModalData.nodeName}\u00BB?`}
+          onConfirm={handleDrainConfirm}
+          onClose={handleDrainCancel}
+          confirmText="Drain"
+          confirmLoading={isDrainLoading}
+          danger
+        >
+          This will cordon the node and evict all eligible pods. DaemonSet pods will be skipped.
+        </ConfirmModal>
+      )}
+
+      {rollbackModalData && (
+        <ConfirmModal
+          title={`Rollback \u00AB${rollbackModalData.resourceName}\u00BB?`}
+          onConfirm={handleRollbackConfirm}
+          onClose={handleRollbackCancel}
+          confirmText="Rollback"
+          confirmLoading={isRollbackLoading}
+          danger
+        >
+          This will revert the resource to its previous revision.
         </ConfirmModal>
       )}
 

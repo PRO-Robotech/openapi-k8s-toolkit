@@ -24,13 +24,14 @@ jest.mock('@tanstack/react-query', () => ({
 
 const mockNotificationSuccess = jest.fn()
 const mockNotificationError = jest.fn()
+const mockNotificationWarning = jest.fn()
 jest.mock('antd', () => {
   const actual = jest.requireActual('antd')
   return {
     ...actual,
     notification: {
       useNotification: () => [
-        { success: mockNotificationSuccess, error: mockNotificationError },
+        { success: mockNotificationSuccess, error: mockNotificationError, warning: mockNotificationWarning },
         null, // contextHolder
       ],
     },
@@ -46,6 +47,13 @@ jest.mock('api/forms', () => ({
   patchEntryWithMergePatch: (...args: unknown[]) => mockPatchEntryWithMergePatch(...args),
 }))
 
+const mockAxiosPost = jest.fn()
+jest.mock('axios', () => ({
+  ...jest.requireActual('axios'),
+  __esModule: true,
+  default: { post: (...args: unknown[]) => mockAxiosPost(...args) },
+}))
+
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
@@ -59,6 +67,7 @@ beforeEach(() => {
   mockCreateNewEntry.mockResolvedValue({})
   mockPatchEntryWithReplaceOp.mockResolvedValue({})
   mockPatchEntryWithMergePatch.mockResolvedValue({})
+  mockAxiosPost.mockResolvedValue({ data: {} })
 })
 
 /* ------------------------------------------------------------------ */
@@ -517,5 +526,283 @@ describe('useActionsDropdownHandlers - modal actions', () => {
       expect(result.current.activeAction).toBeNull()
       expect(result.current.modalOpen).toBe(false)
     })
+  })
+})
+
+describe('useActionsDropdownHandlers - drain action', () => {
+  const drainAction: TActionUnion = {
+    type: 'drain',
+    props: {
+      text: 'Drain',
+      bffEndpoint: '/api/clusters/{2}/openapi-bff/actions/drain',
+      nodeName: 'my-node',
+    },
+  }
+
+  it('sets drainModalData with parsed fields on click', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(drainAction)
+    })
+
+    expect(result.current.drainModalData).toEqual({
+      bffEndpoint: '/api/clusters/my-cluster/openapi-bff/actions/drain',
+      nodeName: 'my-node',
+    })
+  })
+
+  it('handleDrainConfirm calls axios.post with correct body', async () => {
+    mockAxiosPost.mockResolvedValue({ data: { drained: 3, failed: [], skipped: 1 } })
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(drainAction)
+    })
+
+    await act(async () => {
+      result.current.handleDrainConfirm()
+    })
+
+    expect(mockAxiosPost).toHaveBeenCalledTimes(1)
+    expect(mockAxiosPost).toHaveBeenCalledWith('/api/clusters/my-cluster/openapi-bff/actions/drain', {
+      nodeName: 'my-node',
+      apiPath: '/api/v1/nodes/my-node',
+    })
+  })
+
+  it('shows success notification with drained/skipped counts on full success', async () => {
+    mockAxiosPost.mockResolvedValue({ data: { drained: 3, failed: [], skipped: 1 } })
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(drainAction)
+    })
+
+    await act(async () => {
+      result.current.handleDrainConfirm()
+    })
+
+    expect(mockNotificationSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Drain my-node successful',
+        description: 'Evicted 3 pod(s), skipped 1',
+      }),
+    )
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['multi'] })
+    expect(result.current.drainModalData).toBeNull()
+    expect(result.current.isDrainLoading).toBe(false)
+  })
+
+  it('shows success notification with drained: 0 when all skipped', async () => {
+    mockAxiosPost.mockResolvedValue({ data: { drained: 0, failed: [], skipped: 5 } })
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(drainAction)
+    })
+
+    await act(async () => {
+      result.current.handleDrainConfirm()
+    })
+
+    expect(mockNotificationSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Drain my-node successful',
+        description: 'Evicted 0 pod(s), skipped 5',
+      }),
+    )
+  })
+
+  it('shows warning notification with pod failure details on partial failure', async () => {
+    mockAxiosPost.mockResolvedValue({
+      data: {
+        drained: 2,
+        failed: [
+          { name: 'pod-a', namespace: 'ns1', error: 'PDB violated' },
+          { name: 'pod-b', namespace: 'ns2', error: 'timeout' },
+        ],
+        skipped: 1,
+      },
+    })
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(drainAction)
+    })
+
+    await act(async () => {
+      result.current.handleDrainConfirm()
+    })
+
+    expect(mockNotificationWarning).toHaveBeenCalledTimes(1)
+    const call = mockNotificationWarning.mock.calls[0][0]
+    expect(call.message).toBe('Drain my-node partially completed')
+    expect(call.duration).toBe(0)
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['multi'] })
+    expect(result.current.drainModalData).toBeNull()
+    expect(result.current.isDrainLoading).toBe(false)
+  })
+
+  it('handleDrainConfirm shows error and clears modal on reject', async () => {
+    mockAxiosPost.mockRejectedValue(new Error('Cordon failed'))
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(drainAction)
+    })
+
+    await act(async () => {
+      result.current.handleDrainConfirm()
+    })
+
+    expect(mockNotificationError).toHaveBeenCalledWith(expect.objectContaining({ message: 'Drain my-node failed' }))
+    expect(result.current.drainModalData).toBeNull()
+    expect(result.current.isDrainLoading).toBe(false)
+  })
+
+  it('handleDrainCancel clears modal data', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(drainAction)
+    })
+
+    expect(result.current.drainModalData).not.toBeNull()
+
+    act(() => {
+      result.current.handleDrainCancel()
+    })
+
+    expect(result.current.drainModalData).toBeNull()
+    expect(result.current.isDrainLoading).toBe(false)
+  })
+
+  it('handleDrainConfirm does nothing when drainModalData is null', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleDrainConfirm()
+    })
+
+    expect(mockAxiosPost).not.toHaveBeenCalled()
+  })
+})
+
+describe('useActionsDropdownHandlers - rollback action', () => {
+  const rollbackAction: TActionUnion = {
+    type: 'rollback',
+    props: {
+      text: 'Rollback',
+      bffEndpoint: '/api/clusters/{2}/openapi-bff/actions/rollback',
+      resourceName: 'my-deploy',
+      resourceEndpoint: '/apis/apps/v1/namespaces/{1}/deployments/my-deploy',
+    },
+  }
+
+  it('sets rollbackModalData with parsed fields on click', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(rollbackAction)
+    })
+
+    expect(result.current.rollbackModalData).toEqual({
+      bffEndpoint: '/api/clusters/my-cluster/openapi-bff/actions/rollback',
+      resourceName: 'my-deploy',
+      resourceEndpoint: '/apis/apps/v1/namespaces/default/deployments/my-deploy',
+    })
+  })
+
+  it('handleRollbackConfirm calls axios.post with correct body', async () => {
+    mockAxiosPost.mockResolvedValue({ data: { rolledBack: true, fromRevision: 3, toRevision: 2 } })
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(rollbackAction)
+    })
+
+    await act(async () => {
+      result.current.handleRollbackConfirm()
+    })
+
+    expect(mockAxiosPost).toHaveBeenCalledTimes(1)
+    expect(mockAxiosPost).toHaveBeenCalledWith('/api/clusters/my-cluster/openapi-bff/actions/rollback', {
+      resourceEndpoint: '/apis/apps/v1/namespaces/default/deployments/my-deploy',
+      resourceName: 'my-deploy',
+    })
+  })
+
+  it('handleRollbackConfirm shows success and clears modal on resolve', async () => {
+    mockAxiosPost.mockResolvedValue({ data: {} })
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(rollbackAction)
+    })
+
+    await act(async () => {
+      result.current.handleRollbackConfirm()
+    })
+
+    expect(mockNotificationSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Rollback my-deploy successful' }),
+    )
+    expect(result.current.rollbackModalData).toBeNull()
+    expect(result.current.isRollbackLoading).toBe(false)
+  })
+
+  it('handleRollbackConfirm shows error and clears modal on reject', async () => {
+    mockAxiosPost.mockRejectedValue(new Error('No previous revision'))
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(rollbackAction)
+    })
+
+    await act(async () => {
+      result.current.handleRollbackConfirm()
+    })
+
+    expect(mockNotificationError).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Rollback my-deploy failed' }),
+    )
+    expect(result.current.rollbackModalData).toBeNull()
+    expect(result.current.isRollbackLoading).toBe(false)
+  })
+
+  it('handleRollbackCancel clears modal data', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(rollbackAction)
+    })
+
+    expect(result.current.rollbackModalData).not.toBeNull()
+
+    act(() => {
+      result.current.handleRollbackCancel()
+    })
+
+    expect(result.current.rollbackModalData).toBeNull()
+    expect(result.current.isRollbackLoading).toBe(false)
+  })
+
+  it('handleRollbackConfirm does nothing when rollbackModalData is null', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleRollbackConfirm()
+    })
+
+    expect(mockAxiosPost).not.toHaveBeenCalled()
   })
 })
