@@ -27,6 +27,12 @@ const DropdownMock = jest.fn(({ menu, children }: any) => {
 
 jest.mock('antd', () => ({
   Dropdown: (props: any) => DropdownMock(props),
+  Flex: ({ children }: any) => <div data-testid="flex">{children}</div>,
+  Tooltip: ({ title, children }: any) => (
+    <span data-testid="tooltip" data-title={String(title)}>
+      {children}
+    </span>
+  ),
 }))
 
 jest.mock('@ant-design/icons', () => ({
@@ -34,6 +40,7 @@ jest.mock('@ant-design/icons', () => ({
   CloseOutlined: (props: any) => <span data-testid="close-icon" {...props} />,
   SearchOutlined: (props: any) => <span data-testid="search-icon" {...props} />,
   MoreOutlined: (props: any) => <span data-testid="more-icon" {...props} />,
+  QuestionCircleOutlined: (props: any) => <span data-testid="question-circle-icon" {...props} />,
 }))
 
 jest.mock('../../molecules', () => ({
@@ -198,6 +205,8 @@ describe('getEnrichedColumns', () => {
 
     expect(res).toHaveLength(2)
     expect(res[0].width).toBe('123')
+    expect(res[0].showSorterTooltip).toBe(false)
+    expect(res[1].showSorterTooltip).toBe(false)
     expect(typeof res[0].render).toBe('function')
     expect(typeof res[0].onCell).toBe('function')
     expect(res[1].sorter).toBe(false)
@@ -205,6 +214,22 @@ describe('getEnrichedColumns', () => {
     const onCellAttrs = res[0].onCell({ id: 'r1' })
     expect(onCellAttrs['data-rowkey']).toBe('r1')
     expect(String(onCellAttrs['data-colkey'])).toContain('name')
+  })
+
+  test('shows question icon with tooltip near title when additionalPrinterColumnsTooltips is configured', () => {
+    const columns = [{ title: 'Name', key: 'name', dataIndex: 'name' }] as any
+
+    const res = getEnrichedColumns({
+      columns,
+      additionalPrinterColumnsTooltips: [{ key: 'name', value: 'Column description' }],
+      theme: 'light',
+      getRowKey: r => r.id,
+    }) as any[]
+
+    // eslint-disable-next-line react/jsx-no-useless-fragment
+    const { getByTestId } = mount(<>{res[0].title}</>)
+    expect(getByTestId('tooltip')).toHaveAttribute('data-title', 'Column description')
+    expect(getByTestId('question-circle-icon')).toBeInTheDocument()
   })
 
   test('filterDropdown/filterIcon return null for memory/cpu/disabled', () => {

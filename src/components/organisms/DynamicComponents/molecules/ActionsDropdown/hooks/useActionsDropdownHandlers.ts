@@ -1,9 +1,10 @@
 /* eslint-disable no-nested-ternary */
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { notification } from 'antd'
-import { AxiosError } from 'axios'
+import type { NotificationInstance } from 'antd/es/notification/interface'
+import axios, { AxiosError } from 'axios'
 import _ from 'lodash'
 import { createNewEntry, updateEntry, patchEntryWithMergePatch, patchEntryWithReplaceOp } from 'api/forms'
 import { parseAll, parseWithoutPartsOfUrl, parsePartsOfUrl } from '../../utils'
@@ -42,6 +43,23 @@ export type TRerunModalData = {
   createEndpoint: string
   sourceName: string
   sourceSpec: Record<string, unknown>
+}
+
+export type TDrainModalData = {
+  bffEndpoint: string
+  nodeName: string
+}
+
+export type TDrainResponse = {
+  drained: number
+  failed: { name: string; namespace: string; error: string }[]
+  skipped: number
+}
+
+export type TRollbackModalData = {
+  bffEndpoint: string
+  resourceName: string
+  resourceEndpoint: string
 }
 
 export type TParseContext = {
@@ -509,6 +527,129 @@ const useRerunHandlers = (
   return { rerunModalData, isRerunLoading, handleRerunLastAction, handleRerunConfirm, handleRerunCancel }
 }
 
+const MAX_FAILED_PODS_SHOWN = 5
+
+const buildDrainFailureDescription = ({ drained, failed, skipped }: TDrainResponse): React.ReactNode => {
+  const lines: React.ReactNode[] = [`Evicted ${drained}, skipped ${skipped}, failed ${failed.length}`]
+
+  const shown = failed.slice(0, MAX_FAILED_PODS_SHOWN)
+  shown.forEach(pod => {
+    lines.push(React.createElement('br', null), `${pod.namespace}/${pod.name}: ${pod.error}`)
+  })
+
+  if (failed.length > MAX_FAILED_PODS_SHOWN) {
+    lines.push(React.createElement('br', null), `+${failed.length - MAX_FAILED_PODS_SHOWN} more`)
+  }
+
+  return React.createElement(React.Fragment, null, ...lines)
+}
+
+const useDrainHandlers = (
+  ctx: TParseContext,
+  { showError }: Pick<TNotificationCallbacks, 'showError'>,
+  notificationApi: NotificationInstance,
+  invalidateMultiQuery: () => void,
+) => {
+  const [drainModalData, setDrainModalData] = useState<TDrainModalData | null>(null)
+  const [isDrainLoading, setIsDrainLoading] = useState(false)
+
+  const handleDrainAction = (action: Extract<TActionUnion, { type: 'drain' }>) => {
+    const bffEndpointPrepared = parseAll({ text: action.props.bffEndpoint, ...ctx })
+    const nodeNamePrepared = parseAll({ text: action.props.nodeName, ...ctx })
+    setDrainModalData({ bffEndpoint: bffEndpointPrepared, nodeName: nodeNamePrepared })
+  }
+
+  const handleDrainConfirm = () => {
+    if (!drainModalData) return
+
+    setIsDrainLoading(true)
+    const drainLabel = `Drain ${drainModalData.nodeName}`
+
+    axios
+      .post<TDrainResponse>(drainModalData.bffEndpoint, {
+        nodeName: drainModalData.nodeName,
+        apiPath: `/api/v1/nodes/${drainModalData.nodeName}`,
+      })
+      .then(response => {
+        invalidateMultiQuery()
+        const { drained, failed, skipped } = response.data
+
+        if (failed.length > 0) {
+          notificationApi.warning({
+            message: `${drainLabel} partially completed`,
+            description: buildDrainFailureDescription({ drained, failed, skipped }),
+            placement: 'bottomRight',
+            duration: 0,
+          })
+        } else {
+          notificationApi.success({
+            message: `${drainLabel} successful`,
+            description: `Evicted ${drained} pod(s), skipped ${skipped}`,
+            placement: 'bottomRight',
+          })
+        }
+      })
+      .catch(error => {
+        showError(drainLabel, error)
+      })
+      .finally(() => {
+        setIsDrainLoading(false)
+        setDrainModalData(null)
+      })
+  }
+
+  const handleDrainCancel = () => {
+    setDrainModalData(null)
+    setIsDrainLoading(false)
+  }
+
+  return { drainModalData, isDrainLoading, handleDrainAction, handleDrainConfirm, handleDrainCancel }
+}
+
+const useRollbackHandlers = (ctx: TParseContext, { showSuccess, showError }: TNotificationCallbacks) => {
+  const [rollbackModalData, setRollbackModalData] = useState<TRollbackModalData | null>(null)
+  const [isRollbackLoading, setIsRollbackLoading] = useState(false)
+
+  const handleRollbackAction = (action: Extract<TActionUnion, { type: 'rollback' }>) => {
+    const bffEndpointPrepared = parseAll({ text: action.props.bffEndpoint, ...ctx })
+    const resourceNamePrepared = parseAll({ text: action.props.resourceName, ...ctx })
+    const resourceEndpointPrepared = parseAll({ text: action.props.resourceEndpoint, ...ctx })
+    setRollbackModalData({
+      bffEndpoint: bffEndpointPrepared,
+      resourceName: resourceNamePrepared,
+      resourceEndpoint: resourceEndpointPrepared,
+    })
+  }
+
+  const handleRollbackConfirm = () => {
+    if (!rollbackModalData) return
+
+    setIsRollbackLoading(true)
+    const rollbackLabel = `Rollback ${rollbackModalData.resourceName}`
+
+    axios
+      .post(rollbackModalData.bffEndpoint, {
+        resourceEndpoint: rollbackModalData.resourceEndpoint,
+        resourceName: rollbackModalData.resourceName,
+      })
+      .then(() => showSuccess(rollbackLabel))
+      .catch(error => {
+        showError(rollbackLabel, error)
+      })
+      .finally(() => {
+        setIsRollbackLoading(false)
+        setRollbackModalData(null)
+      })
+  }
+
+  const handleRollbackCancel = () => {
+    setRollbackModalData(null)
+    setIsRollbackLoading(false)
+  }
+
+  return { rollbackModalData, isRollbackLoading, handleRollbackAction, handleRollbackConfirm, handleRollbackCancel }
+}
+
 const fireTriggerRunAction = (
   action: Extract<TActionUnion, { type: 'triggerRun' }>,
   ctx: TParseContext,
@@ -610,6 +751,14 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TP
     useEvictHandlers(notificationCallbacks)
   const { rerunModalData, isRerunLoading, handleRerunLastAction, handleRerunConfirm, handleRerunCancel } =
     useRerunHandlers(ctx, multiQueryData, notificationCallbacks)
+  const { drainModalData, isDrainLoading, handleDrainAction, handleDrainConfirm, handleDrainCancel } = useDrainHandlers(
+    ctx,
+    notificationCallbacks,
+    notificationApi,
+    invalidateMultiQuery,
+  )
+  const { rollbackModalData, isRollbackLoading, handleRollbackAction, handleRollbackConfirm, handleRollbackCancel } =
+    useRollbackHandlers(ctx, notificationCallbacks)
 
   // --- DeleteChildren handlers ---
   const handleDeleteChildrenAction = (action: Extract<TActionUnion, { type: 'deleteChildren' }>) => {
@@ -684,8 +833,13 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TP
       return
     }
 
-    // Phase 2: drain and rollback are no-ops for now
-    if (action.type === 'drain' || action.type === 'rollback') {
+    if (action.type === 'drain') {
+      handleDrainAction(action)
+      return
+    }
+
+    if (action.type === 'rollback') {
+      handleRollbackAction(action)
       return
     }
 
@@ -728,6 +882,10 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TP
     deleteChildrenModalData,
     rerunModalData,
     isRerunLoading,
+    drainModalData,
+    isDrainLoading,
+    rollbackModalData,
+    isRollbackLoading,
     handleActionClick,
     handleCloseModal,
     handleDeleteModalClose,
@@ -738,5 +896,9 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TP
     handleDeleteChildrenClose,
     handleRerunConfirm,
     handleRerunCancel,
+    handleDrainConfirm,
+    handleDrainCancel,
+    handleRollbackConfirm,
+    handleRollbackCancel,
   }
 }
