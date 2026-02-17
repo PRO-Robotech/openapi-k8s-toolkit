@@ -27,6 +27,7 @@ export type TAntdTabsProps = {
   // If true, tab labels become links that can be opened in a new browser tab.
   allowOpenInNewBrowserTab?: boolean
   // If true, inactive tab pane content is unmounted on tab change.
+  // True by default
   unmountOnTabChange?: boolean
 } & Omit<TabsProps, 'id' | 'children'>
 
