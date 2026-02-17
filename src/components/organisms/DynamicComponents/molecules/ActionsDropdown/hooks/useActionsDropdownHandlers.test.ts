@@ -24,13 +24,14 @@ jest.mock('@tanstack/react-query', () => ({
 
 const mockNotificationSuccess = jest.fn()
 const mockNotificationError = jest.fn()
+const mockNotificationWarning = jest.fn()
 jest.mock('antd', () => {
   const actual = jest.requireActual('antd')
   return {
     ...actual,
     notification: {
       useNotification: () => [
-        { success: mockNotificationSuccess, error: mockNotificationError },
+        { success: mockNotificationSuccess, error: mockNotificationError, warning: mockNotificationWarning },
         null, // contextHolder
       ],
     },
@@ -571,8 +572,8 @@ describe('useActionsDropdownHandlers - drain action', () => {
     })
   })
 
-  it('handleDrainConfirm shows success and clears modal on resolve', async () => {
-    mockAxiosPost.mockResolvedValue({ data: {} })
+  it('shows success notification with drained/skipped counts on full success', async () => {
+    mockAxiosPost.mockResolvedValue({ data: { drained: 3, failed: [], skipped: 1 } })
 
     const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
 
@@ -585,8 +586,64 @@ describe('useActionsDropdownHandlers - drain action', () => {
     })
 
     expect(mockNotificationSuccess).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'Drain my-node successful' }),
+      expect.objectContaining({
+        message: 'Drain my-node successful',
+        description: 'Evicted 3 pod(s), skipped 1',
+      }),
     )
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['multi'] })
+    expect(result.current.drainModalData).toBeNull()
+    expect(result.current.isDrainLoading).toBe(false)
+  })
+
+  it('shows success notification with drained: 0 when all skipped', async () => {
+    mockAxiosPost.mockResolvedValue({ data: { drained: 0, failed: [], skipped: 5 } })
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(drainAction)
+    })
+
+    await act(async () => {
+      result.current.handleDrainConfirm()
+    })
+
+    expect(mockNotificationSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Drain my-node successful',
+        description: 'Evicted 0 pod(s), skipped 5',
+      }),
+    )
+  })
+
+  it('shows warning notification with pod failure details on partial failure', async () => {
+    mockAxiosPost.mockResolvedValue({
+      data: {
+        drained: 2,
+        failed: [
+          { name: 'pod-a', namespace: 'ns1', error: 'PDB violated' },
+          { name: 'pod-b', namespace: 'ns2', error: 'timeout' },
+        ],
+        skipped: 1,
+      },
+    })
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(drainAction)
+    })
+
+    await act(async () => {
+      result.current.handleDrainConfirm()
+    })
+
+    expect(mockNotificationWarning).toHaveBeenCalledTimes(1)
+    const call = mockNotificationWarning.mock.calls[0][0]
+    expect(call.message).toBe('Drain my-node partially completed')
+    expect(call.duration).toBe(0)
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['multi'] })
     expect(result.current.drainModalData).toBeNull()
     expect(result.current.isDrainLoading).toBe(false)
   })
