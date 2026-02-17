@@ -1,13 +1,15 @@
+/* eslint-disable jsx-a11y/mouse-events-have-key-events */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ReactNode } from 'react'
 import { NavigateFunction } from 'react-router-dom'
-import { TableProps, Dropdown } from 'antd'
-import { CheckOutlined, CloseOutlined, SearchOutlined, MoreOutlined } from '@ant-design/icons'
+import { TableProps, Dropdown, Tooltip, Flex } from 'antd'
+import { CheckOutlined, CloseOutlined, SearchOutlined, MoreOutlined, QuestionCircleOutlined } from '@ant-design/icons'
 import { get } from 'lodash'
 import {
   TAdditionalPrinterColumnsColWidths,
   TAdditionalPrinterColumnsTrimLengths,
   TAdditionalPrinterColumnsUndefinedValues,
+  TAdditionalPrinterColumnsTooltips,
   TAdditionalPrinterColumnsKeyTypeProps,
   TAdditionalPrinterColumnsCustomSortersAndFilters,
 } from 'localTypes/richTable'
@@ -117,6 +119,7 @@ export const getEnrichedColumns = ({
   additionalPrinterColumnsUndefinedValues,
   additionalPrinterColumnsTrimLengths,
   additionalPrinterColumnsColWidths,
+  additionalPrinterColumnsTooltips,
   additionalPrinterColumnsKeyTypeProps,
   additionalPrinterColumnsCustomSortersAndFilters,
   theme,
@@ -126,6 +129,7 @@ export const getEnrichedColumns = ({
   additionalPrinterColumnsUndefinedValues?: TAdditionalPrinterColumnsUndefinedValues
   additionalPrinterColumnsTrimLengths?: TAdditionalPrinterColumnsTrimLengths
   additionalPrinterColumnsColWidths?: TAdditionalPrinterColumnsColWidths
+  additionalPrinterColumnsTooltips?: TAdditionalPrinterColumnsTooltips
   additionalPrinterColumnsKeyTypeProps?: TAdditionalPrinterColumnsKeyTypeProps
   additionalPrinterColumnsCustomSortersAndFilters?: TAdditionalPrinterColumnsCustomSortersAndFilters
   theme: 'dark' | 'light'
@@ -146,6 +150,7 @@ export const getEnrichedColumns = ({
     const possibleUndefinedValue = additionalPrinterColumnsUndefinedValues?.find(({ key }) => key === el.key)?.value
     const possibleTrimLength = additionalPrinterColumnsTrimLengths?.find(({ key }) => key === el.key)?.value
     const possibleColWidth = additionalPrinterColumnsColWidths?.find(({ key }) => key === el.key)?.value
+    const possibleTooltip = additionalPrinterColumnsTooltips?.find(({ key }) => key === el.key)?.value
     const possibleCustomTypeWithProps =
       additionalPrinterColumnsKeyTypeProps && el.key
         ? additionalPrinterColumnsKeyTypeProps[el.key.toString()]
@@ -213,8 +218,28 @@ export const getEnrichedColumns = ({
       return a - b
     }
 
+    const columnTitle =
+      possibleTooltip && typeof el.title !== 'function' ? (
+        <Flex align="center" gap={4}>
+          <span>{el.title || String(el.key || '')}</span>
+          <Tooltip title={possibleTooltip}>
+            <span
+              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
+              onKeyDown={e => e.stopPropagation()}
+            >
+              <QuestionCircleOutlined />
+            </span>
+          </Tooltip>
+        </Flex>
+      ) : (
+        el.title
+      )
+
     return {
       ...el,
+      title: columnTitle,
+      showSorterTooltip: false,
       render: (value: TJSON, record: unknown) =>
         getCellRender({
           value,
