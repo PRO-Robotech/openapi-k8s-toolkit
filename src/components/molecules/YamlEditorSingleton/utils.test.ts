@@ -6,6 +6,7 @@ describe('findManagedFieldsLine', () => {
     ({
       getLineCount: () => lines.length,
       getLineContent: (lineNumber: number) => lines[lineNumber - 1],
+      getVersionId: () => 1,
     }) as any
 
   test('returns line number for metadata.managedFields', () => {
@@ -42,6 +43,7 @@ describe('collapseManagedFieldsInEditor', () => {
     ({
       getLineCount: () => lines.length,
       getLineContent: (lineNumber: number) => lines[lineNumber - 1],
+      getVersionId: () => 1,
     }) as any
 
   test('does nothing when editor has no model', () => {
@@ -114,5 +116,30 @@ describe('collapseManagedFieldsInEditor', () => {
 
     expect(setPosition).not.toHaveBeenCalled()
     expect(trigger).not.toHaveBeenCalled()
+  })
+
+  test('folds only once for the same model version', () => {
+    const model = makeModel([
+      'metadata:',
+      '  name: test',
+      '  managedFields:',
+      '    - manager: kubelet',
+      'spec:',
+      '  replicas: 1',
+    ])
+
+    const setPosition = jest.fn()
+    const trigger = jest.fn()
+    const editor = {
+      getModel: () => model,
+      setPosition,
+      trigger,
+    } as any
+
+    collapseManagedFieldsInEditor(editor)
+    collapseManagedFieldsInEditor(editor)
+
+    expect(setPosition).toHaveBeenCalledTimes(1)
+    expect(trigger).toHaveBeenCalledTimes(1)
   })
 })

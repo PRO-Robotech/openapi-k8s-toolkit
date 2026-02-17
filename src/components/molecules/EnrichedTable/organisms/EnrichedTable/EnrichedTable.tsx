@@ -11,6 +11,7 @@ import {
   TAdditionalPrinterColumnsTrimLengths,
   TAdditionalPrinterColumnsUndefinedValues,
   TAdditionalPrinterColumnsCustomSortersAndFilters,
+  TAdditionalPrinterColumnsTooltips,
 } from 'localTypes/richTable'
 import { TableComponents } from './atoms'
 import { TInternalDataForControls } from './types'
@@ -28,6 +29,7 @@ export type TEnrichedTableProps = {
   additionalPrinterColumnsUndefinedValues?: TAdditionalPrinterColumnsUndefinedValues
   additionalPrinterColumnsTrimLengths?: TAdditionalPrinterColumnsTrimLengths
   additionalPrinterColumnsColWidths?: TAdditionalPrinterColumnsColWidths
+  additionalPrinterColumnsTooltips?: TAdditionalPrinterColumnsTooltips
   additionalPrinterColumnsKeyTypeProps?: TAdditionalPrinterColumnsKeyTypeProps
   additionalPrinterColumnsCustomSortersAndFilters?: TAdditionalPrinterColumnsCustomSortersAndFilters
   selectData?: {
@@ -60,6 +62,7 @@ export const EnrichedTable: FC<TEnrichedTableProps> = ({
   additionalPrinterColumnsUndefinedValues,
   additionalPrinterColumnsTrimLengths,
   additionalPrinterColumnsColWidths,
+  additionalPrinterColumnsTooltips,
   additionalPrinterColumnsKeyTypeProps,
   additionalPrinterColumnsCustomSortersAndFilters,
   selectData,
@@ -81,6 +84,7 @@ export const EnrichedTable: FC<TEnrichedTableProps> = ({
     additionalPrinterColumnsUndefinedValues,
     additionalPrinterColumnsTrimLengths,
     additionalPrinterColumnsColWidths,
+    additionalPrinterColumnsTooltips,
     additionalPrinterColumnsKeyTypeProps,
     additionalPrinterColumnsCustomSortersAndFilters,
     theme,
