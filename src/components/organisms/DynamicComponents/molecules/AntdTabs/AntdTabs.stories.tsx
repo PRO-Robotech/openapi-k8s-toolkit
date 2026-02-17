@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Meta, StoryObj } from '@storybook/react'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Editor from '@monaco-editor/react'
 import * as yaml from 'yaml'
 
@@ -13,6 +13,29 @@ type TInner = TDynamicComponentsAppTypeMap['antdTabs']
 type TArgs = TInner & {
   children?: React.ReactNode
   showYaml?: boolean
+}
+
+const AntdTabsStoryPreview: React.FC<{
+  data: TInner
+  children?: React.ReactNode
+}> = ({ data, children }) => {
+  const [currentHash, setCurrentHash] = useState<string>('(empty)')
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+
+    const readHash = () => setCurrentHash(window.location.hash || '(empty)')
+    readHash()
+    window.addEventListener('hashchange', readHash)
+    return () => window.removeEventListener('hashchange', readHash)
+  }, [])
+
+  return (
+    <div style={{ padding: 16 }}>
+      <AntdTabs data={data}>{children}</AntdTabs>
+      <div style={{ marginTop: 12, fontFamily: 'monospace', fontSize: 12 }}>Current hash: {currentHash}</div>
+    </div>
+  )
 }
 
 const meta: Meta<TArgs> = {
@@ -50,9 +73,21 @@ const meta: Meta<TArgs> = {
       control: 'boolean',
       description: 'Center tabs',
     },
-    destroyInactiveTabPane: {
+    destroyOnHidden: {
       control: 'boolean',
-      description: 'Destroy inactive tab pane',
+      description: 'Destroy inactive tab pane content when hidden',
+    },
+    unmountOnTabChange: {
+      control: 'boolean',
+      description: 'Explicit alias for destroyOnHidden',
+    },
+    syncActiveKeyWithHash: {
+      control: 'boolean',
+      description: 'When enabled, active tab is synced with URL hash fragment (#tabKey)',
+    },
+    allowOpenInNewBrowserTab: {
+      control: 'boolean',
+      description: 'When enabled, tab labels are links that can be opened in a new browser tab',
     },
     animated: {
       control: 'boolean',
@@ -85,9 +120,7 @@ const meta: Meta<TArgs> = {
 
     return (
       <>
-        <div style={{ padding: 16 }}>
-          <AntdTabs data={data}>{children}</AntdTabs>
-        </div>
+        <AntdTabsStoryPreview data={data}>{children}</AntdTabsStoryPreview>
 
         {showYaml && (
           <Editor
@@ -126,7 +159,6 @@ export const Default: Story = {
     tabPosition: 'top',
     type: 'line',
     centered: false,
-    destroyInactiveTabPane: false,
     animated: true,
     tabBarGutter: 16,
     items: [
@@ -160,5 +192,42 @@ export const CenteredLarge: Story = {
     id: 'example-antd-tabs-centered',
     centered: true,
     size: 'large',
+  },
+}
+
+export const HashSyncEnabled: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-antd-tabs-hash-sync',
+    syncActiveKeyWithHash: true,
+    defaultActiveKey: 'tab2',
+  },
+}
+
+export const HashSyncCardTabs: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-antd-tabs-hash-sync-card',
+    syncActiveKeyWithHash: true,
+    type: 'card',
+    defaultActiveKey: 'tab3',
+  },
+}
+
+export const OpenInNewBrowserTab: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-antd-tabs-open-new-tab',
+    syncActiveKeyWithHash: true,
+    allowOpenInNewBrowserTab: true,
+    defaultActiveKey: 'tab1',
+  },
+}
+
+export const UnmountOnTabChange: Story = {
+  args: {
+    ...Default.args,
+    id: 'example-antd-tabs-unmount-on-change',
+    unmountOnTabChange: true,
   },
 }
