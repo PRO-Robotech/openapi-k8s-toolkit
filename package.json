@@ -1,6 +1,6 @@
 {
   "name": "@prorobotech/openapi-k8s-toolkit",
-  "version": "1.4.0-alpha.10",
+  "version": "1.4.0-alpha.11",
   "description": "ProRobotech OpenAPI k8s tools",
   "main": "dist/openapi-k8s-toolkit.cjs.js",
   "module": "dist/openapi-k8s-toolkit.es.js",
