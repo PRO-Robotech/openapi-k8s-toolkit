@@ -15,5 +15,11 @@ export const usePluginManifest = ({
     queryFn: () => getPlugins({ cluster }),
     refetchInterval: refetchInterval !== undefined ? refetchInterval : 60_000,
     enabled: isEnabled,
+    // 🔴 Disable ALL auto refetching
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
+    // 🟢 Optional: Make data never go stale
+    staleTime: Infinity,
   })
 }
