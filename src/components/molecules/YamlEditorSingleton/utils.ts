@@ -25,7 +25,7 @@ export const findManagedFieldsLine = (model: monaco.editor.ITextModel): number |
 }
 
 export const findManagedFieldsRange = (
-  model: monaco.editor.ITextModel
+  model: monaco.editor.ITextModel,
 ): { startLineNumber: number; endLineNumber: number } | null => {
   const startLineNumber = findManagedFieldsLine(model)
   if (startLineNumber === null) return null
@@ -49,9 +49,7 @@ export const findManagedFieldsRange = (
   return { startLineNumber, endLineNumber: model.getLineCount() }
 }
 
-export const collapseManagedFieldsInEditor = async (
-  editor: monaco.editor.IStandaloneCodeEditor
-): Promise<boolean> => {
+export const collapseManagedFieldsInEditor = async (editor: monaco.editor.IStandaloneCodeEditor): Promise<boolean> => {
   const model = editor.getModel()
   if (!model) return false
 
@@ -60,7 +58,7 @@ export const collapseManagedFieldsInEditor = async (
 
   const managedFieldsLine = range.startLineNumber
   const foldingController = (editor as unknown as { getContribution?: (id: string) => unknown }).getContribution?.(
-    'editor.contrib.folding'
+    'editor.contrib.folding',
   ) as
     | {
         getFoldingModel?: () => Promise<{
