@@ -63,12 +63,42 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
   // before applying any data yaml is empty
   const firstLoadRef = useRef(true)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
+  const shouldCollapseOnNextYamlRef = useRef(false)
+  const collapseRetriesRef = useRef(0)
 
   const collapseManagedFieldsIfNeeded = useCallback(() => {
     const editor = editorRef.current
-    if (!editor) return
-    collapseManagedFieldsInEditor(editor)
+    if (!editor) return Promise.resolve(false)
+    return collapseManagedFieldsInEditor(editor)
   }, [])
+
+  const setYamlDataWithManagedFieldsCollapsed = useCallback((nextYaml: string) => {
+    shouldCollapseOnNextYamlRef.current = true
+    collapseRetriesRef.current = 0
+    setYamlData(nextYaml)
+  }, [])
+
+  const tryCollapseManagedFields = useCallback(() => {
+    if (!shouldCollapseOnNextYamlRef.current) return
+
+    const MAX_RETRIES = 10
+    const RETRY_DELAY_MS = 50
+
+    setTimeout(() => {
+      collapseManagedFieldsIfNeeded().then(collapsed => {
+        if (collapsed) {
+          shouldCollapseOnNextYamlRef.current = false
+          collapseRetriesRef.current = 0
+          return
+        }
+
+        collapseRetriesRef.current += 1
+        if (collapseRetriesRef.current <= MAX_RETRIES) {
+          tryCollapseManagedFields()
+        }
+      })
+    }, RETRY_DELAY_MS)
+  }, [collapseManagedFieldsIfNeeded])
 
   // Unified reload function — closes notification + applies latest data
   const handleReload = useCallback(() => {
@@ -76,9 +106,9 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
 
     const nextYaml = latestPrefillYamlRef.current ?? initialPrefillYamlRef.current
     if (nextYaml !== null) {
-      setYamlData(nextYaml)
+      setYamlDataWithManagedFieldsCollapsed(nextYaml)
     }
-  }, [api])
+  }, [api, setYamlDataWithManagedFieldsCollapsed])
 
   // Show (or update) the "Data changed" notification — only one ever exists
   const openNotificationYamlChanged = useCallback(() => {
@@ -114,7 +144,7 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
     if (firstLoadRef.current) {
       initialPrefillYamlRef.current = nextYaml
       latestPrefillYamlRef.current = nextYaml
-      setYamlData(nextYaml)
+      setYamlDataWithManagedFieldsCollapsed(nextYaml)
 
       firstLoadRef.current = false
       return
@@ -126,14 +156,14 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
     }
 
     latestPrefillYamlRef.current = nextYaml
-  }, [prefillValuesSchema, openNotificationYamlChanged])
+  }, [prefillValuesSchema, openNotificationYamlChanged, setYamlDataWithManagedFieldsCollapsed])
 
   useEffect(() => {
-    const id = setTimeout(() => {
-      collapseManagedFieldsIfNeeded()
-    }, 0)
-    return () => clearTimeout(id)
-  }, [yamlData, collapseManagedFieldsIfNeeded])
+    if (!shouldCollapseOnNextYamlRef.current) return undefined
+
+    tryCollapseManagedFields()
+    return undefined
+  }, [yamlData, tryCollapseManagedFields])
 
   const onSubmit = () => {
     setIsLoading(true)
@@ -201,9 +231,9 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
           value={yamlData}
           onMount={editor => {
             editorRef.current = editor
-            setTimeout(() => {
-              collapseManagedFieldsIfNeeded()
-            }, 0)
+            if (shouldCollapseOnNextYamlRef.current) {
+              tryCollapseManagedFields()
+            }
           }}
           onChange={value => {
             if (!readOnly) {

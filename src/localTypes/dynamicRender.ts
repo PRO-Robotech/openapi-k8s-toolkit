@@ -43,6 +43,7 @@ export type TFactoryDataK8s<T extends TItemTypeMap> = {
   urlsToFetch: (string | TUseK8sSmartResourceParams<any>)[]
   withScrollableMainContentCard?: boolean
   data: TRenderableItem<T>[]
+  forcedSidebarId?: string
   sidebarTags?: string[]
 }
 
