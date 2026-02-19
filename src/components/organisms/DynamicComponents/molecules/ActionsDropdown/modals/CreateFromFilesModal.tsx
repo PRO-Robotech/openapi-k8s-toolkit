@@ -94,18 +94,20 @@ export const CreateFromFilesModal: FC<TCreateFromFilesModalProps> = ({
   }
 
   const handleConfirm = () => {
+    const trimmedResourceName = resourceName.trim()
     const data: Record<string, string> = {}
     const binaryData: Record<string, string> = {}
 
     fileEntries.forEach(entry => {
+      const keyName = entry.keyName.trim()
       if (entry.isBinary) {
-        binaryData[entry.keyName] = entry.content
+        binaryData[keyName] = entry.content
       } else {
-        data[entry.keyName] = entry.content
+        data[keyName] = entry.content
       }
     })
 
-    onConfirm(resourceName, data, binaryData)
+    onConfirm(trimmedResourceName, data, binaryData)
   }
 
   const handleClose = () => {
@@ -115,7 +117,7 @@ export const CreateFromFilesModal: FC<TCreateFromFilesModalProps> = ({
   }
 
   const hasEmptyKeyNames = fileEntries.some(e => !e.keyName.trim())
-  const hasDuplicateKeyNames = new Set(fileEntries.map(e => e.keyName)).size !== fileEntries.length
+  const hasDuplicateKeyNames = new Set(fileEntries.map(e => e.keyName.trim())).size !== fileEntries.length
   const isValid = resourceName.trim() && fileEntries.length > 0 && !hasEmptyKeyNames && !hasDuplicateKeyNames
 
   const columns = [
