@@ -308,6 +308,26 @@ describe('getEnrichedColumns', () => {
     expect(cmp).toBeLessThan(0)
   })
 
+  test('factory search: falls back to record value when cell is not in DOM', () => {
+    const columns = [{ title: 'Factory', key: 'name', dataIndex: 'name' }] as any
+
+    const res = getEnrichedColumns({
+      columns,
+      additionalPrinterColumnsKeyTypeProps: {
+        name: { type: 'factory' },
+      } as any,
+      theme: 'light',
+      getRowKey: r => r.id,
+    }) as any[]
+
+    const a = { id: 'a', name: 'alpha' }
+    const b = { id: 'b', name: 'beta' }
+
+    expect(res[0].onFilter('alp', a)).toBe(true)
+    expect(res[0].onFilter('zzz', a)).toBe(false)
+    expect(res[0].sorter(a, b)).toBeLessThan(0)
+  })
+
   test('memory sorter uses parseValueWithUnit + toBytes and compares safely', () => {
     const columns = [{ title: 'Mem', key: 'mem', dataIndex: 'mem' }] as any
 

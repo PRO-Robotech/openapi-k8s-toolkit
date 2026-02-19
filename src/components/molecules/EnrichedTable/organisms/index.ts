@@ -1,4 +1,6 @@
 export { EnrichedTable, getEnrichedColumns, getEnrichedColumnsWithControls } from './EnrichedTable'
 export type { TEnrichedTableProps } from './EnrichedTable'
+export { ClusterListTable } from './ClusterListTable'
+export type { TClusterListTableProps } from './ClusterListTable'
 export { EnrichedTableProvider } from './EnrichedTableProvider'
 export type { TEnrichedTableProviderProps } from './EnrichedTableProvider'
