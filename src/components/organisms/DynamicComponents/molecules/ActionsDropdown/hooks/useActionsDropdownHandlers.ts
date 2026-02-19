@@ -9,7 +9,7 @@ import _ from 'lodash'
 import { createNewEntry, updateEntry, patchEntryWithMergePatch, patchEntryWithReplaceOp } from 'api/forms'
 import { parseAll, parseWithoutPartsOfUrl, parsePartsOfUrl } from '../../utils'
 import { buildEditUrl } from '../utils'
-import type { TActionUnion, TEvictActionProps } from '../../../types/ActionsDropdown'
+import type { TActionUnion, TEvictActionProps, TResourceKind } from '../../../types/ActionsDropdown'
 
 type TDeleteModalData = {
   name: string
@@ -696,6 +696,99 @@ const fireTriggerRunAction = (
     })
 }
 
+export type TCreateFromFilesModalData = {
+  createEndpoint: string
+  namespace: string
+  resourceKind: TResourceKind
+  apiVersion: string
+}
+
+const useCreateFromFilesHandlers = (ctx: TParseContext, { showSuccess, showError }: TNotificationCallbacks) => {
+  const [createFromFilesModalData, setCreateFromFilesModalData] = useState<TCreateFromFilesModalData | null>(null)
+  const [isCreateFromFilesLoading, setIsCreateFromFilesLoading] = useState(false)
+
+  const handleCreateFromFilesAction = (action: Extract<TActionUnion, { type: 'createFromFiles' }>) => {
+    const createEndpointPrepared = parseAll({ text: action.props.createEndpoint, ...ctx })
+    const namespacePrepared = parseAll({ text: action.props.namespace, ...ctx })
+    const apiVersionPrepared = action.props.apiVersion ? parseAll({ text: action.props.apiVersion, ...ctx }) : 'v1'
+
+    setCreateFromFilesModalData({
+      createEndpoint: createEndpointPrepared,
+      namespace: namespacePrepared,
+      resourceKind: action.props.resourceKind,
+      apiVersion: apiVersionPrepared,
+    })
+  }
+
+  const handleCreateFromFilesConfirm = (
+    name: string,
+    data: Record<string, string>,
+    binaryData: Record<string, string>,
+  ) => {
+    if (!createFromFilesModalData) return
+
+    setIsCreateFromFilesLoading(true)
+    const { createEndpoint, namespace, resourceKind, apiVersion } = createFromFilesModalData
+    const createLabel = `Create ${resourceKind} ${name}`
+
+    const body: Record<string, unknown> = {
+      apiVersion,
+      kind: resourceKind,
+      metadata: { name, namespace },
+    }
+
+    if (Object.keys(data).length > 0) {
+      body.data = data
+    }
+    if (Object.keys(binaryData).length > 0) {
+      body.binaryData = binaryData
+    }
+
+    createNewEntry({ endpoint: createEndpoint, body })
+      .then(() => showSuccess(createLabel))
+      .catch(error => {
+        showError(createLabel, error)
+      })
+      .finally(() => {
+        setIsCreateFromFilesLoading(false)
+        setCreateFromFilesModalData(null)
+      })
+  }
+
+  const handleCreateFromFilesCancel = () => {
+    setCreateFromFilesModalData(null)
+    setIsCreateFromFilesLoading(false)
+  }
+
+  return {
+    createFromFilesModalData,
+    isCreateFromFilesLoading,
+    handleCreateFromFilesAction,
+    handleCreateFromFilesConfirm,
+    handleCreateFromFilesCancel,
+  }
+}
+
+const handleDownloadAsFilesAction = (
+  action: Extract<TActionUnion, { type: 'downloadAsFiles' }>,
+  ctx: TParseContext,
+  setActiveAction: (action: TActionUnion) => void,
+  setModalOpen: (open: boolean) => void,
+) => {
+  const endpointPrepared = parseAll({ text: action.props.endpoint, ...ctx })
+  const namePrepared = parseAll({ text: action.props.name, ...ctx })
+
+  setActiveAction({
+    ...action,
+    props: {
+      ...action.props,
+      endpoint: endpointPrepared,
+      name: namePrepared,
+    },
+  })
+  setModalOpen(true)
+}
+
 export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TParseContext) => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -759,6 +852,13 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TP
   )
   const { rollbackModalData, isRollbackLoading, handleRollbackAction, handleRollbackConfirm, handleRollbackCancel } =
     useRollbackHandlers(ctx, notificationCallbacks)
+  const {
+    createFromFilesModalData,
+    isCreateFromFilesLoading,
+    handleCreateFromFilesAction,
+    handleCreateFromFilesConfirm,
+    handleCreateFromFilesCancel,
+  } = useCreateFromFilesHandlers(ctx, notificationCallbacks)
 
   // --- DeleteChildren handlers ---
   const handleDeleteChildrenAction = (action: Extract<TActionUnion, { type: 'deleteChildren' }>) => {
@@ -843,6 +943,16 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TP
       return
     }
 
+    if (action.type === 'downloadAsFiles') {
+      handleDownloadAsFilesAction(action, ctx, setActiveAction, setModalOpen)
+      return
+    }
+
+    if (action.type === 'createFromFiles') {
+      handleCreateFromFilesAction(action)
+      return
+    }
+
     setActiveAction(action)
     setModalOpen(true)
   }
@@ -900,5 +1010,9 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TP
     handleDrainCancel,
     handleRollbackConfirm,
     handleRollbackCancel,
+    createFromFilesModalData,
+    isCreateFromFilesLoading,
+    handleCreateFromFilesConfirm,
+    handleCreateFromFilesCancel,
   }
 }

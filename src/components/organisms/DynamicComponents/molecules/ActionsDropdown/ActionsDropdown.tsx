@@ -9,6 +9,7 @@ import { getMenuItems, getVisibleActions } from './utils'
 import { useActionsDropdownPermissions, useActionsDropdownHandlers } from './hooks'
 import { renderActionModal } from './renderActionModal'
 import { ScaleModal } from './modals/ScaleModal'
+import { CreateFromFilesModal } from './modals/CreateFromFilesModal'
 import { Styled } from './styled'
 
 export const ActionsDropdown: FC<{
@@ -69,6 +70,10 @@ export const ActionsDropdown: FC<{
     handleDrainCancel,
     handleRollbackConfirm,
     handleRollbackCancel,
+    createFromFilesModalData,
+    isCreateFromFilesLoading,
+    handleCreateFromFilesConfirm,
+    handleCreateFromFilesCancel,
   } = useActionsDropdownHandlers({
     replaceValues,
     multiQueryData: safeMultiQueryData,
@@ -192,6 +197,17 @@ export const ActionsDropdown: FC<{
         >
           This will revert the resource to its previous revision.
         </ConfirmModal>
+      )}
+
+      {createFromFilesModalData && (
+        <CreateFromFilesModal
+          open
+          onClose={handleCreateFromFilesCancel}
+          onConfirm={handleCreateFromFilesConfirm}
+          resourceKind={createFromFilesModalData.resourceKind}
+          namespace={createFromFilesModalData.namespace}
+          isLoading={isCreateFromFilesLoading}
+        />
       )}
 
       {children}
