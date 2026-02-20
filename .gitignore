@@ -28,3 +28,6 @@ storybook-static
 .yalc
 yalc.lock
 .yalc/**
+
+/*.md
+!/README.md
