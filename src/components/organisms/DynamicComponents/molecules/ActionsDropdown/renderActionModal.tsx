@@ -5,6 +5,7 @@ import { AnnotationsModal } from '../AggregatedCounterCard/molecules/Annotations
 import { TaintsModal } from '../AggregatedCounterCard/molecules/TaintsModal'
 import { TolerationsModal } from '../AggregatedCounterCard/molecules/TolerationsModal'
 import { OpenKubeletConfigModal } from './modals/OpenKubeletConfigModal'
+import { DownloadAsFilesModal } from './modals/DownloadAsFilesModal'
 
 type TModalExtraProps = {
   open: boolean
@@ -47,7 +48,18 @@ export const renderActionModal = (action: TActionUnion, extraProps: TModalExtraP
     case 'rerunLast':
     case 'drain':
     case 'rollback':
+    case 'createFromFiles':
       return null
+
+    case 'downloadAsFiles':
+      return (
+        <DownloadAsFilesModal
+          {...extraProps}
+          endpoint={action.props.endpoint}
+          resourceKind={action.props.resourceKind}
+          name={action.props.name}
+        />
+      )
 
     default: {
       // eslint-disable-next-line no-underscore-dangle

@@ -806,3 +806,219 @@ describe('useActionsDropdownHandlers - rollback action', () => {
     expect(mockAxiosPost).not.toHaveBeenCalled()
   })
 })
+
+/* ------------------------------------------------------------------ */
+/*  downloadAsFiles                                                    */
+/* ------------------------------------------------------------------ */
+describe('useActionsDropdownHandlers - downloadAsFiles', () => {
+  const downloadAction: TActionUnion = {
+    type: 'downloadAsFiles',
+    props: {
+      text: 'Download',
+      endpoint: '/api/v1/namespaces/{1}/configmaps/my-cm',
+      resourceKind: 'ConfigMap',
+      name: 'my-cm',
+    },
+  }
+
+  it('sets activeAction with parsed endpoint on click', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(downloadAction)
+    })
+
+    expect(result.current.activeAction).toEqual({
+      type: 'downloadAsFiles',
+      props: expect.objectContaining({
+        endpoint: '/api/v1/namespaces/default/configmaps/my-cm',
+        name: 'my-cm',
+        resourceKind: 'ConfigMap',
+      }),
+    })
+    expect(result.current.modalOpen).toBe(true)
+  })
+
+  it('handleCloseModal clears activeAction and modalOpen', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(downloadAction)
+    })
+
+    act(() => {
+      result.current.handleCloseModal()
+    })
+
+    expect(result.current.activeAction).toBeNull()
+    expect(result.current.modalOpen).toBe(false)
+  })
+})
+
+/* ------------------------------------------------------------------ */
+/*  createFromFiles                                                    */
+/* ------------------------------------------------------------------ */
+describe('useActionsDropdownHandlers - createFromFiles', () => {
+  const createAction: TActionUnion = {
+    type: 'createFromFiles',
+    props: {
+      text: 'Create from files',
+      createEndpoint: '/api/v1/namespaces/{1}/secrets',
+      namespace: '{1}',
+      resourceKind: 'Secret',
+    },
+  }
+
+  it('sets createFromFilesModalData with parsed fields on click', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(createAction)
+    })
+
+    expect(result.current.createFromFilesModalData).toEqual({
+      createEndpoint: '/api/v1/namespaces/default/secrets',
+      namespace: 'default',
+      resourceKind: 'Secret',
+      apiVersion: 'v1',
+    })
+  })
+
+  it('handleCreateFromFilesConfirm calls createNewEntry with correct body', async () => {
+    mockCreateNewEntry.mockResolvedValue({})
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(createAction)
+    })
+
+    await act(async () => {
+      result.current.handleCreateFromFilesConfirm(
+        'my-secret',
+        { 'tls.crt': 'Y2VydA==', 'tls.key': 'a2V5' },
+        {},
+      )
+    })
+
+    expect(mockCreateNewEntry).toHaveBeenCalledTimes(1)
+    expect(mockCreateNewEntry).toHaveBeenCalledWith({
+      endpoint: '/api/v1/namespaces/default/secrets',
+      body: {
+        apiVersion: 'v1',
+        kind: 'Secret',
+        metadata: { name: 'my-secret', namespace: 'default' },
+        data: { 'tls.crt': 'Y2VydA==', 'tls.key': 'a2V5' },
+      },
+    })
+  })
+
+  it('handleCreateFromFilesConfirm includes binaryData when provided', async () => {
+    mockCreateNewEntry.mockResolvedValue({})
+
+    const { result } = renderHook(() => useActionsDropdownHandlers({
+      ...baseParams,
+      replaceValues: { ...baseParams.replaceValues },
+    }))
+
+    const createCmAction: TActionUnion = {
+      type: 'createFromFiles',
+      props: {
+        text: 'Create from files',
+        createEndpoint: '/api/v1/namespaces/{1}/configmaps',
+        namespace: '{1}',
+        resourceKind: 'ConfigMap',
+      },
+    }
+
+    act(() => {
+      result.current.handleActionClick(createCmAction)
+    })
+
+    await act(async () => {
+      result.current.handleCreateFromFilesConfirm(
+        'my-cm',
+        { 'app.conf': 'key=value' },
+        { 'logo.png': 'iVBORw==' },
+      )
+    })
+
+    expect(mockCreateNewEntry).toHaveBeenCalledWith({
+      endpoint: '/api/v1/namespaces/default/configmaps',
+      body: {
+        apiVersion: 'v1',
+        kind: 'ConfigMap',
+        metadata: { name: 'my-cm', namespace: 'default' },
+        data: { 'app.conf': 'key=value' },
+        binaryData: { 'logo.png': 'iVBORw==' },
+      },
+    })
+  })
+
+  it('handleCreateFromFilesConfirm shows success and clears modal on resolve', async () => {
+    mockCreateNewEntry.mockResolvedValue({})
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(createAction)
+    })
+
+    await act(async () => {
+      result.current.handleCreateFromFilesConfirm('my-secret', { key: 'val' }, {})
+    })
+
+    expect(mockNotificationSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Create Secret my-secret successful' }),
+    )
+    expect(result.current.createFromFilesModalData).toBeNull()
+    expect(result.current.isCreateFromFilesLoading).toBe(false)
+  })
+
+  it('handleCreateFromFilesConfirm shows error and clears modal on reject', async () => {
+    mockCreateNewEntry.mockRejectedValue(new Error('already exists'))
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(createAction)
+    })
+
+    await act(async () => {
+      result.current.handleCreateFromFilesConfirm('my-secret', { key: 'val' }, {})
+    })
+
+    expect(mockNotificationError).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Create Secret my-secret failed' }),
+    )
+    expect(result.current.createFromFilesModalData).toBeNull()
+    expect(result.current.isCreateFromFilesLoading).toBe(false)
+  })
+
+  it('handleCreateFromFilesCancel clears modal data', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(createAction)
+    })
+
+    expect(result.current.createFromFilesModalData).not.toBeNull()
+
+    act(() => {
+      result.current.handleCreateFromFilesCancel()
+    })
+
+    expect(result.current.createFromFilesModalData).toBeNull()
+    expect(result.current.isCreateFromFilesLoading).toBe(false)
+  })
+
+  it('handleCreateFromFilesConfirm does nothing when createFromFilesModalData is null', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleCreateFromFilesConfirm('name', {}, {})
+    })
+
+    expect(mockCreateNewEntry).not.toHaveBeenCalled()
+  })
+})
