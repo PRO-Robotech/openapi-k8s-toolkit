@@ -1,3 +1,7 @@
+/* eslint-disable global-require */
+/* eslint-disable react/button-has-type */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-require-imports */
 import { fireEvent, render, screen } from '@testing-library/react'
 import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
 import { DownloadAsFilesModal } from './DownloadAsFilesModal'

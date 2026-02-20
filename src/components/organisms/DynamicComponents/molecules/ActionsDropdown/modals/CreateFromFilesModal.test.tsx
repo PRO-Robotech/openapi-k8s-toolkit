@@ -1,3 +1,7 @@
+/* eslint-disable react/button-has-type */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable global-require */
+/* eslint-disable @typescript-eslint/no-require-imports */
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { CreateFromFilesModal } from './CreateFromFilesModal'
 
@@ -63,7 +67,8 @@ describe('CreateFromFilesModal', () => {
   const realFileReader = global.FileReader
 
   beforeAll(() => {
-    ;(global as unknown as { FileReader: typeof FileReader }).FileReader = MockFileReader as unknown as typeof FileReader
+    ;(global as unknown as { FileReader: typeof FileReader }).FileReader =
+      MockFileReader as unknown as typeof FileReader
   })
 
   afterAll(() => {

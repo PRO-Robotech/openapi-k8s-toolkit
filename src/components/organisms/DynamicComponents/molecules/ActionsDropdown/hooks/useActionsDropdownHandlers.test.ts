@@ -894,11 +894,7 @@ describe('useActionsDropdownHandlers - createFromFiles', () => {
     })
 
     await act(async () => {
-      result.current.handleCreateFromFilesConfirm(
-        'my-secret',
-        { 'tls.crt': 'Y2VydA==', 'tls.key': 'a2V5' },
-        {},
-      )
+      result.current.handleCreateFromFilesConfirm('my-secret', { 'tls.crt': 'Y2VydA==', 'tls.key': 'a2V5' }, {})
     })
 
     expect(mockCreateNewEntry).toHaveBeenCalledTimes(1)
@@ -916,10 +912,12 @@ describe('useActionsDropdownHandlers - createFromFiles', () => {
   it('handleCreateFromFilesConfirm includes binaryData when provided', async () => {
     mockCreateNewEntry.mockResolvedValue({})
 
-    const { result } = renderHook(() => useActionsDropdownHandlers({
-      ...baseParams,
-      replaceValues: { ...baseParams.replaceValues },
-    }))
+    const { result } = renderHook(() =>
+      useActionsDropdownHandlers({
+        ...baseParams,
+        replaceValues: { ...baseParams.replaceValues },
+      }),
+    )
 
     const createCmAction: TActionUnion = {
       type: 'createFromFiles',
@@ -936,11 +934,7 @@ describe('useActionsDropdownHandlers - createFromFiles', () => {
     })
 
     await act(async () => {
-      result.current.handleCreateFromFilesConfirm(
-        'my-cm',
-        { 'app.conf': 'key=value' },
-        { 'logo.png': 'iVBORw==' },
-      )
+      result.current.handleCreateFromFilesConfirm('my-cm', { 'app.conf': 'key=value' }, { 'logo.png': 'iVBORw==' })
     })
 
     expect(mockCreateNewEntry).toHaveBeenCalledWith({
