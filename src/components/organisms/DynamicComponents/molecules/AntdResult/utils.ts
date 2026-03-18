@@ -1,3 +1,42 @@
+/** Extract a 3-digit HTTP status code from a trailing "(NNN)" in a string. */
+const extractStatusFromString = (msg: string): number | undefined => {
+  const match = msg.match(/\((\d{3})\)\s*$/)
+  if (!match) return undefined
+  const code = Number(match[1])
+  return code >= 100 && code <= 599 ? code : undefined
+}
+
+/**
+ * Extract an HTTP status code from any error shape:
+ * - AxiosError: `.response.status`
+ * - Error / string with "(NNN)" suffix: regex parse
+ */
+export const extractHttpStatus = (error: unknown): number | undefined => {
+  if (error != null && typeof error === 'object') {
+    const resp = (error as Record<string, unknown>).response
+    if (resp != null && typeof resp === 'object') {
+      const { status } = resp as Record<string, unknown>
+      if (typeof status === 'number') return status
+    }
+    const { message } = error as Record<string, unknown>
+    if (typeof message === 'string') return extractStatusFromString(message)
+  }
+  if (typeof error === 'string') return extractStatusFromString(error)
+  return undefined
+}
+
+/** Extract a human-readable message from any error shape. */
+export const extractErrorMessage = (error: unknown): string => {
+  if (typeof error === 'string') return error
+  if (error != null && typeof error === 'object') {
+    const e = error as Record<string, unknown>
+    const resp = e.response as Record<string, unknown> | undefined
+    if (resp && typeof resp.statusText === 'string' && resp.statusText) return resp.statusText
+    if (typeof e.message === 'string') return e.message
+  }
+  return String(error)
+}
+
 /** Resolve a dot-separated path (e.g. ".items" or ".data.results") on an object. */
 export const getValueByPath = (obj: Record<string, unknown>, path: string): unknown =>
   path

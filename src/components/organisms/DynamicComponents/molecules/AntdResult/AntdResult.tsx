@@ -5,9 +5,7 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
-import { isEmptyAtPath } from './utils'
-
-type TErrorWithResponse = { response?: { status?: number; statusText?: string }; message?: string }
+import { isEmptyAtPath, extractHttpStatus, extractErrorMessage } from './utils'
 
 const httpStatusToResultStatus = (statusCode: number | undefined) => {
   if (statusCode === 403) return '403' as const
@@ -52,12 +50,9 @@ export const AntdResult: FC<{
       return children ?? null
     }
 
-    const errorObj = error as TErrorWithResponse
-    const httpStatus = emptyListDetected ? 404 : errorObj?.response?.status
+    const httpStatus = emptyListDetected ? 404 : extractHttpStatus(error)
     const autoStatus = httpStatusToResultStatus(httpStatus)
-    const autoMessage = emptyListDetected
-      ? 'The requested resource was not found'
-      : errorObj?.response?.statusText || errorObj?.message || String(error)
+    const autoMessage = emptyListDetected ? 'The requested resource was not found' : extractErrorMessage(error)
 
     const status = data.status ?? autoStatus
     const title = data.title ? parseAll({ text: data.title, replaceValues, multiQueryData }) : getDefaultTitle(status)
