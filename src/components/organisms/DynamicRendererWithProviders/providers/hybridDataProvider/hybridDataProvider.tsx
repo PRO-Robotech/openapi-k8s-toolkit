@@ -10,6 +10,10 @@ type MultiQueryContextValue = {
   isLoading: boolean
   isError: boolean
   errors: ReadonlyArray<AxiosError | Error | string | null>
+  /** Check whether a specific request (by index) has an error */
+  hasErrorForReq: (reqIndex: number) => boolean
+  /** Get the error object for a specific request (by index), or null if it succeeded */
+  getErrorForReq: (reqIndex: number) => AxiosError | Error | string | null
 }
 
 const MultiQueryContext = createContext<MultiQueryContextValue | undefined>(undefined)
@@ -88,7 +92,10 @@ export const MultiQueryProvider: FC<MultiQueryProviderProps> = ({ items, dataToA
 
     const isError = k8sResults.some(r => r.isError) || urlQueries.some(q => q.isError)
 
-    return { data, isLoading, isError, errors }
+    const hasErrorForReq = (reqIndex: number): boolean => Boolean(errors[reqIndex])
+    const getErrorForReq = (reqIndex: number): AxiosError | Error | string | null => errors[reqIndex] ?? null
+
+    return { data, isLoading, isError, errors, hasErrorForReq, getErrorForReq }
   })()
 
   return <MultiQueryContext.Provider value={value}>{children}</MultiQueryContext.Provider>
