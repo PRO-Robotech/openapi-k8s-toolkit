@@ -88,14 +88,15 @@ describe('isEmptyAtPath', () => {
 
 describe('extractHttpStatus', () => {
   it('extracts status from AxiosError shape (.response.status)', () => {
-    expect(extractHttpStatus({ response: { status: 403 } })).toBe(403)
-    expect(extractHttpStatus({ response: { status: 404 } })).toBe(404)
-    expect(extractHttpStatus({ response: { status: 500 } })).toBe(500)
+    const make = (status: number) => Object.assign(new Error('Request failed'), { response: { status } })
+    expect(extractHttpStatus(make(403))).toBe(403)
+    expect(extractHttpStatus(make(404))).toBe(404)
+    expect(extractHttpStatus(make(500))).toBe(500)
   })
 
   it('extracts status from Error with "(NNN)" in message', () => {
-    expect(extractHttpStatus({ message: 'Access denied (403)' })).toBe(403)
-    expect(extractHttpStatus({ message: 'Initial list failed (404)' })).toBe(404)
+    expect(extractHttpStatus(new Error('Access denied (403)'))).toBe(403)
+    expect(extractHttpStatus(new Error('Initial list failed (404)'))).toBe(404)
     expect(extractHttpStatus(new Error('Server error (500)'))).toBe(500)
   })
 
@@ -128,11 +129,17 @@ describe('extractHttpStatus', () => {
   })
 
   it('prefers .response.status over message parsing', () => {
-    expect(extractHttpStatus({ response: { status: 403 }, message: 'error (500)' })).toBe(403)
+    const err = Object.assign(new Error('error (500)'), { response: { status: 403 } })
+    expect(extractHttpStatus(err)).toBe(403)
   })
 
   it('handles trailing whitespace after "(NNN)"', () => {
     expect(extractHttpStatus('Access denied (403) ')).toBe(403)
+  })
+
+  it('returns undefined for plain objects (not Error instances)', () => {
+    expect(extractHttpStatus({ response: { status: 403 } })).toBeUndefined()
+    expect(extractHttpStatus({ message: 'error (404)' })).toBeUndefined()
   })
 })
 
@@ -144,15 +151,18 @@ describe('extractErrorMessage', () => {
   })
 
   it('returns statusText from AxiosError', () => {
-    expect(extractErrorMessage({ response: { statusText: 'Forbidden' }, message: 'Request failed' })).toBe('Forbidden')
+    const err = Object.assign(new Error('Request failed'), { response: { statusText: 'Forbidden' } })
+    expect(extractErrorMessage(err)).toBe('Forbidden')
   })
 
   it('falls back to message when no statusText', () => {
-    expect(extractErrorMessage({ response: {}, message: 'Network error' })).toBe('Network error')
-    expect(extractErrorMessage({ message: 'Something broke' })).toBe('Something broke')
+    const errEmptyResp = Object.assign(new Error('Network error'), { response: {} })
+    expect(extractErrorMessage(errEmptyResp)).toBe('Network error')
+    expect(extractErrorMessage(new Error('Something broke'))).toBe('Something broke')
   })
 
-  it('falls back to String(error) when no message or statusText', () => {
+  it('falls back to String(error) for non-Error values', () => {
+    expect(extractErrorMessage(42)).toBe('42')
     expect(extractErrorMessage({ code: 500 })).toBe('[object Object]')
   })
 

@@ -12,27 +12,22 @@ const extractStatusFromString = (msg: string): number | undefined => {
  * - Error / string with "(NNN)" suffix: regex parse
  */
 export const extractHttpStatus = (error: unknown): number | undefined => {
-  if (error != null && typeof error === 'object') {
-    const resp = (error as Record<string, unknown>).response
-    if (resp != null && typeof resp === 'object') {
-      const { status } = resp as Record<string, unknown>
-      if (typeof status === 'number') return status
-    }
-    const { message } = error as Record<string, unknown>
-    if (typeof message === 'string') return extractStatusFromString(message)
-  }
   if (typeof error === 'string') return extractStatusFromString(error)
+  if (error instanceof Error) {
+    const { response } = error as { response?: { status?: unknown } }
+    if (typeof response?.status === 'number') return response.status
+    return extractStatusFromString(error.message)
+  }
   return undefined
 }
 
 /** Extract a human-readable message from any error shape. */
 export const extractErrorMessage = (error: unknown): string => {
   if (typeof error === 'string') return error
-  if (error != null && typeof error === 'object') {
-    const e = error as Record<string, unknown>
-    const resp = e.response as Record<string, unknown> | undefined
-    if (resp && typeof resp.statusText === 'string' && resp.statusText) return resp.statusText
-    if (typeof e.message === 'string') return e.message
+  if (error instanceof Error) {
+    const { response } = error as { response?: { statusText?: string } }
+    if (response?.statusText) return response.statusText
+    return error.message
   }
   return String(error)
 }

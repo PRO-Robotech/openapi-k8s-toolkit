@@ -126,7 +126,7 @@ describe('auto-detect mode (reqIndex)', () => {
       data: {},
       isLoading: false,
       isError: true,
-      errors: [{ response: { status: 403, statusText: 'Forbidden' }, message: 'Request failed' }],
+      errors: [Object.assign(new Error('Request failed'), { response: { status: 403, statusText: 'Forbidden' } })],
     })
 
     render(
@@ -145,7 +145,7 @@ describe('auto-detect mode (reqIndex)', () => {
       data: {},
       isLoading: false,
       isError: true,
-      errors: [{ response: { status: 500 }, message: 'Internal Server Error' }],
+      errors: [Object.assign(new Error('Internal Server Error'), { response: { status: 500 } })],
     })
 
     render(<AntdResult data={{ id: 'error-msg', reqIndex: 0 }} />)
@@ -273,7 +273,7 @@ describe('checkEmpty (default: true)', () => {
       data: { req0: { items: [] } },
       isLoading: false,
       isError: true,
-      errors: [{ response: { status: 403, statusText: 'Forbidden' }, message: 'Forbidden' }],
+      errors: [Object.assign(new Error('Forbidden'), { response: { status: 403, statusText: 'Forbidden' } })],
     })
 
     render(<AntdResult data={{ id: 'error-priority', reqIndex: 0 }} />)
