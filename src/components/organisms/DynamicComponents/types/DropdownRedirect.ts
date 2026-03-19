@@ -23,4 +23,6 @@ export type TDropdownRedirectProps = {
    * Can be a number to set specific min-width for popup.
    */
   popupMatchSelectWidth?: boolean | number
+  /** Which request index this molecule depends on (for per-request error isolation) */
+  reqIndex?: string
 }

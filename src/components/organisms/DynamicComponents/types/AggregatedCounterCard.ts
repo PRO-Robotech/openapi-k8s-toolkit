@@ -36,4 +36,6 @@ export type TAggregatedCounterCardProps = {
         props: Omit<TItemCounterProps, 'id' | 'text'>
       }
   activeType?: TActiveTypeUnion
+  /** Which request index this molecule depends on (for per-request error isolation) */
+  reqIndex?: string
 }

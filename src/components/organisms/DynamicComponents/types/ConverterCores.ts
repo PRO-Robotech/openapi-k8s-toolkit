@@ -22,4 +22,6 @@ export type TConverterCoresProps = {
   /** If provided, convert to this explicit unit; omit for auto-format */
   toUnit?: TCoreUnitInput
   /** If omitted and toUnit is missing, use auto-scaling (core vs mcore) */
+  /** Which request index this molecule depends on (for per-request error isolation) */
+  reqIndex?: string
 }

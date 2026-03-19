@@ -6,4 +6,6 @@ export type TParsedTextProps = {
   tooltip?: string
   formatter?: 'timestamp'
   style?: CSSProperties
+  /** Which request index this molecule depends on (for per-request error isolation) */
+  reqIndex?: string
 }
