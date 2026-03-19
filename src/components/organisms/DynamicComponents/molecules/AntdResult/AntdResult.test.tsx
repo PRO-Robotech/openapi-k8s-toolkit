@@ -17,6 +17,13 @@ const mockUsePartsOfUrl = usePartsOfUrl as unknown as jest.Mock
 
 const defaultPartsOfUrl = { partsOfUrl: ['openapi-ui', 'default', 'practice'] }
 
+/** Build a mock return value for useMultiQuery with the per-request helpers auto-derived from errors */
+const mockMultiQuery = (base: { data: Record<string, unknown>; isLoading: boolean; isError: boolean; errors: Array<unknown | null> }) => ({
+  ...base,
+  hasErrorForReq: (idx: number) => Boolean(base.errors[idx]),
+  getErrorForReq: (idx: number) => base.errors[idx] ?? null,
+})
+
 beforeEach(() => {
   jest.clearAllMocks()
   mockUsePartsOfUrl.mockReturnValue(defaultPartsOfUrl)
@@ -26,7 +33,7 @@ beforeEach(() => {
 
 describe('loading state', () => {
   it('renders nothing while loading', () => {
-    mockUseMultiQuery.mockReturnValue({ data: {}, isLoading: true, isError: false, errors: [] })
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({ data: {}, isLoading: true, isError: false, errors: [] }))
 
     const { container } = render(
       <AntdResult data={{ id: 'test', reqIndex: 0 }}>
@@ -43,7 +50,7 @@ describe('loading state', () => {
 
 describe('manual mode (no reqIndex)', () => {
   it('renders Result with static status, title, subTitle', () => {
-    mockUseMultiQuery.mockReturnValue({ data: {}, isLoading: false, isError: false, errors: [] })
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({ data: {}, isLoading: false, isError: false, errors: [] }))
 
     render(<AntdResult data={{ id: 'manual', status: '403', title: 'Access Denied', subTitle: 'No permission' }} />)
 
@@ -52,7 +59,7 @@ describe('manual mode (no reqIndex)', () => {
   })
 
   it('renders children inside Result in manual mode', () => {
-    mockUseMultiQuery.mockReturnValue({ data: {}, isLoading: false, isError: false, errors: [] })
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({ data: {}, isLoading: false, isError: false, errors: [] }))
 
     render(
       <AntdResult data={{ id: 'manual-children', status: 'info', title: 'Info' }}>
@@ -65,12 +72,12 @@ describe('manual mode (no reqIndex)', () => {
   })
 
   it('supports template syntax in title and subTitle', () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: { req0: { metadata: { name: 'my-pod' } } },
       isLoading: false,
       isError: false,
       errors: [],
-    })
+    }))
 
     render(
       <AntdResult
@@ -92,12 +99,12 @@ describe('manual mode (no reqIndex)', () => {
 
 describe('auto-detect mode (reqIndex)', () => {
   it('renders children when request succeeded and data has items', () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: { req0: { items: [{ metadata: { name: 'nginx' } }] } },
       isLoading: false,
       isError: false,
       errors: [null],
-    })
+    }))
 
     render(
       <AntdResult data={{ id: 'ok', reqIndex: 0 }}>
@@ -109,12 +116,12 @@ describe('auto-detect mode (reqIndex)', () => {
   })
 
   it('renders null when no error, has items, and no children', () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: { req0: { items: [{ metadata: { name: 'nginx' } }] } },
       isLoading: false,
       isError: false,
       errors: [null],
-    })
+    }))
 
     const { container } = render(<AntdResult data={{ id: 'no-children', reqIndex: 0 }} />)
 
@@ -122,12 +129,12 @@ describe('auto-detect mode (reqIndex)', () => {
   })
 
   it('renders error Result when HTTP error exists', () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: {},
       isLoading: false,
       isError: true,
       errors: [{ response: { status: 403, statusText: 'Forbidden' }, message: 'Request failed' }],
-    })
+    }))
 
     render(
       <AntdResult data={{ id: 'http-error', reqIndex: 0 }}>
@@ -141,12 +148,12 @@ describe('auto-detect mode (reqIndex)', () => {
   })
 
   it('uses error message when statusText is empty', () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: {},
       isLoading: false,
       isError: true,
       errors: [{ response: { status: 500 }, message: 'Internal Server Error' }],
-    })
+    }))
 
     render(<AntdResult data={{ id: 'error-msg', reqIndex: 0 }} />)
 
@@ -156,12 +163,12 @@ describe('auto-detect mode (reqIndex)', () => {
   })
 
   it('allows YAML to override status and title on HTTP error', () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: {},
       isLoading: false,
       isError: true,
       errors: [{ response: { status: 403 }, message: 'Forbidden' }],
-    })
+    }))
 
     render(<AntdResult data={{ id: 'override', reqIndex: 0, status: 'warning', title: 'Custom Title' }} />)
 
@@ -173,12 +180,12 @@ describe('auto-detect mode (reqIndex)', () => {
 
 describe('checkEmpty (default: true)', () => {
   it('renders 404 Result when items is empty (default behavior)', () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: { req0: { items: [] } },
       isLoading: false,
       isError: false,
       errors: [null],
-    })
+    }))
 
     render(
       <AntdResult data={{ id: 'empty-default', reqIndex: 0 }}>
@@ -192,12 +199,12 @@ describe('checkEmpty (default: true)', () => {
   })
 
   it('renders 404 Result when checkEmpty is explicitly true', () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: { req0: { items: [] } },
       isLoading: false,
       isError: false,
       errors: [null],
-    })
+    }))
 
     render(
       <AntdResult data={{ id: 'empty-explicit', reqIndex: 0, checkEmpty: true }}>
@@ -210,12 +217,12 @@ describe('checkEmpty (default: true)', () => {
   })
 
   it('renders children when items is empty but checkEmpty is false', () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: { req0: { items: [] } },
       isLoading: false,
       isError: false,
       errors: [null],
-    })
+    }))
 
     render(
       <AntdResult data={{ id: 'no-check', reqIndex: 0, checkEmpty: false }}>
@@ -227,12 +234,12 @@ describe('checkEmpty (default: true)', () => {
   })
 
   it('renders children when items has data', () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: { req0: { items: [{ metadata: { name: 'nginx' } }] } },
       isLoading: false,
       isError: false,
       errors: [null],
-    })
+    }))
 
     render(
       <AntdResult data={{ id: 'has-data', reqIndex: 0 }}>
@@ -244,12 +251,12 @@ describe('checkEmpty (default: true)', () => {
   })
 
   it('allows YAML to override status and title on empty list', () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: { req0: { items: [] } },
       isLoading: false,
       isError: false,
       errors: [null],
-    })
+    }))
     mockUsePartsOfUrl.mockReturnValue({ partsOfUrl: ['nginx-missing', 'default'] })
 
     render(
@@ -269,12 +276,12 @@ describe('checkEmpty (default: true)', () => {
   })
 
   it('prefers HTTP error over empty check when both apply', () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: { req0: { items: [] } },
       isLoading: false,
       isError: true,
       errors: [{ response: { status: 403, statusText: 'Forbidden' }, message: 'Forbidden' }],
-    })
+    }))
 
     render(<AntdResult data={{ id: 'error-priority', reqIndex: 0 }} />)
 
@@ -287,12 +294,12 @@ describe('checkEmpty (default: true)', () => {
 
 describe('custom itemsPath', () => {
   it('checks emptiness at a custom path (non-K8s API)', () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: { req0: { data: { results: [] } } },
       isLoading: false,
       isError: false,
       errors: [null],
-    })
+    }))
 
     render(
       <AntdResult data={{ id: 'custom-path', reqIndex: 0, itemsPath: '.data.results' }}>
@@ -305,12 +312,12 @@ describe('custom itemsPath', () => {
   })
 
   it('renders children when custom path has data', () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: { req0: { data: { results: [{ id: 1 }] } } },
       isLoading: false,
       isError: false,
       errors: [null],
-    })
+    }))
 
     render(
       <AntdResult data={{ id: 'custom-path-ok', reqIndex: 0, itemsPath: '.data.results' }}>
@@ -322,12 +329,12 @@ describe('custom itemsPath', () => {
   })
 
   it('renders children when custom path does not exist in response', () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: { req0: { something: 'else' } },
       isLoading: false,
       isError: false,
       errors: [null],
-    })
+    }))
 
     render(
       <AntdResult data={{ id: 'missing-path', reqIndex: 0, itemsPath: '.data.results' }}>
@@ -339,12 +346,12 @@ describe('custom itemsPath', () => {
   })
 
   it('does not check default .items when custom path is set', () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: { req0: { items: [], data: { results: [{ id: 1 }] } } },
       isLoading: false,
       isError: false,
       errors: [null],
-    })
+    }))
 
     render(
       <AntdResult data={{ id: 'custom-ignores-default', reqIndex: 0, itemsPath: '.data.results' }}>
