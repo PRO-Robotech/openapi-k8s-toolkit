@@ -5,7 +5,7 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
-import { parseAll } from '../utils'
+import { parseAll, parseReqIndex } from '../utils'
 
 export const DefaultIframe: FC<{
   data: TDynamicComponentsAppTypeMap['DefaultIframe']
@@ -21,18 +21,22 @@ export const DefaultIframe: FC<{
 
   const theme = useTheme()
 
-  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, hasErrorForReq, getErrorForReq, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
   }
 
-  if (isMultiQueryErrors) {
+  const reqIdx = parseReqIndex(data.reqIndex)
+  const shouldShowError = reqIdx != null ? hasErrorForReq(reqIdx) : isMultiQueryErrors
+
+  if (shouldShowError) {
+    const errorToShow = reqIdx != null ? getErrorForReq(reqIdx) : errors.find(e => e !== null)
     return (
       <div>
         <h4>Errors:</h4>
-        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
+        <ul>{errorToShow && <li>{typeof errorToShow === 'string' ? errorToShow : errorToShow.message}</li>}</ul>
       </div>
     )
   }

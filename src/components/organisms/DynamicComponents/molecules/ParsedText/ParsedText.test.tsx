@@ -18,6 +18,18 @@ const mockUsePartsOfUrl = usePartsOfUrl as unknown as jest.Mock
 
 const defaultPartsOfUrl = { partsOfUrl: ['', 'openapi-ui', 'default', 'incloud-sgroups'] }
 
+/** Build a mock return value for useMultiQuery with per-request helpers auto-derived from errors */
+const mockMultiQuery = (base: {
+  data: Record<string, unknown>
+  isLoading: boolean
+  isError: boolean
+  errors: Array<unknown | null>
+}) => ({
+  ...base,
+  hasErrorForReq: (idx: number) => Boolean(base.errors[idx]),
+  getErrorForReq: (idx: number) => base.errors[idx] ?? null,
+})
+
 beforeEach(() => {
   jest.clearAllMocks()
   mockUsePartsOfUrl.mockReturnValue(defaultPartsOfUrl)
@@ -27,7 +39,7 @@ beforeEach(() => {
 
 describe('loading state', () => {
   it('renders "Loading..." when isLoading is true', () => {
-    mockUseMultiQuery.mockReturnValue({ data: {}, isLoading: true, isError: false, errors: [] })
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({ data: {}, isLoading: true, isError: false, errors: [] }))
 
     render(<ParsedText data={{ id: 'test', text: '{reqs[0][".metadata.name"]}' }} />)
 
@@ -39,12 +51,12 @@ describe('loading state', () => {
 
 describe('happy path', () => {
   it('renders parsed text from multiQuery data', () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: { req0: { metadata: { name: 'my-addressgroup' } } },
       isLoading: false,
       isError: false,
       errors: [null],
-    })
+    }))
 
     render(<ParsedText data={{ id: 'name', text: "{reqs[0]['metadata', 'name']}" }} />)
 
@@ -52,12 +64,12 @@ describe('happy path', () => {
   })
 
   it('renders text with partsOfUrl substitution', () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: {},
       isLoading: false,
       isError: false,
       errors: [],
-    })
+    }))
 
     render(<ParsedText data={{ id: 'ns', text: 'Namespace: {3}' }} />)
 
@@ -65,12 +77,12 @@ describe('happy path', () => {
   })
 
   it('applies inline style from data.style', () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: { req0: { metadata: { name: 'styled-text' } } },
       isLoading: false,
       isError: false,
       errors: [null],
-    })
+    }))
 
     const { container } = render(
       <ParsedText data={{ id: 'styled', text: "{reqs[0]['metadata', 'name']}", style: { color: 'red' } }} />,
@@ -81,12 +93,12 @@ describe('happy path', () => {
   })
 
   it('renders tooltip when tooltip prop is provided', async () => {
-    mockUseMultiQuery.mockReturnValue({
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: { req0: { metadata: { name: 'hover-me' } } },
       isLoading: false,
       isError: false,
       errors: [null],
-    })
+    }))
 
     render(
       <ParsedText
@@ -98,56 +110,78 @@ describe('happy path', () => {
   })
 })
 
-// ── Bug proof: aggregated isError poisons unrelated molecules ──
+// ── Per-request error isolation (the fix) ──────────────────────
 
-describe('aggregated isError bug', () => {
-  it('renders error block when isError=true even though errors=[null, Error] and req0 data is valid', () => {
-    /**
-     * This is THE BUG. ParsedText only uses req0 data, but because req1
-     * failed, isError is true and ParsedText early-returns with the error
-     * block instead of rendering the perfectly valid req0 data.
-     */
-    mockUseMultiQuery.mockReturnValue({
+describe('per-request error isolation', () => {
+  it('renders text when reqIndex is set and its request succeeded, even if another request failed', () => {
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: {
-        req0: { metadata: { name: 'my-addressgroup' }, spec: { defaultAction: 'DROP' } },
+        req0: { metadata: { name: 'my-addressgroup' } },
         req1: undefined,
       },
       isLoading: false,
       isError: true,
       errors: [null, { message: 'Request failed with status code 404' }],
-    })
+    }))
 
-    render(<ParsedText data={{ id: 'name-field', text: "{reqs[0]['metadata', 'name']}" }} />)
+    render(<ParsedText data={{ id: 'name-field', text: "{reqs[0]['metadata', 'name']}", reqIndex: '0' }} />)
 
-    // BUG: instead of rendering "my-addressgroup", it renders the error block
-    expect(screen.getByText('Errors:')).toBeInTheDocument()
-    expect(screen.getByText('Request failed with status code 404')).toBeInTheDocument()
-
-    // The valid data is NOT rendered — this is what we want to fix
-    expect(screen.queryByText('my-addressgroup')).not.toBeInTheDocument()
+    // With reqIndex=0, ParsedText checks only req0 which succeeded → renders data
+    expect(screen.getByText('my-addressgroup')).toBeInTheDocument()
+    expect(screen.queryByText('Errors:')).not.toBeInTheDocument()
   })
 
-  it('shows ALL errors in the error block even though only one request failed', () => {
-    /**
-     * Even worse: the error block renders errors.map() which lists ALL
-     * errors including null ones. When there are many requests, a molecule
-     * that only uses req0 shows errors from req2, req3, etc.
-     */
-    mockUseMultiQuery.mockReturnValue({
+  it('renders error when reqIndex is set and its request failed', () => {
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
       data: {
-        req0: { metadata: { name: 'valid-resource' } },
+        req0: { metadata: { name: 'my-addressgroup' } },
         req1: undefined,
-        req2: { items: [{ name: 'ns-1' }] },
       },
       isLoading: false,
       isError: true,
-      errors: [null, { message: 'Request failed with status code 404' }, null],
-    })
+      errors: [null, { message: 'Request failed with status code 500' }],
+    }))
 
-    render(<ParsedText data={{ id: 'name-field', text: "{reqs[0]['metadata', 'name']}" }} />)
+    render(<ParsedText data={{ id: 'metrics-field', text: "{reqs[1]['.items']}", reqIndex: '1' }} />)
 
-    // BUG: error block is shown instead of the valid data
+    // reqIndex=1 points to the failed request → shows error
     expect(screen.getByText('Errors:')).toBeInTheDocument()
-    expect(screen.queryByText('valid-resource')).not.toBeInTheDocument()
+    expect(screen.getByText('Request failed with status code 500')).toBeInTheDocument()
+  })
+
+  it('shows only the specific request error, not all errors', () => {
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
+      data: { req0: undefined, req1: undefined },
+      isLoading: false,
+      isError: true,
+      errors: [
+        { message: 'Request failed with status code 403' },
+        { message: 'Request failed with status code 500' },
+      ],
+    }))
+
+    render(<ParsedText data={{ id: 'specific', text: "{reqs[1]['.items']}", reqIndex: '1' }} />)
+
+    // Only req1 error shown, not req0
+    expect(screen.getByText('Request failed with status code 500')).toBeInTheDocument()
+    expect(screen.queryByText('Request failed with status code 403')).not.toBeInTheDocument()
+  })
+
+  it('falls back to global isError when reqIndex is not set (backward compat)', () => {
+    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
+      data: {
+        req0: { metadata: { name: 'my-addressgroup' } },
+        req1: undefined,
+      },
+      isLoading: false,
+      isError: true,
+      errors: [null, { message: 'Request failed with status code 404' }],
+    }))
+
+    render(<ParsedText data={{ id: 'no-reqindex', text: "{reqs[0]['metadata', 'name']}" }} />)
+
+    // No reqIndex → falls back to global isError (true) → shows error block
+    expect(screen.getByText('Errors:')).toBeInTheDocument()
+    expect(screen.queryByText('my-addressgroup')).not.toBeInTheDocument()
   })
 })

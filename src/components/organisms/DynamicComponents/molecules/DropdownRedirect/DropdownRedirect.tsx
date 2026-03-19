@@ -7,7 +7,7 @@ import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
-import { parseAll, parseWithoutPartsOfUrl } from '../utils'
+import { parseAll, parseWithoutPartsOfUrl, parseReqIndex } from '../utils'
 import { Styled } from './styled'
 
 type TResourceList = {
@@ -35,7 +35,7 @@ export const DropdownRedirect: FC<{ data: TDynamicComponentsAppTypeMap['Dropdown
   } = data
 
   const navigate = useNavigate()
-  const { data: multiQueryData, isLoading: isMultiQueryLoading } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryError, hasErrorForReq, getErrorForReq, errors: multiQueryErrors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
@@ -101,6 +101,19 @@ export const DropdownRedirect: FC<{ data: TDynamicComponentsAppTypeMap['Dropdown
     })
 
     navigate(finalUrl)
+  }
+
+  const reqIdx = parseReqIndex(data.reqIndex)
+  const shouldShowMultiQueryError = reqIdx != null ? hasErrorForReq(reqIdx) : isMultiQueryError
+
+  if (shouldShowMultiQueryError) {
+    const errorToShow = reqIdx != null ? getErrorForReq(reqIdx) : multiQueryErrors.find(e => e !== null)
+    return (
+      <div>
+        <h4>Errors:</h4>
+        <ul>{errorToShow && <li>{typeof errorToShow === 'string' ? errorToShow : errorToShow.message}</li>}</ul>
+      </div>
+    )
   }
 
   if (isLoading) {

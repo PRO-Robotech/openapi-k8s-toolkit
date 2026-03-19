@@ -7,7 +7,7 @@ import { convertCores, formatCoresAuto, toCores, parseCoresWithUnit } from 'util
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
-import { parseAll } from '../utils'
+import { parseAll, parseReqIndex } from '../utils'
 
 /**
  * Idea (extended for arrays):
@@ -40,18 +40,22 @@ export const ConverterCores: FC<{ data: TDynamicComponentsAppTypeMap['ConverterC
     style,
   } = data
 
-  const { data: multiQueryData, isLoading, isError, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading, isError, hasErrorForReq, getErrorForReq, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
 
   if (isLoading) {
     return <div>Loading...</div>
   }
 
-  if (isError) {
+  const reqIdx = parseReqIndex(data.reqIndex)
+  const shouldShowError = reqIdx != null ? hasErrorForReq(reqIdx) : isError
+
+  if (shouldShowError) {
+    const errorToShow = reqIdx != null ? getErrorForReq(reqIdx) : errors.find(e => e !== null)
     return (
       <div>
         <h4>Errors:</h4>
-        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
+        <ul>{errorToShow && <li>{typeof errorToShow === 'string' ? errorToShow : errorToShow.message}</li>}</ul>
       </div>
     )
   }

@@ -9,7 +9,7 @@ import { usePermissions } from 'hooks/usePermissions'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
-import { parseAll } from '../utils'
+import { parseAll, parseReqIndex } from '../utils'
 import { TaintsEditModal } from '../../atoms'
 import { getTaintsItemsInside } from '../../utils/Taints'
 
@@ -42,7 +42,7 @@ export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children
   const [api, contextHolder] = notification.useNotification()
   const [open, setOpen] = useState<boolean>(false)
 
-  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, hasErrorForReq, getErrorForReq, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
 
   const safeMultiQueryData = multiQueryData || {}
@@ -96,11 +96,15 @@ export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children
     return <div>Loading...</div>
   }
 
-  if (isMultiQueryErrors) {
+  const reqIdx = parseReqIndex(data.reqIndex)
+  const shouldShowError = reqIdx != null ? hasErrorForReq(reqIdx) : isMultiQueryErrors
+
+  if (shouldShowError) {
+    const errorToShow = reqIdx != null ? getErrorForReq(reqIdx) : errors.find(e => e !== null)
     return (
       <div>
         <h4>Errors:</h4>
-        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
+        <ul>{errorToShow && <li>{typeof errorToShow === 'string' ? errorToShow : errorToShow.message}</li>}</ul>
       </div>
     )
   }

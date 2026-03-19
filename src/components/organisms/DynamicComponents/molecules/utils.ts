@@ -3,6 +3,16 @@ import _ from 'lodash'
 import jp from 'jsonpath'
 import { prepareTemplate } from 'utils/prepareTemplate'
 
+/** Parse a string reqIndex (from YAML config) to a number, or return undefined if absent/invalid */
+export const parseReqIndex = (reqIndex: string | number | undefined): number | undefined => {
+  if (typeof reqIndex === 'number') return Number.isNaN(reqIndex) ? undefined : reqIndex
+  if (typeof reqIndex === 'string') {
+    const parsed = parseInt(reqIndex, 10)
+    return Number.isNaN(parsed) ? undefined : parsed
+  }
+  return undefined
+}
+
 export const parsePartsOfUrl = ({
   template,
   replaceValues,

@@ -10,7 +10,7 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
-import { parseAll } from '../utils'
+import { parseAll, parseReqIndex } from '../utils'
 import { Styled } from './styled'
 import { decodeIfBase64, resolveMultilineRows } from './utils'
 
@@ -44,7 +44,7 @@ export const SecretBase64Plain: FC<{ data: TDynamicComponentsAppTypeMap['SecretB
 
   const [notificationApi, contextHolder] = notification.useNotification()
 
-  const { data: multiQueryData, isLoading, isError, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading, isError, hasErrorForReq, getErrorForReq, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
   const theme = useTheme()
 
@@ -52,11 +52,15 @@ export const SecretBase64Plain: FC<{ data: TDynamicComponentsAppTypeMap['SecretB
     return <div>Loading...</div>
   }
 
-  if (isError) {
+  const reqIdx = parseReqIndex(data.reqIndex)
+  const shouldShowError = reqIdx != null ? hasErrorForReq(reqIdx) : isError
+
+  if (shouldShowError) {
+    const errorToShow = reqIdx != null ? getErrorForReq(reqIdx) : errors.find(e => e !== null)
     return (
       <div>
         <h4>Errors:</h4>
-        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
+        <ul>{errorToShow && <li>{typeof errorToShow === 'string' ? errorToShow : errorToShow.message}</li>}</ul>
       </div>
     )
   }

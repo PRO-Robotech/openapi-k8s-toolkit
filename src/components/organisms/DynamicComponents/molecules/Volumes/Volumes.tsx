@@ -10,7 +10,7 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
-import { parseAll } from '../utils'
+import { parseAll, parseReqIndex } from '../utils'
 import {
   buildCustomColumns,
   getVolumeFactoryKey,
@@ -81,7 +81,7 @@ export const Volumes: FC<{ data: TDynamicComponentsAppTypeMap['Volumes']; childr
   const theme = useTheme()
   const partsOfUrl = usePartsOfUrl()
 
-  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, hasErrorForReq, getErrorForReq, errors } = useMultiQuery()
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
     acc[index.toString()] = value
@@ -285,12 +285,15 @@ export const Volumes: FC<{ data: TDynamicComponentsAppTypeMap['Volumes']; childr
     return <div>Loading...</div>
   }
 
-  if (isMultiQueryErrors) {
+  const reqIdx = parseReqIndex(data.reqIndex)
+  const shouldShowError = reqIdx != null ? hasErrorForReq(reqIdx) : isMultiQueryErrors
+
+  if (shouldShowError) {
+    const errorToShow = reqIdx != null ? getErrorForReq(reqIdx) : errors.find(e => e !== null)
     return (
       <div>
         <h4>Errors:</h4>
-        {/* eslint-disable-next-line react/no-array-index-key */}
-        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
+        <ul>{errorToShow && <li>{typeof errorToShow === 'string' ? errorToShow : errorToShow.message}</li>}</ul>
       </div>
     )
   }

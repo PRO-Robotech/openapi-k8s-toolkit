@@ -152,6 +152,8 @@ describe('Volumes', () => {
       isLoading: false,
       isError: false,
       errors: [],
+      hasErrorForReq: () => false,
+      getErrorForReq: () => null,
     })
 
     mockUseK8sSmartResource.mockReturnValue({

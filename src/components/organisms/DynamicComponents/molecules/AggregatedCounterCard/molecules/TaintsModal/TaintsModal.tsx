@@ -6,7 +6,7 @@ import jp from 'jsonpath'
 import { notification } from 'antd'
 import { useMultiQuery } from '../../../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
-import { parseAll } from '../../../utils'
+import { parseAll, parseReqIndex } from '../../../utils'
 import { TaintsEditModal } from '../../../../atoms'
 import { getTaintsItemsInside } from '../../../../utils/Taints'
 import type { TTaintsBaseProps, TTaintsModalProps as TModalInner } from '../../../../types/Taints'
@@ -38,18 +38,22 @@ export const TaintsModal: FC<TTaintsModalProps> = ({
 }) => {
   const [api, contextHolder] = notification.useNotification()
 
-  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, hasErrorForReq, getErrorForReq, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
   }
 
-  if (isMultiQueryErrors) {
+  const reqIdx = parseReqIndex(reqIndex)
+  const shouldShowError = reqIdx != null ? hasErrorForReq(reqIdx) : isMultiQueryErrors
+
+  if (shouldShowError) {
+    const errorToShow = reqIdx != null ? getErrorForReq(reqIdx) : errors.find(e => e !== null)
     return (
       <div>
         <h4>Errors:</h4>
-        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
+        <ul>{errorToShow && <li>{typeof errorToShow === 'string' ? errorToShow : errorToShow.message}</li>}</ul>
       </div>
     )
   }

@@ -4,7 +4,7 @@ import { Typography } from 'antd'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
-import { parseAll } from '../utils'
+import { parseAll, parseReqIndex } from '../utils'
 import { getResult } from './utils'
 
 export const StatusText: FC<{ data: TDynamicComponentsAppTypeMap['StatusText']; children?: any }> = ({
@@ -24,10 +24,12 @@ export const StatusText: FC<{ data: TDynamicComponentsAppTypeMap['StatusText']; 
     successText,
     errorText,
     fallbackText,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    reqIndex,
     ...props
   } = data
 
-  const { data: multiQueryData, isLoading: isMultiqueryLoading, isError, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiqueryLoading, isError, hasErrorForReq, getErrorForReq, errors } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
@@ -45,12 +47,15 @@ export const StatusText: FC<{ data: TDynamicComponentsAppTypeMap['StatusText']; 
     return <div>Loading multiquery</div>
   }
 
-  if (isError) {
+  const reqIdx = parseReqIndex(data.reqIndex)
+  const shouldShowError = reqIdx != null ? hasErrorForReq(reqIdx) : isError
+
+  if (shouldShowError) {
+    const errorToShow = reqIdx != null ? getErrorForReq(reqIdx) : errors.find(e => e !== null)
     return (
       <div>
         <h4>Errors:</h4>
-        {/* eslint-disable-next-line react/no-array-index-key */}
-        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
+        <ul>{errorToShow && <li>{typeof errorToShow === 'string' ? errorToShow : errorToShow.message}</li>}</ul>
       </div>
     )
   }
