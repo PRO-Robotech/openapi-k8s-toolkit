@@ -1,4 +1,4 @@
-import { getValueByPath, isEmptyAtPath } from './utils'
+import { getValueByPath, isEmptyAtPath, extractHttpStatus, extractErrorMessage } from './utils'
 
 // ── getValueByPath ───────────────────────────────────────────
 
@@ -81,5 +81,97 @@ describe('isEmptyAtPath', () => {
     const data = { req0: { items: [1] }, req1: { items: [] } }
     expect(isEmptyAtPath(data, 0, '.items')).toBe(false)
     expect(isEmptyAtPath(data, 1, '.items')).toBe(true)
+  })
+})
+
+// ── extractHttpStatus ─────────────────────────────────────────
+
+describe('extractHttpStatus', () => {
+  it('extracts status from AxiosError shape (.response.status)', () => {
+    const make = (status: number) => Object.assign(new Error('Request failed'), { response: { status } })
+    expect(extractHttpStatus(make(403))).toBe(403)
+    expect(extractHttpStatus(make(404))).toBe(404)
+    expect(extractHttpStatus(make(500))).toBe(500)
+  })
+
+  it('extracts status from Error with "(NNN)" in message', () => {
+    expect(extractHttpStatus(new Error('Access denied (403)'))).toBe(403)
+    expect(extractHttpStatus(new Error('Initial list failed (404)'))).toBe(404)
+    expect(extractHttpStatus(new Error('Server error (500)'))).toBe(500)
+  })
+
+  it('extracts status from plain string with "(NNN)" suffix', () => {
+    expect(extractHttpStatus('Initial list failed (404)')).toBe(404)
+    expect(extractHttpStatus('Access denied (403)')).toBe(403)
+    expect(extractHttpStatus('Internal server error (500)')).toBe(500)
+  })
+
+  it('returns undefined for string without status code', () => {
+    expect(extractHttpStatus('Something went wrong')).toBeUndefined()
+    expect(extractHttpStatus('WebSocket closed')).toBeUndefined()
+  })
+
+  it('does not match mid-message parentheses (no false positive)', () => {
+    expect(extractHttpStatus('Pod (nginx) crashed')).toBeUndefined()
+    expect(extractHttpStatus('Deployment (v2) rollback')).toBeUndefined()
+  })
+
+  it('returns undefined for null, undefined, and numbers', () => {
+    expect(extractHttpStatus(null)).toBeUndefined()
+    expect(extractHttpStatus(undefined)).toBeUndefined()
+    expect(extractHttpStatus(42)).toBeUndefined()
+  })
+
+  it('returns undefined for status codes outside 100-599', () => {
+    expect(extractHttpStatus('error (000)')).toBeUndefined()
+    expect(extractHttpStatus('error (600)')).toBeUndefined()
+    expect(extractHttpStatus('error (999)')).toBeUndefined()
+  })
+
+  it('prefers .response.status over message parsing', () => {
+    const err = Object.assign(new Error('error (500)'), { response: { status: 403 } })
+    expect(extractHttpStatus(err)).toBe(403)
+  })
+
+  it('handles trailing whitespace after "(NNN)"', () => {
+    expect(extractHttpStatus('Access denied (403) ')).toBe(403)
+  })
+
+  it('returns undefined for plain objects (not Error instances)', () => {
+    expect(extractHttpStatus({ response: { status: 403 } })).toBeUndefined()
+    expect(extractHttpStatus({ message: 'error (404)' })).toBeUndefined()
+  })
+})
+
+// ── extractErrorMessage ───────────────────────────────────────
+
+describe('extractErrorMessage', () => {
+  it('returns a plain string as-is', () => {
+    expect(extractErrorMessage('Initial list failed (404)')).toBe('Initial list failed (404)')
+  })
+
+  it('returns statusText from AxiosError', () => {
+    const err = Object.assign(new Error('Request failed'), { response: { statusText: 'Forbidden' } })
+    expect(extractErrorMessage(err)).toBe('Forbidden')
+  })
+
+  it('falls back to message when no statusText', () => {
+    const errEmptyResp = Object.assign(new Error('Network error'), { response: {} })
+    expect(extractErrorMessage(errEmptyResp)).toBe('Network error')
+    expect(extractErrorMessage(new Error('Something broke'))).toBe('Something broke')
+  })
+
+  it('falls back to String(error) for non-Error values', () => {
+    expect(extractErrorMessage(42)).toBe('42')
+    expect(extractErrorMessage({ code: 500 })).toBe('[object Object]')
+  })
+
+  it('handles Error instances', () => {
+    expect(extractErrorMessage(new Error('test error'))).toBe('test error')
+  })
+
+  it('handles null/undefined', () => {
+    expect(extractErrorMessage(null)).toBe('null')
+    expect(extractErrorMessage(undefined)).toBe('undefined')
   })
 })
