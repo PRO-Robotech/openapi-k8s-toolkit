@@ -402,9 +402,7 @@ describe('MultiQueryProvider / useMultiQuery', () => {
     }
 
     test('hasErrorForReq and getErrorForReq exist on context', async () => {
-      useManyK8sSmartResourceMock.mockImplementation(
-        makeK8sResultsMock({ k1: { data: { k: 1 } } }),
-      )
+      useManyK8sSmartResourceMock.mockImplementation(makeK8sResultsMock({ k1: { data: { k: 1 } } }))
       useQueriesMock.mockImplementation(({ queries }: any) =>
         makeStableUrlResults({ data: { u: 1 } }).slice(0, queries.length),
       )

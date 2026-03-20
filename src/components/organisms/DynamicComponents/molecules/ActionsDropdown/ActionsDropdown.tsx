@@ -92,9 +92,11 @@ export const ActionsDropdown: FC<{
   }
 
   if (shouldShowError) {
-    const errorMessage = errorToShow
-      ? (typeof errorToShow === 'string' ? errorToShow : errorToShow.message)
-      : 'Failed to load data'
+    const resolveMessage = () => {
+      if (!errorToShow) return 'Failed to load data'
+      return typeof errorToShow === 'string' ? errorToShow : errorToShow.message
+    }
+    const errorMessage = resolveMessage()
 
     return (
       <Tooltip title={errorMessage}>

@@ -1,8 +1,9 @@
+/* eslint-disable react/prop-types */
 import React, { Component, ErrorInfo, ReactNode } from 'react'
 import { Result } from 'antd'
 
 type TErrorBoundaryProps = {
-  /** Custom fallback UI. When omitted, a default Ant Design Result with status="error" is shown. */
+  /** Custom fallback UI. When omitted, a default Ant Design Result with status="500" is shown. */
   fallback?: ReactNode
   /** Optional callback fired when an error is caught. */
   onError?: (error: Error, errorInfo: ErrorInfo) => void
@@ -35,24 +36,24 @@ export class ErrorBoundary extends Component<TErrorBoundaryProps, TErrorBoundary
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    this.props.onError?.(error, errorInfo)
+    const { onError } = this.props
+    onError?.(error, errorInfo)
   }
 
   render(): ReactNode {
-    if (this.state.hasError) {
-      if (this.props.fallback) {
-        return this.props.fallback
+    const { hasError, error } = this.state
+    const { fallback, children } = this.props
+
+    if (hasError) {
+      if (fallback) {
+        return fallback
       }
 
       return (
-        <Result
-          status="500"
-          title="Something went wrong"
-          subTitle={this.state.error?.message || 'An unexpected error occurred'}
-        />
+        <Result status="500" title="Something went wrong" subTitle={error?.message || 'An unexpected error occurred'} />
       )
     }
 
-    return this.props.children
+    return children
   }
 }

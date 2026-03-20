@@ -11,8 +11,11 @@ export const usePerRequestError = (reqIndex?: string | number): TPerRequestError
   const { isError, hasErrorForReq, getErrorForReq, errors } = useMultiQuery()
   const reqIdx = parseReqIndex(reqIndex)
   const shouldShowError = reqIdx != null ? hasErrorForReq(reqIdx) : isError
-  const errorToShow = shouldShowError
-    ? (reqIdx != null ? getErrorForReq(reqIdx) : errors.find(e => e !== null) ?? null)
-    : null
+  const resolveError = (): AxiosError | Error | string | null => {
+    if (!shouldShowError) return null
+    if (reqIdx != null) return getErrorForReq(reqIdx)
+    return errors.find(e => e !== null) ?? null
+  }
+  const errorToShow = resolveError()
   return { shouldShowError, errorToShow }
 }

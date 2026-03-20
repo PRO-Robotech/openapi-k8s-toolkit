@@ -51,12 +51,14 @@ describe('loading state', () => {
 
 describe('happy path', () => {
   it('renders parsed text from multiQuery data', () => {
-    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
-      data: { req0: { metadata: { name: 'my-addressgroup' } } },
-      isLoading: false,
-      isError: false,
-      errors: [null],
-    }))
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: { req0: { metadata: { name: 'my-addressgroup' } } },
+        isLoading: false,
+        isError: false,
+        errors: [null],
+      }),
+    )
 
     render(<ParsedText data={{ id: 'name', text: "{reqs[0]['metadata', 'name']}" }} />)
 
@@ -64,12 +66,14 @@ describe('happy path', () => {
   })
 
   it('renders text with partsOfUrl substitution', () => {
-    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
-      data: {},
-      isLoading: false,
-      isError: false,
-      errors: [],
-    }))
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: {},
+        isLoading: false,
+        isError: false,
+        errors: [],
+      }),
+    )
 
     render(<ParsedText data={{ id: 'ns', text: 'Namespace: {3}' }} />)
 
@@ -77,12 +81,14 @@ describe('happy path', () => {
   })
 
   it('applies inline style from data.style', () => {
-    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
-      data: { req0: { metadata: { name: 'styled-text' } } },
-      isLoading: false,
-      isError: false,
-      errors: [null],
-    }))
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: { req0: { metadata: { name: 'styled-text' } } },
+        isLoading: false,
+        isError: false,
+        errors: [null],
+      }),
+    )
 
     const { container } = render(
       <ParsedText data={{ id: 'styled', text: "{reqs[0]['metadata', 'name']}", style: { color: 'red' } }} />,
@@ -93,16 +99,22 @@ describe('happy path', () => {
   })
 
   it('renders tooltip when tooltip prop is provided', async () => {
-    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
-      data: { req0: { metadata: { name: 'hover-me' } } },
-      isLoading: false,
-      isError: false,
-      errors: [null],
-    }))
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: { req0: { metadata: { name: 'hover-me' } } },
+        isLoading: false,
+        isError: false,
+        errors: [null],
+      }),
+    )
 
     render(
       <ParsedText
-        data={{ id: 'with-tip', text: "{reqs[0]['metadata', 'name']}", tooltip: "Details for {reqs[0]['metadata', 'name']}" }}
+        data={{
+          id: 'with-tip',
+          text: "{reqs[0]['metadata', 'name']}",
+          tooltip: "Details for {reqs[0]['metadata', 'name']}",
+        }}
       />,
     )
 
@@ -114,15 +126,17 @@ describe('happy path', () => {
 
 describe('per-request error isolation', () => {
   it('renders text when reqIndex is set and its request succeeded, even if another request failed', () => {
-    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
-      data: {
-        req0: { metadata: { name: 'my-addressgroup' } },
-        req1: undefined,
-      },
-      isLoading: false,
-      isError: true,
-      errors: [null, { message: 'Request failed with status code 404' }],
-    }))
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: {
+          req0: { metadata: { name: 'my-addressgroup' } },
+          req1: undefined,
+        },
+        isLoading: false,
+        isError: true,
+        errors: [null, { message: 'Request failed with status code 404' }],
+      }),
+    )
 
     render(<ParsedText data={{ id: 'name-field', text: "{reqs[0]['metadata', 'name']}", reqIndex: '0' }} />)
 
@@ -132,15 +146,17 @@ describe('per-request error isolation', () => {
   })
 
   it('renders error when reqIndex is set and its request failed', () => {
-    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
-      data: {
-        req0: { metadata: { name: 'my-addressgroup' } },
-        req1: undefined,
-      },
-      isLoading: false,
-      isError: true,
-      errors: [null, { message: 'Request failed with status code 500' }],
-    }))
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: {
+          req0: { metadata: { name: 'my-addressgroup' } },
+          req1: undefined,
+        },
+        isLoading: false,
+        isError: true,
+        errors: [null, { message: 'Request failed with status code 500' }],
+      }),
+    )
 
     render(<ParsedText data={{ id: 'metrics-field', text: "{reqs[1]['.items']}", reqIndex: '1' }} />)
 
@@ -150,15 +166,17 @@ describe('per-request error isolation', () => {
   })
 
   it('shows only the specific request error, not all errors', () => {
-    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
-      data: { req0: undefined, req1: undefined },
-      isLoading: false,
-      isError: true,
-      errors: [
-        { message: 'Request failed with status code 403' },
-        { message: 'Request failed with status code 500' },
-      ],
-    }))
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: { req0: undefined, req1: undefined },
+        isLoading: false,
+        isError: true,
+        errors: [
+          { message: 'Request failed with status code 403' },
+          { message: 'Request failed with status code 500' },
+        ],
+      }),
+    )
 
     render(<ParsedText data={{ id: 'specific', text: "{reqs[1]['.items']}", reqIndex: '1' }} />)
 
@@ -168,15 +186,17 @@ describe('per-request error isolation', () => {
   })
 
   it('falls back to global isError when reqIndex is not set (backward compat)', () => {
-    mockUseMultiQuery.mockReturnValue(mockMultiQuery({
-      data: {
-        req0: { metadata: { name: 'my-addressgroup' } },
-        req1: undefined,
-      },
-      isLoading: false,
-      isError: true,
-      errors: [null, { message: 'Request failed with status code 404' }],
-    }))
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: {
+          req0: { metadata: { name: 'my-addressgroup' } },
+          req1: undefined,
+        },
+        isLoading: false,
+        isError: true,
+        errors: [null, { message: 'Request failed with status code 404' }],
+      }),
+    )
 
     render(<ParsedText data={{ id: 'no-reqindex', text: "{reqs[0]['metadata', 'name']}" }} />)
 
