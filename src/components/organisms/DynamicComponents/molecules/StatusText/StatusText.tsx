@@ -45,11 +45,11 @@ export const StatusText: FC<{ data: TDynamicComponentsAppTypeMap['StatusText']; 
 
   const valuesPrepared = values.map(el => parseAll({ text: el, replaceValues, multiQueryData }))
 
+  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
+
   if (isMultiqueryLoading) {
     return <div>Loading multiquery</div>
   }
-
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (shouldShowError) {
     return <PerRequestError error={errorToShow} />

@@ -115,11 +115,11 @@ export const AggregatedCounterCard: FC<{
     }
   }, [open, canOpenActiveType])
 
+  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
+
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
   }
-
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (shouldShowError) {
     return <PerRequestError error={errorToShow} />

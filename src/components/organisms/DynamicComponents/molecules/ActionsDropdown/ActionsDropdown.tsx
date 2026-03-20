@@ -85,11 +85,11 @@ export const ActionsDropdown: FC<{
     multiQueryData: safeMultiQueryData,
   })
 
+  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
+
   if (isMultiQueryLoading) {
     return <Spin size="small" />
   }
-
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (shouldShowError) {
     const errorMessage = errorToShow

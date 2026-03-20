@@ -12,12 +12,11 @@ import { formatLocalDate } from './utils'
 export const ParsedText: FC<{ data: TDynamicComponentsAppTypeMap['parsedText'] }> = ({ data }) => {
   const { data: multiQueryData, isLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
+  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (isLoading) {
     return <div>Loading...</div>
   }
-
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (shouldShowError) {
     return <PerRequestError error={errorToShow} />

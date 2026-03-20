@@ -8,14 +8,13 @@ import { PerRequestError } from '../PerRequestError'
 
 export const MultiQuery: FC<{ data: TDynamicComponentsAppTypeMap['multiQuery'] }> = ({ data }) => {
   const { data: multiQueryData, isLoading } = useMultiQuery()
+  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   const preparedText = parseMutliqueryText({ text: data.text, multiQueryData })
 
   if (isLoading) {
     return <div>Loading...</div>
   }
-
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (shouldShowError) {
     return <PerRequestError error={errorToShow} />

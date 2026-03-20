@@ -283,11 +283,11 @@ export const Volumes: FC<{ data: TDynamicComponentsAppTypeMap['Volumes']; childr
     [dataSourceWithoutHref, resourceLinkPrefixes],
   )
 
+  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
+
   if (isMultiQueryLoading || isLinkPrefixLoading) {
     return <div>Loading...</div>
   }
-
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (shouldShowError) {
     return <PerRequestError error={errorToShow} />

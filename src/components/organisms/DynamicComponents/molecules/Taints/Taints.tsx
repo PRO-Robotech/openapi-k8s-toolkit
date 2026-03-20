@@ -93,12 +93,11 @@ export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children
   const shouldGateEdit = Boolean(permissions || permissionContext)
   const canOpenEdit = !readOnly
   const canSubmitEdit = !readOnly && (!shouldGateEdit || canPatch === true)
+  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
   }
-
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (shouldShowError) {
     return <PerRequestError error={errorToShow} />

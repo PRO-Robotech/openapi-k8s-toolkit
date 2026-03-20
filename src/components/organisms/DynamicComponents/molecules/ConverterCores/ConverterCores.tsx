@@ -44,12 +44,11 @@ export const ConverterCores: FC<{ data: TDynamicComponentsAppTypeMap['ConverterC
 
   const { data: multiQueryData, isLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
+  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (isLoading) {
     return <div>Loading...</div>
   }
-
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (shouldShowError) {
     return <PerRequestError error={errorToShow} />

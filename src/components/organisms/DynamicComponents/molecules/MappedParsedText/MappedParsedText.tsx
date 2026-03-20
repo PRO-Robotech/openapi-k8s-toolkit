@@ -12,12 +12,11 @@ export const MappedParsedText: FC<{ data: TDynamicComponentsAppTypeMap['MappedPa
 
   const { data: multiQueryData, isLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
+  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (isLoading) {
     return <div>Loading...</div>
   }
-
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (shouldShowError) {
     return <PerRequestError error={errorToShow} />

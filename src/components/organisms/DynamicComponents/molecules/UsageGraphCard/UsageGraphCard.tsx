@@ -375,6 +375,7 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
                   valueStrategy={valueStrategy}
                   converterBytesProps={data.converterBytesProps}
                   converterCoresProps={data.converterCoresProps}
+                  reqIndex={data.reqIndex}
                 />
                 <span> used</span>
               </Styled.UsedBadge>
@@ -391,6 +392,7 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
                   valueStrategy={valueStrategy}
                   converterBytesProps={data.converterBytesProps}
                   converterCoresProps={data.converterCoresProps}
+                  reqIndex={data.reqIndex}
                 />
                 <span>requested</span>
               </Styled.MarkerLabel>
@@ -407,6 +409,7 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
                   valueStrategy={valueStrategy}
                   converterBytesProps={data.converterBytesProps}
                   converterCoresProps={data.converterCoresProps}
+                  reqIndex={data.reqIndex}
                 />
                 <span>limit</span>
               </Styled.MarkerLabel>

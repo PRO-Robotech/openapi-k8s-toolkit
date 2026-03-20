@@ -49,12 +49,11 @@ export const SecretBase64Plain: FC<{ data: TDynamicComponentsAppTypeMap['SecretB
   const { data: multiQueryData, isLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
   const theme = useTheme()
+  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (isLoading) {
     return <div>Loading...</div>
   }
-
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (shouldShowError) {
     return <PerRequestError error={errorToShow} />

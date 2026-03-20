@@ -27,12 +27,11 @@ export const ArrayOfObjectsToKeyValues: FC<{
   } = data
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading } = useMultiQuery()
+  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
   }
-
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (shouldShowError) {
     return <PerRequestError error={errorToShow} />

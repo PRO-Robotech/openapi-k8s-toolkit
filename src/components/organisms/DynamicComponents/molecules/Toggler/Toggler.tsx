@@ -36,12 +36,11 @@ export const Toggler: FC<{ data: TDynamicComponentsAppTypeMap['Toggler']; childr
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
+  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
   }
-
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (shouldShowError) {
     return <PerRequestError error={errorToShow} />

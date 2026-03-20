@@ -45,12 +45,11 @@ export const LabelsModal: FC<TLabelsModalProps> = ({
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
+  const { shouldShowError, errorToShow } = usePerRequestError(reqIndex)
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
   }
-
-  const { shouldShowError, errorToShow } = usePerRequestError(reqIndex)
 
   if (shouldShowError) {
     return <PerRequestError error={errorToShow} />
