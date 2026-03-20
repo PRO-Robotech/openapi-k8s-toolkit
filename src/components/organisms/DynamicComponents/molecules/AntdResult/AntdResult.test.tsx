@@ -145,7 +145,7 @@ describe('auto-detect mode (reqIndex)', () => {
         data: {},
         isLoading: false,
         isError: true,
-        errors: [{ response: { status: 403, statusText: 'Forbidden' }, message: 'Request failed' }],
+        errors: [Object.assign(new Error('Request failed'), { response: { status: 403, statusText: 'Forbidden' } })],
       }),
     )
 
@@ -166,7 +166,7 @@ describe('auto-detect mode (reqIndex)', () => {
         data: {},
         isLoading: false,
         isError: true,
-        errors: [{ response: { status: 500 }, message: 'Internal Server Error' }],
+        errors: [Object.assign(new Error('Internal Server Error'), { response: { status: 500 } })],
       }),
     )
 
@@ -308,7 +308,7 @@ describe('checkEmpty (default: true)', () => {
         data: { req0: { items: [] } },
         isLoading: false,
         isError: true,
-        errors: [{ response: { status: 403, statusText: 'Forbidden' }, message: 'Forbidden' }],
+        errors: [Object.assign(new Error('Forbidden'), { response: { status: 403, statusText: 'Forbidden' } })],
       }),
     )
 
@@ -401,4 +401,73 @@ describe('custom itemsPath', () => {
   })
 })
 
-// Edge cases for isEmptyAtPath are covered in utils.test.ts
+// ── WebSocket / string errors ────────────────────────────────
+
+describe('string errors (WebSocket path)', () => {
+  it('renders 404 illustration for string error with (404) suffix', () => {
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: {},
+        isLoading: false,
+        isError: true,
+        errors: ['Initial list failed (404)'],
+      }),
+    )
+
+    render(<AntdResult data={{ id: 'ws-404', reqIndex: 0 }} />)
+
+    expect(screen.getByText('Not Found')).toBeInTheDocument()
+    expect(screen.getByText('Initial list failed (404)')).toBeInTheDocument()
+  })
+
+  it('renders 403 illustration for string error with (403) suffix', () => {
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: {},
+        isLoading: false,
+        isError: true,
+        errors: ['Access denied (403)'],
+      }),
+    )
+
+    render(<AntdResult data={{ id: 'ws-403', reqIndex: 0 }} />)
+
+    expect(screen.getByText('Access Denied')).toBeInTheDocument()
+    expect(screen.getByText('Access denied (403)')).toBeInTheDocument()
+  })
+
+  it('renders 500 illustration for string error with (500) suffix', () => {
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: {},
+        isLoading: false,
+        isError: true,
+        errors: ['Server error (500)'],
+      }),
+    )
+
+    render(<AntdResult data={{ id: 'ws-500', reqIndex: 0 }} />)
+
+    expect(screen.getAllByText('Server Error').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText('Server error (500)')).toBeInTheDocument()
+  })
+
+  it('renders generic error for string without status code', () => {
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: {},
+        isLoading: false,
+        isError: true,
+        errors: ['WebSocket connection closed'],
+      }),
+    )
+
+    render(<AntdResult data={{ id: 'ws-generic', reqIndex: 0 }} />)
+
+    expect(screen.getByText('Error')).toBeInTheDocument()
+    expect(screen.getByText('WebSocket connection closed')).toBeInTheDocument()
+  })
+})
+
+// Edge cases for extractHttpStatus, extractErrorMessage, isEmptyAtPath
+// are covered in utils.test.ts
