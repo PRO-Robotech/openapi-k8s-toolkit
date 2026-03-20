@@ -5,7 +5,9 @@ import { ProjectInfoCard as Card } from 'components/molecules'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
-import { parseAll, parseReqIndex } from '../utils'
+import { parseAll } from '../utils'
+import { usePerRequestError } from '../hooks/usePerRequestError'
+import { PerRequestError } from '../PerRequestError'
 
 export const ProjectInfoCard: FC<{ data: TDynamicComponentsAppTypeMap['ProjectInfoCard']; children?: any }> = ({
   data,
@@ -14,7 +16,7 @@ export const ProjectInfoCard: FC<{ data: TDynamicComponentsAppTypeMap['ProjectIn
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id, cluster, namespace, accessGroups, ...props } = data
 
-  const { data: multiQueryData, isError, hasErrorForReq, getErrorForReq, errors } = useMultiQuery()
+  const { data: multiQueryData } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
@@ -30,17 +32,10 @@ export const ProjectInfoCard: FC<{ data: TDynamicComponentsAppTypeMap['ProjectIn
     parseAll({ text: accessGroup, replaceValues, multiQueryData }),
   )
 
-  const reqIdx = parseReqIndex(data.reqIndex)
-  const shouldShowError = reqIdx != null ? hasErrorForReq(reqIdx) : isError
+  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (shouldShowError) {
-    const errorToShow = reqIdx != null ? getErrorForReq(reqIdx) : errors.find(e => e !== null)
-    return (
-      <div>
-        <h4>Errors:</h4>
-        <ul>{errorToShow && <li>{typeof errorToShow === 'string' ? errorToShow : errorToShow.message}</li>}</ul>
-      </div>
-    )
+    return <PerRequestError error={errorToShow} />
   }
 
   return (

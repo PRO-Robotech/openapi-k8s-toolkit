@@ -7,7 +7,9 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
-import { parseAll, parseReqIndex } from '../utils'
+import { parseAll } from '../utils'
+import { usePerRequestError } from '../hooks/usePerRequestError'
+import { PerRequestError } from '../PerRequestError'
 import { Styled } from './styled'
 
 export const ResourceBadge: FC<{ data: TDynamicComponentsAppTypeMap['ResourceBadge'] }> = ({ data }) => {
@@ -19,7 +21,7 @@ export const ResourceBadge: FC<{ data: TDynamicComponentsAppTypeMap['ResourceBad
     style,
   } = data
 
-  const { data: multiQueryData, isLoading, isError, hasErrorForReq, getErrorForReq, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
   const theme = useTheme()
 
@@ -27,17 +29,10 @@ export const ResourceBadge: FC<{ data: TDynamicComponentsAppTypeMap['ResourceBad
     return <div>Loading...</div>
   }
 
-  const reqIdx = parseReqIndex(data.reqIndex)
-  const shouldShowError = reqIdx != null ? hasErrorForReq(reqIdx) : isError
+  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (shouldShowError) {
-    const errorToShow = reqIdx != null ? getErrorForReq(reqIdx) : errors.find(e => e !== null)
-    return (
-      <div>
-        <h4>Errors:</h4>
-        <ul>{errorToShow && <li>{typeof errorToShow === 'string' ? errorToShow : errorToShow.message}</li>}</ul>
-      </div>
-    )
+    return <PerRequestError error={errorToShow} />
   }
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {

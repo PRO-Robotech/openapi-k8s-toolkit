@@ -11,7 +11,9 @@ import { usePermissions } from 'hooks/usePermissions'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
-import { parseAll, parseReqIndex } from '../utils'
+import { parseAll } from '../utils'
+import { usePerRequestError } from '../hooks/usePerRequestError'
+import { PerRequestError } from '../PerRequestError'
 import { LabelsEditModal } from '../../atoms'
 import { parseLabelsArrayOfAny } from '../../utils/Labels'
 import { truncate } from '../../utils/truncate'
@@ -55,7 +57,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
 
   const { maxTagTextLength, ...restSelectProps } = selectProps || { maxTagTextLength: undefined }
 
-  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, hasErrorForReq, getErrorForReq, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiQueryLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
 
   const safeMultiQueryData = multiQueryData || {}
@@ -109,17 +111,10 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
     return <div>Loading...</div>
   }
 
-  const reqIdx = parseReqIndex(data.reqIndex)
-  const shouldShowError = reqIdx != null ? hasErrorForReq(reqIdx) : isMultiQueryErrors
+  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (shouldShowError) {
-    const errorToShow = reqIdx != null ? getErrorForReq(reqIdx) : errors.find(e => e !== null)
-    return (
-      <div>
-        <h4>Errors:</h4>
-        <ul>{errorToShow && <li>{typeof errorToShow === 'string' ? errorToShow : errorToShow.message}</li>}</ul>
-      </div>
-    )
+    return <PerRequestError error={errorToShow} />
   }
 
   const jsonRoot = multiQueryData[`req${reqIndex}`]

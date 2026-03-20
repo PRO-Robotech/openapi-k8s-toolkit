@@ -10,7 +10,9 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { getItemCounterItemsInside } from '../../utils/ItemCounter'
 import { getKeyCounterItemsInside } from '../../utils/KeyCounter'
-import { parseAll, parseReqIndex } from '../utils'
+import { parseAll } from '../utils'
+import { usePerRequestError } from '../hooks/usePerRequestError'
+import { PerRequestError } from '../PerRequestError'
 import { renderActiveType, renderIcon } from './utils'
 import { Styled } from './styled'
 
@@ -37,7 +39,7 @@ export const AggregatedCounterCard: FC<{
   const { token } = antdtheme.useToken()
   const [open, setOpen] = useState<boolean>(false)
 
-  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, hasErrorForReq, getErrorForReq, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiQueryLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
 
   const safeMultiQueryData = multiQueryData || {}
@@ -117,17 +119,10 @@ export const AggregatedCounterCard: FC<{
     return <div>Loading...</div>
   }
 
-  const reqIdx = parseReqIndex(data.reqIndex)
-  const shouldShowError = reqIdx != null ? hasErrorForReq(reqIdx) : isMultiQueryErrors
+  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
 
   if (shouldShowError) {
-    const errorToShow = reqIdx != null ? getErrorForReq(reqIdx) : errors.find(e => e !== null)
-    return (
-      <div>
-        <h4>Errors:</h4>
-        <ul>{errorToShow && <li>{typeof errorToShow === 'string' ? errorToShow : errorToShow.message}</li>}</ul>
-      </div>
-    )
+    return <PerRequestError error={errorToShow} />
   }
 
   const jsonRoot = multiQueryData[`req${counter.props.reqIndex}`]
