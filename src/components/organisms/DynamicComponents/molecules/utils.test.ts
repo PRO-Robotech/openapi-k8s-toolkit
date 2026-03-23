@@ -481,6 +481,69 @@ describe('extractReqIndicesFromData', () => {
       }),
     ).toEqual([0, 1])
   })
+
+  it('finds indices inside arrays of strings (e.g. StatusText values)', () => {
+    expect(
+      extractReqIndicesFromData({
+        id: 'status',
+        values: ['{reqsJsonPath[0][".status.phase"]}', '{reqsJsonPath[1][".status.reason"]}'],
+      }),
+    ).toEqual([0, 1])
+  })
+
+  it('finds indices inside nested objects (e.g. ActionsDropdown actions)', () => {
+    expect(
+      extractReqIndicesFromData({
+        id: 'actions',
+        buttonText: 'Actions',
+        actions: [
+          {
+            type: 'edit',
+            props: {
+              name: '{reqsJsonPath[0][".metadata.name"]}',
+              endpoint: '/api/{2}/{reqsJsonPath[0][".metadata.name"]}',
+            },
+          },
+          {
+            type: 'editLabels',
+            props: {
+              reqIndex: '0',
+              jsonPathToLabels: '.items.0.metadata.labels',
+            },
+          },
+        ],
+      }),
+    ).toEqual([0])
+  })
+
+  it('does not extract bare reqIndex strings — only {reqs[N]...} patterns (reqIndex is handled by the hook)', () => {
+    expect(
+      extractReqIndicesFromData({
+        id: 'card',
+        text: 'Labels',
+        counter: {
+          type: 'key',
+          props: {
+            reqIndex: '0',
+            jsonPathToObj: '.items.0.metadata.labels',
+          },
+        },
+      }),
+    ).toEqual([])
+  })
+
+  it('handles mixed nesting: arrays of objects with strings at various depths', () => {
+    expect(
+      extractReqIndicesFromData({
+        id: 'complex',
+        items: [
+          { nested: { value: '{reqsJsonPath[0][".a"]}' } },
+          { nested: { value: '{reqsJsonPath[2][".b"]}' } },
+        ],
+        simple: '{reqs[1]["c"]}',
+      }),
+    ).toEqual([0, 2, 1])
+  })
 })
 
 describe('parsePromTemplate', () => {

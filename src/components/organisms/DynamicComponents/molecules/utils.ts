@@ -35,18 +35,26 @@ export const extractReqIndices = (text: string): number[] => {
 }
 
 /**
- * Scans all string values in a component's `data` object
+ * Recursively scans all string values in a component's `data` object
  * and collects req indices from template expressions.
  *
- * Skips non-string values (number, object, boolean, etc.).
+ * Traverses nested objects and arrays to find template strings
+ * at any depth (e.g. data.actions[].props.endpoint, data.values[]).
  */
 export const extractReqIndicesFromData = (data: Record<string, unknown>): number[] => {
   const indices = new Set<number>()
-  Object.values(data).forEach(value => {
+
+  const walk = (value: unknown): void => {
     if (typeof value === 'string') {
       extractReqIndices(value).forEach(idx => indices.add(idx))
+    } else if (Array.isArray(value)) {
+      value.forEach(walk)
+    } else if (value !== null && typeof value === 'object') {
+      Object.values(value).forEach(walk)
     }
-  })
+  }
+
+  Object.values(data).forEach(walk)
   return [...indices]
 }
 

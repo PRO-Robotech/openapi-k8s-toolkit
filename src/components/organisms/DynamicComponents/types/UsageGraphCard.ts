@@ -8,8 +8,6 @@ export type TUsageGraphCardDatum = {
 }
 
 export type TUsageGraphCardProps = {
-  /** Which request index this molecule depends on (for per-request error isolation) */
-  reqIndex?: string
   title?: string // default: 'CPU, core'
   series?: TUsageGraphCardDatum[] // can be provided straight forward
   containerStyle?: CSSProperties
