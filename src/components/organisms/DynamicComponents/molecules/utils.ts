@@ -13,6 +13,43 @@ export const parseReqIndex = (reqIndex: string | number | undefined): number | u
   return undefined
 }
 
+const REQ_INDEX_REGEX = /\{reqs(?:JsonPath)?\[(\d+)\]/g
+
+/**
+ * Scans a template string for {reqs[N]...} and {reqsJsonPath[N]...} patterns
+ * and returns the deduplicated set of req indices referenced.
+ *
+ * Handles nested/recursive cases like:
+ *   {reqsJsonPath[0]['.items.{reqsJsonPath[1][".index"]}.name']}
+ *   → returns [0, 1]
+ */
+export const extractReqIndices = (text: string): number[] => {
+  const indices = new Set<number>()
+  REQ_INDEX_REGEX.lastIndex = 0
+  let match = REQ_INDEX_REGEX.exec(text)
+  while (match !== null) {
+    indices.add(parseInt(match[1], 10))
+    match = REQ_INDEX_REGEX.exec(text)
+  }
+  return [...indices]
+}
+
+/**
+ * Scans all string values in a component's `data` object
+ * and collects req indices from template expressions.
+ *
+ * Skips non-string values (number, object, boolean, etc.).
+ */
+export const extractReqIndicesFromData = (data: Record<string, unknown>): number[] => {
+  const indices = new Set<number>()
+  Object.values(data).forEach(value => {
+    if (typeof value === 'string') {
+      extractReqIndices(value).forEach(idx => indices.add(idx))
+    }
+  })
+  return [...indices]
+}
+
 export const parsePartsOfUrl = ({
   template,
   replaceValues,
