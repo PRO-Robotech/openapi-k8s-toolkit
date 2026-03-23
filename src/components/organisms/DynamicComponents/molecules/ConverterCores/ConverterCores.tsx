@@ -8,7 +8,7 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
-import { usePerRequestError } from '../hooks/usePerRequestError'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
 import { PerRequestError } from '../PerRequestError'
 
 /**
@@ -44,7 +44,7 @@ export const ConverterCores: FC<{ data: TDynamicComponentsAppTypeMap['ConverterC
 
   const { data: multiQueryData, isLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   if (isLoading) {
     return <div>Loading...</div>

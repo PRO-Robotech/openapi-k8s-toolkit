@@ -21,6 +21,4 @@ export type TConverterBytesProps = {
   /** If provided, convert to this explicit unit */
   toUnit?: TUnitInput // do not enter if wanna auto format
   /** If omitted and toUnit is missing, use auto-scaling */
-  /** Which request index this molecule depends on (for per-request error isolation) */
-  reqIndex?: string
 }

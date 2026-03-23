@@ -5,7 +5,7 @@ import { ConfirmModal, DeleteModal, DeleteModalMany } from 'components/atoms'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
-import { usePerRequestError } from '../hooks/usePerRequestError'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
 import { getMenuItems, getVisibleActions } from './utils'
 import { useActionsDropdownPermissions, useActionsDropdownHandlers } from './hooks'
 import { renderActionModal } from './renderActionModal'
@@ -85,7 +85,7 @@ export const ActionsDropdown: FC<{
     multiQueryData: safeMultiQueryData,
   })
 
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   if (isMultiQueryLoading) {
     return <Spin size="small" />

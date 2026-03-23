@@ -8,7 +8,7 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll, parseWithoutPartsOfUrl } from '../utils'
-import { usePerRequestError } from '../hooks/usePerRequestError'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
 import { PerRequestError } from '../PerRequestError'
 import { Styled } from './styled'
 
@@ -105,7 +105,7 @@ export const DropdownRedirect: FC<{ data: TDynamicComponentsAppTypeMap['Dropdown
     navigate(finalUrl)
   }
 
-  const { shouldShowError: shouldShowMultiQueryError, errorToShow: multiQueryError } = usePerRequestError(data.reqIndex)
+  const { shouldShowError: shouldShowMultiQueryError, errorToShow: multiQueryError } = useAutoPerRequestError(data)
 
   if (shouldShowMultiQueryError) {
     return <PerRequestError error={multiQueryError} />

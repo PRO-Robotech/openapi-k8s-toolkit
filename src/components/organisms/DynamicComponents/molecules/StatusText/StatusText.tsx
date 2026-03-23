@@ -5,7 +5,7 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
-import { usePerRequestError } from '../hooks/usePerRequestError'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
 import { PerRequestError } from '../PerRequestError'
 import { getResult } from './utils'
 
@@ -26,8 +26,6 @@ export const StatusText: FC<{ data: TDynamicComponentsAppTypeMap['StatusText']; 
     successText,
     errorText,
     fallbackText,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    reqIndex,
     ...props
   } = data
 
@@ -45,7 +43,7 @@ export const StatusText: FC<{ data: TDynamicComponentsAppTypeMap['StatusText']; 
 
   const valuesPrepared = values.map(el => parseAll({ text: el, replaceValues, multiQueryData }))
 
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   if (isMultiqueryLoading) {
     return <div>Loading multiquery</div>

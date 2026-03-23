@@ -11,6 +11,4 @@ export type TProjectInfoCardProps = {
   accessGroups: string[]
   baseprefix?: string
   showZeroResources?: boolean
-  /** Which request index this molecule depends on (for per-request error isolation) */
-  reqIndex?: string
 }

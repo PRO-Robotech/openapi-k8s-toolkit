@@ -18,6 +18,7 @@ type TAutoPerRequestErrorResult = {
  *
  * If no req references are found (layout components like antdFlex),
  * falls back to the global isError flag from the provider.
+ *
  */
 export const useAutoPerRequestError = (data: Record<string, unknown>): TAutoPerRequestErrorResult => {
   const { isError, errors, hasErrorForReq, getErrorForReq } = useMultiQuery()

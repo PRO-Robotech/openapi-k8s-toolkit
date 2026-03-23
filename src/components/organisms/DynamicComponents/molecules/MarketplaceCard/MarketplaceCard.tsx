@@ -6,7 +6,7 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
-import { usePerRequestError } from '../hooks/usePerRequestError'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
 import { PerRequestError } from '../PerRequestError'
 
 export const MarketplaceCard: FC<{ data: TDynamicComponentsAppTypeMap['MarketplaceCard']; children?: any }> = ({
@@ -29,7 +29,7 @@ export const MarketplaceCard: FC<{ data: TDynamicComponentsAppTypeMap['Marketpla
 
   const namespacePrepared = parseAll({ text: namespace, replaceValues, multiQueryData })
 
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   if (shouldShowError) {
     return <PerRequestError error={errorToShow} />

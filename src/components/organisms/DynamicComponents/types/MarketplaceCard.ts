@@ -10,6 +10,4 @@ export type TMarketplaceCardProps = {
   standalone?: boolean
   addedMode?: boolean
   showZeroResources?: boolean
-  /** Which request index this molecule depends on (for per-request error isolation) */
-  reqIndex?: string
 }

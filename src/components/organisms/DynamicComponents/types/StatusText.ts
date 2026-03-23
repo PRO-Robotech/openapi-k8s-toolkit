@@ -10,6 +10,4 @@ export type TStatusTextProps = {
   successText: string
   errorText: string
   fallbackText: string
-  /** Which request index this molecule depends on (for per-request error isolation) */
-  reqIndex?: string
 }

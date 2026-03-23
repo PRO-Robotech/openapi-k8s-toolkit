@@ -138,7 +138,7 @@ describe('per-request error isolation', () => {
       }),
     )
 
-    render(<ParsedText data={{ id: 'name-field', text: "{reqs[0]['metadata', 'name']}", reqIndex: '0' }} />)
+    render(<ParsedText data={{ id: 'name-field', text: "{reqs[0]['metadata', 'name']}", }} />)
 
     // With reqIndex=0, ParsedText checks only req0 which succeeded → renders data
     expect(screen.getByText('my-addressgroup')).toBeInTheDocument()
@@ -158,7 +158,7 @@ describe('per-request error isolation', () => {
       }),
     )
 
-    render(<ParsedText data={{ id: 'metrics-field', text: "{reqs[1]['.items']}", reqIndex: '1' }} />)
+    render(<ParsedText data={{ id: 'metrics-field', text: "{reqs[1]['.items']}", }} />)
 
     // reqIndex=1 points to the failed request → shows error
     expect(screen.getByText('Errors:')).toBeInTheDocument()
@@ -178,14 +178,14 @@ describe('per-request error isolation', () => {
       }),
     )
 
-    render(<ParsedText data={{ id: 'specific', text: "{reqs[1]['.items']}", reqIndex: '1' }} />)
+    render(<ParsedText data={{ id: 'specific', text: "{reqs[1]['.items']}", }} />)
 
     // Only req1 error shown, not req0
     expect(screen.getByText('Request failed with status code 500')).toBeInTheDocument()
     expect(screen.queryByText('Request failed with status code 403')).not.toBeInTheDocument()
   })
 
-  it('falls back to global isError when reqIndex is not set (backward compat)', () => {
+  it('auto-detects req0 from template and renders data when req0 is healthy (even if global isError)', () => {
     mockUseMultiQuery.mockReturnValue(
       mockMultiQuery({
         data: {
@@ -200,8 +200,8 @@ describe('per-request error isolation', () => {
 
     render(<ParsedText data={{ id: 'no-reqindex', text: "{reqs[0]['metadata', 'name']}" }} />)
 
-    // No reqIndex → falls back to global isError (true) → shows error block
-    expect(screen.getByText('Errors:')).toBeInTheDocument()
-    expect(screen.queryByText('my-addressgroup')).not.toBeInTheDocument()
+    // useAutoPerRequestError detects req0 from template → req0 is OK → renders data
+    expect(screen.getByText('my-addressgroup')).toBeInTheDocument()
+    expect(screen.queryByText('Errors:')).not.toBeInTheDocument()
   })
 })

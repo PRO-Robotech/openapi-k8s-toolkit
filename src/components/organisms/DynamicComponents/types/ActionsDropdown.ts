@@ -174,6 +174,4 @@ export type TActionsDropdownProps = {
   actions: TActionUnion[]
   /** Manual permission override. Takes priority over per-action permissionContext. */
   permissions?: TActionsPermissions
-  /** Which request index this molecule depends on (for per-request error isolation) */
-  reqIndex?: string
 }
