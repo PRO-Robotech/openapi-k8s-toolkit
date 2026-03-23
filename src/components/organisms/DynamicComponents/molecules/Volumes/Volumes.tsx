@@ -11,7 +11,7 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
 import { parseAll } from '../utils'
-import { usePerRequestError } from '../hooks/usePerRequestError'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
 import { PerRequestError } from '../PerRequestError'
 import {
   buildCustomColumns,
@@ -283,7 +283,7 @@ export const Volumes: FC<{ data: TDynamicComponentsAppTypeMap['Volumes']; childr
     [dataSourceWithoutHref, resourceLinkPrefixes],
   )
 
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   if (isMultiQueryLoading || isLinkPrefixLoading) {
     return <div>Loading...</div>

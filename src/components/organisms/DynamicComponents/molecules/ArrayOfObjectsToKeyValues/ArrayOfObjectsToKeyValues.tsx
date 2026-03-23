@@ -4,7 +4,7 @@ import React, { FC } from 'react'
 import jp from 'jsonpath'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
-import { usePerRequestError } from '../hooks/usePerRequestError'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
 import { PerRequestError } from '../PerRequestError'
 import { unknownToString, parseArrayOfAny } from './utils'
 
@@ -27,7 +27,7 @@ export const ArrayOfObjectsToKeyValues: FC<{
   } = data
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading } = useMultiQuery()
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>

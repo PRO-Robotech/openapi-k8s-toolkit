@@ -11,7 +11,7 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { truncate } from '../../utils/truncate'
 import { parseAll } from '../utils'
-import { usePerRequestError } from '../hooks/usePerRequestError'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
 import { PerRequestError } from '../PerRequestError'
 import { parseLabelsArrayOfAny } from '../../utils/Labels'
 import { handleLabelsToSearchParamsLinkClick } from './utils'
@@ -44,7 +44,7 @@ export const LabelsToSearchParams: FC<{
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>

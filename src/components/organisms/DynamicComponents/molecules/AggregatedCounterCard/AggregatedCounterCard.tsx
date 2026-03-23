@@ -11,7 +11,7 @@ import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/p
 import { getItemCounterItemsInside } from '../../utils/ItemCounter'
 import { getKeyCounterItemsInside } from '../../utils/KeyCounter'
 import { parseAll } from '../utils'
-import { usePerRequestError } from '../hooks/usePerRequestError'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
 import { PerRequestError } from '../PerRequestError'
 import { renderActiveType, renderIcon } from './utils'
 import { Styled } from './styled'
@@ -115,7 +115,7 @@ export const AggregatedCounterCard: FC<{
     }
   }, [open, canOpenActiveType])
 
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(counter.props)
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>

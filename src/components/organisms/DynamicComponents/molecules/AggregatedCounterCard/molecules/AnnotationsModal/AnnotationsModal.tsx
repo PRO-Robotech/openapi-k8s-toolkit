@@ -7,7 +7,7 @@ import { notification } from 'antd'
 import { useMultiQuery } from '../../../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../../../utils'
-import { usePerRequestError } from '../../../hooks/usePerRequestError'
+import { useAutoPerRequestError } from '../../../hooks/useAutoPerRequestError'
 import { PerRequestError } from '../../../PerRequestError'
 import { AnnotationsEditModal } from '../../../../atoms'
 import { getAnnotationsItemsInside } from '../../../../utils/Annotations'
@@ -42,7 +42,7 @@ export const AnnotationsModal: FC<TAnnotationsModalProps> = ({
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
-  const { shouldShowError, errorToShow } = usePerRequestError(reqIndex)
+  const { shouldShowError, errorToShow } = useAutoPerRequestError({ reqIndex })
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>

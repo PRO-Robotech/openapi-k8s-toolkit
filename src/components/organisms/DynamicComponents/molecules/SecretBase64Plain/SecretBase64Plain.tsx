@@ -11,7 +11,7 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
 import { parseAll } from '../utils'
-import { usePerRequestError } from '../hooks/usePerRequestError'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
 import { PerRequestError } from '../PerRequestError'
 import { Styled } from './styled'
 import { decodeIfBase64, resolveMultilineRows } from './utils'
@@ -49,7 +49,7 @@ export const SecretBase64Plain: FC<{ data: TDynamicComponentsAppTypeMap['SecretB
   const { data: multiQueryData, isLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
   const theme = useTheme()
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   if (isLoading) {
     return <div>Loading...</div>

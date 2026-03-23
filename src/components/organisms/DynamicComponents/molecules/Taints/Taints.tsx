@@ -10,7 +10,7 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
-import { usePerRequestError } from '../hooks/usePerRequestError'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
 import { PerRequestError } from '../PerRequestError'
 import { TaintsEditModal } from '../../atoms'
 import { getTaintsItemsInside } from '../../utils/Taints'
@@ -93,7 +93,7 @@ export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children
   const shouldGateEdit = Boolean(permissions || permissionContext)
   const canOpenEdit = !readOnly
   const canSubmitEdit = !readOnly && (!shouldGateEdit || canPatch === true)
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>

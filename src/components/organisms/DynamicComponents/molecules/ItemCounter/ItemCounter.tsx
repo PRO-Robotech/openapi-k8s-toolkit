@@ -8,7 +8,7 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { getItemCounterItemsInside } from '../../utils/ItemCounter'
 import { parseAll } from '../utils'
-import { usePerRequestError } from '../hooks/usePerRequestError'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
 import { PerRequestError } from '../PerRequestError'
 
 export const ItemCounter: FC<{ data: TDynamicComponentsAppTypeMap['ItemCounter']; children?: any }> = ({
@@ -27,7 +27,7 @@ export const ItemCounter: FC<{ data: TDynamicComponentsAppTypeMap['ItemCounter']
 
   const { data: multiQueryData, isLoading: isMultiQueryLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
-  const { shouldShowError, errorToShow } = usePerRequestError(data.reqIndex)
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
