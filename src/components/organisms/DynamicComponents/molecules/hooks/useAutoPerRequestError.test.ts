@@ -103,19 +103,21 @@ describe('useAutoPerRequestError', () => {
 
   // ---- Layout components (no req references) ----
 
-  test('falls back to global isError for layout components with no req references', () => {
+  test('no error for layout components with no req references, even when global isError is true', () => {
     const err = new Error('global error')
     mockUseMultiQuery.mockReturnValue(
       makeCtx({
         isError: true,
         errors: [err],
+        hasErrorForReq: jest.fn().mockReturnValue(true),
+        getErrorForReq: jest.fn().mockReturnValue(err),
       }),
     )
 
     const { result } = renderHook(() => useAutoPerRequestError({ id: 'flex', gap: 6, align: 'center' }))
 
-    expect(result.current.shouldShowError).toBe(true)
-    expect(result.current.errorToShow).toBe(err)
+    expect(result.current.shouldShowError).toBe(false)
+    expect(result.current.errorToShow).toBeNull()
   })
 
   test('no error for layout components when global isError is false', () => {

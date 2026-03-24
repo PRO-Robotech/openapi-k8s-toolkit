@@ -18,6 +18,8 @@ import { useTheme } from '../../../../../DynamicRendererWithProviders/providers/
 import { serializeLabelsWithNoEncoding } from '../../../../utils/EnrichedTable'
 import { TEnrichedTableProps as TInnerProps } from '../../../../types/EnrichedTable'
 import { parseAll } from '../../../utils'
+import { useAutoPerRequestError } from '../../../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../../../PerRequestError'
 import { ReadOnlyModal } from '../../../../atoms/modals'
 import { Styled } from './styled'
 
@@ -68,6 +70,25 @@ export const EnrichedTableModal: FC<TEnrichedTableModalProps> = ({
 
   const theme = useTheme()
   const partsOfUrl = usePartsOfUrl()
+  const allProps = {
+    fetchUrl,
+    k8sResourceToFetch,
+    pathToItems,
+    additionalReqsDataToEachItem,
+    cluster,
+    labelSelector,
+    labelSelectorFull,
+    fieldSelector,
+    namespace,
+    k8sResource,
+    dataForControls,
+    baseprefix,
+    pathToKey,
+    modalTitle,
+    modalDescriptionText,
+    ...props,
+  }
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(allProps)
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
     acc[index.toString()] = value
@@ -202,6 +223,10 @@ export const EnrichedTableModal: FC<TEnrichedTableModalProps> = ({
 
   if (k8sResourceToFetchPrepared && isMultiqueryLoading) {
     return <div>Loading multiquery</div>
+  }
+
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   // if (!fetchedData) {

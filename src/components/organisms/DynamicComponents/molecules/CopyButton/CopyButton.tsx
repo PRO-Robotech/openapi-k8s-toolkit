@@ -6,6 +6,8 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../PerRequestError'
 
 export const CopyButton: FC<{ data: TDynamicComponentsAppTypeMap['CopyButton']; children?: any }> = ({
   data,
@@ -23,6 +25,7 @@ export const CopyButton: FC<{ data: TDynamicComponentsAppTypeMap['CopyButton']; 
   const [messageApi, contextHolder] = message.useMessage()
   const { data: multiQueryData, isLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
     acc[index.toString()] = value
@@ -48,6 +51,10 @@ export const CopyButton: FC<{ data: TDynamicComponentsAppTypeMap['CopyButton']; 
 
   if (isLoading) {
     return null
+  }
+
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   return (

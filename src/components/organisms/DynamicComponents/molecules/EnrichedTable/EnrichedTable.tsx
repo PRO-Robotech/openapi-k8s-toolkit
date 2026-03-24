@@ -18,6 +18,8 @@ import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/p
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
 import { serializeLabelsWithNoEncoding } from '../../utils/EnrichedTable'
 import { parseAll } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../PerRequestError'
 import { isValidLabelSelectorObject } from './utils'
 
 export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTable']; children?: any }> = ({
@@ -59,6 +61,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
 
   const theme = useTheme()
   const partsOfUrl = usePartsOfUrl()
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
     acc[index.toString()] = value
@@ -195,6 +198,10 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
 
   if (k8sResourceToFetchPrepared && isMultiqueryLoading) {
     return <div>Loading multiquery</div>
+  }
+
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   // if (!fetchedData) {

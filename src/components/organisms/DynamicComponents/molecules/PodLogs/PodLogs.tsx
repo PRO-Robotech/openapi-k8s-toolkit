@@ -9,6 +9,8 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
 import { parseAll } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../PerRequestError'
 import { getContainerNames } from './utils'
 
 export const PodLogs: FC<{ data: TDynamicComponentsAppTypeMap['PodLogs']; children?: any }> = ({
@@ -18,6 +20,7 @@ export const PodLogs: FC<{ data: TDynamicComponentsAppTypeMap['PodLogs']; childr
 }) => {
   const { data: multiQueryData, isLoading: isMultiqueryLoading } = useMultiQuery()
   const theme = useTheme()
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   const {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -88,6 +91,10 @@ export const PodLogs: FC<{ data: TDynamicComponentsAppTypeMap['PodLogs']; childr
 
   if (isMultiqueryLoading) {
     return <div>Loading multiquery</div>
+  }
+
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   if (isLoadingPodInfo) {

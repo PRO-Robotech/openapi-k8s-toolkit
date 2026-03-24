@@ -7,6 +7,8 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
 import { parseAll } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../PerRequestError'
 import { RefsList } from './organsisms/RefsList'
 import { isOwnerReference } from './guard'
 import { TOwnerReference } from './types'
@@ -46,6 +48,7 @@ export const OwnerRefs: FC<{ data: TDynamicComponentsAppTypeMap['OwnerRefs']; ch
 
   const theme = useTheme()
   const partsOfUrl = usePartsOfUrl()
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
     acc[index.toString()] = value
@@ -73,6 +76,10 @@ export const OwnerRefs: FC<{ data: TDynamicComponentsAppTypeMap['OwnerRefs']; ch
         replaceValues,
       })
     : undefined
+
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
+  }
 
   const jsonRoot = multiQueryData[`req${reqIndex}`]
 

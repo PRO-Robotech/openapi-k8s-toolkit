@@ -11,6 +11,8 @@ import { usePromVector } from '../PrometheusGraph/hooks/queryVector/usePromVecto
 import { TPrometheusVectorResponse } from '../PrometheusGraph/types'
 import { TUsageGraphCardProps, TUsageGraphCardDatum } from '../../types/UsageGraphCard'
 import { parsePromTemplate } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../PerRequestError'
 import { RequestedMarkerSvg, UsedMarkerSvg, LimitMarkerSvg, FormattedValue } from './atoms'
 import { getDefaultQuery, clampPercent } from './utils'
 import { DEFAULT_SERIES } from './constants'
@@ -29,6 +31,7 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
   const [clampedRequestedPercent, setClampedRequestedPercent] = useState<number | null>(null)
 
   const { data: multiQueryData, isLoading: isMultiqueryLoading } = useMultiQuery()
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   const { token } = antdtheme.useToken()
 
@@ -295,6 +298,10 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
       observer.disconnect()
     }
   }, [updateUsedBadgeClamp, updateRequestedLabelClamp])
+
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
+  }
 
   return (
     <Styled.Wrapper style={containerStyle} $colorBgContainer={token.colorBgContainer} $colorBorder={token.colorBorder}>

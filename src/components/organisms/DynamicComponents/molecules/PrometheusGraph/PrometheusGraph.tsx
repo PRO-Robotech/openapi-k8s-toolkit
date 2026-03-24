@@ -4,6 +4,8 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll, parsePromTemplate } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../PerRequestError'
 import {
   MatrixToAreaMulti,
   MatrixToAreaSingle,
@@ -83,6 +85,7 @@ export const PrometheusGraph: FC<{ data: TDynamicComponentsAppTypeMap['Prometheu
   } = data
 
   const partsOfUrl = usePartsOfUrl()
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
     acc[index.toString()] = value
@@ -118,6 +121,10 @@ export const PrometheusGraph: FC<{ data: TDynamicComponentsAppTypeMap['Prometheu
 
   if (isMultiqueryLoading) {
     return <div>Loading multiquery</div>
+  }
+
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   const Graph = COMPONENTS[type]

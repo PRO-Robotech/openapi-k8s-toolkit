@@ -536,10 +536,7 @@ describe('extractReqIndicesFromData', () => {
     expect(
       extractReqIndicesFromData({
         id: 'complex',
-        items: [
-          { nested: { value: '{reqsJsonPath[0][".a"]}' } },
-          { nested: { value: '{reqsJsonPath[2][".b"]}' } },
-        ],
+        items: [{ nested: { value: '{reqsJsonPath[0][".a"]}' } }, { nested: { value: '{reqsJsonPath[2][".b"]}' } }],
         simple: '{reqs[1]["c"]}',
       }),
     ).toEqual([0, 2, 1])

@@ -10,6 +10,8 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
 import { parseAll } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../PerRequestError'
 import { serializeLabelsWithNoEncoding } from './utils'
 
 const extractStatusCode = (error: unknown): number | undefined => {
@@ -61,6 +63,7 @@ export const Events: FC<{ data: TDynamicComponentsAppTypeMap['Events']; children
 
   const theme = useTheme()
   const partsOfUrl = usePartsOfUrl()
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
     acc[index.toString()] = value
@@ -146,6 +149,10 @@ export const Events: FC<{ data: TDynamicComponentsAppTypeMap['Events']; children
 
   if (isMultiqueryLoading) {
     return <div>Loading multiquery</div>
+  }
+
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   if (isPermissionCheckEnabled && (listPermission.isPending || watchPermission.isPending)) {
