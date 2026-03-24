@@ -20,7 +20,7 @@ type TErrorBoundaryState = {
  * a fallback UI instead of a white screen.
  *
  * This is a safety net for unexpected crashes — it does NOT handle
- * API errors (those are handled by usePerRequestError / PerRequestError).
+ * API errors (those are handled by useAutoPerRequestError / PerRequestError).
  */
 // React requires a class component for error boundaries — arrow functions cannot implement
 // getDerivedStateFromError or componentDidCatch.
