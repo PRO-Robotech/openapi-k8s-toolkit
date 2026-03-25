@@ -17,9 +17,5 @@ export const ErrorBoundaryWithDataReset: FC<{ children: ReactNode }> = ({ childr
   const { isError } = useMultiQuery()
   const location = useLocation()
 
-  return (
-    <ErrorBoundary resetKeys={[location.pathname, isError]}>
-      {children}
-    </ErrorBoundary>
-  )
+  return <ErrorBoundary resetKeys={[location.pathname, isError]}>{children}</ErrorBoundary>
 }
