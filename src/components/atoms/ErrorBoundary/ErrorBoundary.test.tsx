@@ -90,4 +90,56 @@ describe('ErrorBoundary', () => {
 
     expect(onError).not.toHaveBeenCalled()
   })
+
+  test('resets error state when resetKeys change', () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    let shouldThrow = true
+
+    const MaybeThrow = () => {
+      if (shouldThrow) throw new Error('transient')
+      return <div data-testid="recovered">Recovered</div>
+    }
+
+    const { rerender } = render(
+      <ErrorBoundary resetKeys={['/page/a']}>
+        <MaybeThrow />
+      </ErrorBoundary>,
+    )
+
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument()
+
+    shouldThrow = false
+    rerender(
+      <ErrorBoundary resetKeys={['/page/b']}>
+        <MaybeThrow />
+      </ErrorBoundary>,
+    )
+
+    expect(screen.getByTestId('recovered')).toBeInTheDocument()
+
+    consoleSpy.mockRestore()
+  })
+
+  test('stays in error state when resetKeys do not change', () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+
+    const { rerender } = render(
+      <ErrorBoundary resetKeys={['/page/a']}>
+        <ThrowingChild message="stuck" />
+      </ErrorBoundary>,
+    )
+
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument()
+
+    rerender(
+      <ErrorBoundary resetKeys={['/page/a']}>
+        <GoodChild />
+      </ErrorBoundary>,
+    )
+
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument()
+    expect(screen.queryByTestId('good-child')).not.toBeInTheDocument()
+
+    consoleSpy.mockRestore()
+  })
 })

@@ -16,6 +16,7 @@ jest.mock('components/atoms', () => ({
     </div>
   ),
   ErrorBoundary: ({ children }: any) => <div data-testid="error-boundary">{children}</div>,
+  ErrorBoundaryWithDataReset: ({ children }: any) => <div data-testid="error-boundary">{children}</div>,
 }))
 
 // Mock prepare util so we can predict outputs AND verify behavior.
