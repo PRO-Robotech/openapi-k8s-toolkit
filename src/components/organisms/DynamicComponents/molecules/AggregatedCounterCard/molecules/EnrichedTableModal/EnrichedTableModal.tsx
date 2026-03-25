@@ -19,6 +19,7 @@ import { serializeLabelsWithNoEncoding } from '../../../../utils/EnrichedTable'
 import { TEnrichedTableProps as TInnerProps } from '../../../../types/EnrichedTable'
 import { parseAll } from '../../../utils'
 import { useAutoPerRequestError } from '../../../hooks/useAutoPerRequestError'
+import { mergePerRequestErrors } from '../../../hooks/mergePerRequestErrors'
 import { PerRequestError } from '../../../PerRequestError'
 import { ReadOnlyModal } from '../../../../atoms/modals'
 import { Styled } from './styled'
@@ -66,7 +67,7 @@ export const EnrichedTableModal: FC<TEnrichedTableModalProps> = ({
     false,
   )
 
-  const { data: multiQueryData, isLoading: isMultiqueryLoading } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiqueryLoading, hasErrorForReq } = useMultiQuery()
 
   const theme = useTheme()
   const partsOfUrl = usePartsOfUrl()
@@ -88,7 +89,11 @@ export const EnrichedTableModal: FC<TEnrichedTableModalProps> = ({
     modalDescriptionText,
     ...props,
   }
-  const { shouldShowError, errorToShow } = useAutoPerRequestError(allProps)
+  const autoErrorResult = useAutoPerRequestError(allProps)
+  const { shouldShowError, errorToShow } = mergePerRequestErrors(autoErrorResult, hasErrorForReq, [
+    labelSelectorFull?.reqIndex,
+    ...(additionalReqsDataToEachItem ?? []),
+  ])
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
     acc[index.toString()] = value

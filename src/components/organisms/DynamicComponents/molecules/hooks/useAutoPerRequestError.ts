@@ -1,12 +1,7 @@
 import { useMemo } from 'react'
-import { AxiosError } from 'axios'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { extractReqIndicesFromData, parseReqIndex } from '../utils'
-
-type TAutoPerRequestErrorResult = {
-  shouldShowError: boolean
-  errorToShow: AxiosError | Error | string | null
-}
+import { TPerRequestErrorResult } from './types'
 
 /**
  * Auto-detects which requests a component depends on
@@ -22,7 +17,7 @@ type TAutoPerRequestErrorResult = {
  * multiQuery data, so multiQuery errors are irrelevant to it.
  *
  */
-export const useAutoPerRequestError = (data: Record<string, unknown>): TAutoPerRequestErrorResult => {
+export const useAutoPerRequestError = (data: Record<string, unknown>): TPerRequestErrorResult => {
   const { hasErrorForReq, getErrorForReq } = useMultiQuery()
 
   const reqIndices = useMemo(() => {
