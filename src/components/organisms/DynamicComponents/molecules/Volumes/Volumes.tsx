@@ -83,7 +83,7 @@ export const Volumes: FC<{ data: TDynamicComponentsAppTypeMap['Volumes']; childr
   const theme = useTheme()
   const partsOfUrl = usePartsOfUrl()
 
-  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiQueryLoading, hasErrorForReq } = useMultiQuery()
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
     acc[index.toString()] = value
@@ -121,8 +121,11 @@ export const Volumes: FC<{ data: TDynamicComponentsAppTypeMap['Volumes']; childr
 
   const customColumns = useMemo(() => buildCustomColumns(containerFactoryKey), [containerFactoryKey])
 
+  const parsedReqIndex = typeof reqIndex === 'string' ? parseInt(reqIndex, 10) : reqIndex
+  const ownReqFailed = !Number.isNaN(parsedReqIndex) && hasErrorForReq(parsedReqIndex)
+
   const dataSourceWithoutHref = useMemo<TVolumeRowWithoutHref[]>(() => {
-    if (isMultiQueryLoading || isMultiQueryErrors || !multiQueryData) return []
+    if (isMultiQueryLoading || ownReqFailed || !multiQueryData) return []
 
     const jsonRoot = multiQueryData[`req${reqIndex}`] as any
     if (jsonRoot === undefined) return []
@@ -170,7 +173,7 @@ export const Volumes: FC<{ data: TDynamicComponentsAppTypeMap['Volumes']; childr
   }, [
     multiQueryData,
     isMultiQueryLoading,
-    isMultiQueryErrors,
+    ownReqFailed,
     reqIndex,
     jsonPathToSpec,
     jsonPathToPodName,
@@ -219,10 +222,7 @@ export const Volumes: FC<{ data: TDynamicComponentsAppTypeMap['Volumes']; childr
       isPendingLinkSegment(secretFactoryKey))
 
   const isLinkPrefixLoading =
-    hasLinkableVolumeTypes &&
-    !isMultiQueryErrors &&
-    !isNavigationError &&
-    (isNavigationLoading || hasPendingLinkPrefixInputs)
+    hasLinkableVolumeTypes && !ownReqFailed && !isNavigationError && (isNavigationLoading || hasPendingLinkPrefixInputs)
 
   const resourceLinkPrefixes = useMemo<Partial<Record<'configMap' | 'secret', string>> | undefined>(() => {
     if (!hasLinkableVolumeTypes || isLinkPrefixLoading) {

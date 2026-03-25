@@ -328,4 +328,72 @@ describe('Volumes', () => {
       ]),
     )
   })
+
+  describe('per-request error isolation', () => {
+    test('renders table with data when another request fails but own request (req0) succeeds', () => {
+      // req1 fails, req0 succeeds — isError is true (aggregated), but req0 data is valid
+      useMultiQuery.mockReturnValue({
+        data: multiQueryData,
+        isLoading: false,
+        isError: true,
+        errors: [null, new Error('req1 failed')],
+        hasErrorForReq: (idx: number) => idx === 1,
+        getErrorForReq: (idx: number) => (idx === 1 ? new Error('req1 failed') : null),
+      })
+
+      render(<Volumes data={baseData} />)
+
+      // Table must render — req0 data is available
+      expect(screen.getByTestId('enriched-table')).toBeInTheDocument()
+      const props = getCapturedProps()
+      expect(props.dataSource.length).toBeGreaterThan(0)
+      expect(props.dataSource).toEqual(
+        expect.arrayContaining([expect.objectContaining({ typeKey: 'configMap', typeName: 'cfg-one' })]),
+      )
+    })
+
+    test('shows PerRequestError when own request (req0) fails', () => {
+      useMultiQuery.mockReturnValue({
+        data: { req0: undefined },
+        isLoading: false,
+        isError: true,
+        errors: [new Error('req0 failed'), null],
+        hasErrorForReq: (idx: number) => idx === 0,
+        getErrorForReq: (idx: number) => (idx === 0 ? new Error('req0 failed') : null),
+      })
+
+      render(<Volumes data={baseData} />)
+
+      // Should show the error, not the table
+      expect(screen.queryByTestId('enriched-table')).not.toBeInTheDocument()
+      expect(screen.getByText('req0 failed')).toBeInTheDocument()
+    })
+
+    test('renders table with forced namespace links when another request fails', () => {
+      // req1 fails, but req0 is fine — link prefixes should still be computed
+      useMultiQuery.mockReturnValue({
+        data: multiQueryData,
+        isLoading: false,
+        isError: true,
+        errors: [null, new Error('req1 failed')],
+        hasErrorForReq: (idx: number) => idx === 1,
+        getErrorForReq: (idx: number) => (idx === 1 ? new Error('req1 failed') : null),
+      })
+
+      render(<Volumes data={{ ...baseData, forcedNamespace: '{2}' }} />)
+
+      expect(screen.getByTestId('enriched-table')).toBeInTheDocument()
+      const props = getCapturedProps()
+      // Link prefixes must be computed despite aggregated isError=true
+      expect(props.dataSource).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            typeKey: 'configMap',
+            typeName: 'cfg-one',
+            typeHref: '/openapi-ui/cluster-a/forced-ns/factory/factory-namespaced-builtin/v1/configmaps/cfg-one',
+          }),
+        ]),
+      )
+    })
+  })
 })
