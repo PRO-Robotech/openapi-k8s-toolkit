@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { extractReqIndicesFromData, parseReqIndex } from '../utils'
 import { TPerRequestErrorResult } from './types'
@@ -15,24 +14,21 @@ import { TPerRequestErrorResult } from './types'
  * or programmatically rendered components like ConverterBytes inside
  * UsageGraphCard), returns no error — the component does not consume
  * multiQuery data, so multiQuery errors are irrelevant to it.
- *
  */
 export const useAutoPerRequestError = (data: Record<string, unknown>): TPerRequestErrorResult => {
   const { hasErrorForReq, getErrorForReq } = useMultiQuery()
 
-  const reqIndices = useMemo(() => {
-    const fromTemplates = extractReqIndicesFromData(data)
+  const fromTemplates = extractReqIndicesFromData(data)
 
-    const raw = data.reqIndex
-    if (typeof raw === 'string' || typeof raw === 'number') {
-      const explicit = parseReqIndex(raw)
-      if (explicit !== undefined) {
-        fromTemplates.push(explicit)
-      }
+  const raw = data.reqIndex
+  if (typeof raw === 'string' || typeof raw === 'number') {
+    const explicit = parseReqIndex(raw)
+    if (explicit !== undefined) {
+      fromTemplates.push(explicit)
     }
+  }
 
-    return [...new Set(fromTemplates)]
-  }, [data])
+  const reqIndices = [...new Set(fromTemplates)]
 
   if (reqIndices.length === 0) {
     return { shouldShowError: false, errorToShow: null }
