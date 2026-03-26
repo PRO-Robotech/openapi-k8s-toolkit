@@ -3,6 +3,61 @@ import _ from 'lodash'
 import jp from 'jsonpath'
 import { prepareTemplate } from 'utils/prepareTemplate'
 
+/** Parse a string reqIndex (from YAML config) to a number, or return undefined if absent/invalid */
+export const parseReqIndex = (reqIndex: string | number | undefined): number | undefined => {
+  if (typeof reqIndex === 'number') return Number.isNaN(reqIndex) ? undefined : reqIndex
+  if (typeof reqIndex === 'string') {
+    const parsed = parseInt(reqIndex, 10)
+    return Number.isNaN(parsed) ? undefined : parsed
+  }
+  return undefined
+}
+
+const REQ_INDEX_REGEX = /\{reqs(?:JsonPath)?\[(\d+)\]/g
+
+/**
+ * Scans a template string for {reqs[N]...} and {reqsJsonPath[N]...} patterns
+ * and returns the deduplicated set of req indices referenced.
+ *
+ * Handles nested/recursive cases like:
+ *   {reqsJsonPath[0]['.items.{reqsJsonPath[1][".index"]}.name']}
+ *   → returns [0, 1]
+ */
+export const extractReqIndices = (text: string): number[] => {
+  const indices = new Set<number>()
+  REQ_INDEX_REGEX.lastIndex = 0
+  let match = REQ_INDEX_REGEX.exec(text)
+  while (match !== null) {
+    indices.add(parseInt(match[1], 10))
+    match = REQ_INDEX_REGEX.exec(text)
+  }
+  return [...indices]
+}
+
+/**
+ * Recursively scans all string values in a component's `data` object
+ * and collects req indices from template expressions.
+ *
+ * Traverses nested objects and arrays to find template strings
+ * at any depth (e.g. data.actions[].props.endpoint, data.values[]).
+ */
+export const extractReqIndicesFromData = (data: Record<string, unknown>): number[] => {
+  const indices = new Set<number>()
+
+  const walk = (value: unknown): void => {
+    if (typeof value === 'string') {
+      extractReqIndices(value).forEach(idx => indices.add(idx))
+    } else if (Array.isArray(value)) {
+      value.forEach(walk)
+    } else if (value !== null && typeof value === 'object') {
+      Object.values(value).forEach(walk)
+    }
+  }
+
+  Object.values(data).forEach(walk)
+  return [...indices]
+}
+
 export const parsePartsOfUrl = ({
   template,
   replaceValues,

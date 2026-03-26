@@ -4,6 +4,8 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseWithoutPartsOfUrl, parseAll } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../PerRequestError'
 import { Styled } from './styled'
 
 export const VisibilityContainer: FC<{ data: TDynamicComponentsAppTypeMap['VisibilityContainer']; children?: any }> = ({
@@ -13,6 +15,7 @@ export const VisibilityContainer: FC<{ data: TDynamicComponentsAppTypeMap['Visib
 }) => {
   const { data: multiQueryData, isLoading: isMultiqueryLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   const {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -58,6 +61,10 @@ export const VisibilityContainer: FC<{ data: TDynamicComponentsAppTypeMap['Visib
 
   if (isMultiqueryLoading) {
     return <div>Loading multiquery</div>
+  }
+
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   const shouldAutoHide = !criteria && (!valuePrepared || valuePrepared === '~undefined-value~')

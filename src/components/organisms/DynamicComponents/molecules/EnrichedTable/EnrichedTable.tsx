@@ -18,6 +18,9 @@ import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/p
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
 import { serializeLabelsWithNoEncoding } from '../../utils/EnrichedTable'
 import { parseAll } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { mergePerRequestErrors } from '../hooks/mergePerRequestErrors'
+import { PerRequestError } from '../PerRequestError'
 import { isValidLabelSelectorObject } from './utils'
 
 export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTable']; children?: any }> = ({
@@ -36,7 +39,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     false,
   )
 
-  const { data: multiQueryData, isLoading: isMultiqueryLoading } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiqueryLoading, hasErrorForReq } = useMultiQuery()
 
   const {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -59,6 +62,11 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
 
   const theme = useTheme()
   const partsOfUrl = usePartsOfUrl()
+  const autoErrorResult = useAutoPerRequestError(data)
+  const { shouldShowError, errorToShow } = mergePerRequestErrors(autoErrorResult, hasErrorForReq, [
+    labelSelectorFull?.reqIndex,
+    ...(additionalReqsDataToEachItem ?? []),
+  ])
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
     acc[index.toString()] = value
@@ -195,6 +203,10 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
 
   if (k8sResourceToFetchPrepared && isMultiqueryLoading) {
     return <div>Loading multiquery</div>
+  }
+
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   // if (!fetchedData) {

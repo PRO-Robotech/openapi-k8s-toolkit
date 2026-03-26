@@ -11,6 +11,8 @@ import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/p
 import { getItemCounterItemsInside } from '../../utils/ItemCounter'
 import { getKeyCounterItemsInside } from '../../utils/KeyCounter'
 import { parseAll } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../PerRequestError'
 import { renderActiveType, renderIcon } from './utils'
 import { Styled } from './styled'
 
@@ -37,7 +39,7 @@ export const AggregatedCounterCard: FC<{
   const { token } = antdtheme.useToken()
   const [open, setOpen] = useState<boolean>(false)
 
-  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiQueryLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
 
   const safeMultiQueryData = multiQueryData || {}
@@ -113,17 +115,14 @@ export const AggregatedCounterCard: FC<{
     }
   }, [open, canOpenActiveType])
 
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(counter.props)
+
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
   }
 
-  if (isMultiQueryErrors) {
-    return (
-      <div>
-        <h4>Errors:</h4>
-        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
-      </div>
-    )
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   const jsonRoot = multiQueryData[`req${counter.props.reqIndex}`]

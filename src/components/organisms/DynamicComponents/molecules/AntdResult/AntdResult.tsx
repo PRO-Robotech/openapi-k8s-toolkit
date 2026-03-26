@@ -25,7 +25,7 @@ export const AntdResult: FC<{
   data: TDynamicComponentsAppTypeMap['antdResult']
   children?: any
 }> = ({ data, children }) => {
-  const { data: multiQueryData, isLoading, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading, getErrorForReq } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
 
   if (isLoading) {
@@ -39,7 +39,7 @@ export const AntdResult: FC<{
 
   // Auto-detect mode: reqIndex provided → check errors for that request
   if (typeof data.reqIndex === 'number') {
-    const error = errors[data.reqIndex]
+    const error = getErrorForReq(data.reqIndex)
 
     // checkEmpty (default: true): response has empty array at itemsPath → treat as 404
     const shouldCheckEmpty = data.checkEmpty !== false

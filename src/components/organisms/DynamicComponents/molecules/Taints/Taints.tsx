@@ -10,6 +10,8 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../PerRequestError'
 import { TaintsEditModal } from '../../atoms'
 import { getTaintsItemsInside } from '../../utils/Taints'
 
@@ -42,7 +44,7 @@ export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children
   const [api, contextHolder] = notification.useNotification()
   const [open, setOpen] = useState<boolean>(false)
 
-  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiQueryLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
 
   const safeMultiQueryData = multiQueryData || {}
@@ -91,18 +93,14 @@ export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children
   const shouldGateEdit = Boolean(permissions || permissionContext)
   const canOpenEdit = !readOnly
   const canSubmitEdit = !readOnly && (!shouldGateEdit || canPatch === true)
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
   }
 
-  if (isMultiQueryErrors) {
-    return (
-      <div>
-        <h4>Errors:</h4>
-        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
-      </div>
-    )
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   const jsonRoot = multiQueryData[`req${reqIndex}`]

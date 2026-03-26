@@ -1,1 +1,4 @@
-export type TMultiQueryProps = { id: number | string; text: string }
+export type TMultiQueryProps = {
+  id: number | string
+  text: string
+}

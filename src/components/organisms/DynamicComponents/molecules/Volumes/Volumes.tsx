@@ -11,6 +11,8 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
 import { parseAll } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../PerRequestError'
 import {
   buildCustomColumns,
   getVolumeFactoryKey,
@@ -81,7 +83,7 @@ export const Volumes: FC<{ data: TDynamicComponentsAppTypeMap['Volumes']; childr
   const theme = useTheme()
   const partsOfUrl = usePartsOfUrl()
 
-  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiQueryLoading, hasErrorForReq } = useMultiQuery()
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
     acc[index.toString()] = value
@@ -119,8 +121,11 @@ export const Volumes: FC<{ data: TDynamicComponentsAppTypeMap['Volumes']; childr
 
   const customColumns = useMemo(() => buildCustomColumns(containerFactoryKey), [containerFactoryKey])
 
+  const parsedReqIndex = typeof reqIndex === 'string' ? parseInt(reqIndex, 10) : reqIndex
+  const ownReqFailed = !Number.isNaN(parsedReqIndex) && hasErrorForReq(parsedReqIndex)
+
   const dataSourceWithoutHref = useMemo<TVolumeRowWithoutHref[]>(() => {
-    if (isMultiQueryLoading || isMultiQueryErrors || !multiQueryData) return []
+    if (isMultiQueryLoading || ownReqFailed || !multiQueryData) return []
 
     const jsonRoot = multiQueryData[`req${reqIndex}`] as any
     if (jsonRoot === undefined) return []
@@ -168,7 +173,7 @@ export const Volumes: FC<{ data: TDynamicComponentsAppTypeMap['Volumes']; childr
   }, [
     multiQueryData,
     isMultiQueryLoading,
-    isMultiQueryErrors,
+    ownReqFailed,
     reqIndex,
     jsonPathToSpec,
     jsonPathToPodName,
@@ -217,10 +222,7 @@ export const Volumes: FC<{ data: TDynamicComponentsAppTypeMap['Volumes']; childr
       isPendingLinkSegment(secretFactoryKey))
 
   const isLinkPrefixLoading =
-    hasLinkableVolumeTypes &&
-    !isMultiQueryErrors &&
-    !isNavigationError &&
-    (isNavigationLoading || hasPendingLinkPrefixInputs)
+    hasLinkableVolumeTypes && !ownReqFailed && !isNavigationError && (isNavigationLoading || hasPendingLinkPrefixInputs)
 
   const resourceLinkPrefixes = useMemo<Partial<Record<'configMap' | 'secret', string>> | undefined>(() => {
     if (!hasLinkableVolumeTypes || isLinkPrefixLoading) {
@@ -281,18 +283,14 @@ export const Volumes: FC<{ data: TDynamicComponentsAppTypeMap['Volumes']; childr
     [dataSourceWithoutHref, resourceLinkPrefixes],
   )
 
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
+
   if (isMultiQueryLoading || isLinkPrefixLoading) {
     return <div>Loading...</div>
   }
 
-  if (isMultiQueryErrors) {
-    return (
-      <div>
-        <h4>Errors:</h4>
-        {/* eslint-disable-next-line react/no-array-index-key */}
-        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
-      </div>
-    )
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   const jsonRoot = multiQueryData[`req${reqIndex}`]

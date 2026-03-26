@@ -5,6 +5,7 @@ import { ConfirmModal, DeleteModal, DeleteModalMany } from 'components/atoms'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
 import { getMenuItems, getVisibleActions } from './utils'
 import { useActionsDropdownPermissions, useActionsDropdownHandlers } from './hooks'
 import { renderActionModal } from './renderActionModal'
@@ -19,7 +20,7 @@ export const ActionsDropdown: FC<{
 }> = ({ data, children }) => {
   const { buttonText = 'Actions', buttonVariant = 'default', containerStyle, actions, permissions } = data
 
-  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryError, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiQueryLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
@@ -84,18 +85,21 @@ export const ActionsDropdown: FC<{
     multiQueryData: safeMultiQueryData,
   })
 
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
+
   if (isMultiQueryLoading) {
     return <Spin size="small" />
   }
 
-  if (isMultiQueryError) {
-    const errorMessage = errors
-      .filter((e): e is Error | string => e !== null)
-      .map(e => (typeof e === 'string' ? e : e.message))
-      .join('; ')
+  if (shouldShowError) {
+    const resolveMessage = () => {
+      if (!errorToShow) return 'Failed to load data'
+      return typeof errorToShow === 'string' ? errorToShow : errorToShow.message
+    }
+    const errorMessage = resolveMessage()
 
     return (
-      <Tooltip title={errorMessage || 'Failed to load data'}>
+      <Tooltip title={errorMessage}>
         <WarningOutlined style={{ color: 'red' }} />
       </Tooltip>
     )

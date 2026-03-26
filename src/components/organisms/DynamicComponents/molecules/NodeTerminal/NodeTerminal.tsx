@@ -5,6 +5,8 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../PerRequestError'
 
 export const NodeTerminal: FC<{ data: TDynamicComponentsAppTypeMap['NodeTerminal']; children?: any }> = ({
   data,
@@ -12,6 +14,7 @@ export const NodeTerminal: FC<{ data: TDynamicComponentsAppTypeMap['NodeTerminal
   children,
 }) => {
   const { data: multiQueryData, isLoading: isMultiqueryLoading } = useMultiQuery()
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   const {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -35,6 +38,10 @@ export const NodeTerminal: FC<{ data: TDynamicComponentsAppTypeMap['NodeTerminal
 
   if (isMultiqueryLoading) {
     return <div>Loading multiquery</div>
+  }
+
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   return (

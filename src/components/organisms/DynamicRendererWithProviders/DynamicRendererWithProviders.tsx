@@ -1,7 +1,7 @@
 import React, { ReactElement } from 'react'
 import { useLocation } from 'react-router-dom'
 import { TItemTypeMap } from 'localTypes/dynamicRender'
-import { CursorDefaultDiv } from 'components/atoms'
+import { CursorDefaultDiv, ErrorBoundaryWithDataReset } from 'components/atoms'
 import { prepareUrlsToFetchForDynamicRenderer } from 'utils/prepareUrlsToFetchForDynamicRenderer'
 import { TUseK8sSmartResourceParams } from 'hooks/useK8sSmartResource'
 import { DynamicRenderer, TDynamicRendererProps } from '../DynamicRenderer'
@@ -82,7 +82,9 @@ export const DynamicRendererWithProviders = <T extends TItemTypeMap>(
               items={[...preparedK8sResoucesUrls, ...preparedUrlsToFetch]}
               dataToApplyToContext={dataToApplyToContext}
             >
-              <DynamicRenderer {...props} />
+              <ErrorBoundaryWithDataReset>
+                <DynamicRenderer {...props} />
+              </ErrorBoundaryWithDataReset>
             </MultiQueryProvider>
           </PartsOfUrlProvider>
         </FactoryConfigContextProvider>

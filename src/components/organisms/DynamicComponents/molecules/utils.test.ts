@@ -10,6 +10,8 @@ import {
   parseWithoutPartsOfUrl,
   parseAll,
   parsePromTemplate,
+  extractReqIndices,
+  extractReqIndicesFromData,
 } from './utils'
 
 // Mock prepareTemplate so we can assert interactions easily
@@ -390,6 +392,155 @@ it('supports {7} placeholder inside JSONPath expressions via replaceValues', () 
   expect(result).toBe('probe=READY')
 
   jpSpy.mockRestore()
+})
+
+describe('extractReqIndices', () => {
+  it('extracts index from reqsJsonPath pattern', () => {
+    expect(extractReqIndices('{reqsJsonPath[0][".items.0.kind"]["-"]}')).toEqual([0])
+  })
+
+  it('extracts index from reqs pattern', () => {
+    expect(extractReqIndices('{reqs[2]["status"]["phase"]["-"]}')).toEqual([2])
+  })
+
+  it('extracts multiple distinct indices from one string', () => {
+    const text = '{reqsJsonPath[0][".name"]} in {reqsJsonPath[1][".ns"]}'
+    expect(extractReqIndices(text)).toEqual([0, 1])
+  })
+
+  it('catches nested req-in-req patterns', () => {
+    const text = '{reqsJsonPath[0][".items.{reqsJsonPath[1][".index"]}.name"]}'
+    expect(extractReqIndices(text)).toEqual([0, 1])
+  })
+
+  it('deduplicates repeated indices', () => {
+    const text = '{reqsJsonPath[0][".name"]} and {reqsJsonPath[0][".kind"]}'
+    expect(extractReqIndices(text)).toEqual([0])
+  })
+
+  it('returns empty array for plain text', () => {
+    expect(extractReqIndices('just some text')).toEqual([])
+  })
+
+  it('returns empty array for URL-only templates', () => {
+    expect(extractReqIndices('{2}/{3}')).toEqual([])
+  })
+
+  it('handles mixed reqs and reqsJsonPath in one string', () => {
+    const text = '{reqs[0]["foo"]} and {reqsJsonPath[1][".bar"]}'
+    expect(extractReqIndices(text)).toEqual([0, 1])
+  })
+
+  it('works correctly on consecutive calls (lastIndex reset)', () => {
+    expect(extractReqIndices('{reqsJsonPath[0][".a"]}')).toEqual([0])
+    expect(extractReqIndices('{reqsJsonPath[1][".b"]}')).toEqual([1])
+    expect(extractReqIndices('{reqsJsonPath[2][".c"]}')).toEqual([2])
+  })
+})
+
+describe('extractReqIndicesFromData', () => {
+  it('scans all string values in a data object', () => {
+    expect(
+      extractReqIndicesFromData({
+        id: 'my-badge',
+        value: '{reqsJsonPath[0][".items.0.kind"]["-"]}',
+        tooltip: '{reqsJsonPath[1][".metadata.name"]}',
+      }),
+    ).toEqual([0, 1])
+  })
+
+  it('skips non-string values', () => {
+    expect(
+      extractReqIndicesFromData({
+        id: 'flex-1',
+        gap: 6,
+        align: 'center',
+        style: { fontSize: '20px' },
+        visible: true,
+      }),
+    ).toEqual([])
+  })
+
+  it('returns empty array for layout components with no req references', () => {
+    expect(extractReqIndicesFromData({ id: 'flex', gap: 6 })).toEqual([])
+  })
+
+  it('deduplicates indices across multiple props', () => {
+    expect(
+      extractReqIndicesFromData({
+        value: '{reqsJsonPath[0][".kind"]}',
+        label: '{reqsJsonPath[0][".name"]}',
+      }),
+    ).toEqual([0])
+  })
+
+  it('collects indices from props with nested req-in-req', () => {
+    expect(
+      extractReqIndicesFromData({
+        value: '{reqsJsonPath[0][".items.{reqsJsonPath[1][".idx"]}.name"]}',
+      }),
+    ).toEqual([0, 1])
+  })
+
+  it('finds indices inside arrays of strings (e.g. StatusText values)', () => {
+    expect(
+      extractReqIndicesFromData({
+        id: 'status',
+        values: ['{reqsJsonPath[0][".status.phase"]}', '{reqsJsonPath[1][".status.reason"]}'],
+      }),
+    ).toEqual([0, 1])
+  })
+
+  it('finds indices inside nested objects (e.g. ActionsDropdown actions)', () => {
+    expect(
+      extractReqIndicesFromData({
+        id: 'actions',
+        buttonText: 'Actions',
+        actions: [
+          {
+            type: 'edit',
+            props: {
+              name: '{reqsJsonPath[0][".metadata.name"]}',
+              endpoint: '/api/{2}/{reqsJsonPath[0][".metadata.name"]}',
+            },
+          },
+          {
+            type: 'editLabels',
+            props: {
+              reqIndex: '0',
+              jsonPathToLabels: '.items.0.metadata.labels',
+            },
+          },
+        ],
+      }),
+    ).toEqual([0])
+  })
+
+  it('does not extract bare reqIndex strings — only {reqs[N]...} patterns (reqIndex is handled by the hook)', () => {
+    expect(
+      extractReqIndicesFromData({
+        id: 'card',
+        text: 'Labels',
+        counter: {
+          type: 'key',
+          props: {
+            reqIndex: '0',
+            jsonPathToObj: '.items.0.metadata.labels',
+          },
+        },
+      }),
+    ).toEqual([])
+  })
+
+  it('handles mixed nesting: arrays of objects with strings at various depths', () => {
+    expect(
+      extractReqIndicesFromData({
+        id: 'complex',
+        items: [{ nested: { value: '{reqsJsonPath[0][".a"]}' } }, { nested: { value: '{reqsJsonPath[2][".b"]}' } }],
+        simple: '{reqs[1]["c"]}',
+      }),
+    ).toEqual([0, 2, 1])
+  })
 })
 
 describe('parsePromTemplate', () => {
