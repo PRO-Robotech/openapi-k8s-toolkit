@@ -2,6 +2,7 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
 import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
 import { EnrichedTable } from './EnrichedTable'
 
@@ -34,13 +35,14 @@ jest.mock('../../../DynamicRendererWithProviders/providers/themeContext', () => 
 }))
 
 const mockUseK8sSmartResource = useK8sSmartResource as unknown as jest.Mock
+const mockUseDirectUnknownResource = useDirectUnknownResource as unknown as jest.Mock
 
 describe('Dynamic EnrichedTable error rendering', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
-  test('shows socket error payload and does not fall through to table rendering', () => {
+  test('shows socket error alert and does not fall through to table rendering', () => {
     mockUseK8sSmartResource.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -63,7 +65,43 @@ describe('Dynamic EnrichedTable error rendering', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByText(/Access denied \(403\)/)).toBeInTheDocument()
+    expect(screen.getByText('An error has occurred: Access denied (403)')).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+    expect(screen.queryByTestId('enriched-provider')).not.toBeInTheDocument()
+    expect(screen.queryByText(/No data/i)).not.toBeInTheDocument()
+  })
+
+  test('shows fetchUrl error alert and does not fall through to table rendering', () => {
+    mockUseDirectUnknownResource.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error('Access denied (403)'),
+    })
+    mockUseK8sSmartResource.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      error: undefined,
+    })
+
+    render(
+      <MemoryRouter>
+        <EnrichedTable
+          data={
+            {
+              id: 'pods-table',
+              cluster: 'default',
+              fetchUrl: '/api/test',
+              pathToItems: '.items',
+            } as any
+          }
+        />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('An error has occurred: Access denied (403)')).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toBeInTheDocument()
     expect(screen.queryByTestId('enriched-provider')).not.toBeInTheDocument()
     expect(screen.queryByText(/No data/i)).not.toBeInTheDocument()
   })
