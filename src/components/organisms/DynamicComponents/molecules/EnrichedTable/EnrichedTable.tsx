@@ -4,7 +4,7 @@ import React, { FC, useState } from 'react'
 import jp from 'jsonpath'
 import _ from 'lodash'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { Flex, Spin, Button } from 'antd'
+import { Flex, Spin, Button, Alert } from 'antd'
 import { PlusOutlined, ClearOutlined, MinusOutlined } from '@ant-design/icons'
 import { EditIcon, DeleteIcon, PaddingContainer, DeleteModal, DeleteModalMany } from 'components/atoms'
 import { EnrichedTableProvider } from 'components/molecules'
@@ -21,6 +21,7 @@ import { parseAll } from '../utils'
 import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
 import { mergePerRequestErrors } from '../hooks/mergePerRequestErrors'
 import { PerRequestError } from '../PerRequestError'
+import { extractErrorMessage } from '../AntdResult/utils'
 import { isValidLabelSelectorObject } from './utils'
 
 export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTable']; children?: any }> = ({
@@ -230,11 +231,11 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
   }
 
   if (fetchUrlPrepared && fetchedDataError) {
-    return <div>Error: {JSON.stringify(fetchedDataError)}</div>
+    return <Alert message={`An error has occurred: ${extractErrorMessage(fetchedDataError)}`} type="error" />
   }
 
   if (k8sResourceToFetchPrepared && fetchedDataSocketError) {
-    return <div>Error: {JSON.stringify(fetchedDataSocketError)}</div>
+    return <Alert message={`An error has occurred: ${extractErrorMessage(fetchedDataSocketError)}`} type="error" />
   }
 
   const dataFromOneOfHooks = fetchedData || fetchedDataSocket || {}
