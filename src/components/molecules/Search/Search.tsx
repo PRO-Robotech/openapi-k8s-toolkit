@@ -57,6 +57,11 @@ export const Search: FC<TSearchProps> = ({ theme, form, constants, kindsWithVers
           ),
           value: `${group}~${version.version}~${version.resource}`,
         }
+      })
+      .sort((a, b) => {
+        const aSelected = typeof a.value === 'string' && watchedKinds?.includes(a.value) ? 0 : 1
+        const bSelected = typeof b.value === 'string' && watchedKinds?.includes(b.value) ? 0 : 1
+        return aSelected - bSelected
       }) || []
 
   const tagRender = ({ label, closable, onClose }: CustomTagProps) => (
