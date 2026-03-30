@@ -43,6 +43,7 @@ export { useK8sVerbs } from './hooks/useK8sVerbs'
 export { useK8sSmartResource, useManyK8sSmartResource, useSmartResourceParams } from './hooks/useK8sSmartResource'
 export { useResourceScope } from './hooks/useResourceScope'
 export { useKinds } from './hooks/useKinds'
+export { useKindsRaw } from './hooks/useKindsRaw'
 export { usePluginManifest } from './hooks/usePlugins'
 
 /* types */
