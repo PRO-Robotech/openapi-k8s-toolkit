@@ -160,8 +160,8 @@ describe('per-request error isolation', () => {
 
     render(<ParsedText data={{ id: 'metrics-field', text: "{reqs[1]['.items']}" }} />)
 
-    // reqIndex=1 points to the failed request → shows error
-    expect(screen.getByText('Errors:')).toBeInTheDocument()
+    // reqIndex=1 points to the failed request → shows error Alert
+    expect(screen.getByRole('alert')).toBeInTheDocument()
     expect(screen.getByText('Request failed with status code 500')).toBeInTheDocument()
   })
 

@@ -9,21 +9,22 @@ describe('PerRequestError', () => {
     expect(container.innerHTML).toBe('')
   })
 
-  test('renders error message when error is an Error object', () => {
+  test('renders Alert with error message when error is an Error object', () => {
     render(<PerRequestError error={new Error('Something broke')} />)
+    expect(screen.getByRole('alert')).toBeInTheDocument()
     expect(screen.getByText('Something broke')).toBeInTheDocument()
-    expect(screen.getByText('Errors:')).toBeInTheDocument()
   })
 
-  test('renders error string when error is a string', () => {
+  test('renders Alert with error string when error is a string', () => {
     render(<PerRequestError error="Network timeout" />)
+    expect(screen.getByRole('alert')).toBeInTheDocument()
     expect(screen.getByText('Network timeout')).toBeInTheDocument()
-    expect(screen.getByText('Errors:')).toBeInTheDocument()
   })
 
-  test('renders AxiosError message', () => {
+  test('renders Alert with AxiosError message', () => {
     const axiosError = new AxiosError('Request failed with status 500')
     render(<PerRequestError error={axiosError} />)
+    expect(screen.getByRole('alert')).toBeInTheDocument()
     expect(screen.getByText('Request failed with status 500')).toBeInTheDocument()
   })
 })
