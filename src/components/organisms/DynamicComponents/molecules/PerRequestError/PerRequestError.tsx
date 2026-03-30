@@ -1,4 +1,5 @@
 import React, { FC } from 'react'
+import { Alert } from 'antd'
 import { AxiosError } from 'axios'
 
 type TPerRequestErrorProps = {
@@ -7,12 +8,8 @@ type TPerRequestErrorProps = {
 
 export const PerRequestError: FC<TPerRequestErrorProps> = ({ error }) => {
   if (!error) return null
-  return (
-    <div>
-      <h4>Errors:</h4>
-      <ul>
-        <li>{typeof error === 'string' ? error : error.message}</li>
-      </ul>
-    </div>
-  )
+
+  const message = typeof error === 'string' ? error : error.message
+
+  return <Alert type="error" message={message} showIcon />
 }
