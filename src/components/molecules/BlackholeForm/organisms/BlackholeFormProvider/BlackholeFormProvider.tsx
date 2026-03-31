@@ -40,6 +40,7 @@ type TCustomFormsOverridesMappingResponse = {
 export type TBlackholeFormProviderProps = {
   theme: 'light' | 'dark'
   cluster: string
+  partsOfUrl: string[]
   urlParams: TUrlParams
   urlParamsForPermissions: {
     apiGroup?: string
@@ -82,6 +83,7 @@ export type TBlackholeFormProviderProps = {
 export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
   theme,
   cluster,
+  partsOfUrl,
   urlParams,
   urlParamsForPermissions,
   data,
@@ -208,6 +210,7 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
     const payload: TPrepareFormReq = {
       data,
       cluster,
+      partsOfUrl,
       customizationId: resolvedCustomizationId,
       customizationIdPrefill: resolvedCustomizationIdPrefill,
     }
@@ -249,6 +252,7 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
       })
   }, [
     cluster,
+    partsOfUrl,
     data,
     customizationId,
     resolvedCustomizationId,

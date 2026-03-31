@@ -31,6 +31,7 @@ jest.mock('../../../YamlEditorSingleton', () => ({
 const baseProps = {
   theme: 'light' as const,
   cluster: 'c1',
+  partsOfUrl: ['', 'openapi-ui', 'c1', 'ns1'],
   forcingCustomization: {
     baseApiGroup: 'front.in-cloud.io',
     baseApiVersion: 'v1alpha1',
@@ -87,6 +88,7 @@ describe('BlackholeFormProvider', () => {
     expect(screen.getByText(/kind:Deployment/)).toBeInTheDocument()
     expect(mockPost).toHaveBeenCalledWith(`/api/clusters/c1/openapi-bff/forms/formPrepare/prepareFormProps`, {
       cluster: 'c1',
+      partsOfUrl: ['', 'openapi-ui', 'c1', 'ns1'],
       data: baseProps.data,
       customizationId: undefined,
       customizationIdPrefill: undefined,
@@ -136,6 +138,7 @@ describe('BlackholeFormProvider', () => {
 
     expect(mockPost).toHaveBeenCalledWith(`/api/clusters/c1/openapi-bff/forms/formPrepare/prepareFormProps`, {
       cluster: 'c1',
+      partsOfUrl: ['', 'openapi-ui', 'c1', 'ns1'],
       data: baseProps.data,
       customizationId: 'custom-a',
       customizationIdPrefill: 'custom-a',
@@ -191,6 +194,7 @@ describe('BlackholeFormProvider', () => {
 
     expect(mockPost).toHaveBeenCalledWith(`/api/clusters/c1/openapi-bff/forms/formPrepare/prepareFormProps`, {
       cluster: 'c1',
+      partsOfUrl: ['', 'openapi-ui', 'c1', 'ns1'],
       data: baseProps.data,
       customizationId: 'mapped-a',
       customizationIdPrefill: 'fallback-a',
