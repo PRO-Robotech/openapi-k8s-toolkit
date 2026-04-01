@@ -31,6 +31,7 @@ jest.mock('../../../YamlEditorSingleton', () => ({
 const baseProps = {
   theme: 'light' as const,
   cluster: 'c1',
+  partsOfUrl: ['', 'openapi-ui', 'c1', 'ns1'],
   forcingCustomization: {
     baseApiGroup: 'front.in-cloud.io',
     baseApiVersion: 'v1alpha1',
@@ -50,6 +51,7 @@ const baseProps = {
 describe('BlackholeFormProvider', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockPost.mockReset()
     mockUseK8sSmartResource.mockImplementation(({ plural }: { plural: string }) => {
       if (plural === 'customformsoverrides' || plural === 'customformsprefills') {
         return {
@@ -87,6 +89,7 @@ describe('BlackholeFormProvider', () => {
     expect(screen.getByText(/kind:Deployment/)).toBeInTheDocument()
     expect(mockPost).toHaveBeenCalledWith(`/api/clusters/c1/openapi-bff/forms/formPrepare/prepareFormProps`, {
       cluster: 'c1',
+      partsOfUrl: ['', 'openapi-ui', 'c1', 'ns1'],
       data: baseProps.data,
       customizationId: undefined,
       customizationIdPrefill: undefined,
@@ -136,6 +139,7 @@ describe('BlackholeFormProvider', () => {
 
     expect(mockPost).toHaveBeenCalledWith(`/api/clusters/c1/openapi-bff/forms/formPrepare/prepareFormProps`, {
       cluster: 'c1',
+      partsOfUrl: ['', 'openapi-ui', 'c1', 'ns1'],
       data: baseProps.data,
       customizationId: 'custom-a',
       customizationIdPrefill: 'custom-a',
@@ -191,6 +195,7 @@ describe('BlackholeFormProvider', () => {
 
     expect(mockPost).toHaveBeenCalledWith(`/api/clusters/c1/openapi-bff/forms/formPrepare/prepareFormProps`, {
       cluster: 'c1',
+      partsOfUrl: ['', 'openapi-ui', 'c1', 'ns1'],
       data: baseProps.data,
       customizationId: 'mapped-a',
       customizationIdPrefill: 'fallback-a',
@@ -248,6 +253,125 @@ describe('BlackholeFormProvider', () => {
     render(<BlackholeFormProvider {...(baseProps as any)} />)
 
     expect(await screen.findByText('network down')).toBeInTheDocument()
+  })
+
+  test('re-applies backend mode when partsOfUrl changes without remount', async () => {
+    mockPost
+      .mockResolvedValueOnce({
+        data: {
+          result: 'success',
+          properties: { spec: { type: 'object' } },
+          required: ['spec'],
+          expandedPaths: [],
+          persistedPaths: [],
+          kind: 'Deployment',
+          isNamespaced: true,
+          forceViewMode: 'Manual',
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          result: 'success',
+          properties: { spec: { type: 'object' } },
+          required: ['spec'],
+          expandedPaths: [],
+          persistedPaths: [],
+          kind: 'Deployment',
+          isNamespaced: true,
+          forceViewMode: 'OpenAPI',
+        },
+      })
+
+    const Harness = ({ partsOfUrl }: { partsOfUrl: string[] }) => {
+      const [current, setCurrent] = React.useState<'OpenAPI' | 'Manual'>('OpenAPI')
+      const modeDataRef = React.useRef({
+        current,
+        onChange: (value: string) => setCurrent(value as 'OpenAPI' | 'Manual'),
+        onDisabled: jest.fn(),
+      })
+
+      modeDataRef.current.current = current
+
+      return <BlackholeFormProvider {...(baseProps as any)} partsOfUrl={partsOfUrl} modeData={modeDataRef.current} />
+    }
+
+    const { rerender } = render(<Harness partsOfUrl={['', 'openapi-ui', 'c1', 'ns1']} />)
+
+    expect(await screen.findByTestId('yaml-editor-singleton')).toBeInTheDocument()
+
+    rerender(<Harness partsOfUrl={['', 'openapi-ui', 'c1', 'ns2']} />)
+
+    expect(await screen.findByTestId('blackhole-form')).toBeInTheDocument()
+  })
+
+  test('ignores stale responses after partsOfUrl changes', async () => {
+    type TDeferred = {
+      promise: Promise<unknown>
+      resolve: (value: unknown) => void
+    }
+
+    const createDeferred = (): TDeferred => {
+      let resolve!: (value: unknown) => void
+      const promise = new Promise(res => {
+        resolve = res
+      })
+
+      return { promise, resolve }
+    }
+
+    const first = createDeferred()
+    const second = createDeferred()
+
+    mockPost.mockImplementationOnce(() => first.promise).mockImplementationOnce(() => second.promise)
+
+    const Harness = ({ partsOfUrl }: { partsOfUrl: string[] }) => {
+      const [current, setCurrent] = React.useState<'OpenAPI' | 'Manual'>('OpenAPI')
+      const modeDataRef = React.useRef({
+        current,
+        onChange: (value: string) => setCurrent(value as 'OpenAPI' | 'Manual'),
+        onDisabled: jest.fn(),
+      })
+
+      modeDataRef.current.current = current
+
+      return <BlackholeFormProvider {...(baseProps as any)} partsOfUrl={partsOfUrl} modeData={modeDataRef.current} />
+    }
+
+    const { rerender } = render(<Harness partsOfUrl={['', 'openapi-ui', 'c1', 'ns1']} />)
+
+    rerender(<Harness partsOfUrl={['', 'openapi-ui', 'c1', 'ns2']} />)
+
+    second.resolve({
+      data: {
+        result: 'success',
+        properties: { spec: { type: 'object' } },
+        required: ['spec'],
+        expandedPaths: [],
+        persistedPaths: [],
+        kind: 'Deployment',
+        isNamespaced: true,
+        forceViewMode: 'OpenAPI',
+      },
+    })
+
+    expect(await screen.findByTestId('blackhole-form')).toBeInTheDocument()
+
+    first.resolve({
+      data: {
+        result: 'success',
+        properties: { spec: { type: 'object' } },
+        required: ['spec'],
+        expandedPaths: [],
+        persistedPaths: [],
+        kind: 'Deployment',
+        isNamespaced: true,
+        forceViewMode: 'Manual',
+      },
+    })
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('yaml-editor-singleton')).not.toBeInTheDocument()
+    })
   })
 
   test('cluster empty: skips prepareFormProps request', async () => {

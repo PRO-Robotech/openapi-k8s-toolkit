@@ -40,6 +40,7 @@ type TCustomFormsOverridesMappingResponse = {
 export type TBlackholeFormProviderProps = {
   theme: 'light' | 'dark'
   cluster: string
+  partsOfUrl: string[]
   urlParams: TUrlParams
   urlParamsForPermissions: {
     apiGroup?: string
@@ -82,6 +83,7 @@ export type TBlackholeFormProviderProps = {
 export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
   theme,
   cluster,
+  partsOfUrl,
   urlParams,
   urlParamsForPermissions,
   data,
@@ -112,6 +114,7 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
   const [isNamespaced, setIsNamespaced] = useState<boolean>(false)
   const [isError, setIsError] = useState<false | string | ReactNode>(false)
   const hasAppliedBackendModeRef = useRef(false)
+  const requestIdRef = useRef(0)
 
   const { data: overridesData, isLoading: overridesLoading } = useK8sSmartResource<TCustomFormsOverridesResponse>({
     cluster,
@@ -199,21 +202,30 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
   useEffect(() => {
     if (!cluster) {
       setIsLoading(false)
-      return
+      return undefined
     }
-    if (!isResolutionReady) return
-    if (customizationId && (!resolvedCustomizationId || !resolvedCustomizationIdPrefill)) return
+    if (!isResolutionReady) return undefined
+    if (customizationId && (!resolvedCustomizationId || !resolvedCustomizationIdPrefill)) return undefined
 
+    requestIdRef.current += 1
+    const requestId = requestIdRef.current
+    let isActive = true
+
+    hasAppliedBackendModeRef.current = false
+    setIsNamespaced(false)
     setIsLoading(true)
     const payload: TPrepareFormReq = {
       data,
       cluster,
+      partsOfUrl,
       customizationId: resolvedCustomizationId,
       customizationIdPrefill: resolvedCustomizationIdPrefill,
     }
     axios
       .post<TPrepareFormRes>(`/api/clusters/${cluster}/openapi-bff/forms/formPrepare/prepareFormProps`, payload)
       .then(({ data }) => {
+        if (!isActive || requestId !== requestIdRef.current) return
+
         if (data.isNamespaced) {
           setIsNamespaced(true)
         }
@@ -242,13 +254,20 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
         }
       })
       .catch((e: AxiosError) => {
+        if (!isActive || requestId !== requestIdRef.current) return
         setIsError(e.message)
       })
       .finally(() => {
+        if (!isActive || requestId !== requestIdRef.current) return
         setIsLoading(false)
       })
+
+    return () => {
+      isActive = false
+    }
   }, [
     cluster,
+    partsOfUrl,
     data,
     customizationId,
     resolvedCustomizationId,
