@@ -43,7 +43,7 @@ export type TAntdIconsProps = {
 
 export type TAntdResultProps = {
   id: number | string
-  reqIndex?: number
+  reqIndex?: number | number[]
   /** Dot-separated path to the array in the response to check for emptiness.
    *  Default: ".items" (K8s list response format). Can be changed for non-K8s
    *  APIs, e.g. ".data.results" */
