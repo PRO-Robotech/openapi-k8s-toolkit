@@ -21,6 +21,7 @@ import {
   getVolumeTypeMetas,
   isLinkableVolumeTypeKey,
   isPendingLinkSegment,
+  TLinkableVolumeTypeKey,
   TVolumeTypeMeta,
 } from './utils'
 
@@ -184,78 +185,64 @@ export const Volumes: FC<{ data: TDynamicComponentsAppTypeMap['Volumes']; childr
 
   const linkableNamespace = dataSourceWithoutHref.find(({ typeKey }) => isLinkableVolumeTypeKey(typeKey))?.namespace
 
-  const configMapFactoryKey =
-    hasLinkableVolumeTypes && !isNavigationLoading && !isNavigationError
-      ? getVolumeFactoryKey({
-          apiGroup: undefined,
-          apiVersion: 'v1',
-          resource: 'configmaps',
-          namespace: linkableNamespace,
-          baseFactoriesMapping,
-          baseFactoryNamespacedAPIKey,
-          baseFactoryClusterSceopedAPIKey,
-          baseFactoryNamespacedBuiltinKey,
-          baseFactoryClusterSceopedBuiltinKey,
-        })
-      : undefined
+  const baseFactoryKeyParams = {
+    apiGroup: undefined,
+    apiVersion: 'v1',
+    namespace: linkableNamespace,
+    baseFactoriesMapping,
+    baseFactoryNamespacedAPIKey,
+    baseFactoryClusterSceopedAPIKey,
+    baseFactoryNamespacedBuiltinKey,
+    baseFactoryClusterSceopedBuiltinKey,
+  }
 
-  const secretFactoryKey =
-    hasLinkableVolumeTypes && !isNavigationLoading && !isNavigationError
-      ? getVolumeFactoryKey({
-          apiGroup: undefined,
-          apiVersion: 'v1',
-          resource: 'secrets',
-          namespace: linkableNamespace,
-          baseFactoriesMapping,
-          baseFactoryNamespacedAPIKey,
-          baseFactoryClusterSceopedAPIKey,
-          baseFactoryNamespacedBuiltinKey,
-          baseFactoryClusterSceopedBuiltinKey,
-        })
-      : undefined
+  const canResolveLinkableKeys = hasLinkableVolumeTypes && !isNavigationLoading && !isNavigationError
+
+  const configMapFactoryKey = canResolveLinkableKeys
+    ? getVolumeFactoryKey({ ...baseFactoryKeyParams, resource: 'configmaps' })
+    : undefined
+
+  const secretFactoryKey = canResolveLinkableKeys
+    ? getVolumeFactoryKey({ ...baseFactoryKeyParams, resource: 'secrets' })
+    : undefined
+
+  const pvcFactoryKey = canResolveLinkableKeys
+    ? getVolumeFactoryKey({ ...baseFactoryKeyParams, resource: 'persistentvolumeclaims' })
+    : undefined
 
   const hasPendingLinkPrefixInputs =
     hasLinkableVolumeTypes &&
     (isPendingLinkSegment(clusterPrepared) ||
       isPendingLinkSegment(linkableNamespace) ||
       isPendingLinkSegment(configMapFactoryKey) ||
-      isPendingLinkSegment(secretFactoryKey))
+      isPendingLinkSegment(secretFactoryKey) ||
+      isPendingLinkSegment(pvcFactoryKey))
 
   const isLinkPrefixLoading =
     hasLinkableVolumeTypes && !ownReqFailed && !isNavigationError && (isNavigationLoading || hasPendingLinkPrefixInputs)
 
-  const resourceLinkPrefixes = useMemo<Partial<Record<'configMap' | 'secret', string>> | undefined>(() => {
+  const resourceLinkPrefixes = useMemo<Partial<Record<TLinkableVolumeTypeKey, string>> | undefined>(() => {
     if (!hasLinkableVolumeTypes || isLinkPrefixLoading) {
       return undefined
     }
 
+    const baseLinkPrefixParams = {
+      baseprefix,
+      cluster: clusterPrepared,
+      namespace: linkableNamespace,
+      apiGroupVersion: 'v1',
+      baseFactoryNamespacedAPIKey,
+      baseFactoryClusterSceopedAPIKey,
+      baseFactoryNamespacedBuiltinKey,
+      baseFactoryClusterSceopedBuiltinKey,
+      baseFactoriesMapping,
+    }
+
     return {
-      configMap:
-        getVolumeResourceLinkPrefix({
-          baseprefix,
-          cluster: clusterPrepared,
-          namespace: linkableNamespace,
-          apiGroupVersion: 'v1',
-          pluralName: 'configmaps',
-          baseFactoryNamespacedAPIKey,
-          baseFactoryClusterSceopedAPIKey,
-          baseFactoryNamespacedBuiltinKey,
-          baseFactoryClusterSceopedBuiltinKey,
-          baseFactoriesMapping,
-        }) || '',
-      secret:
-        getVolumeResourceLinkPrefix({
-          baseprefix,
-          cluster: clusterPrepared,
-          namespace: linkableNamespace,
-          apiGroupVersion: 'v1',
-          pluralName: 'secrets',
-          baseFactoryNamespacedAPIKey,
-          baseFactoryClusterSceopedAPIKey,
-          baseFactoryNamespacedBuiltinKey,
-          baseFactoryClusterSceopedBuiltinKey,
-          baseFactoriesMapping,
-        }) || '',
+      configMap: getVolumeResourceLinkPrefix({ ...baseLinkPrefixParams, pluralName: 'configmaps' }) || '',
+      secret: getVolumeResourceLinkPrefix({ ...baseLinkPrefixParams, pluralName: 'secrets' }) || '',
+      persistentVolumeClaim:
+        getVolumeResourceLinkPrefix({ ...baseLinkPrefixParams, pluralName: 'persistentvolumeclaims' }) || '',
     }
   }, [
     hasLinkableVolumeTypes,
