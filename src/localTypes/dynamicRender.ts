@@ -43,6 +43,9 @@ export type TFactoryDataK8s<T extends TItemTypeMap> = {
   urlsToFetch: (string | TUseK8sSmartResourceParams<any>)[]
   withScrollableMainContentCard?: boolean
   effectiveReqIndexes?: number[]
+  /** Per-request itemsPath for effectiveReqIndexes empty-check.
+   *  String → same path for all; string[] → positional mapping per reqIndex. */
+  effectiveItemsPath?: string | string[]
   data: TRenderableItem<T>[]
   forcedSidebarId?: string
   sidebarTags?: string[]

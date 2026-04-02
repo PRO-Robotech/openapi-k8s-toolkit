@@ -5,6 +5,7 @@ import {
   extractErrorMessage,
   httpStatusToResultStatus,
   getDefaultTitle,
+  resolveItemsPath,
   checkReqIndex,
   findWorstError,
   STATUS_SEVERITY,
@@ -239,6 +240,37 @@ describe('getDefaultTitle', () => {
   })
 })
 
+// ── resolveItemsPath ─────────────────────────────────────────────
+
+describe('resolveItemsPath', () => {
+  it('returns the string as-is when itemsPath is a string', () => {
+    expect(resolveItemsPath('.data.results', 0)).toBe('.data.results')
+    expect(resolveItemsPath('.data.results', 1)).toBe('.data.results')
+  })
+
+  it('returns ".items" when itemsPath is undefined', () => {
+    expect(resolveItemsPath(undefined, 0)).toBe('.items')
+    expect(resolveItemsPath(undefined, 2)).toBe('.items')
+  })
+
+  it('returns the element at the given index when itemsPath is an array', () => {
+    const paths = ['.items', '.data.results', '.rows']
+    expect(resolveItemsPath(paths, 0)).toBe('.items')
+    expect(resolveItemsPath(paths, 1)).toBe('.data.results')
+    expect(resolveItemsPath(paths, 2)).toBe('.rows')
+  })
+
+  it('falls back to ".items" when array index is out of bounds', () => {
+    const paths = ['.items']
+    expect(resolveItemsPath(paths, 1)).toBe('.items')
+    expect(resolveItemsPath(paths, 5)).toBe('.items')
+  })
+
+  it('falls back to ".items" for an empty array', () => {
+    expect(resolveItemsPath([], 0)).toBe('.items')
+  })
+})
+
 // ── checkReqIndex ────────────────────────────────────────────────
 
 describe('checkReqIndex', () => {
@@ -399,5 +431,61 @@ describe('findWorstError', () => {
     const result = findWorstError([0], {}, getError, true, '.items')
 
     expect(result).toMatchObject({ resultStatus: '403', message: 'Forbidden' })
+  })
+
+  it('uses per-request itemsPath when given an array', () => {
+    const data = {
+      req0: { items: [] }, // empty at .items
+      req1: { data: { results: [{ id: 1 }] } }, // has data at .data.results
+    }
+
+    // With a single path ".items", req1 would also be checked at ".items" (missing → no empty detection)
+    // With per-request paths, req0 checks ".items" (empty → 404), req1 checks ".data.results" (has data → OK)
+    const result = findWorstError([0, 1], data, () => null, true, ['.items', '.data.results'])
+
+    expect(result?.resultStatus).toBe('404')
+    expect(result?.message).toBe('The requested resource was not found')
+  })
+
+  it('detects empty at different paths per request', () => {
+    const data = {
+      req0: { items: [{ id: 1 }] }, // has data at .items
+      req1: { data: { results: [] } }, // empty at .data.results
+    }
+
+    const result = findWorstError([0, 1], data, () => null, true, ['.items', '.data.results'])
+
+    expect(result?.resultStatus).toBe('404')
+  })
+
+  it('returns null when all requests have data at their respective paths', () => {
+    const data = {
+      req0: { items: [{ id: 1 }] },
+      req1: { data: { results: [{ id: 2 }] } },
+    }
+
+    const result = findWorstError([0, 1], data, () => null, true, ['.items', '.data.results'])
+
+    expect(result).toBeNull()
+  })
+
+  it('falls back to ".items" for missing array positions', () => {
+    const data = {
+      req0: { items: [] }, // empty at .items
+      req1: { items: [{ id: 1 }] }, // has data at .items (fallback)
+    }
+
+    // Only one path provided — req1 falls back to default ".items"
+    const result = findWorstError([0, 1], data, () => null, true, ['.items'])
+
+    expect(result?.resultStatus).toBe('404')
+  })
+
+  it('accepts undefined itemsPath (defaults to ".items" for all)', () => {
+    const data = { req0: { items: [] } }
+
+    const result = findWorstError([0], data, () => null, true, undefined)
+
+    expect(result?.resultStatus).toBe('404')
   })
 })

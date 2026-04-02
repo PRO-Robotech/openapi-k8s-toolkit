@@ -5,7 +5,7 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
-import { checkReqIndex, findWorstError, getDefaultTitle } from './utils'
+import { checkReqIndex, findWorstError, getDefaultTitle, resolveItemsPath } from './utils'
 
 export const AntdResult: FC<{
   data: TDynamicComponentsAppTypeMap['antdResult']
@@ -24,10 +24,10 @@ export const AntdResult: FC<{
   }, {})
 
   const shouldCheckEmpty = data.checkEmpty !== false
-  const itemsPath = data.itemsPath ?? '.items'
 
   // Auto-detect mode: reqIndex provided → check errors for that request (or requests)
   if (typeof data.reqIndex === 'number') {
+    const itemsPath = resolveItemsPath(data.itemsPath, 0)
     const result = checkReqIndex(data.reqIndex, multiQueryData, getErrorForReq, shouldCheckEmpty, itemsPath)
 
     if (!result) {
@@ -42,7 +42,7 @@ export const AntdResult: FC<{
   }
 
   if (Array.isArray(data.reqIndex)) {
-    const worst = findWorstError(data.reqIndex, multiQueryData, getErrorForReq, shouldCheckEmpty, itemsPath)
+    const worst = findWorstError(data.reqIndex, multiQueryData, getErrorForReq, shouldCheckEmpty, data.itemsPath)
 
     if (!worst) {
       return children ?? null

@@ -31,6 +31,7 @@ export const DynamicRendererWithProviders = <T extends TItemTypeMap>(
     nodeTerminalDefaultProfile?: string
     disableEventBubbling?: boolean
     effectiveReqIndexes?: number[]
+    effectiveItemsPath?: string | string[]
   },
 ): ReactElement => {
   const location = useLocation()
@@ -41,6 +42,7 @@ export const DynamicRendererWithProviders = <T extends TItemTypeMap>(
     nodeTerminalDefaultProfile,
     disableEventBubbling,
     effectiveReqIndexes,
+    effectiveItemsPath,
   } = props
 
   const directUrls = urlsToFetch.filter(el => typeof el === 'string') as string[]
@@ -93,7 +95,7 @@ export const DynamicRendererWithProviders = <T extends TItemTypeMap>(
             >
               <ErrorBoundaryWithDataReset>
                 {effectiveReqIndexes && effectiveReqIndexes.length > 0 ? (
-                  <EffectiveAntdResultWrapper effectiveReqIndexes={effectiveReqIndexes}>
+                  <EffectiveAntdResultWrapper effectiveReqIndexes={effectiveReqIndexes} itemsPath={effectiveItemsPath}>
                     <DynamicRenderer {...props} />
                   </EffectiveAntdResultWrapper>
                 ) : (

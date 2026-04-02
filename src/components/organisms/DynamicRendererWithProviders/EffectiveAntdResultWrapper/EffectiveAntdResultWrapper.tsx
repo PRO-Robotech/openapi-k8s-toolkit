@@ -3,9 +3,14 @@ import { AntdResult } from 'components/organisms/DynamicComponents/molecules/Ant
 
 type TEffectiveAntdResultWrapperProps = {
   effectiveReqIndexes: number[]
+  itemsPath?: string | string[]
   children: ReactNode
 }
 
-export const EffectiveAntdResultWrapper: FC<TEffectiveAntdResultWrapperProps> = ({ effectiveReqIndexes, children }) => (
-  <AntdResult data={{ id: 'effective-antd-result', reqIndex: effectiveReqIndexes }}>{children}</AntdResult>
+export const EffectiveAntdResultWrapper: FC<TEffectiveAntdResultWrapperProps> = ({
+  effectiveReqIndexes,
+  itemsPath,
+  children,
+}) => (
+  <AntdResult data={{ id: 'effective-antd-result', reqIndex: effectiveReqIndexes, itemsPath }}>{children}</AntdResult>
 )

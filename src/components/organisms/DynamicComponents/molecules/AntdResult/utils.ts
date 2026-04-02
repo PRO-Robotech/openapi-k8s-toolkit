@@ -75,6 +75,17 @@ export const getDefaultTitle = (status: string | number): string => {
   return 'Error'
 }
 
+// ── Per-request path resolution ─────────────────────────────────
+
+/** Resolve the itemsPath for a specific position in the reqIndex array.
+ *  - string → same path for all requests
+ *  - string[] → positional mapping (itemsPath[index] for reqIndex at that position)
+ *  - undefined → default ".items" */
+export const resolveItemsPath = (itemsPath: string | string[] | undefined, index: number): string => {
+  if (Array.isArray(itemsPath)) return itemsPath[index] ?? '.items'
+  return itemsPath ?? '.items'
+}
+
 // ── Per-request error checking ──────────────────────────────────
 
 /** Check a single reqIndex for errors/empty state. Returns null if OK. */
@@ -98,19 +109,24 @@ export const checkReqIndex = (
   return { resultStatus, severity, message }
 }
 
-/** Find the worst error across an array of reqIndexes. Returns null if all OK. */
+/** Find the worst error across an array of reqIndexes. Returns null if all OK.
+ *  itemsPath can be a string (same for all) or string[] (per-position). */
 export const findWorstError = (
   reqIndexes: number[],
   multiQueryData: Record<string, unknown>,
   getErrorForReq: (i: number) => unknown,
   shouldCheckEmpty: boolean,
-  itemsPath: string,
+  itemsPath: string | string[] | undefined,
 ): { resultStatus: TResultStatus; message: string } | null =>
-  reqIndexes.reduce<{ resultStatus: TResultStatus; message: string; severity: number } | null>((worst, reqIndex) => {
-    const result = checkReqIndex(reqIndex, multiQueryData, getErrorForReq, shouldCheckEmpty, itemsPath)
-    if (!result) return worst
-    if (!worst || result.severity > worst.severity) {
-      return { resultStatus: result.resultStatus, message: result.message, severity: result.severity }
-    }
-    return worst
-  }, null)
+  reqIndexes.reduce<{ resultStatus: TResultStatus; message: string; severity: number } | null>(
+    (worst, reqIndex, index) => {
+      const resolved = resolveItemsPath(itemsPath, index)
+      const result = checkReqIndex(reqIndex, multiQueryData, getErrorForReq, shouldCheckEmpty, resolved)
+      if (!result) return worst
+      if (!worst || result.severity > worst.severity) {
+        return { resultStatus: result.resultStatus, message: result.message, severity: result.severity }
+      }
+      return worst
+    },
+    null,
+  )

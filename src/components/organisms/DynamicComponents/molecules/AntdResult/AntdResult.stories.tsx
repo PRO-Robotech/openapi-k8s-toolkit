@@ -27,7 +27,10 @@ const meta: Meta<TArgs> = {
   argTypes: {
     id: { control: 'text', description: 'data.id' },
     reqIndex: { control: 'number', description: 'data.reqIndex — auto-detect error from this request index' },
-    checkEmpty: { control: 'boolean', description: 'data.checkEmpty — check if array at itemsPath is empty and show 404 (default: true)' },
+    checkEmpty: {
+      control: 'boolean',
+      description: 'data.checkEmpty — check if array at itemsPath is empty and show 404 (default: true)',
+    },
     status: {
       control: { type: 'select' },
       options: [undefined, 'success', 'error', 'info', 'warning', '403', '404', '500'],

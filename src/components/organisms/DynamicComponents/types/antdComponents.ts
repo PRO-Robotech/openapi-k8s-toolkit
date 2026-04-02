@@ -46,8 +46,10 @@ export type TAntdResultProps = {
   reqIndex?: number | number[]
   /** Dot-separated path to the array in the response to check for emptiness.
    *  Default: ".items" (K8s list response format). Can be changed for non-K8s
-   *  APIs, e.g. ".data.results" */
-  itemsPath?: string
+   *  APIs, e.g. ".data.results".
+   *  When reqIndex is an array, itemsPath can also be an array — each position
+   *  maps to the corresponding reqIndex (e.g. reqIndex: [0,1], itemsPath: [".items", ".data.results"]). */
+  itemsPath?: string | string[]
   /** Whether to check if the array at `itemsPath` is empty and show 404 when
    *  it is. Default: true — antdResult reacts to empty responses by default.
    *  Set to false to explicitly disable this check. */
