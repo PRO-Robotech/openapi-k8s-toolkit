@@ -291,8 +291,10 @@ export const buildCustomColumns = (containerFactoryKey?: string): TAdditionalPri
   },
 })
 
-export const isLinkableVolumeTypeKey = (typeKey: string): typeKey is 'configMap' | 'secret' =>
-  typeKey === 'configMap' || typeKey === 'secret'
+export type TLinkableVolumeTypeKey = 'configMap' | 'secret' | 'persistentVolumeClaim'
+
+export const isLinkableVolumeTypeKey = (typeKey: string): typeKey is TLinkableVolumeTypeKey =>
+  typeKey === 'configMap' || typeKey === 'secret' || typeKey === 'persistentVolumeClaim'
 
 export const isPendingLinkSegment = (value?: string): boolean =>
   !value || value.includes('...') || value.includes('{') || value.includes('}')
@@ -384,7 +386,7 @@ export const getVolumeTypeHref = ({
 }: {
   typeKey: string
   typeName: string
-  resourceLinkPrefixes?: Partial<Record<'configMap' | 'secret', string>>
+  resourceLinkPrefixes?: Partial<Record<TLinkableVolumeTypeKey, string>>
 }): string => {
   if (!isLinkableVolumeTypeKey(typeKey)) {
     return ''

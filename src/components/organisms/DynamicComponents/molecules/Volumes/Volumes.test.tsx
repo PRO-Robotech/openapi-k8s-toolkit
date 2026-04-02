@@ -125,6 +125,7 @@ const multiQueryData = {
             { name: 'sec-vol', mountPath: '/etc/secret', readOnly: true },
             { name: 'cache-vol', mountPath: '/cache' },
             { name: 'projected-vol', mountPath: '/projected' },
+            { name: 'pvc-vol', mountPath: '/data' },
           ],
         },
       ],
@@ -138,6 +139,7 @@ const multiQueryData = {
             sources: [{ configMap: { name: 'projected-cm' } }, { secret: { name: 'projected-secret' } }],
           },
         },
+        { name: 'pvc-vol', persistentVolumeClaim: { claimName: 'my-pvc' } },
       ],
     },
   },
@@ -201,6 +203,13 @@ describe('Volumes', () => {
           typeName: 'sec-one',
           namespace: 'forced-ns',
           typeHref: '/openapi-ui/cluster-a/forced-ns/factory/secret-details/v1/secrets/sec-one',
+        }),
+        expect.objectContaining({
+          typeKey: 'persistentVolumeClaim',
+          typeName: 'my-pvc',
+          namespace: 'forced-ns',
+          typeHref:
+            '/openapi-ui/cluster-a/forced-ns/factory/factory-namespaced-builtin/v1/persistentvolumeclaims/my-pvc',
         }),
       ]),
     )
@@ -281,6 +290,12 @@ describe('Volumes', () => {
           typeKey: 'secret',
           typeName: 'sec-one',
           typeHref: '/openapi-ui/cluster-a/forced-ns/factory/factory-namespaced-builtin/v1/secrets/sec-one',
+        }),
+        expect.objectContaining({
+          typeKey: 'persistentVolumeClaim',
+          typeName: 'my-pvc',
+          typeHref:
+            '/openapi-ui/cluster-a/forced-ns/factory/factory-namespaced-builtin/v1/persistentvolumeclaims/my-pvc',
         }),
       ]),
     )
