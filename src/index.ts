@@ -3,7 +3,14 @@ export * from './utils'
 
 /* api reqs */
 export { getClusterList } from './api/getClusterList'
-export { createNewEntry, updateEntry, deleteEntry } from './api/forms'
+export {
+  createNewEntry,
+  updateEntry,
+  deleteEntry,
+  patchEntryWithReplaceOp,
+  patchEntryWithMergePatch,
+  patchEntryWithDeleteOp,
+} from './api/forms'
 export { getApiResources, getApiResourceSingle } from './api/getApiResource'
 export { getBuiltinResources, getBuiltinResourceSingle } from './api/getBuiltinResource'
 export { getCrdResources, getCrdResourceSingle } from './api/getCrdResource'
