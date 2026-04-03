@@ -1,4 +1,15 @@
-import { getValueByPath, isEmptyAtPath, extractHttpStatus, extractErrorMessage } from './utils'
+import {
+  getValueByPath,
+  isEmptyAtPath,
+  extractHttpStatus,
+  extractErrorMessage,
+  httpStatusToResultStatus,
+  getDefaultTitle,
+  resolveItemsPath,
+  checkReqIndex,
+  findWorstError,
+  STATUS_SEVERITY,
+} from './utils'
 
 // ── getValueByPath ───────────────────────────────────────────
 
@@ -173,5 +184,308 @@ describe('extractErrorMessage', () => {
   it('handles null/undefined', () => {
     expect(extractErrorMessage(null)).toBe('null')
     expect(extractErrorMessage(undefined)).toBe('undefined')
+  })
+})
+
+// ── httpStatusToResultStatus ─────────────────────────────────────
+
+describe('httpStatusToResultStatus', () => {
+  it('maps 403 → "403"', () => {
+    expect(httpStatusToResultStatus(403)).toBe('403')
+  })
+
+  it('maps 404 → "404"', () => {
+    expect(httpStatusToResultStatus(404)).toBe('404')
+  })
+
+  it('maps 500 → "500"', () => {
+    expect(httpStatusToResultStatus(500)).toBe('500')
+  })
+
+  it('maps 502, 503 → "500" (any 5xx)', () => {
+    expect(httpStatusToResultStatus(502)).toBe('500')
+    expect(httpStatusToResultStatus(503)).toBe('500')
+  })
+
+  it('maps undefined → "error"', () => {
+    expect(httpStatusToResultStatus(undefined)).toBe('error')
+  })
+
+  it('maps unrecognized status codes → "error"', () => {
+    expect(httpStatusToResultStatus(400)).toBe('error')
+    expect(httpStatusToResultStatus(401)).toBe('error')
+    expect(httpStatusToResultStatus(200)).toBe('error')
+  })
+})
+
+// ── getDefaultTitle ──────────────────────────────────────────────
+
+describe('getDefaultTitle', () => {
+  it('returns "Access Denied" for "403"', () => {
+    expect(getDefaultTitle('403')).toBe('Access Denied')
+  })
+
+  it('returns "Not Found" for "404"', () => {
+    expect(getDefaultTitle('404')).toBe('Not Found')
+  })
+
+  it('returns "Server Error" for "500"', () => {
+    expect(getDefaultTitle('500')).toBe('Server Error')
+  })
+
+  it('returns "Error" for any other status', () => {
+    expect(getDefaultTitle('error')).toBe('Error')
+    expect(getDefaultTitle('info')).toBe('Error')
+    expect(getDefaultTitle('warning')).toBe('Error')
+  })
+})
+
+// ── resolveItemsPath ─────────────────────────────────────────────
+
+describe('resolveItemsPath', () => {
+  it('returns the string as-is when itemsPath is a string', () => {
+    expect(resolveItemsPath('.data.results', 0)).toBe('.data.results')
+    expect(resolveItemsPath('.data.results', 1)).toBe('.data.results')
+  })
+
+  it('returns ".items" when itemsPath is undefined', () => {
+    expect(resolveItemsPath(undefined, 0)).toBe('.items')
+    expect(resolveItemsPath(undefined, 2)).toBe('.items')
+  })
+
+  it('returns the element at the given index when itemsPath is an array', () => {
+    const paths = ['.items', '.data.results', '.rows']
+    expect(resolveItemsPath(paths, 0)).toBe('.items')
+    expect(resolveItemsPath(paths, 1)).toBe('.data.results')
+    expect(resolveItemsPath(paths, 2)).toBe('.rows')
+  })
+
+  it('falls back to ".items" when array index is out of bounds', () => {
+    const paths = ['.items']
+    expect(resolveItemsPath(paths, 1)).toBe('.items')
+    expect(resolveItemsPath(paths, 5)).toBe('.items')
+  })
+
+  it('falls back to ".items" for an empty array', () => {
+    expect(resolveItemsPath([], 0)).toBe('.items')
+  })
+})
+
+// ── checkReqIndex ────────────────────────────────────────────────
+
+describe('checkReqIndex', () => {
+  const noError = () => null
+
+  it('returns null when no error and data has items', () => {
+    const data = { req0: { items: [{ name: 'nginx' }] } }
+    expect(checkReqIndex(0, data, noError, true, '.items')).toBeNull()
+  })
+
+  it('returns null when no error and checkEmpty is false (even if items empty)', () => {
+    const data = { req0: { items: [] } }
+    expect(checkReqIndex(0, data, noError, false, '.items')).toBeNull()
+  })
+
+  it('returns 404 result when items is empty and checkEmpty is true', () => {
+    const data = { req0: { items: [] } }
+    const result = checkReqIndex(0, data, noError, true, '.items')
+
+    expect(result).not.toBeNull()
+    expect(result?.resultStatus).toBe('404')
+    expect(result?.severity).toBe(STATUS_SEVERITY['404'])
+    expect(result?.message).toBe('The requested resource was not found')
+  })
+
+  it('returns error result when getErrorForReq returns an error', () => {
+    const error = Object.assign(new Error('Forbidden'), { response: { status: 403, statusText: 'Forbidden' } })
+    const getError = (i: number) => (i === 0 ? error : null)
+
+    const result = checkReqIndex(0, {}, getError, true, '.items')
+
+    expect(result).not.toBeNull()
+    expect(result?.resultStatus).toBe('403')
+    expect(result?.severity).toBe(STATUS_SEVERITY['403'])
+    expect(result?.message).toBe('Forbidden')
+  })
+
+  it('prioritizes HTTP error over empty check', () => {
+    const error = Object.assign(new Error('Server Error'), { response: { status: 500 } })
+    const getError = (i: number) => (i === 0 ? error : null)
+    const data = { req0: { items: [] } }
+
+    const result = checkReqIndex(0, data, getError, true, '.items')
+
+    expect(result?.resultStatus).toBe('500')
+  })
+
+  it('uses custom itemsPath for empty detection', () => {
+    const data = { req0: { data: { results: [] } } }
+    const result = checkReqIndex(0, data, noError, true, '.data.results')
+
+    expect(result?.resultStatus).toBe('404')
+  })
+
+  it('returns generic error for string error without status code', () => {
+    const getError = (i: number) => (i === 0 ? 'WebSocket connection closed' : null)
+    const result = checkReqIndex(0, {}, getError, true, '.items')
+
+    expect(result?.resultStatus).toBe('error')
+    expect(result?.message).toBe('WebSocket connection closed')
+  })
+
+  it('extracts status from string error with (NNN) suffix', () => {
+    const getError = (i: number) => (i === 0 ? 'Initial list failed (404)' : null)
+    const result = checkReqIndex(0, {}, getError, true, '.items')
+
+    expect(result?.resultStatus).toBe('404')
+    expect(result?.message).toBe('Initial list failed (404)')
+  })
+})
+
+// ── findWorstError ───────────────────────────────────────────────
+
+describe('findWorstError', () => {
+  const noError = () => null
+
+  it('returns null when all requests are OK', () => {
+    const data = {
+      req0: { items: [{ id: 1 }] },
+      req1: { items: [{ id: 2 }] },
+    }
+    expect(findWorstError([0, 1], data, noError, true, '.items')).toBeNull()
+  })
+
+  it('returns null for an empty reqIndexes array', () => {
+    expect(findWorstError([], {}, noError, true, '.items')).toBeNull()
+  })
+
+  it('returns the single error when only one request failed', () => {
+    const error = Object.assign(new Error('Forbidden'), { response: { status: 403, statusText: 'Forbidden' } })
+    const getError = (i: number) => (i === 1 ? error : null)
+    const data = { req0: { items: [{ id: 1 }] } }
+
+    const result = findWorstError([0, 1], data, getError, true, '.items')
+
+    expect(result?.resultStatus).toBe('403')
+    expect(result?.message).toBe('Forbidden')
+  })
+
+  it('picks 500 over 403 (highest severity wins)', () => {
+    const err403 = Object.assign(new Error('Forbidden'), { response: { status: 403, statusText: 'Forbidden' } })
+    const err500 = Object.assign(new Error('Internal Server Error'), { response: { status: 500 } })
+    const getError = (i: number) => {
+      if (i === 0) return err403
+      if (i === 1) return err500
+      return null
+    }
+
+    const result = findWorstError([0, 1], {}, getError, true, '.items')
+
+    expect(result?.resultStatus).toBe('500')
+  })
+
+  it('picks 403 over 404 (empty list)', () => {
+    const err403 = Object.assign(new Error('Forbidden'), { response: { status: 403, statusText: 'Forbidden' } })
+    const getError = (i: number) => (i === 1 ? err403 : null)
+    const data = { req0: { items: [] } }
+
+    const result = findWorstError([0, 1], data, getError, true, '.items')
+
+    expect(result?.resultStatus).toBe('403')
+    expect(result?.message).toBe('Forbidden')
+  })
+
+  it('picks 500 over 404 (empty list)', () => {
+    const err500 = Object.assign(new Error('Server Error'), { response: { status: 500 } })
+    const getError = (i: number) => (i === 1 ? err500 : null)
+    const data = { req0: { items: [] } }
+
+    const result = findWorstError([0, 1], data, getError, true, '.items')
+
+    expect(result?.resultStatus).toBe('500')
+  })
+
+  it('returns 404 (empty) when that is the only issue', () => {
+    const data = { req0: { items: [{ id: 1 }] }, req1: { items: [] } }
+
+    const result = findWorstError([0, 1], data, noError, true, '.items')
+
+    expect(result?.resultStatus).toBe('404')
+    expect(result?.message).toBe('The requested resource was not found')
+  })
+
+  it('ignores requests not in the reqIndexes array', () => {
+    const error = Object.assign(new Error('Not Found'), { response: { status: 404 } })
+    const getError = (i: number) => (i === 1 ? error : null)
+    const data = { req0: { items: [{ id: 1 }] } }
+
+    const result = findWorstError([0], data, getError, true, '.items')
+
+    expect(result).toBeNull()
+  })
+
+  it('returns result with at least resultStatus and message', () => {
+    const error = Object.assign(new Error('Forbidden'), { response: { status: 403 } })
+    const getError = (i: number) => (i === 0 ? error : null)
+
+    const result = findWorstError([0], {}, getError, true, '.items')
+
+    expect(result).toMatchObject({ resultStatus: '403', message: 'Forbidden' })
+  })
+
+  it('uses per-request itemsPath when given an array', () => {
+    const data = {
+      req0: { items: [] }, // empty at .items
+      req1: { data: { results: [{ id: 1 }] } }, // has data at .data.results
+    }
+
+    // With a single path ".items", req1 would also be checked at ".items" (missing → no empty detection)
+    // With per-request paths, req0 checks ".items" (empty → 404), req1 checks ".data.results" (has data → OK)
+    const result = findWorstError([0, 1], data, () => null, true, ['.items', '.data.results'])
+
+    expect(result?.resultStatus).toBe('404')
+    expect(result?.message).toBe('The requested resource was not found')
+  })
+
+  it('detects empty at different paths per request', () => {
+    const data = {
+      req0: { items: [{ id: 1 }] }, // has data at .items
+      req1: { data: { results: [] } }, // empty at .data.results
+    }
+
+    const result = findWorstError([0, 1], data, () => null, true, ['.items', '.data.results'])
+
+    expect(result?.resultStatus).toBe('404')
+  })
+
+  it('returns null when all requests have data at their respective paths', () => {
+    const data = {
+      req0: { items: [{ id: 1 }] },
+      req1: { data: { results: [{ id: 2 }] } },
+    }
+
+    const result = findWorstError([0, 1], data, () => null, true, ['.items', '.data.results'])
+
+    expect(result).toBeNull()
+  })
+
+  it('falls back to ".items" for missing array positions', () => {
+    const data = {
+      req0: { items: [] }, // empty at .items
+      req1: { items: [{ id: 1 }] }, // has data at .items (fallback)
+    }
+
+    // Only one path provided — req1 falls back to default ".items"
+    const result = findWorstError([0, 1], data, () => null, true, ['.items'])
+
+    expect(result?.resultStatus).toBe('404')
+  })
+
+  it('accepts undefined itemsPath (defaults to ".items" for all)', () => {
+    const data = { req0: { items: [] } }
+
+    const result = findWorstError([0], data, () => null, true, undefined)
+
+    expect(result?.resultStatus).toBe('404')
   })
 })

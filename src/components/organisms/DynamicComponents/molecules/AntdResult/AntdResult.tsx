@@ -5,21 +5,7 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
-import { isEmptyAtPath, extractHttpStatus, extractErrorMessage } from './utils'
-
-const httpStatusToResultStatus = (statusCode: number | undefined) => {
-  if (statusCode === 403) return '403' as const
-  if (statusCode === 404) return '404' as const
-  if (statusCode && statusCode >= 500) return '500' as const
-  return 'error' as const
-}
-
-const getDefaultTitle = (status: string | number) => {
-  if (status === '403') return 'Access Denied'
-  if (status === '404') return 'Not Found'
-  if (status === '500') return 'Server Error'
-  return 'Error'
-}
+import { checkReqIndex, findWorstError, getDefaultTitle, resolveItemsPath } from './utils'
 
 export const AntdResult: FC<{
   data: TDynamicComponentsAppTypeMap['antdResult']
@@ -37,26 +23,34 @@ export const AntdResult: FC<{
     return acc
   }, {})
 
-  // Auto-detect mode: reqIndex provided → check errors for that request
+  const shouldCheckEmpty = data.checkEmpty !== false
+
+  // Auto-detect mode: reqIndex provided → check errors for that request (or requests)
   if (typeof data.reqIndex === 'number') {
-    const error = getErrorForReq(data.reqIndex)
+    const itemsPath = resolveItemsPath(data.itemsPath, 0)
+    const result = checkReqIndex(data.reqIndex, multiQueryData, getErrorForReq, shouldCheckEmpty, itemsPath)
 
-    // checkEmpty (default: true): response has empty array at itemsPath → treat as 404
-    const shouldCheckEmpty = data.checkEmpty !== false
-    const itemsPath = data.itemsPath ?? '.items'
-    const emptyListDetected = !error && shouldCheckEmpty && isEmptyAtPath(multiQueryData, data.reqIndex, itemsPath)
-
-    if (!error && !emptyListDetected) {
+    if (!result) {
       return children ?? null
     }
 
-    const httpStatus = emptyListDetected ? 404 : extractHttpStatus(error)
-    const autoStatus = httpStatusToResultStatus(httpStatus)
-    const autoMessage = emptyListDetected ? 'The requested resource was not found' : extractErrorMessage(error)
-
-    const status = data.status ?? autoStatus
+    const status = data.status ?? result.resultStatus
     const title = data.title ? parseAll({ text: data.title, replaceValues, multiQueryData }) : getDefaultTitle(status)
-    const subTitle = data.subTitle ? parseAll({ text: data.subTitle, replaceValues, multiQueryData }) : autoMessage
+    const subTitle = data.subTitle ? parseAll({ text: data.subTitle, replaceValues, multiQueryData }) : result.message
+
+    return <Result status={status} title={title} subTitle={subTitle} style={data.style} />
+  }
+
+  if (Array.isArray(data.reqIndex)) {
+    const worst = findWorstError(data.reqIndex, multiQueryData, getErrorForReq, shouldCheckEmpty, data.itemsPath)
+
+    if (!worst) {
+      return children ?? null
+    }
+
+    const status = data.status ?? worst.resultStatus
+    const title = data.title ? parseAll({ text: data.title, replaceValues, multiQueryData }) : getDefaultTitle(status)
+    const subTitle = data.subTitle ? parseAll({ text: data.subTitle, replaceValues, multiQueryData }) : worst.message
 
     return <Result status={status} title={title} subTitle={subTitle} style={data.style} />
   }

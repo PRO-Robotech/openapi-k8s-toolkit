@@ -469,5 +469,185 @@ describe('string errors (WebSocket path)', () => {
   })
 })
 
+// ── Array reqIndex (multiple effective requests) ─────────────
+
+describe('array reqIndex (multiple effective requests)', () => {
+  it('renders children when all requests in array are OK', () => {
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: {
+          req0: { items: [{ metadata: { name: 'nginx' } }] },
+          req1: { items: [{ metadata: { name: 'pod-1' } }] },
+        },
+        isLoading: false,
+        isError: false,
+        errors: [null, null],
+      }),
+    )
+
+    render(
+      <AntdResult data={{ id: 'array-ok', reqIndex: [0, 1] }}>
+        <div data-testid="page-content">Both OK</div>
+      </AntdResult>,
+    )
+
+    expect(screen.getByTestId('page-content')).toBeInTheDocument()
+  })
+
+  it('shows error when one request in array failed', () => {
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: { req0: { items: [{ metadata: { name: 'nginx' } }] } },
+        isLoading: false,
+        isError: true,
+        errors: [null, Object.assign(new Error('Forbidden'), { response: { status: 403, statusText: 'Forbidden' } })],
+      }),
+    )
+
+    render(
+      <AntdResult data={{ id: 'array-one-fail', reqIndex: [0, 1] }}>
+        <div data-testid="should-not-render" />
+      </AntdResult>,
+    )
+
+    expect(screen.getByText('Access Denied')).toBeInTheDocument()
+    expect(screen.queryByTestId('should-not-render')).not.toBeInTheDocument()
+  })
+
+  it('picks worst error: 500 over 403', () => {
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: {},
+        isLoading: false,
+        isError: true,
+        errors: [
+          Object.assign(new Error('Forbidden'), { response: { status: 403, statusText: 'Forbidden' } }),
+          Object.assign(new Error('Internal Server Error'), { response: { status: 500 } }),
+        ],
+      }),
+    )
+
+    render(
+      <AntdResult data={{ id: 'array-worst', reqIndex: [0, 1] }}>
+        <div data-testid="should-not-render" />
+      </AntdResult>,
+    )
+
+    expect(screen.getAllByText('Server Error').length).toBeGreaterThanOrEqual(1)
+    expect(screen.queryByTestId('should-not-render')).not.toBeInTheDocument()
+  })
+
+  it('picks worst error: 403 over 404 (empty list)', () => {
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: { req0: { items: [] } },
+        isLoading: false,
+        isError: true,
+        errors: [null, Object.assign(new Error('Forbidden'), { response: { status: 403, statusText: 'Forbidden' } })],
+      }),
+    )
+
+    render(
+      <AntdResult data={{ id: 'array-403-vs-404', reqIndex: [0, 1] }}>
+        <div data-testid="should-not-render" />
+      </AntdResult>,
+    )
+
+    expect(screen.getByText('Access Denied')).toBeInTheDocument()
+    expect(screen.queryByTestId('should-not-render')).not.toBeInTheDocument()
+  })
+
+  it('ignores errors on requests NOT in the array', () => {
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: {
+          req0: { items: [{ metadata: { name: 'nginx' } }] },
+          req1: {},
+        },
+        isLoading: false,
+        isError: true,
+        errors: [null, Object.assign(new Error('Not Found'), { response: { status: 404 } })],
+      }),
+    )
+
+    render(
+      <AntdResult data={{ id: 'array-ignore', reqIndex: [0] }}>
+        <div data-testid="page-content">Should render</div>
+      </AntdResult>,
+    )
+
+    expect(screen.getByTestId('page-content')).toBeInTheDocument()
+  })
+
+  it('renders null when all OK and no children', () => {
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: { req0: { items: [{ id: 1 }] } },
+        isLoading: false,
+        isError: false,
+        errors: [null],
+      }),
+    )
+
+    const { container } = render(<AntdResult data={{ id: 'array-no-children', reqIndex: [0] }} />)
+
+    expect(container.innerHTML).toBe('')
+  })
+
+  it('supports YAML-override status and title on array error', () => {
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: {},
+        isLoading: false,
+        isError: true,
+        errors: [Object.assign(new Error('Forbidden'), { response: { status: 403 } })],
+      }),
+    )
+
+    render(<AntdResult data={{ id: 'array-override', reqIndex: [0], status: 'warning', title: 'Custom Title' }} />)
+
+    expect(screen.getByText('Custom Title')).toBeInTheDocument()
+  })
+
+  it('detects empty items in array mode', () => {
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: { req0: { items: [] } },
+        isLoading: false,
+        isError: false,
+        errors: [null],
+      }),
+    )
+
+    render(
+      <AntdResult data={{ id: 'array-empty', reqIndex: [0] }}>
+        <div data-testid="should-not-render" />
+      </AntdResult>,
+    )
+
+    expect(screen.getByText('Not Found')).toBeInTheDocument()
+    expect(screen.queryByTestId('should-not-render')).not.toBeInTheDocument()
+  })
+
+  it('respects checkEmpty: false in array mode', () => {
+    mockUseMultiQuery.mockReturnValue(
+      mockMultiQuery({
+        data: { req0: { items: [] } },
+        isLoading: false,
+        isError: false,
+        errors: [null],
+      }),
+    )
+
+    render(
+      <AntdResult data={{ id: 'array-no-check', reqIndex: [0], checkEmpty: false }}>
+        <div data-testid="page-content">Should render</div>
+      </AntdResult>,
+    )
+
+    expect(screen.getByTestId('page-content')).toBeInTheDocument()
+  })
+})
+
 // Edge cases for extractHttpStatus, extractErrorMessage, isEmptyAtPath
 // are covered in utils.test.ts

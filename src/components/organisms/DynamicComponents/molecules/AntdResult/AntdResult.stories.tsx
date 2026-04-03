@@ -27,7 +27,10 @@ const meta: Meta<TArgs> = {
   argTypes: {
     id: { control: 'text', description: 'data.id' },
     reqIndex: { control: 'number', description: 'data.reqIndex — auto-detect error from this request index' },
-    emptyAsNotFound: { control: 'boolean', description: 'data.emptyAsNotFound — treat empty K8s list as 404' },
+    checkEmpty: {
+      control: 'boolean',
+      description: 'data.checkEmpty — check if array at itemsPath is empty and show 404 (default: true)',
+    },
     status: {
       control: { type: 'select' },
       options: [undefined, 'success', 'error', 'info', 'warning', '403', '404', '500'],
@@ -61,7 +64,7 @@ const meta: Meta<TArgs> = {
             data={{
               id: args.id,
               reqIndex: args.reqIndex,
-              emptyAsNotFound: args.emptyAsNotFound,
+              checkEmpty: args.checkEmpty,
               status: args.status,
               title: args.title,
               subTitle: args.subTitle,
@@ -80,7 +83,7 @@ const meta: Meta<TArgs> = {
           data: {
             id: args.id,
             ...(args.reqIndex !== undefined && { reqIndex: args.reqIndex }),
-            ...(args.emptyAsNotFound && { emptyAsNotFound: args.emptyAsNotFound }),
+            ...(args.checkEmpty && { checkEmpty: args.checkEmpty }),
             ...(args.status && { status: args.status }),
             ...(args.title && { title: args.title }),
             ...(args.subTitle && { subTitle: args.subTitle }),
@@ -206,12 +209,12 @@ export const AutoDetectNoError: Story = {
   },
 }
 
-export const EmptyAsNotFound: Story = {
-  name: 'emptyAsNotFound: empty K8s list treated as 404',
+export const CheckEmptyEnabled: Story = {
+  name: 'checkEmpty: empty K8s list treated as 404',
   args: {
     id: 'result-empty-list',
     reqIndex: 0,
-    emptyAsNotFound: true,
+    checkEmpty: true,
     status: undefined,
     title: 'Pod {0} is not found',
     subTitle: 'Namespace: {1}',
@@ -225,12 +228,12 @@ export const EmptyAsNotFound: Story = {
   },
 }
 
-export const EmptyAsNotFoundDisabled: Story = {
-  name: 'emptyAsNotFound: disabled — empty list renders children',
+export const CheckEmptyDisabled: Story = {
+  name: 'checkEmpty: disabled — empty list renders children',
   args: {
-    ...EmptyAsNotFound.args,
+    ...CheckEmptyEnabled.args,
     id: 'result-empty-list-disabled',
-    emptyAsNotFound: false,
+    checkEmpty: false,
   },
 }
 
