@@ -6,6 +6,7 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
 import { checkReqIndex, findWorstError, getDefaultTitle, resolveItemsPath } from './utils'
+import { Styled } from './styled'
 
 export const AntdResult: FC<{
   data: TDynamicComponentsAppTypeMap['antdResult']
@@ -38,7 +39,11 @@ export const AntdResult: FC<{
     const title = data.title ? parseAll({ text: data.title, replaceValues, multiQueryData }) : getDefaultTitle(status)
     const subTitle = data.subTitle ? parseAll({ text: data.subTitle, replaceValues, multiQueryData }) : result.message
 
-    return <Result status={status} title={title} subTitle={subTitle} style={data.style} />
+    return (
+      <Styled.CenteredResultWrapper>
+        <Result status={status} title={title} subTitle={subTitle} style={data.style} />
+      </Styled.CenteredResultWrapper>
+    )
   }
 
   if (Array.isArray(data.reqIndex)) {
@@ -52,7 +57,11 @@ export const AntdResult: FC<{
     const title = data.title ? parseAll({ text: data.title, replaceValues, multiQueryData }) : getDefaultTitle(status)
     const subTitle = data.subTitle ? parseAll({ text: data.subTitle, replaceValues, multiQueryData }) : worst.message
 
-    return <Result status={status} title={title} subTitle={subTitle} style={data.style} />
+    return (
+      <Styled.CenteredResultWrapper>
+        <Result status={status} title={title} subTitle={subTitle} style={data.style} />
+      </Styled.CenteredResultWrapper>
+    )
   }
 
   // Manual mode: no reqIndex → fully static/template-driven
@@ -61,8 +70,10 @@ export const AntdResult: FC<{
   const parsedSubTitle = data.subTitle ? parseAll({ text: data.subTitle, replaceValues, multiQueryData }) : undefined
 
   return (
-    <Result status={data.status} title={parsedTitle} subTitle={parsedSubTitle} style={data.style}>
-      {children}
-    </Result>
+    <Styled.CenteredResultWrapper>
+      <Result status={data.status} title={parsedTitle} subTitle={parsedSubTitle} style={data.style}>
+        {children}
+      </Result>
+    </Styled.CenteredResultWrapper>
   )
 }
