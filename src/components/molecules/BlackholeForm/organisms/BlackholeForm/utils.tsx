@@ -16,7 +16,6 @@ import {
   extractStringDefault,
   extractNumberDefault,
   extractBooleanDefault,
-  extractStringOrNumberDefault,
   extractListInputDefault,
 } from './helpers/extractDefaultValue'
 import { ResetedFormItem, ArrayInsideContainer, HiddenContainer } from '../../atoms'
@@ -208,7 +207,6 @@ export const getRangeInputFormItemFromSwagger = ({
   customProps,
   urlParams,
   onRemoveByMinus,
-  defaultValue,
 }: {
   name: TFormName
   arrKey?: number
@@ -222,7 +220,6 @@ export const getRangeInputFormItemFromSwagger = ({
   customProps: TRangeInputCustomProps
   urlParams: TUrlParams
   onRemoveByMinus?: () => void
-  defaultValue?: string | number
 }) => {
   return (
     <FormRangeInput
@@ -239,7 +236,6 @@ export const getRangeInputFormItemFromSwagger = ({
       persistedControls={persistedControls}
       urlParams={urlParams}
       onRemoveByMinus={onRemoveByMinus}
-      defaultValue={defaultValue}
     />
   )
 }
@@ -861,7 +857,6 @@ export const getObjectFormItemsDraft = ({
             customProps: properties[el].customProps,
             persistedControls,
             urlParams,
-            defaultValue: extractStringOrNumberDefault(properties[el].default),
           })
         }
         if (properties[el].type === 'listInput') {

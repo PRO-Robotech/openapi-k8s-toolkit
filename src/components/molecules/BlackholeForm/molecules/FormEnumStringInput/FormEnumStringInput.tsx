@@ -8,6 +8,7 @@ import { MinusIcon, feedbackIcons } from 'components/atoms'
 import { PersistedCheckbox, HiddenContainer, ResetedFormItem, CustomSizeTitle } from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
 import { getRequiredRule } from '../helpers/validation'
+import { buildPlaceholder } from '../helpers/buildPlaceholder'
 
 type TFormEnumStringInputProps = {
   name: TFormName
@@ -43,6 +44,7 @@ export const FormEnumStringInput: FC<TFormEnumStringInputProps> = ({
   options,
   persistedControls,
   onRemoveByMinus,
+  defaultValue,
 }) => {
   const designNewLayout = useDesignNewLayout()
 
@@ -82,7 +84,10 @@ export const FormEnumStringInput: FC<TFormEnumStringInputProps> = ({
         validateTrigger="onBlur"
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
       >
-        <Select options={options.map(el => ({ value: el, label: el }))} placeholder={getStringByName(name)} />
+        <Select
+          options={options.map(el => ({ value: el, label: el }))}
+          placeholder={buildPlaceholder(name, defaultValue)}
+        />
       </ResetedFormItem>
     </HiddenContainer>
   )

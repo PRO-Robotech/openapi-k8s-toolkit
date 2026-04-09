@@ -24,12 +24,15 @@ export const FormNamespaceInput: FC<TFormNamespaceInputProps> = ({
   namespaceData,
   isAdditionalProperties,
   removeField,
+  defaultValue,
 }) => {
   const designNewLayout = useDesignNewLayout()
 
   if (!namespaceData) {
     return null
   }
+
+  const placeholder = defaultValue !== undefined ? `Default: ${defaultValue}` : 'Select namespace'
 
   return (
     <HiddenContainer name={name}>
@@ -52,7 +55,7 @@ export const FormNamespaceInput: FC<TFormNamespaceInputProps> = ({
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
       >
         <Select
-          placeholder="Select namespace"
+          placeholder={placeholder}
           options={namespaceData.selectValues}
           filterOption={namespaceData.filterSelectOptions}
           allowClear

@@ -23,13 +23,6 @@ export const extractBooleanDefault = (value: unknown): boolean | undefined => {
   return typeof value === 'boolean' ? value : undefined
 }
 
-export const extractStringOrNumberDefault = (value: unknown): string | number | undefined => {
-  if (typeof value === 'string' || typeof value === 'number') {
-    return value
-  }
-  return undefined
-}
-
 /**
  * For `listInput` fields, the form value can be either a single string (select
  * mode) or an array of strings (multi-select / tags mode). We accept both shapes

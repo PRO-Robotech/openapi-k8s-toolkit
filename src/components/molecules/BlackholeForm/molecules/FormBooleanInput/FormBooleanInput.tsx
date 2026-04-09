@@ -1,7 +1,7 @@
 /* eslint-disable no-unneeded-ternary */
 /* eslint-disable no-nested-ternary */
 import React, { FC } from 'react'
-import { Flex, Switch, Tooltip, Button } from 'antd'
+import { Flex, Switch, Tooltip, Button, Typography } from 'antd'
 import { getStringByName } from 'utils/getStringByName'
 import { TFormName } from 'localTypes/form'
 import { MinusIcon, BackToDefaultIcon } from 'components/atoms'
@@ -35,6 +35,7 @@ export const FormBooleanInput: FC<TFormBooleanInputProps> = ({
   isAdditionalProperties,
   removeField,
   onRemoveByMinus,
+  defaultValue,
 }) => {
   const designNewLayout = useDesignNewLayout()
 
@@ -66,6 +67,11 @@ export const FormBooleanInput: FC<TFormBooleanInputProps> = ({
         >
           <Switch size="small" />
         </ResetedFormItem>
+        {defaultValue !== undefined && (
+          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+            Default: {String(defaultValue)}
+          </Typography.Text>
+        )}
         <Styled.CrossContainer
           onClick={() => {
             if (makeValueUndefined) {

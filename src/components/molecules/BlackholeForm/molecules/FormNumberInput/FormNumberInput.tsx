@@ -8,6 +8,7 @@ import { MinusIcon, feedbackIcons } from 'components/atoms'
 import { PersistedCheckbox, HiddenContainer, ResetedFormItem, CustomSizeTitle } from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
 import { getRequiredRule } from '../helpers/validation'
+import { buildPlaceholder } from '../helpers/buildPlaceholder'
 
 type TFormNumberItemProps = {
   isNumber?: boolean
@@ -43,6 +44,7 @@ export const FormNumberInput: FC<TFormNumberItemProps> = ({
   removeField,
   persistedControls,
   onRemoveByMinus,
+  defaultValue,
 }) => {
   const designNewLayout = useDesignNewLayout()
 
@@ -80,7 +82,7 @@ export const FormNumberInput: FC<TFormNumberItemProps> = ({
         validateTrigger="onBlur"
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
       >
-        <InputNumber placeholder={getStringByName(name)} step={isNumber ? 0.1 : 1} />
+        <InputNumber placeholder={buildPlaceholder(name, defaultValue)} step={isNumber ? 0.1 : 1} />
       </ResetedFormItem>
     </HiddenContainer>
   )

@@ -59,6 +59,7 @@ export const FormListInput: FC<TFormListInputProps> = ({
   customProps,
   urlParams,
   onRemoveByMinus,
+  defaultValue,
 }) => {
   const designNewLayout = useDesignNewLayout()
   const onValuesChangeCallBack = useOnValuesChangeCallback()
@@ -276,7 +277,11 @@ export const FormListInput: FC<TFormListInputProps> = ({
         >
           <Select
             mode={customProps.mode}
-            placeholder="Select"
+            placeholder={
+              defaultValue !== undefined
+                ? `Default: ${Array.isArray(defaultValue) ? defaultValue.join(', ') : defaultValue}`
+                : 'Select'
+            }
             options={uniqueOptions}
             filterOption={filterSelectOptions}
             disabled={isWaitingForRelatedValue}

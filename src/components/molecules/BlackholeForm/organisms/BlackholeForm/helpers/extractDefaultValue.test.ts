@@ -2,7 +2,6 @@ import {
   extractStringDefault,
   extractNumberDefault,
   extractBooleanDefault,
-  extractStringOrNumberDefault,
   extractListInputDefault,
 } from './extractDefaultValue'
 
@@ -51,24 +50,6 @@ describe('extractBooleanDefault', () => {
     expect(extractBooleanDefault(0)).toBeUndefined()
     expect(extractBooleanDefault(null)).toBeUndefined()
     expect(extractBooleanDefault(undefined)).toBeUndefined()
-  })
-})
-
-describe('extractStringOrNumberDefault', () => {
-  it('returns the value when it is a string', () => {
-    expect(extractStringOrNumberDefault('500m')).toBe('500m')
-  })
-
-  it('returns the value when it is a number', () => {
-    expect(extractStringOrNumberDefault(100)).toBe(100)
-  })
-
-  it('returns undefined for other types', () => {
-    expect(extractStringOrNumberDefault(true)).toBeUndefined()
-    expect(extractStringOrNumberDefault(null)).toBeUndefined()
-    expect(extractStringOrNumberDefault(undefined)).toBeUndefined()
-    expect(extractStringOrNumberDefault({})).toBeUndefined()
-    expect(extractStringOrNumberDefault([])).toBeUndefined()
   })
 })
 

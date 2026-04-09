@@ -11,6 +11,7 @@ import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
 import { toBase64, fromBase64 } from './helpers'
 import { Styled } from './styled'
 import { getRequiredRule } from '../helpers/validation'
+import { buildPlaceholder } from '../helpers/buildPlaceholder'
 
 type TFormStringMultilineInputProps = {
   name: TFormName
@@ -46,8 +47,10 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
   persistedControls,
   onRemoveByMinus,
   isBase64,
+  defaultValue,
 }) => {
   const designNewLayout = useDesignNewLayout()
+  const placeholder = buildPlaceholder(name, defaultValue)
 
   const fixedName = name === 'nodeName' ? 'nodeNameBecauseOfSuddenBug' : name
   const formFieldName = arrName || fixedName
@@ -106,7 +109,7 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
         }}
       >
         <Input.TextArea
-          placeholder={getStringByName(name)}
+          placeholder={placeholder}
           // rows={isMultiline ? 4 : 1}
           rows={4}
           // autoSize={!isMultiline ? { minRows: 1, maxRows: 1 } : { minRows: 2, maxRows: 10 }}
@@ -116,7 +119,7 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
       {isBase64 && (
         <Styled.MarginBottom>
           <Input.TextArea
-            placeholder={getStringByName(name)}
+            placeholder={placeholder}
             value={decoded}
             onChange={e => {
               try {
