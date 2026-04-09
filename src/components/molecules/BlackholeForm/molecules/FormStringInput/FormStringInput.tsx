@@ -20,6 +20,12 @@ type TFormStringInputProps = {
   removeField: ({ path }: { path: TFormName }) => void
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
+  /**
+   * OpenAPI schema `default` value for this field.
+   * Wired through in Stage 1; will drive placeholder display and the
+   * "apply default" button in Stage 2/4.
+   */
+  defaultValue?: string
 }
 
 export const FormStringInput: FC<TFormStringInputProps> = ({

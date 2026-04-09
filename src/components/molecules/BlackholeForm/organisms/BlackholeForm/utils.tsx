@@ -12,6 +12,13 @@ import { TFormName, TExpandedControls, TNamespaceData, TPersistedControls, TUrlP
 import { PlusIcon } from 'components/atoms'
 import { deepMerge } from 'utils/deepMerge'
 import { getSortedPropertyKeys } from './helpers/getSortedPropertyKeys'
+import {
+  extractStringDefault,
+  extractNumberDefault,
+  extractBooleanDefault,
+  extractStringOrNumberDefault,
+  extractListInputDefault,
+} from './helpers/extractDefaultValue'
 import { ResetedFormItem, ArrayInsideContainer, HiddenContainer } from '../../atoms'
 import { prettyFieldPath } from '../../molecules/helpers/validation'
 import {
@@ -42,6 +49,7 @@ export const getStringFormItemFromSwagger = ({
   removeField,
   persistedControls,
   onRemoveByMinus,
+  defaultValue,
 }: {
   name: TFormName
   arrKey?: number
@@ -55,6 +63,7 @@ export const getStringFormItemFromSwagger = ({
   removeField: ({ path }: { path: TFormName }) => void
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
+  defaultValue?: string
 }) => {
   if (Array.isArray(name) && name.length === 2 && name[0] === 'metadata' && name[1] === 'namespace' && namespaceData) {
     return (
@@ -64,6 +73,7 @@ export const getStringFormItemFromSwagger = ({
         namespaceData={namespaceData}
         isAdditionalProperties={isAdditionalProperties}
         removeField={removeField}
+        defaultValue={defaultValue}
       />
     )
   }
@@ -82,6 +92,7 @@ export const getStringFormItemFromSwagger = ({
       removeField={removeField}
       persistedControls={persistedControls}
       onRemoveByMinus={onRemoveByMinus}
+      defaultValue={defaultValue}
     />
   )
 }
@@ -99,6 +110,7 @@ export const getEnumStringFormItemFromSwagger = ({
   options,
   persistedControls,
   onRemoveByMinus,
+  defaultValue,
 }: {
   name: TFormName
   arrKey?: number
@@ -112,6 +124,7 @@ export const getEnumStringFormItemFromSwagger = ({
   options: string[]
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
+  defaultValue?: string
 }) => {
   return (
     <FormEnumStringInput
@@ -128,6 +141,7 @@ export const getEnumStringFormItemFromSwagger = ({
       options={options}
       persistedControls={persistedControls}
       onRemoveByMinus={onRemoveByMinus}
+      defaultValue={defaultValue}
     />
   )
 }
@@ -145,6 +159,7 @@ export const getNumberFormItemFromSwagger = ({
   removeField,
   persistedControls,
   onRemoveByMinus,
+  defaultValue,
 }: {
   isNumber?: boolean
   name: TFormName
@@ -158,6 +173,7 @@ export const getNumberFormItemFromSwagger = ({
   removeField: ({ path }: { path: TFormName }) => void
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
+  defaultValue?: number
 }) => {
   return (
     <FormNumberInput
@@ -174,6 +190,7 @@ export const getNumberFormItemFromSwagger = ({
       removeField={removeField}
       persistedControls={persistedControls}
       onRemoveByMinus={onRemoveByMinus}
+      defaultValue={defaultValue}
     />
   )
 }
@@ -191,6 +208,7 @@ export const getRangeInputFormItemFromSwagger = ({
   customProps,
   urlParams,
   onRemoveByMinus,
+  defaultValue,
 }: {
   name: TFormName
   arrKey?: number
@@ -204,6 +222,7 @@ export const getRangeInputFormItemFromSwagger = ({
   customProps: TRangeInputCustomProps
   urlParams: TUrlParams
   onRemoveByMinus?: () => void
+  defaultValue?: string | number
 }) => {
   return (
     <FormRangeInput
@@ -220,6 +239,7 @@ export const getRangeInputFormItemFromSwagger = ({
       persistedControls={persistedControls}
       urlParams={urlParams}
       onRemoveByMinus={onRemoveByMinus}
+      defaultValue={defaultValue}
     />
   )
 }
@@ -237,6 +257,7 @@ export const getStringMultilineFormItemFromSwagger = ({
   persistedControls,
   onRemoveByMinus,
   isBase64,
+  defaultValue,
 }: {
   name: TFormName
   arrKey?: number
@@ -250,6 +271,7 @@ export const getStringMultilineFormItemFromSwagger = ({
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
   isBase64?: boolean
+  defaultValue?: string
 }) => {
   return (
     <FormStringMultilineInput
@@ -266,6 +288,7 @@ export const getStringMultilineFormItemFromSwagger = ({
       persistedControls={persistedControls}
       onRemoveByMinus={onRemoveByMinus}
       isBase64={isBase64}
+      defaultValue={defaultValue}
     />
   )
 }
@@ -284,6 +307,7 @@ export const getListInputFormItemFromSwagger = ({
   customProps,
   urlParams,
   onRemoveByMinus,
+  defaultValue,
 }: {
   name: TFormName
   arrKey?: number
@@ -298,6 +322,7 @@ export const getListInputFormItemFromSwagger = ({
   customProps: TListInputCustomProps
   urlParams: TUrlParams
   onRemoveByMinus?: () => void
+  defaultValue?: string | string[]
 }) => {
   return (
     <FormListInput
@@ -315,6 +340,7 @@ export const getListInputFormItemFromSwagger = ({
       customProps={customProps}
       urlParams={urlParams}
       onRemoveByMinus={onRemoveByMinus}
+      defaultValue={defaultValue}
     />
   )
 }
@@ -328,6 +354,7 @@ export const getBooleanFormItemFromSwagger = ({
   isAdditionalProperties,
   removeField,
   onRemoveByMinus,
+  defaultValue,
 }: {
   name: TFormName
   arrKey?: number
@@ -337,6 +364,7 @@ export const getBooleanFormItemFromSwagger = ({
   isAdditionalProperties?: boolean
   removeField: ({ path }: { path: TFormName }) => void
   onRemoveByMinus?: () => void
+  defaultValue?: boolean
 }) => {
   return (
     <FormBooleanInput
@@ -349,6 +377,7 @@ export const getBooleanFormItemFromSwagger = ({
       isAdditionalProperties={isAdditionalProperties}
       removeField={removeField}
       onRemoveByMinus={onRemoveByMinus}
+      defaultValue={defaultValue}
     />
   )
 }
@@ -766,6 +795,7 @@ export const getObjectFormItemsDraft = ({
             removeField,
             persistedControls,
             options: properties[el].enum || [],
+            defaultValue: extractStringDefault(properties[el].default),
           })
         }
         if (
@@ -789,6 +819,7 @@ export const getObjectFormItemsDraft = ({
             isAdditionalProperties: properties[el].isAdditionalProperties,
             removeField,
             persistedControls,
+            defaultValue: extractStringDefault(properties[el].default),
           })
         }
         if (properties[el].type === 'number' || properties[el].type === 'integer') {
@@ -809,6 +840,7 @@ export const getObjectFormItemsDraft = ({
             isAdditionalProperties: properties[el].isAdditionalProperties,
             removeField,
             persistedControls,
+            defaultValue: extractNumberDefault(properties[el].default),
           })
         }
         if (properties[el].type === 'rangeInputCpu' || properties[el].type === 'rangeInputMemory') {
@@ -829,6 +861,7 @@ export const getObjectFormItemsDraft = ({
             customProps: properties[el].customProps,
             persistedControls,
             urlParams,
+            defaultValue: extractStringOrNumberDefault(properties[el].default),
           })
         }
         if (properties[el].type === 'listInput') {
@@ -849,6 +882,7 @@ export const getObjectFormItemsDraft = ({
             removeField,
             persistedControls,
             urlParams,
+            defaultValue: extractListInputDefault(properties[el].default),
           })
         }
         if (properties[el].type === 'multilineString' || properties[el].type === 'multilineStringBase64') {
@@ -869,6 +903,7 @@ export const getObjectFormItemsDraft = ({
             removeField,
             persistedControls,
             isBase64: properties[el].type === 'multilineStringBase64',
+            defaultValue: extractStringDefault(properties[el].default),
           })
         }
         if (properties[el].type === 'boolean') {
@@ -880,6 +915,7 @@ export const getObjectFormItemsDraft = ({
             makeValueUndefined,
             isAdditionalProperties: properties[el].isAdditionalProperties,
             removeField,
+            defaultValue: extractBooleanDefault(properties[el].default),
           })
         }
         if (properties[el].type === 'array') {

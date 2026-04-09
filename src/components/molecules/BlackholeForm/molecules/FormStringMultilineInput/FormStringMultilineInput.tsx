@@ -25,6 +25,12 @@ type TFormStringMultilineInputProps = {
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
   isBase64?: boolean
+  /**
+   * OpenAPI schema `default` value for this field.
+   * Wired through in Stage 1; will drive placeholder display and the
+   * "apply default" button in Stage 2/4.
+   */
+  defaultValue?: string
 }
 
 export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
