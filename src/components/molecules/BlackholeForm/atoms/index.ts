@@ -1,4 +1,5 @@
 export { CustomCollapse } from './CustomCollapse'
+export { DefaultValueButton } from './DefaultValueButton'
 export { PersistedCheckbox } from './PersistedCheckbox'
 export { DebugNameViewer } from './DebugNameViewer'
 export { PossibleHiddenContainer } from './PossibleHiddenContainer'
