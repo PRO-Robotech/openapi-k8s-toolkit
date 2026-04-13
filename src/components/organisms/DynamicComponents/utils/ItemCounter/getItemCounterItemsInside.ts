@@ -10,9 +10,7 @@ export const getItemCounterItemsInside = (value: any[]): { counter?: number; err
   let flattenArrayOfUnknown: unknown[] = []
   try {
     flattenArrayOfUnknown = flattenOnce(value)
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.log(e)
+  } catch {
     return { error: 'Error while flattening' }
   }
 

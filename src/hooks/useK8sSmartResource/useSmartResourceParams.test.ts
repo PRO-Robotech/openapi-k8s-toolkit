@@ -160,4 +160,52 @@ describe('useSmartResourceParams', () => {
     expect(result.current.paramsList).toHaveLength(2)
     expect(result.current.paramsList.map(p => p.plural)).toEqual(['pods', 'deployments'])
   })
+
+  test('disables all scope queries when enabler is false', () => {
+    setResourcesParam('builtin/v1/pods,apps/v1/deployments')
+
+    mockUseQueries.mockReturnValue([
+      { isLoading: false, error: undefined, data: { isNamespaceScoped: true } },
+      { isLoading: false, error: undefined, data: { isNamespaceScoped: true } },
+    ])
+
+    renderHook(() => useSmartResourceParams({ cluster: 'c1', namespace: 'ns1', enabler: false }))
+
+    const cfg = mockUseQueries.mock.calls[0][0]
+    expect(cfg.queries).toHaveLength(2)
+    expect(cfg.queries[0].enabled).toBe(false)
+    expect(cfg.queries[1].enabled).toBe(false)
+  })
+
+  test('treats missing cluster as disabled and keeps params shape stable', () => {
+    setResourcesParam('builtin/v1/pods,apps/v1/deployments')
+
+    mockUseQueries.mockReturnValue([
+      { isLoading: false, error: undefined, data: { isNamespaceScoped: true } },
+      { isLoading: false, error: undefined, data: { isNamespaceScoped: true } },
+    ])
+
+    const { result } = renderHook(() => useSmartResourceParams({ namespace: 'ns1' }))
+
+    const cfg = mockUseQueries.mock.calls[0][0]
+    expect(cfg.queries).toHaveLength(2)
+    expect(cfg.queries[0].enabled).toBe(false)
+    expect(cfg.queries[1].enabled).toBe(false)
+    expect(result.current.paramsList).toEqual([
+      {
+        cluster: '',
+        plural: 'pods',
+        apiGroup: undefined,
+        apiVersion: 'v1',
+        namespace: 'ns1',
+      },
+      {
+        cluster: '',
+        plural: 'deployments',
+        apiGroup: 'apps',
+        apiVersion: 'v1',
+        namespace: 'ns1',
+      },
+    ])
+  })
 })

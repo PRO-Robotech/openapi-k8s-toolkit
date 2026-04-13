@@ -476,8 +476,15 @@ export const useListWatch = ({
 
       // Logs from Server (errors basically)
       if (frame.type === 'INITIAL_ERROR') {
-        const msg = frame.message
+        const needsCodeSuffix = typeof frame.statusCode === 'number' && !frame.message.includes(`(${frame.statusCode})`)
+        const msg = needsCodeSuffix ? `${frame.message} (${frame.statusCode})` : frame.message
         setErrorSafe(msg)
+        // eslint-disable-next-line no-console
+        console.error('[useListWatch][initial]', {
+          message: frame.message,
+          statusCode: frame.statusCode,
+          reason: frame.reason,
+        })
         return
       }
 

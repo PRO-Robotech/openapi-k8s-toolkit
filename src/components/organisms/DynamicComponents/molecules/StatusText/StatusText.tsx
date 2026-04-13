@@ -5,6 +5,8 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../PerRequestError'
 import { getResult } from './utils'
 
 export const StatusText: FC<{ data: TDynamicComponentsAppTypeMap['StatusText']; children?: any }> = ({
@@ -27,7 +29,7 @@ export const StatusText: FC<{ data: TDynamicComponentsAppTypeMap['StatusText']; 
     ...props
   } = data
 
-  const { data: multiQueryData, isLoading: isMultiqueryLoading, isError, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiqueryLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
@@ -41,18 +43,14 @@ export const StatusText: FC<{ data: TDynamicComponentsAppTypeMap['StatusText']; 
 
   const valuesPrepared = values.map(el => parseAll({ text: el, replaceValues, multiQueryData }))
 
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
+
   if (isMultiqueryLoading) {
     return <div>Loading multiquery</div>
   }
 
-  if (isError) {
-    return (
-      <div>
-        <h4>Errors:</h4>
-        {/* eslint-disable-next-line react/no-array-index-key */}
-        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
-      </div>
-    )
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   const { type, text } = getResult({

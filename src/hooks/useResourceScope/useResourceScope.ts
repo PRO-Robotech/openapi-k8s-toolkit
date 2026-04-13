@@ -6,6 +6,7 @@ type TUseResourceScopeArgs = {
   apiGroup?: string
   apiVersion?: string
   plural: string
+  enabler?: boolean
 }
 
 type TUseResourceScopeRes = {
@@ -13,10 +14,14 @@ type TUseResourceScopeRes = {
   isNamespaceScoped: boolean
 }
 
-export const useResourceScope = ({ plural, cluster, apiGroup, apiVersion }: TUseResourceScopeArgs) => {
+export const useResourceScope = ({ plural, cluster, apiGroup, apiVersion, enabler }: TUseResourceScopeArgs) => {
   const computedResourceType: 'builtin' | 'api' = apiGroup ? 'api' : 'builtin'
 
-  const enabled = Boolean(cluster) && Boolean(plural) && (computedResourceType === 'builtin' || Boolean(apiVersion))
+  const enabled =
+    (enabler ?? true) &&
+    Boolean(cluster) &&
+    Boolean(plural) &&
+    (computedResourceType === 'builtin' || Boolean(apiVersion))
 
   return useQuery<TUseResourceScopeRes>({
     queryKey: ['resource-scope', computedResourceType, cluster, plural, apiGroup, apiVersion],

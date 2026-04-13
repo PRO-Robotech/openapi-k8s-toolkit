@@ -62,6 +62,7 @@ export const useApiResourceSingle = ({
   plural,
   name,
   refetchInterval,
+  enabler,
 }: {
   cluster: string
   namespace?: string
@@ -70,6 +71,7 @@ export const useApiResourceSingle = ({
   plural: string
   name: string
   refetchInterval?: number | false
+  enabler?: boolean
 }) => {
   return useQuery({
     queryKey: ['useApiResourceSingle', cluster, namespace, apiGroup, apiVersion, plural, name],
@@ -85,5 +87,6 @@ export const useApiResourceSingle = ({
         })
       ).data,
     refetchInterval: refetchInterval !== undefined ? refetchInterval : 5000,
+    enabled: enabler ?? true,
   })
 }

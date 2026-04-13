@@ -66,4 +66,10 @@ describe('parseArrayOfAny', () => {
 
     expect(res).toEqual({ data: [] })
   })
+
+  test('returns flattening error without logging when inner item is not iterable', () => {
+    const res = parseArrayOfAny([{}] as any)
+
+    expect(res).toEqual({ error: 'Error while flattening' })
+  })
 })

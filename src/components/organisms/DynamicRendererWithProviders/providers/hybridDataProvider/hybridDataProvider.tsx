@@ -1,8 +1,7 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import React, { FC, ReactNode, createContext, useContext, useEffect, useMemo, useReducer } from 'react'
+import React, { FC, ReactNode, createContext, useContext, useMemo } from 'react'
 import axios, { AxiosError } from 'axios'
 import { useQueries } from '@tanstack/react-query'
-import { TUseK8sSmartResourceParams, useK8sSmartResource } from 'hooks/useK8sSmartResource'
+import { TUseK8sSmartResourceParams, useManyK8sSmartResource } from 'hooks/useK8sSmartResource'
 
 type DataMap = Record<string, unknown>
 
@@ -11,6 +10,10 @@ type MultiQueryContextValue = {
   isLoading: boolean
   isError: boolean
   errors: ReadonlyArray<AxiosError | Error | string | null>
+  /** Check whether a specific request (by index) has an error */
+  hasErrorForReq: (reqIndex: number) => boolean
+  /** Get the error object for a specific request (by index), or null if it succeeded */
+  getErrorForReq: (reqIndex: number) => AxiosError | Error | string | null
 }
 
 const MultiQueryContext = createContext<MultiQueryContextValue | undefined>(undefined)
@@ -21,66 +24,6 @@ type MultiQueryProviderProps = {
   /** Optional short-circuit to set data.req0 directly */
   dataToApplyToContext?: unknown
   children: ReactNode
-}
-
-/** ---------------- Aggregation for K8s branch --------------------------- */
-
-type ResultEntry = {
-  data: unknown
-  isLoading: boolean
-  isError: boolean
-  error: AxiosError | Error | string | null
-}
-
-type AggState = { entries: ResultEntry[] }
-type AggAction = { type: 'RESET'; total: number } | { type: 'SET_ENTRY'; index: number; entry: ResultEntry }
-
-const makeEmptyEntry = (): ResultEntry => ({
-  data: undefined,
-  isLoading: false,
-  isError: false,
-  error: null,
-})
-
-const aggReducer = (state: AggState, action: AggAction): AggState => {
-  switch (action.type) {
-    case 'RESET':
-      return { entries: Array.from({ length: action.total }, makeEmptyEntry) }
-    case 'SET_ENTRY': {
-      const entries = state.entries.slice()
-      entries[action.index] = action.entry
-      return { entries }
-    }
-    default:
-      return state
-  }
-}
-
-/** ----------------- Child allowed to call the K8s hook ------------------- */
-
-type K8sFetcherProps = {
-  index: number // index within the K8s subset (0..k8sCount-1)
-  params: TUseK8sSmartResourceParams<unknown>
-  dispatch: React.Dispatch<AggAction>
-}
-
-const K8sFetcher: FC<K8sFetcherProps> = ({ index, params, dispatch }) => {
-  const res = useK8sSmartResource<unknown>(params)
-
-  useEffect(() => {
-    dispatch({
-      type: 'SET_ENTRY',
-      index,
-      entry: {
-        data: res.data,
-        isLoading: res.isLoading,
-        isError: res.isError,
-        error: (res.error as AxiosError | Error | string | undefined) ?? null,
-      },
-    })
-  }, [index, res.data, res.isLoading, res.isError, res.error, dispatch])
-
-  return null
 }
 
 /** ------------------------------ Provider -------------------------------- */
@@ -96,13 +39,9 @@ export const MultiQueryProvider: FC<MultiQueryProviderProps> = ({ items, dataToA
   const k8sCount = k8sItems.length
   const urlCount = urlItems.length
 
-  // Aggregator for K8s subset only
-  const [state, dispatch] = useReducer(aggReducer, { entries: Array.from({ length: k8sCount }, makeEmptyEntry) })
-
-  // Reset when K8s count changes
-  useEffect(() => {
-    dispatch({ type: 'RESET', total: k8sCount })
-  }, [k8sCount])
+  // Direct hook call — replaces K8sFetcher + useReducer + useEffect bridge
+  // Data is available synchronously in the same render frame (no 1-frame lag)
+  const k8sResults = useManyK8sSmartResource(k8sItems)
 
   // URL queries for the URL subset only
   const urlQueries = useQueries({
@@ -119,10 +58,6 @@ export const MultiQueryProvider: FC<MultiQueryProviderProps> = ({ items, dataToA
 
   // Assemble context value
   const value: MultiQueryContextValue = (() => {
-    // if (typeof dataToApplyToContext !== 'undefined') {
-    //   return { data: { req0: dataToApplyToContext }, isLoading: false, isError: false, errors: [] }
-    // }
-
     const data: DataMap = {}
     const errors: Array<AxiosError | Error | string | null> = []
 
@@ -130,22 +65,17 @@ export const MultiQueryProvider: FC<MultiQueryProviderProps> = ({ items, dataToA
     const hasExtraReq0 = typeof dataToApplyToContext !== 'undefined'
     const baseIndex = hasExtraReq0 ? 1 : 0
 
-    // 1) K8s occupy req[0..k8sCount-1]
+    // 1) K8s results from useManyK8sSmartResource (synchronous, no useEffect delay)
     for (let i = 0; i < k8sCount; i++) {
-      const e = state.entries[i] ?? makeEmptyEntry()
-      // data[`req${i}`] = e.data
-      // errors[i] = e.isError ? e.error : null
+      const result = k8sResults[i]
       const idx = baseIndex + i
-      data[`req${idx}`] = e.data
-      errors[idx] = e.isError ? e.error : null
+      data[`req${idx}`] = result?.data
+      errors[idx] = result?.isError ? ((result.error ?? null) as AxiosError | Error | string | null) : null
     }
 
     // 2) URLs continue after K8s: req[k8sCount..total-1]
     for (let i = 0; i < urlCount; i++) {
       const q = urlQueries[i]
-      // const idx = k8sCount + i
-      // data[`req${idx}`] = q?.data
-      // errors[idx] = q?.isError ? ((q.error ?? null) as AxiosError | Error | string | null) : null
       const idx = baseIndex + k8sCount + i
       data[`req${idx}`] = q?.data
       errors[idx] = q?.isError ? ((q.error ?? null) as AxiosError | Error | string | null) : null
@@ -158,23 +88,17 @@ export const MultiQueryProvider: FC<MultiQueryProviderProps> = ({ items, dataToA
       errors[0] = null
     }
 
-    const isLoading = state.entries.some(e => e.isLoading) || urlQueries.some(q => q.isLoading)
+    const isLoading = k8sResults.some(r => r.isLoading) || urlQueries.some(q => q.isLoading)
 
-    const isError = state.entries.some(e => e.isError) || urlQueries.some(q => q.isError)
+    const isError = k8sResults.some(r => r.isError) || urlQueries.some(q => q.isError)
 
-    return { data, isLoading, isError, errors }
+    const hasErrorForReq = (reqIndex: number): boolean => Boolean(errors[reqIndex])
+    const getErrorForReq = (reqIndex: number): AxiosError | Error | string | null => errors[reqIndex] ?? null
+
+    return { data, isLoading, isError, errors, hasErrorForReq, getErrorForReq }
   })()
 
-  return (
-    <MultiQueryContext.Provider value={value}>
-      {/* Mount one fetcher per K8s resource (Rules of Hooks compliant) */}
-      {k8sItems.map((params, i) => (
-        // eslint-disable-next-line react/no-array-index-key
-        <K8sFetcher key={i} index={i} params={params} dispatch={dispatch} />
-      ))}
-      {children}
-    </MultiQueryContext.Provider>
-  )
+  return <MultiQueryContext.Provider value={value}>{children}</MultiQueryContext.Provider>
 }
 
 /** Consumer hook */

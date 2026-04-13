@@ -63,12 +63,31 @@ type TPageErrorFrame = {
   error: string
 }
 
+type TInitialErrorFrame = {
+  type: 'INITIAL_ERROR'
+  message: string
+  statusCode?: number
+  reason?: string
+}
+
+type TServerLogFrame = {
+  type: 'SERVER_LOG'
+  level: 'info' | 'warn' | 'error'
+  message: string
+}
+
 type TDeltaFrame = {
   type: TWatchPhase // ADDED | MODIFIED | DELETED
   item: TEventsV1Event
 }
 
-export type TServerFrame = TInitialFrame | TPageFrame | TPageErrorFrame | TDeltaFrame
+export type TServerFrame =
+  | TInitialFrame
+  | TPageFrame
+  | TPageErrorFrame
+  | TInitialErrorFrame
+  | TServerLogFrame
+  | TDeltaFrame
 
 // Outgoing scroll request to server
 // Sent when the bottom sentinel intersects view and `continue` exists.

@@ -20,6 +20,11 @@ export type TAdditionalPrinterColumnsColWidths = {
   value: string
 }[]
 
+export type TAdditionalPrinterColumnsTooltips = {
+  key: string
+  value: string
+}[]
+
 export type TAdditionalPrinterColumnsKeyTypeProps = Record<
   string,
   {

@@ -10,6 +10,8 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../PerRequestError'
 
 export const TogglerSegmented: FC<{ data: TDynamicComponentsAppTypeMap['TogglerSegmented']; children?: any }> = ({
   data,
@@ -35,20 +37,16 @@ export const TogglerSegmented: FC<{ data: TDynamicComponentsAppTypeMap['TogglerS
 
   const queryClient = useQueryClient()
 
-  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiQueryLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
   }
 
-  if (isMultiQueryErrors) {
-    return (
-      <div>
-        <h4>Errors:</h4>
-        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
-      </div>
-    )
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {

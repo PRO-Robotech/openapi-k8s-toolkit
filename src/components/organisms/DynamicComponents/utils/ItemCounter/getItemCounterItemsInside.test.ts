@@ -2,16 +2,6 @@
 import { getItemCounterItemsInside } from './getItemCounterItemsInside'
 
 describe('getItemCounterItemsInside (flatten + counter)', () => {
-  let consoleLogSpy: jest.SpyInstance
-
-  beforeEach(() => {
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
-  })
-
-  afterEach(() => {
-    consoleLogSpy.mockRestore()
-  })
-
   test('returns error when value is not an array', () => {
     expect(getItemCounterItemsInside(undefined as any)).toEqual({ error: 'Value on jsonPath is not an array' })
     expect(getItemCounterItemsInside(null as any)).toEqual({ error: 'Value on jsonPath is not an array' })
@@ -40,6 +30,5 @@ describe('getItemCounterItemsInside (flatten + counter)', () => {
     const res = getItemCounterItemsInside(value)
 
     expect(res).toEqual({ error: 'Error while flattening' })
-    expect(consoleLogSpy).toHaveBeenCalled() // optional, but nice to lock behavior
   })
 })

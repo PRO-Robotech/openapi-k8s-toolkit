@@ -1,13 +1,15 @@
+/* eslint-disable jsx-a11y/mouse-events-have-key-events */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ReactNode } from 'react'
 import { NavigateFunction } from 'react-router-dom'
-import { TableProps, Dropdown } from 'antd'
-import { CheckOutlined, CloseOutlined, SearchOutlined, MoreOutlined } from '@ant-design/icons'
+import { TableProps, Dropdown, Tooltip, Flex } from 'antd'
+import { CheckOutlined, CloseOutlined, SearchOutlined, MoreOutlined, QuestionCircleOutlined } from '@ant-design/icons'
 import { get } from 'lodash'
 import {
   TAdditionalPrinterColumnsColWidths,
   TAdditionalPrinterColumnsTrimLengths,
   TAdditionalPrinterColumnsUndefinedValues,
+  TAdditionalPrinterColumnsTooltips,
   TAdditionalPrinterColumnsKeyTypeProps,
   TAdditionalPrinterColumnsCustomSortersAndFilters,
 } from 'localTypes/richTable'
@@ -117,6 +119,7 @@ export const getEnrichedColumns = ({
   additionalPrinterColumnsUndefinedValues,
   additionalPrinterColumnsTrimLengths,
   additionalPrinterColumnsColWidths,
+  additionalPrinterColumnsTooltips,
   additionalPrinterColumnsKeyTypeProps,
   additionalPrinterColumnsCustomSortersAndFilters,
   theme,
@@ -126,6 +129,7 @@ export const getEnrichedColumns = ({
   additionalPrinterColumnsUndefinedValues?: TAdditionalPrinterColumnsUndefinedValues
   additionalPrinterColumnsTrimLengths?: TAdditionalPrinterColumnsTrimLengths
   additionalPrinterColumnsColWidths?: TAdditionalPrinterColumnsColWidths
+  additionalPrinterColumnsTooltips?: TAdditionalPrinterColumnsTooltips
   additionalPrinterColumnsKeyTypeProps?: TAdditionalPrinterColumnsKeyTypeProps
   additionalPrinterColumnsCustomSortersAndFilters?: TAdditionalPrinterColumnsCustomSortersAndFilters
   theme: 'dark' | 'light'
@@ -146,6 +150,7 @@ export const getEnrichedColumns = ({
     const possibleUndefinedValue = additionalPrinterColumnsUndefinedValues?.find(({ key }) => key === el.key)?.value
     const possibleTrimLength = additionalPrinterColumnsTrimLengths?.find(({ key }) => key === el.key)?.value
     const possibleColWidth = additionalPrinterColumnsColWidths?.find(({ key }) => key === el.key)?.value
+    const possibleTooltip = additionalPrinterColumnsTooltips?.find(({ key }) => key === el.key)?.value
     const possibleCustomTypeWithProps =
       additionalPrinterColumnsKeyTypeProps && el.key
         ? additionalPrinterColumnsKeyTypeProps[el.key.toString()]
@@ -161,18 +166,46 @@ export const getEnrichedColumns = ({
         ? (el as any).dataIndex.join('.')
         : String((el as any).dataIndex ?? colIndex))
 
-    // for factory search
-    const getCellTextFromDOM = (record: any): string => {
-      const rowKey = getRowKey(record)
-      const selector = `td[data-rowkey="${String(rowKey)}"][data-colkey="${colKey}"]`
-      const cell = document.querySelector(selector) as HTMLElement | null
-      if (!cell) return ''
-      return (cell.innerText || cell.textContent || '').trim().toLowerCase()
+    const getCellTextFromRecord = (record: any): string => {
+      const { dataIndex } = el as { dataIndex?: string | string[] }
+      if (!dataIndex) return ''
+
+      const entry = Array.isArray(dataIndex) ? get(record, dataIndex) : record?.[dataIndex]
+      if (entry === null || entry === undefined) return ''
+
+      if (typeof entry === 'string') return entry.trim().toLowerCase()
+      if (typeof entry === 'number' || typeof entry === 'boolean') return String(entry).toLowerCase()
+      if (Array.isArray(entry))
+        return entry
+          .map(item => String(item))
+          .join(', ')
+          .trim()
+          .toLowerCase()
+      if (typeof entry === 'object') return JSON.stringify(entry).trim().toLowerCase()
+      return String(entry).trim().toLowerCase()
     }
+
+    // for factory search (safe even when keys contain characters that break CSS selectors)
+    const getCellTextFromDOM = (record: any): string => {
+      if (typeof document === 'undefined') return ''
+      const rowKey = getRowKey(record)
+      const rowKeyStr = String(rowKey)
+      const colKeyStr = String(colKey)
+      const cells = document.querySelectorAll('td[data-rowkey][data-colkey]')
+      for (let i = 0; i < cells.length; i += 1) {
+        const cell = cells[i] as HTMLElement
+        if (cell.getAttribute('data-rowkey') === rowKeyStr && cell.getAttribute('data-colkey') === colKeyStr) {
+          return (cell.innerText || cell.textContent || '').trim().toLowerCase()
+        }
+      }
+      return ''
+    }
+
+    const getComparableCellText = (record: any): string => getCellTextFromDOM(record) || getCellTextFromRecord(record)
 
     // ---- MEMORY: parse DOM text like "782.02 MB" → bytes; no DOM → 0 ----
     const getMemoryInBytes = (record: any): number => {
-      const text = getCellTextFromDOM(record)
+      const text = getComparableCellText(record)
       if (!text) return 0
 
       const parsed = parseValueWithUnit(text)
@@ -189,7 +222,7 @@ export const getEnrichedColumns = ({
 
     // ---- CPU: parse DOM text like "3.69 mcore" → cores; no DOM → 0 ----
     const getCpuInCores = (record: any): number => {
-      const text = getCellTextFromDOM(record)
+      const text = getComparableCellText(record)
       if (!text) return 0
 
       const parsed = parseCoresWithUnit(text)
@@ -213,8 +246,28 @@ export const getEnrichedColumns = ({
       return a - b
     }
 
+    const columnTitle =
+      possibleTooltip && typeof el.title !== 'function' ? (
+        <Flex align="center" gap={4}>
+          <span>{el.title || String(el.key || '')}</span>
+          <Tooltip title={possibleTooltip}>
+            <span
+              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
+              onKeyDown={e => e.stopPropagation()}
+            >
+              <QuestionCircleOutlined />
+            </span>
+          </Tooltip>
+        </Flex>
+      ) : (
+        el.title
+      )
+
     return {
       ...el,
+      title: columnTitle,
+      showSorterTooltip: false,
       render: (value: TJSON, record: unknown) =>
         getCellRender({
           value,
@@ -260,7 +313,7 @@ export const getEnrichedColumns = ({
         }
         // for factory search
         if (useFactorySearch) {
-          const text = getCellTextFromDOM(record)
+          const text = getComparableCellText(record)
           return text.includes(String(value).toLowerCase())
         }
 
@@ -303,8 +356,8 @@ export const getEnrichedColumns = ({
 
             // for factory search
             if (useFactorySearch) {
-              const aText = getCellTextFromDOM(a)
-              const bText = getCellTextFromDOM(b)
+              const aText = getComparableCellText(a)
+              const bText = getComparableCellText(b)
               return aText.localeCompare(bText)
             }
 

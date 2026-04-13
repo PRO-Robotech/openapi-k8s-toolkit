@@ -4,6 +4,7 @@ import {
   buildEvictModalData,
   buildEvictBody,
   buildDeleteChildrenData,
+  resolveObjectByReqIndexAndJsonPath,
   stripMetadataForRerun,
   TParseContext,
   TEvictModalData,
@@ -346,6 +347,58 @@ describe('buildDeleteChildrenData', () => {
     }
 
     expect(() => buildDeleteChildrenData(action, ctx)).toThrow('Could not parse children data')
+  })
+})
+
+describe('resolveObjectByReqIndexAndJsonPath', () => {
+  it('resolves object from reqIndex/jsonPathToObj', () => {
+    const result = resolveObjectByReqIndexAndJsonPath({
+      reqIndex: '0',
+      jsonPathToObj: '.spec.jobTemplate',
+      multiQueryData: {
+        req0: {
+          spec: {
+            jobTemplate: {
+              spec: {
+                template: {
+                  spec: {
+                    containers: [{ name: 'job', image: 'busybox' }],
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    expect(result).toEqual({
+      spec: {
+        template: {
+          spec: {
+            containers: [{ name: 'job', image: 'busybox' }],
+          },
+        },
+      },
+    })
+  })
+
+  it('returns undefined for missing root/path or non-object values', () => {
+    expect(
+      resolveObjectByReqIndexAndJsonPath({
+        reqIndex: '1',
+        jsonPathToObj: '.spec.jobTemplate',
+        multiQueryData: { req0: {} },
+      }),
+    ).toBeUndefined()
+
+    expect(
+      resolveObjectByReqIndexAndJsonPath({
+        reqIndex: '0',
+        jsonPathToObj: '.spec.completions',
+        multiQueryData: { req0: { spec: { completions: 1 } } },
+      }),
+    ).toBeUndefined()
   })
 })
 

@@ -24,13 +24,14 @@ jest.mock('@tanstack/react-query', () => ({
 
 const mockNotificationSuccess = jest.fn()
 const mockNotificationError = jest.fn()
+const mockNotificationWarning = jest.fn()
 jest.mock('antd', () => {
   const actual = jest.requireActual('antd')
   return {
     ...actual,
     notification: {
       useNotification: () => [
-        { success: mockNotificationSuccess, error: mockNotificationError },
+        { success: mockNotificationSuccess, error: mockNotificationError, warning: mockNotificationWarning },
         null, // contextHolder
       ],
     },
@@ -46,6 +47,13 @@ jest.mock('api/forms', () => ({
   patchEntryWithMergePatch: (...args: unknown[]) => mockPatchEntryWithMergePatch(...args),
 }))
 
+const mockAxiosPost = jest.fn()
+jest.mock('axios', () => ({
+  ...jest.requireActual('axios'),
+  __esModule: true,
+  default: { post: (...args: unknown[]) => mockAxiosPost(...args) },
+}))
+
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
@@ -59,6 +67,7 @@ beforeEach(() => {
   mockCreateNewEntry.mockResolvedValue({})
   mockPatchEntryWithReplaceOp.mockResolvedValue({})
   mockPatchEntryWithMergePatch.mockResolvedValue({})
+  mockAxiosPost.mockResolvedValue({ data: {} })
 })
 
 /* ------------------------------------------------------------------ */
@@ -282,6 +291,205 @@ describe('useActionsDropdownHandlers - rollout restart', () => {
         expect.objectContaining({ message: 'Rollout Restart successful' }),
       )
     })
+  })
+})
+
+describe('useActionsDropdownHandlers - triggerRun and rerunLast', () => {
+  it('triggerRun resolves object via reqIndex/jsonPathToObj and creates a new Job', async () => {
+    const params = {
+      ...baseParams,
+      multiQueryData: {
+        req0: {
+          metadata: { name: 'nightly' },
+          spec: {
+            jobTemplate: {
+              metadata: { namespace: 'default' },
+              spec: {
+                template: { spec: { restartPolicy: 'Never', containers: [{ name: 'main', image: 'busybox' }] } },
+              },
+            },
+          },
+        },
+      },
+    }
+
+    const triggerRunAction: TActionUnion = {
+      type: 'triggerRun',
+      props: {
+        text: 'Trigger run',
+        createEndpoint: '/api/clusters/{2}/k8s/apis/batch/v1/namespaces/default/jobs',
+        cronJobName: "{reqsJsonPath[0]['.metadata.name']['-']}",
+        reqIndex: '0',
+        jsonPathToObj: '.spec.jobTemplate',
+      },
+    }
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(params))
+
+    await act(async () => {
+      result.current.handleActionClick(triggerRunAction)
+    })
+
+    expect(mockCreateNewEntry).toHaveBeenCalledTimes(1)
+    const callArg = mockCreateNewEntry.mock.calls[0][0]
+    expect(callArg.endpoint).toBe('/api/clusters/my-cluster/k8s/apis/batch/v1/namespaces/default/jobs')
+    expect(callArg.body).toEqual(
+      expect.objectContaining({
+        apiVersion: 'batch/v1',
+        kind: 'Job',
+        metadata: expect.objectContaining({
+          namespace: 'default',
+          annotations: { 'cronjob.kubernetes.io/instantiate': 'manual' },
+          name: expect.stringMatching(/^nightly-manual-/),
+        }),
+      }),
+    )
+    expect(callArg.body.spec).toEqual({
+      template: { spec: { restartPolicy: 'Never', containers: [{ name: 'main', image: 'busybox' }] } },
+    })
+  })
+
+  it('triggerRun shows error when object cannot be resolved', async () => {
+    const triggerRunAction: TActionUnion = {
+      type: 'triggerRun',
+      props: {
+        text: 'Trigger run',
+        createEndpoint: '/api/jobs',
+        cronJobName: 'nightly',
+        reqIndex: '0',
+        jsonPathToObj: '.spec.jobTemplate',
+      },
+    }
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    await act(async () => {
+      result.current.handleActionClick(triggerRunAction)
+    })
+
+    expect(mockCreateNewEntry).not.toHaveBeenCalled()
+    expect(mockNotificationError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Trigger run failed',
+        description: 'Could not resolve job template from resource data',
+      }),
+    )
+  })
+
+  it('rerunLast resolves object via reqIndex/jsonPathToObj and creates rerun payload', async () => {
+    const params = {
+      ...baseParams,
+      multiQueryData: {
+        req0: {
+          items: [
+            {
+              metadata: {
+                name: 'daily-report',
+                namespace: 'default',
+                labels: {
+                  app: 'report',
+                  'controller-uid': 'uid-1',
+                  'job-name': 'daily-report',
+                },
+              },
+              spec: {
+                selector: { matchLabels: { 'controller-uid': 'uid-1' } },
+                manualSelector: true,
+                template: {
+                  metadata: {
+                    labels: {
+                      app: 'report',
+                      'controller-uid': 'uid-1',
+                      'job-name': 'daily-report',
+                    },
+                  },
+                  spec: { restartPolicy: 'Never', containers: [{ name: 'main', image: 'busybox' }] },
+                },
+              },
+              status: { succeeded: 1 },
+            },
+          ],
+        },
+      },
+    }
+
+    const rerunAction: TActionUnion = {
+      type: 'rerunLast',
+      props: {
+        text: 'Rerun',
+        createEndpoint: '/api/clusters/{2}/k8s/apis/batch/v1/namespaces/default/jobs',
+        sourceJobName: "{reqsJsonPath[0]['.items.0.metadata.name']['-']}",
+        reqIndex: '0',
+        jsonPathToObj: '.items.0',
+      },
+    }
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(params))
+
+    act(() => {
+      result.current.handleActionClick(rerunAction)
+    })
+
+    expect(result.current.rerunModalData).toEqual(
+      expect.objectContaining({
+        createEndpoint: '/api/clusters/my-cluster/k8s/apis/batch/v1/namespaces/default/jobs',
+        sourceName: 'daily-report',
+      }),
+    )
+
+    await act(async () => {
+      result.current.handleRerunConfirm()
+    })
+
+    expect(mockCreateNewEntry).toHaveBeenCalledTimes(1)
+    expect(mockCreateNewEntry).toHaveBeenCalledWith({
+      endpoint: '/api/clusters/my-cluster/k8s/apis/batch/v1/namespaces/default/jobs',
+      body: {
+        metadata: {
+          namespace: 'default',
+          labels: { app: 'report' },
+          generateName: 'daily-report-rerun-',
+        },
+        spec: {
+          template: {
+            metadata: {
+              labels: { app: 'report' },
+            },
+            spec: {
+              restartPolicy: 'Never',
+              containers: [{ name: 'main', image: 'busybox' }],
+            },
+          },
+        },
+      },
+    })
+  })
+
+  it('rerunLast shows error when object cannot be resolved', () => {
+    const rerunAction: TActionUnion = {
+      type: 'rerunLast',
+      props: {
+        text: 'Rerun',
+        createEndpoint: '/api/jobs',
+        sourceJobName: 'missing-job',
+        reqIndex: '0',
+        jsonPathToObj: '.items.0',
+      },
+    }
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(rerunAction)
+    })
+
+    expect(mockCreateNewEntry).not.toHaveBeenCalled()
+    expect(mockNotificationError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Rerun job failed',
+        description: 'Could not resolve source job spec from resource data',
+      }),
+    )
   })
 })
 
@@ -517,5 +725,493 @@ describe('useActionsDropdownHandlers - modal actions', () => {
       expect(result.current.activeAction).toBeNull()
       expect(result.current.modalOpen).toBe(false)
     })
+  })
+})
+
+describe('useActionsDropdownHandlers - drain action', () => {
+  const drainAction: TActionUnion = {
+    type: 'drain',
+    props: {
+      text: 'Drain',
+      bffEndpoint: '/api/clusters/{2}/openapi-bff/actions/drain',
+      nodeName: 'my-node',
+    },
+  }
+
+  it('sets drainModalData with parsed fields on click', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(drainAction)
+    })
+
+    expect(result.current.drainModalData).toEqual({
+      bffEndpoint: '/api/clusters/my-cluster/openapi-bff/actions/drain',
+      nodeName: 'my-node',
+    })
+  })
+
+  it('handleDrainConfirm calls axios.post with correct body', async () => {
+    mockAxiosPost.mockResolvedValue({ data: { drained: 3, failed: [], skipped: 1 } })
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(drainAction)
+    })
+
+    await act(async () => {
+      result.current.handleDrainConfirm()
+    })
+
+    expect(mockAxiosPost).toHaveBeenCalledTimes(1)
+    expect(mockAxiosPost).toHaveBeenCalledWith('/api/clusters/my-cluster/openapi-bff/actions/drain', {
+      nodeName: 'my-node',
+      apiPath: '/api/v1/nodes/my-node',
+    })
+  })
+
+  it('shows success notification with drained/skipped counts on full success', async () => {
+    mockAxiosPost.mockResolvedValue({ data: { drained: 3, failed: [], skipped: 1 } })
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(drainAction)
+    })
+
+    await act(async () => {
+      result.current.handleDrainConfirm()
+    })
+
+    expect(mockNotificationSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Drain my-node successful',
+        description: 'Evicted 3 pod(s), skipped 1',
+      }),
+    )
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['multi'] })
+    expect(result.current.drainModalData).toBeNull()
+    expect(result.current.isDrainLoading).toBe(false)
+  })
+
+  it('shows success notification with drained: 0 when all skipped', async () => {
+    mockAxiosPost.mockResolvedValue({ data: { drained: 0, failed: [], skipped: 5 } })
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(drainAction)
+    })
+
+    await act(async () => {
+      result.current.handleDrainConfirm()
+    })
+
+    expect(mockNotificationSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Drain my-node successful',
+        description: 'Evicted 0 pod(s), skipped 5',
+      }),
+    )
+  })
+
+  it('shows warning notification with pod failure details on partial failure', async () => {
+    mockAxiosPost.mockResolvedValue({
+      data: {
+        drained: 2,
+        failed: [
+          { name: 'pod-a', namespace: 'ns1', error: 'PDB violated' },
+          { name: 'pod-b', namespace: 'ns2', error: 'timeout' },
+        ],
+        skipped: 1,
+      },
+    })
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(drainAction)
+    })
+
+    await act(async () => {
+      result.current.handleDrainConfirm()
+    })
+
+    expect(mockNotificationWarning).toHaveBeenCalledTimes(1)
+    const call = mockNotificationWarning.mock.calls[0][0]
+    expect(call.message).toBe('Drain my-node partially completed')
+    expect(call.duration).toBe(0)
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['multi'] })
+    expect(result.current.drainModalData).toBeNull()
+    expect(result.current.isDrainLoading).toBe(false)
+  })
+
+  it('handleDrainConfirm shows error and clears modal on reject', async () => {
+    mockAxiosPost.mockRejectedValue(new Error('Cordon failed'))
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(drainAction)
+    })
+
+    await act(async () => {
+      result.current.handleDrainConfirm()
+    })
+
+    expect(mockNotificationError).toHaveBeenCalledWith(expect.objectContaining({ message: 'Drain my-node failed' }))
+    expect(result.current.drainModalData).toBeNull()
+    expect(result.current.isDrainLoading).toBe(false)
+  })
+
+  it('handleDrainCancel clears modal data', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(drainAction)
+    })
+
+    expect(result.current.drainModalData).not.toBeNull()
+
+    act(() => {
+      result.current.handleDrainCancel()
+    })
+
+    expect(result.current.drainModalData).toBeNull()
+    expect(result.current.isDrainLoading).toBe(false)
+  })
+
+  it('handleDrainConfirm does nothing when drainModalData is null', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleDrainConfirm()
+    })
+
+    expect(mockAxiosPost).not.toHaveBeenCalled()
+  })
+})
+
+describe('useActionsDropdownHandlers - rollback action', () => {
+  const rollbackAction: TActionUnion = {
+    type: 'rollback',
+    props: {
+      text: 'Rollback',
+      bffEndpoint: '/api/clusters/{2}/openapi-bff/actions/rollback',
+      resourceName: 'my-deploy',
+      resourceEndpoint: '/apis/apps/v1/namespaces/{1}/deployments/my-deploy',
+    },
+  }
+
+  it('sets rollbackModalData with parsed fields on click', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(rollbackAction)
+    })
+
+    expect(result.current.rollbackModalData).toEqual({
+      bffEndpoint: '/api/clusters/my-cluster/openapi-bff/actions/rollback',
+      resourceName: 'my-deploy',
+      resourceEndpoint: '/apis/apps/v1/namespaces/default/deployments/my-deploy',
+    })
+  })
+
+  it('handleRollbackConfirm calls axios.post with correct body', async () => {
+    mockAxiosPost.mockResolvedValue({ data: { rolledBack: true, fromRevision: 3, toRevision: 2 } })
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(rollbackAction)
+    })
+
+    await act(async () => {
+      result.current.handleRollbackConfirm()
+    })
+
+    expect(mockAxiosPost).toHaveBeenCalledTimes(1)
+    expect(mockAxiosPost).toHaveBeenCalledWith('/api/clusters/my-cluster/openapi-bff/actions/rollback', {
+      resourceEndpoint: '/apis/apps/v1/namespaces/default/deployments/my-deploy',
+      resourceName: 'my-deploy',
+    })
+  })
+
+  it('handleRollbackConfirm shows success and clears modal on resolve', async () => {
+    mockAxiosPost.mockResolvedValue({ data: {} })
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(rollbackAction)
+    })
+
+    await act(async () => {
+      result.current.handleRollbackConfirm()
+    })
+
+    expect(mockNotificationSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Rollback my-deploy successful' }),
+    )
+    expect(result.current.rollbackModalData).toBeNull()
+    expect(result.current.isRollbackLoading).toBe(false)
+  })
+
+  it('handleRollbackConfirm shows error and clears modal on reject', async () => {
+    mockAxiosPost.mockRejectedValue(new Error('No previous revision'))
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(rollbackAction)
+    })
+
+    await act(async () => {
+      result.current.handleRollbackConfirm()
+    })
+
+    expect(mockNotificationError).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Rollback my-deploy failed' }),
+    )
+    expect(result.current.rollbackModalData).toBeNull()
+    expect(result.current.isRollbackLoading).toBe(false)
+  })
+
+  it('handleRollbackCancel clears modal data', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(rollbackAction)
+    })
+
+    expect(result.current.rollbackModalData).not.toBeNull()
+
+    act(() => {
+      result.current.handleRollbackCancel()
+    })
+
+    expect(result.current.rollbackModalData).toBeNull()
+    expect(result.current.isRollbackLoading).toBe(false)
+  })
+
+  it('handleRollbackConfirm does nothing when rollbackModalData is null', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleRollbackConfirm()
+    })
+
+    expect(mockAxiosPost).not.toHaveBeenCalled()
+  })
+})
+
+/* ------------------------------------------------------------------ */
+/*  downloadAsFiles                                                    */
+/* ------------------------------------------------------------------ */
+describe('useActionsDropdownHandlers - downloadAsFiles', () => {
+  const downloadAction: TActionUnion = {
+    type: 'downloadAsFiles',
+    props: {
+      text: 'Download',
+      endpoint: '/api/v1/namespaces/{1}/configmaps/my-cm',
+      resourceKind: 'ConfigMap',
+      name: 'my-cm',
+    },
+  }
+
+  it('sets activeAction with parsed endpoint on click', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(downloadAction)
+    })
+
+    expect(result.current.activeAction).toEqual({
+      type: 'downloadAsFiles',
+      props: expect.objectContaining({
+        endpoint: '/api/v1/namespaces/default/configmaps/my-cm',
+        name: 'my-cm',
+        resourceKind: 'ConfigMap',
+      }),
+    })
+    expect(result.current.modalOpen).toBe(true)
+  })
+
+  it('handleCloseModal clears activeAction and modalOpen', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(downloadAction)
+    })
+
+    act(() => {
+      result.current.handleCloseModal()
+    })
+
+    expect(result.current.activeAction).toBeNull()
+    expect(result.current.modalOpen).toBe(false)
+  })
+})
+
+/* ------------------------------------------------------------------ */
+/*  createFromFiles                                                    */
+/* ------------------------------------------------------------------ */
+describe('useActionsDropdownHandlers - createFromFiles', () => {
+  const createAction: TActionUnion = {
+    type: 'createFromFiles',
+    props: {
+      text: 'Create from files',
+      createEndpoint: '/api/v1/namespaces/{1}/secrets',
+      namespace: '{1}',
+      resourceKind: 'Secret',
+    },
+  }
+
+  it('sets createFromFilesModalData with parsed fields on click', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(createAction)
+    })
+
+    expect(result.current.createFromFilesModalData).toEqual({
+      createEndpoint: '/api/v1/namespaces/default/secrets',
+      namespace: 'default',
+      resourceKind: 'Secret',
+      apiVersion: 'v1',
+    })
+  })
+
+  it('handleCreateFromFilesConfirm calls createNewEntry with correct body', async () => {
+    mockCreateNewEntry.mockResolvedValue({})
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(createAction)
+    })
+
+    await act(async () => {
+      result.current.handleCreateFromFilesConfirm('my-secret', { 'tls.crt': 'Y2VydA==', 'tls.key': 'a2V5' }, {})
+    })
+
+    expect(mockCreateNewEntry).toHaveBeenCalledTimes(1)
+    expect(mockCreateNewEntry).toHaveBeenCalledWith({
+      endpoint: '/api/v1/namespaces/default/secrets',
+      body: {
+        apiVersion: 'v1',
+        kind: 'Secret',
+        metadata: { name: 'my-secret', namespace: 'default' },
+        data: { 'tls.crt': 'Y2VydA==', 'tls.key': 'a2V5' },
+      },
+    })
+  })
+
+  it('handleCreateFromFilesConfirm includes binaryData when provided', async () => {
+    mockCreateNewEntry.mockResolvedValue({})
+
+    const { result } = renderHook(() =>
+      useActionsDropdownHandlers({
+        ...baseParams,
+        replaceValues: { ...baseParams.replaceValues },
+      }),
+    )
+
+    const createCmAction: TActionUnion = {
+      type: 'createFromFiles',
+      props: {
+        text: 'Create from files',
+        createEndpoint: '/api/v1/namespaces/{1}/configmaps',
+        namespace: '{1}',
+        resourceKind: 'ConfigMap',
+      },
+    }
+
+    act(() => {
+      result.current.handleActionClick(createCmAction)
+    })
+
+    await act(async () => {
+      result.current.handleCreateFromFilesConfirm('my-cm', { 'app.conf': 'key=value' }, { 'logo.png': 'iVBORw==' })
+    })
+
+    expect(mockCreateNewEntry).toHaveBeenCalledWith({
+      endpoint: '/api/v1/namespaces/default/configmaps',
+      body: {
+        apiVersion: 'v1',
+        kind: 'ConfigMap',
+        metadata: { name: 'my-cm', namespace: 'default' },
+        data: { 'app.conf': 'key=value' },
+        binaryData: { 'logo.png': 'iVBORw==' },
+      },
+    })
+  })
+
+  it('handleCreateFromFilesConfirm shows success and clears modal on resolve', async () => {
+    mockCreateNewEntry.mockResolvedValue({})
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(createAction)
+    })
+
+    await act(async () => {
+      result.current.handleCreateFromFilesConfirm('my-secret', { key: 'val' }, {})
+    })
+
+    expect(mockNotificationSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Create Secret my-secret successful' }),
+    )
+    expect(result.current.createFromFilesModalData).toBeNull()
+    expect(result.current.isCreateFromFilesLoading).toBe(false)
+  })
+
+  it('handleCreateFromFilesConfirm shows error and clears modal on reject', async () => {
+    mockCreateNewEntry.mockRejectedValue(new Error('already exists'))
+
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(createAction)
+    })
+
+    await act(async () => {
+      result.current.handleCreateFromFilesConfirm('my-secret', { key: 'val' }, {})
+    })
+
+    expect(mockNotificationError).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Create Secret my-secret failed' }),
+    )
+    expect(result.current.createFromFilesModalData).toBeNull()
+    expect(result.current.isCreateFromFilesLoading).toBe(false)
+  })
+
+  it('handleCreateFromFilesCancel clears modal data', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleActionClick(createAction)
+    })
+
+    expect(result.current.createFromFilesModalData).not.toBeNull()
+
+    act(() => {
+      result.current.handleCreateFromFilesCancel()
+    })
+
+    expect(result.current.createFromFilesModalData).toBeNull()
+    expect(result.current.isCreateFromFilesLoading).toBe(false)
+  })
+
+  it('handleCreateFromFilesConfirm does nothing when createFromFilesModalData is null', () => {
+    const { result } = renderHook(() => useActionsDropdownHandlers(baseParams))
+
+    act(() => {
+      result.current.handleCreateFromFilesConfirm('name', {}, {})
+    })
+
+    expect(mockCreateNewEntry).not.toHaveBeenCalled()
   })
 })

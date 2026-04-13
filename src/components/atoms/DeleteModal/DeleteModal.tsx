@@ -43,6 +43,11 @@ export const DeleteModal: FC<TDeleteModalProps> = ({ name, onClose, endpoint }) 
       okButtonProps={{ danger: true }}
       width={400}
       centered
+      styles={{
+        header: {
+          paddingRight: '30px',
+        },
+      }}
     >
       {error && <Alert type="error" message="Error while delete" description={error?.response?.data?.message} />}
     </Modal>

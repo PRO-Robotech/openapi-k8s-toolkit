@@ -6,7 +6,7 @@
 /* eslint-disable no-console */
 import React, { FC, useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react'
 import { useDebounceCallback } from 'usehooks-ts'
-import { theme as antdtheme, Form, Button, Alert, Flex, Modal, Typography } from 'antd'
+import { App as AntdApp, theme as antdtheme, Form, Button, Alert, Flex, Modal, Typography } from 'antd'
 import { BugOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import axios, { isAxiosError } from 'axios'
@@ -34,7 +34,9 @@ import {
   collectArrayLengths,
   templateMatchesArray,
   buildConcretePathForNewItem,
+  getConcretePathsForNewArrayItem,
   scrubLiteralWildcardKeys,
+  TWildcardTemplate,
 } from './helpers/prefills'
 import { DEBUG_PREFILLS, dbg, group, end, wdbg, wgroup, wend, prettyPath } from './helpers/debugs'
 import { sanitizeWildcardPath, expandWildcardTemplates, toStringPath, isPrefix } from './helpers/hiddenExpanded'
@@ -102,12 +104,30 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
   designNewLayoutHeight,
 }) => {
   const { token } = antdtheme.useToken()
+  const { notification: notificationApi } = AntdApp.useApp()
   const navigate = useNavigate()
 
   const [form] = Form.useForm()
 
   const allValues = Form.useWatch([], form)
   const namespaceFromFormData = Form.useWatch<string>(['metadata', 'namespace'], form)
+
+  const resolvedBacklink = useMemo(() => {
+    if (!backlink || !namespaceFromFormData) return backlink
+    const tablePattern = /(\/api-table\/|\/builtin-table\/)/
+    const match = backlink.match(tablePattern)
+    if (!match || match.index == null) return backlink
+
+    const beforeTable = backlink.substring(0, match.index)
+    const tableAndAfter = backlink.substring(match.index)
+    const segments = beforeTable.split('/').filter(Boolean)
+
+    if (segments.length <= 2) {
+      return `${beforeTable}/${namespaceFromFormData}${tableAndAfter}`
+    }
+
+    return backlink
+  }, [backlink, namespaceFromFormData])
 
   const [properties, setProperties] = useState<OpenAPIV2.SchemaObject['properties']>(staticProperties)
   const [yamlValues, setYamlValues] = useState<Record<string, unknown>>()
@@ -146,7 +166,18 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
       return value
     })
   }
-  const [persistedKeys, setPersistedKeys] = useState<TFormName[]>(persistedPaths || [])
+  const exactPersistedPaths = useMemo<TFormName[]>(
+    () => (persistedPaths || []).filter(path => !path.some(seg => seg === '*')),
+    [persistedPaths],
+  )
+  const persistedWildcardTemplates = useMemo<TWildcardTemplate[]>(
+    () =>
+      (persistedPaths || [])
+        .filter(path => path.some(seg => seg === '*'))
+        .map(path => ({ wildcardPath: sanitizeWildcardPath(path as (string | number | unknown)[]) })),
+    [persistedPaths],
+  )
+  const [persistedKeys, setPersistedKeys] = useState<TFormName[]>(exactPersistedPaths)
   const [resolvedHiddenPaths, setResolvedHiddenPaths] = useState<TFormName[]>([])
 
   const blockedPathsRef = useRef<Set<string>>(new Set())
@@ -251,11 +282,15 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
             }/${plural}/${isCreate ? '' : name}`
 
             if (isCreate) {
-              createNewEntry({ endpoint, body })
+              createNewEntry<{ metadata?: { name?: string } }>({ endpoint, body })
                 .then(res => {
-                  console.log(res)
-                  if (backlink) {
-                    navigate(backlink)
+                  const resName = res.data?.metadata?.name || name
+                  notificationApi.success({
+                    message: `${kind} "${resName}" created successfully`,
+                    placement: 'bottomRight',
+                  })
+                  if (resolvedBacklink) {
+                    navigate(resolvedBacklink)
                   }
                 })
                 .catch(error => {
@@ -268,11 +303,15 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
                   setError(error)
                 })
             } else {
-              updateEntry({ endpoint, body })
+              updateEntry<{ metadata?: { name?: string } }>({ endpoint, body })
                 .then(res => {
-                  console.log(res)
-                  if (backlink) {
-                    navigate(backlink)
+                  const resName = res.data?.metadata?.name || name
+                  notificationApi.success({
+                    message: `${kind} "${resName}" updated successfully`,
+                    placement: 'bottomRight',
+                  })
+                  if (resolvedBacklink) {
+                    navigate(resolvedBacklink)
                   }
                 })
                 .catch(error => {
@@ -405,7 +444,11 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
         const current = form.getFieldValue(concretePath as any)
         dbg('current value at path', concretePath, ':', current)
 
-        if (typeof current === 'undefined') {
+        const isItemLevelWildcard = tpl.wildcardPath[tpl.wildcardPath.length - 1] === '*'
+        const isEffectivelyEmpty =
+          typeof current === 'undefined' || (isItemLevelWildcard && _.isPlainObject(current) && _.isEmpty(current))
+
+        if (isEffectivelyEmpty) {
           const toSet = _.cloneDeep(tpl.value)
           dbg('setting value', { path: concretePath, value: toSet })
           form.setFieldValue(concretePath as any, toSet)
@@ -416,6 +459,34 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
       end() // apply group
     },
     [form, prefillTemplates],
+  )
+
+  const applyPersistedForNewArrayItem = useCallback(
+    (arrayPath: (string | number)[], newIndex: number) => {
+      const concretePaths = getConcretePathsForNewArrayItem(
+        persistedWildcardTemplates,
+        arrayPath,
+        newIndex,
+      ) as TFormName[]
+
+      if (!concretePaths.length) return
+
+      setPersistedKeys(prev => {
+        const seen = new Set(prev.map(x => JSON.stringify(x)))
+        const merged = [...prev]
+
+        concretePaths.forEach(path => {
+          const key = JSON.stringify(path)
+          if (!seen.has(key)) {
+            seen.add(key)
+            merged.push(path)
+          }
+        })
+
+        return merged
+      })
+    },
+    [persistedWildcardTemplates],
   )
 
   // --- Feature: wildcard hidden/expanded items ---
@@ -472,8 +543,28 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
       return merged
     })
 
+    const persistedResolved = expandWildcardTemplates(
+      persistedWildcardTemplates.map(tpl => tpl.wildcardPath),
+      initialValues as any,
+      {
+        includeMissingFinalForWildcard: true,
+      },
+    )
+    setPersistedKeys(prev => {
+      const seen = new Set(prev.map(x => JSON.stringify(x)))
+      const merged = [...prev]
+      for (const p of persistedResolved) {
+        const k = JSON.stringify(p as any)
+        if (!seen.has(k)) {
+          seen.add(k)
+          merged.push(p as any)
+        }
+      }
+      return merged
+    })
+
     wend()
-  }, [initialValues, hiddenWildcardTemplates, expandedWildcardTemplates])
+  }, [initialValues, hiddenWildcardTemplates, expandedWildcardTemplates, persistedWildcardTemplates])
 
   const resolvedHiddenStringPaths = useMemo<string[][]>(
     () => resolvedHiddenPaths.map(toStringPath),
@@ -725,6 +816,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
 
             // your existing prefills (wildcards etc.)
             applyPrefillForNewArrayItem(arrayPath, i)
+            applyPersistedForNewArrayItem(arrayPath, i)
           }
         }
       }
@@ -747,6 +839,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
           for (let i = prevLen; i < newLen; i++) {
             dbg('…prefilling new index', i, 'under', arrayPath)
             applyPrefillForNewArrayItem(arrayPath, i)
+            applyPersistedForNewArrayItem(arrayPath, i)
           }
         }
       }
@@ -770,6 +863,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
       persistedKeys,
       debouncedPostValuesToYaml,
       applyPrefillForNewArrayItem,
+      applyPersistedForNewArrayItem,
       hiddenWildcardTemplates,
       expandedWildcardTemplates,
     ],
@@ -970,7 +1064,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
     const prev = prevInitialValues.current
     if (!_.isEqual(prev, initialValues)) {
       if (initialValues) {
-        console.log('fired initial values', initialValues)
+        // console.log('fired initial values', initialValues)
         onValuesChangeCallback(initialValues)
       }
       prevInitialValues.current = initialValues
@@ -1210,7 +1304,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
   }
 
   const onPersistUnmark = (value: TFormName) => {
-    console.log(value)
+    // console.log(value)
     setPersistedKeys([...persistedKeys.filter(arr => JSON.stringify(arr) !== JSON.stringify(value))])
   }
 
@@ -1322,6 +1416,11 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
           }
           cancelButtonProps={{ style: { display: 'none' } }}
           centered
+          styles={{
+            header: {
+              paddingRight: '30px',
+            },
+          }}
         >
           An error has occurred: {error?.response?.data?.message}
         </Modal>
@@ -1335,6 +1434,11 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
           title="Debug for properties"
           width="90vw"
           centered
+          styles={{
+            header: {
+              paddingRight: '30px',
+            },
+          }}
         >
           <Styled.DebugContainer $designNewLayoutHeight={designNewLayoutHeight}>
             <Suspense fallback={<div>Loading...</div>}>

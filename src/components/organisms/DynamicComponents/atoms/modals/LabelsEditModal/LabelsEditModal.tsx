@@ -73,7 +73,7 @@ export const LabelsEditModal: FC<TLabelsEditModalProps> = ({
           const [key, value] = label.split('=')
           result[key] = value || ''
         })
-        console.log(JSON.stringify(result))
+        // console.log(JSON.stringify(result))
         setIsLoading(true)
         setError(undefined)
         patchEntryWithReplaceOp({ endpoint, pathToValue, body: result })
@@ -112,6 +112,11 @@ export const LabelsEditModal: FC<TLabelsEditModalProps> = ({
       width={editModalWidth || 520}
       destroyOnHidden
       centered
+      styles={{
+        header: {
+          paddingRight: '30px',
+        },
+      }}
     >
       {error && <Alert type="error" message="Error while submitting" description={error?.response?.data?.message} />}
       {modalDescriptionText && (

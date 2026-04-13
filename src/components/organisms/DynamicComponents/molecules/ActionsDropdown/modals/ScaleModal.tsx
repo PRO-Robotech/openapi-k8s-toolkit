@@ -35,6 +35,11 @@ export const ScaleModal: FC<TScaleModalProps> = ({ open, onClose, onConfirm, cur
       confirmLoading={isLoading}
       okButtonProps={{ disabled: !isValidReplicas }}
       width={400}
+      styles={{
+        header: {
+          paddingRight: '30px',
+        },
+      }}
     >
       <Typography.Paragraph>
         Current replicas: <strong>{currentReplicas}</strong>

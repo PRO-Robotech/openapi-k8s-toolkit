@@ -215,6 +215,22 @@ describe('useK8sSmartResourceWithoutKinds', () => {
     expect(result.current.isLoading).toBe(true)
   })
 
+  test('watch exposes blocking error when open, hasInitial=false, and lastError exists', () => {
+    setVerbs({ canList: true, canWatch: true })
+    setWatch({ status: 'open', hasInitial: false, lastError: 'Access denied (403)' } as any)
+
+    const { result } = renderHook(() =>
+      useK8sSmartResourceWithoutKinds({
+        ...baseParams,
+      }),
+    )
+
+    expect(result.current._meta?.used).toBe('watch')
+    expect(result.current.isLoading).toBe(false)
+    expect(result.current.isError).toBe(true)
+    expect(result.current.error).toBe('Access denied (403)')
+  })
+
   test('watch error when closed and lastError present', () => {
     setVerbs({ canList: true, canWatch: true })
     setWatch({ status: 'closed', hasInitial: true, lastError: 'WS down' } as any)
@@ -228,6 +244,22 @@ describe('useK8sSmartResourceWithoutKinds', () => {
     expect(result.current._meta?.used).toBe('watch')
     expect(result.current.isError).toBe(true)
     expect(result.current.error).toBe('WS down')
+  })
+
+  test('watch keeps non-blocking state when open, hasInitial=true, and lastError exists', () => {
+    setVerbs({ canList: true, canWatch: true })
+    setWatch({ status: 'open', hasInitial: true, lastError: 'intermittent stream error' } as any)
+
+    const { result } = renderHook(() =>
+      useK8sSmartResourceWithoutKinds({
+        ...baseParams,
+      }),
+    )
+
+    expect(result.current._meta?.used).toBe('watch')
+    expect(result.current.isLoading).toBe(false)
+    expect(result.current.isError).toBe(false)
+    expect(result.current.error).toBeUndefined()
   })
 
   test('list path enabled when canList=true and canWatch=false', () => {

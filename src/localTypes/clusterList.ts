@@ -1,8 +1,9 @@
 export type TCluster = {
+  name: string
+  displayName?: string
+  tenant: string
   api: string
   description: string
-  name: string
-  tenant: string
 }
 
 export type TClusterList = TCluster[]

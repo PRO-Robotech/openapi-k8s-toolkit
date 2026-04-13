@@ -6,4 +6,7 @@ type TCursorDefaultDivProps = {
 
 export const CursorDefaultDiv = styled.div<TCursorDefaultDivProps>`
   cursor: ${({ $default }) => ($default ? 'default' : 'inherit')};
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 `

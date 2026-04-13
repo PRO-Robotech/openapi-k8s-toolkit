@@ -8,6 +8,8 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { getKeyCounterItemsInside } from '../../utils/KeyCounter'
 import { parseAll } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../PerRequestError'
 
 export const KeyCounter: FC<{ data: TDynamicComponentsAppTypeMap['KeyCounter']; children?: any }> = ({
   data,
@@ -23,20 +25,16 @@ export const KeyCounter: FC<{ data: TDynamicComponentsAppTypeMap['KeyCounter']; 
     style,
   } = data
 
-  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiQueryLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
   }
 
-  if (isMultiQueryErrors) {
-    return (
-      <div>
-        <h4>Errors:</h4>
-        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
-      </div>
-    )
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
@@ -47,7 +45,7 @@ export const KeyCounter: FC<{ data: TDynamicComponentsAppTypeMap['KeyCounter']; 
   const jsonRoot = multiQueryData[`req${reqIndex}`]
 
   if (jsonRoot === undefined) {
-    console.log(`Key Counter: ${id}: No root for json path`)
+    // console.log(`Key Counter: ${id}: No root for json path`)
     return <span style={style}>{errorText}</span>
   }
 
@@ -56,7 +54,7 @@ export const KeyCounter: FC<{ data: TDynamicComponentsAppTypeMap['KeyCounter']; 
   const { counter, error: errorArrayOfObjects } = getKeyCounterItemsInside(anythingForNow)
 
   if (errorArrayOfObjects) {
-    console.log(`Key Counter: ${id}: ${errorArrayOfObjects}`)
+    // console.log(`Key Counter: ${id}: ${errorArrayOfObjects}`)
     return <span style={style}>{errorText}</span>
   }
 

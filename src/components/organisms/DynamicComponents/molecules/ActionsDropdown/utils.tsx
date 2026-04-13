@@ -111,5 +111,7 @@ export const getMenuItems = (
     icon: getActionIcon(action),
     disabled: action.props.disabled || isActionDisabledByPermission(actionKey, permissions),
     danger: action.props.danger,
-    onClick: () => onActionClick(action),
+    onClick: () => {
+      onActionClick(action)
+    },
   }))

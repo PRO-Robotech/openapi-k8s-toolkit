@@ -1,0 +1,1 @@
+export { AntdResult } from './AntdResult'

@@ -35,6 +35,11 @@ export const ReadOnlyModal: FC<TReadOnlyModalProps> = ({
       width={editModalWidth || 520}
       destroyOnHidden
       centered
+      styles={{
+        header: {
+          paddingRight: '30px',
+        },
+      }}
     >
       {modalDescriptionText && (
         <>

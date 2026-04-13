@@ -437,7 +437,13 @@ describe('getRequiredPermissions', () => {
   it('returns create verb for triggerRun', () => {
     const action: TActionUnion = {
       type: 'triggerRun',
-      props: { text: 'Trigger', createEndpoint: '/api/jobs', cronJobName: 'cron-1', jobTemplate: '{}' },
+      props: {
+        text: 'Trigger',
+        createEndpoint: '/api/jobs',
+        cronJobName: 'cron-1',
+        reqIndex: '0',
+        jsonPathToObj: '.spec.jobTemplate',
+      },
     }
 
     expect(getRequiredPermissions([action])).toEqual([{ verb: 'create' }])
@@ -455,7 +461,13 @@ describe('getRequiredPermissions', () => {
   it('returns create verb for rerunLast', () => {
     const action: TActionUnion = {
       type: 'rerunLast',
-      props: { text: 'Rerun', createEndpoint: '/api/jobs', sourceJobSpec: '{}', sourceJobName: 'job-1' },
+      props: {
+        text: 'Rerun',
+        createEndpoint: '/api/jobs',
+        sourceJobName: 'job-1',
+        reqIndex: '0',
+        jsonPathToObj: '.items.0',
+      },
     }
 
     expect(getRequiredPermissions([action])).toEqual([{ verb: 'create' }])

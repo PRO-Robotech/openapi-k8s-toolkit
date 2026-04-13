@@ -33,9 +33,7 @@ export const getTaintsItemsInside = (value: any[]): { counter?: number; taints?:
   let flattenArrayOfUnknown: unknown[] = []
   try {
     flattenArrayOfUnknown = flattenOnce(value)
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.log(e)
+  } catch {
     return { error: 'Error while flattening' }
   }
 

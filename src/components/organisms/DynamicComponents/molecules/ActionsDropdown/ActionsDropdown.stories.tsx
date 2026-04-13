@@ -608,6 +608,172 @@ export const PodActions: Story = {
 }
 
 /**
+ * ConfigMap detail page — includes downloadAsFiles and createFromFiles actions.
+ */
+export const ConfigMapActions: Story = {
+  args: {
+    id: 'configmap-actions',
+    buttonText: 'Actions',
+    buttonVariant: 'default',
+    containerStyle: {},
+    permissions: {
+      'edit-0': true,
+      'downloadAsFiles-1': true,
+      'createFromFiles-2': true,
+      'delete-3': true,
+    },
+    actions: [
+      {
+        type: 'edit',
+        props: {
+          text: 'Edit',
+          icon: 'EditOutlined',
+          cluster: 'default',
+          namespace: 'default',
+          apiVersion: 'v1',
+          plural: 'configmaps',
+          name: 'app-config',
+          baseprefix: '/openapi-ui',
+        },
+      },
+      {
+        type: 'downloadAsFiles',
+        props: {
+          text: 'Download as files',
+          icon: 'DownloadOutlined',
+          endpoint: '/api/clusters/default/k8s/api/v1/namespaces/default/configmaps/app-config',
+          resourceKind: 'ConfigMap',
+          name: 'app-config',
+        },
+      },
+      {
+        type: 'createFromFiles',
+        props: {
+          text: 'Create from files',
+          icon: 'UploadOutlined',
+          createEndpoint: '/api/clusters/default/k8s/api/v1/namespaces/default/configmaps',
+          namespace: 'default',
+          resourceKind: 'ConfigMap',
+        },
+      },
+      {
+        type: 'delete',
+        props: {
+          text: 'Delete',
+          icon: 'DeleteOutlined',
+          endpoint: '/api/clusters/default/k8s/api/v1/namespaces/default/configmaps/app-config',
+          name: 'app-config',
+        },
+      },
+    ],
+
+    isLoading: false,
+    isError: false,
+    errors: [],
+    multiQueryData: {
+      req0: {
+        metadata: {
+          name: 'app-config',
+          namespace: 'default',
+          labels: { app: 'demo' },
+        },
+        data: {
+          'application.yml': 'server:\n  port: 8080\nspring:\n  profiles:\n    active: production\n',
+          'nginx.conf': 'worker_processes auto;\nevents { worker_connections 1024; }\n',
+          'envoy.yaml': 'admin:\n  address:\n    socket_address:\n      address: 0.0.0.0\n      port_value: 9901\n',
+        },
+      },
+    },
+    partsOfUrl: ['openapi-ui', 'default', 'default', 'configmaps', 'app-config'],
+    theme: 'light',
+  },
+}
+
+/**
+ * Secret detail page — includes downloadAsFiles and createFromFiles actions.
+ * Secret .data values are base64-encoded.
+ */
+export const SecretActions: Story = {
+  args: {
+    id: 'secret-actions',
+    buttonText: 'Actions',
+    buttonVariant: 'default',
+    containerStyle: {},
+    permissions: {
+      'edit-0': true,
+      'downloadAsFiles-1': true,
+      'createFromFiles-2': true,
+      'delete-3': true,
+    },
+    actions: [
+      {
+        type: 'edit',
+        props: {
+          text: 'Edit',
+          icon: 'EditOutlined',
+          cluster: 'default',
+          namespace: 'default',
+          apiVersion: 'v1',
+          plural: 'secrets',
+          name: 'tls-cert',
+          baseprefix: '/openapi-ui',
+        },
+      },
+      {
+        type: 'downloadAsFiles',
+        props: {
+          text: 'Download as files',
+          icon: 'DownloadOutlined',
+          endpoint: '/api/clusters/default/k8s/api/v1/namespaces/default/secrets/tls-cert',
+          resourceKind: 'Secret',
+          name: 'tls-cert',
+        },
+      },
+      {
+        type: 'createFromFiles',
+        props: {
+          text: 'Create from files',
+          icon: 'UploadOutlined',
+          createEndpoint: '/api/clusters/default/k8s/api/v1/namespaces/default/secrets',
+          namespace: 'default',
+          resourceKind: 'Secret',
+        },
+      },
+      {
+        type: 'delete',
+        props: {
+          text: 'Delete',
+          icon: 'DeleteOutlined',
+          danger: true,
+          endpoint: '/api/clusters/default/k8s/api/v1/namespaces/default/secrets/tls-cert',
+          name: 'tls-cert',
+        },
+      },
+    ],
+
+    isLoading: false,
+    isError: false,
+    errors: [],
+    multiQueryData: {
+      req0: {
+        metadata: {
+          name: 'tls-cert',
+          namespace: 'default',
+          labels: { app: 'ingress' },
+        },
+        data: {
+          'tls.crt': btoa('-----BEGIN CERTIFICATE-----\nMIICpDCCAYwCCQDU+pQ4pBmm...\n-----END CERTIFICATE-----'),
+          'tls.key': btoa('-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA2a2rwplBQ...\n-----END RSA PRIVATE KEY-----'),
+          'ca.crt': btoa('-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgAwIBAgIJAJC1...\n-----END CERTIFICATE-----'),
+        },
+      },
+    },
+    partsOfUrl: ['openapi-ui', 'default', 'default', 'secrets', 'tls-cert'],
+    theme: 'light',
+  },
+}
+
+/**
  * Deployment detail page — includes suspend/resume and rolloutRestart.
  */
 export const DeploymentActions: Story = {

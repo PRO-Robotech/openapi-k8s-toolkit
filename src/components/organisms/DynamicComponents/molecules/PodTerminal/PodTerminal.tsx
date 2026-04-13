@@ -8,6 +8,8 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../PerRequestError'
 import { getRunningContainerNames } from './utils'
 
 export const PodTerminal: FC<{ data: TDynamicComponentsAppTypeMap['PodTerminal']; children?: any }> = ({
@@ -16,6 +18,7 @@ export const PodTerminal: FC<{ data: TDynamicComponentsAppTypeMap['PodTerminal']
   children,
 }) => {
   const { data: multiQueryData, isLoading: isMultiqueryLoading } = useMultiQuery()
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   const {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -76,6 +79,10 @@ export const PodTerminal: FC<{ data: TDynamicComponentsAppTypeMap['PodTerminal']
 
   if (isMultiqueryLoading) {
     return <div>Loading multiquery</div>
+  }
+
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   if (isLoadingPodInfo) {

@@ -15,6 +15,8 @@ jest.mock('components/atoms', () => ({
       {children}
     </div>
   ),
+  ErrorBoundary: ({ children }: any) => <div data-testid="error-boundary">{children}</div>,
+  ErrorBoundaryWithDataReset: ({ children }: any) => <div data-testid="error-boundary">{children}</div>,
 }))
 
 // Mock prepare util so we can predict outputs AND verify behavior.
@@ -77,6 +79,16 @@ const DynamicRendererMock = jest.fn((props: any) => (
 ))
 jest.mock('../DynamicRenderer', () => ({
   DynamicRenderer: (props: any) => DynamicRendererMock(props),
+}))
+
+// EffectiveAntdResultWrapper mock
+const EffectiveAntdResultWrapperMock = jest.fn(({ effectiveReqIndexes, children }: any) => (
+  <div data-testid="effective-wrapper" data-indexes={JSON.stringify(effectiveReqIndexes)}>
+    {children}
+  </div>
+))
+jest.mock('./EffectiveAntdResultWrapper', () => ({
+  EffectiveAntdResultWrapper: (props: any) => EffectiveAntdResultWrapperMock(props),
 }))
 
 // ----- Helpers -----
@@ -223,5 +235,43 @@ describe('DynamicRendererWithProviders', () => {
     fireEvent.click(screen.getByTestId('cursor'))
     expect(screen.getByTestId('cursor')).toHaveAttribute('data-default', 'false')
     expect(parentClick).toHaveBeenCalledTimes(1)
+  })
+
+  test('wraps DynamicRenderer with EffectiveAntdResultWrapper when effectiveReqIndexes is provided', () => {
+    renderWithRoute(
+      <DynamicRendererWithProviders
+        {...({} as any)}
+        urlsToFetch={['url-a']}
+        theme="dark"
+        effectiveReqIndexes={[0, 1]}
+      />,
+      '/x/y',
+    )
+
+    const wrapper = screen.getByTestId('effective-wrapper')
+    expect(wrapper).toBeInTheDocument()
+    expect(wrapper).toHaveAttribute('data-indexes', JSON.stringify([0, 1]))
+    // DynamicRenderer should be inside the wrapper
+    expect(wrapper.querySelector('[data-testid="dynamic-renderer"]')).toBeInTheDocument()
+    // Wrapper should be inside ErrorBoundary
+    const errorBoundary = screen.getByTestId('error-boundary')
+    expect(errorBoundary.contains(wrapper)).toBe(true)
+  })
+
+  test('does not render EffectiveAntdResultWrapper when effectiveReqIndexes is undefined', () => {
+    renderWithRoute(<DynamicRendererWithProviders {...({} as any)} urlsToFetch={['url-a']} theme="dark" />, '/x/y')
+
+    expect(screen.queryByTestId('effective-wrapper')).not.toBeInTheDocument()
+    expect(screen.getByTestId('dynamic-renderer')).toBeInTheDocument()
+  })
+
+  test('does not render EffectiveAntdResultWrapper when effectiveReqIndexes is empty array', () => {
+    renderWithRoute(
+      <DynamicRendererWithProviders {...({} as any)} urlsToFetch={['url-a']} theme="dark" effectiveReqIndexes={[]} />,
+      '/x/y',
+    )
+
+    expect(screen.queryByTestId('effective-wrapper')).not.toBeInTheDocument()
+    expect(screen.getByTestId('dynamic-renderer')).toBeInTheDocument()
   })
 })

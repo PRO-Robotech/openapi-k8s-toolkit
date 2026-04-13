@@ -7,6 +7,8 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
 import { parseAll } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../PerRequestError'
 import { getDataByPath, getPrefillValuesWithForces } from './utils'
 
 export const YamlEditorSingleton: FC<{ data: TDynamicComponentsAppTypeMap['YamlEditorSingleton']; children?: any }> = ({
@@ -53,6 +55,7 @@ export const YamlEditorSingleton: FC<{ data: TDynamicComponentsAppTypeMap['YamlE
 
   const theme = useTheme()
   const partsOfUrl = usePartsOfUrl()
+  const { shouldShowError, errorToShow } = useAutoPerRequestError({ ...data, reqIndex: data.prefillValuesRequestIndex })
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
     acc[index.toString()] = value
@@ -115,6 +118,10 @@ export const YamlEditorSingleton: FC<{ data: TDynamicComponentsAppTypeMap['YamlE
 
   if (isMultiqueryLoading) {
     return <div>Loading multiquery</div>
+  }
+
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   return (

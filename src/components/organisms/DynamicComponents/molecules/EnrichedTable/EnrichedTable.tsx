@@ -4,7 +4,7 @@ import React, { FC, useState } from 'react'
 import jp from 'jsonpath'
 import _ from 'lodash'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { Flex, Spin, Button } from 'antd'
+import { Flex, Spin, Button, Alert } from 'antd'
 import { PlusOutlined, ClearOutlined, MinusOutlined } from '@ant-design/icons'
 import { EditIcon, DeleteIcon, PaddingContainer, DeleteModal, DeleteModalMany } from 'components/atoms'
 import { EnrichedTableProvider } from 'components/molecules'
@@ -18,6 +18,10 @@ import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/p
 import { useTheme } from '../../../DynamicRendererWithProviders/providers/themeContext'
 import { serializeLabelsWithNoEncoding } from '../../utils/EnrichedTable'
 import { parseAll } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { mergePerRequestErrors } from '../hooks/mergePerRequestErrors'
+import { PerRequestError } from '../PerRequestError'
+import { extractErrorMessage } from '../AntdResult/utils'
 import { isValidLabelSelectorObject } from './utils'
 
 export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTable']; children?: any }> = ({
@@ -36,7 +40,7 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     false,
   )
 
-  const { data: multiQueryData, isLoading: isMultiqueryLoading } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiqueryLoading, hasErrorForReq } = useMultiQuery()
 
   const {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -59,6 +63,11 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
 
   const theme = useTheme()
   const partsOfUrl = usePartsOfUrl()
+  const autoErrorResult = useAutoPerRequestError(data)
+  const { shouldShowError, errorToShow } = mergePerRequestErrors(autoErrorResult, hasErrorForReq, [
+    labelSelectorFull?.reqIndex,
+    ...(additionalReqsDataToEachItem ?? []),
+  ])
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
     acc[index.toString()] = value
@@ -197,6 +206,10 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
     return <div>Loading multiquery</div>
   }
 
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
+  }
+
   // if (!fetchedData) {
   //   return <div>No data has been fetched</div>
   // }
@@ -218,11 +231,11 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
   }
 
   if (fetchUrlPrepared && fetchedDataError) {
-    return <div>Error: {JSON.stringify(fetchedDataError)}</div>
+    return <Alert message={`An error has occurred: ${extractErrorMessage(fetchedDataError)}`} type="error" />
   }
 
   if (k8sResourceToFetchPrepared && fetchedDataSocketError) {
-    return <div>Error: {JSON.stringify(fetchedDataError)}</div>
+    return <Alert message={`An error has occurred: ${extractErrorMessage(fetchedDataSocketError)}`} type="error" />
   }
 
   const dataFromOneOfHooks = fetchedData || fetchedDataSocket || {}

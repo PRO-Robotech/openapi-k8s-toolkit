@@ -21,6 +21,14 @@ type TCustomFormsOverridesResponse = {
   }[]
 }
 
+type TCustomFormsPrefillsResponse = {
+  items?: {
+    spec?: {
+      customizationId?: string
+    }
+  }[]
+}
+
 type TCustomFormsOverridesMappingResponse = {
   items?: {
     spec?: {
@@ -32,6 +40,7 @@ type TCustomFormsOverridesMappingResponse = {
 export type TBlackholeFormProviderProps = {
   theme: 'light' | 'dark'
   cluster: string
+  partsOfUrl: string[]
   urlParams: TUrlParams
   urlParamsForPermissions: {
     apiGroup?: string
@@ -74,6 +83,7 @@ export type TBlackholeFormProviderProps = {
 export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
   theme,
   cluster,
+  partsOfUrl,
   urlParams,
   urlParamsForPermissions,
   data,
@@ -104,12 +114,21 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
   const [isNamespaced, setIsNamespaced] = useState<boolean>(false)
   const [isError, setIsError] = useState<false | string | ReactNode>(false)
   const hasAppliedBackendModeRef = useRef(false)
+  const requestIdRef = useRef(0)
 
   const { data: overridesData, isLoading: overridesLoading } = useK8sSmartResource<TCustomFormsOverridesResponse>({
     cluster,
     apiGroup: forcingCustomization.baseApiGroup,
     apiVersion: forcingCustomization.baseApiVersion,
     plural: 'customformsoverrides',
+    isEnabled: Boolean(cluster && forcingCustomization.baseApiGroup && forcingCustomization.baseApiVersion),
+  })
+
+  const { data: prefillsData, isLoading: prefillsLoading } = useK8sSmartResource<TCustomFormsPrefillsResponse>({
+    cluster,
+    apiGroup: forcingCustomization.baseApiGroup,
+    apiVersion: forcingCustomization.baseApiVersion,
+    plural: 'customformsprefills',
     isEnabled: Boolean(cluster && forcingCustomization.baseApiGroup && forcingCustomization.baseApiVersion),
   })
 
@@ -158,7 +177,13 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
   const hasForcedMatchingOverride = Boolean(
     forcedCustomizationId && overridesData?.items?.some(item => item?.spec?.customizationId === forcedCustomizationId),
   )
-  const isResolutionReady = !customizationId || (!overridesLoading && !mappingLoading)
+  const hasMatchingPrefill = Boolean(
+    customizationId && prefillsData?.items?.some(item => item?.spec?.customizationId === customizationId),
+  )
+  const hasForcedMatchingPrefill = Boolean(
+    forcedCustomizationId && prefillsData?.items?.some(item => item?.spec?.customizationId === forcedCustomizationId),
+  )
+  const isResolutionReady = !customizationId || (!overridesLoading && !prefillsLoading && !mappingLoading)
   const resolvedCustomizationId = isResolutionReady
     ? hasMatchingOverride
       ? customizationId
@@ -166,30 +191,47 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
       ? forcedCustomizationId
       : forcingCustomization.fallbackId
     : undefined
+  const resolvedCustomizationIdPrefill = isResolutionReady
+    ? hasMatchingPrefill
+      ? customizationId
+      : hasForcedMatchingPrefill
+      ? forcedCustomizationId
+      : forcingCustomization.fallbackId
+    : undefined
 
   useEffect(() => {
     if (!cluster) {
       setIsLoading(false)
-      return
+      return undefined
     }
-    if (!isResolutionReady) return
-    if (customizationId && !resolvedCustomizationId) return
+    if (!isResolutionReady) return undefined
+    if (customizationId && (!resolvedCustomizationId || !resolvedCustomizationIdPrefill)) return undefined
 
+    requestIdRef.current += 1
+    const requestId = requestIdRef.current
+    let isActive = true
+
+    hasAppliedBackendModeRef.current = false
+    setIsNamespaced(false)
     setIsLoading(true)
     const payload: TPrepareFormReq = {
       data,
       cluster,
+      partsOfUrl,
       customizationId: resolvedCustomizationId,
+      customizationIdPrefill: resolvedCustomizationIdPrefill,
     }
     axios
       .post<TPrepareFormRes>(`/api/clusters/${cluster}/openapi-bff/forms/formPrepare/prepareFormProps`, payload)
       .then(({ data }) => {
+        if (!isActive || requestId !== requestIdRef.current) return
+
         if (data.isNamespaced) {
           setIsNamespaced(true)
         }
         if (data.result === 'error') {
           setIsError(data.error)
-          console.warn(data.error)
+          // console.warn(data.error)
           if (data.forceViewMode) {
             applyForceViewMode(data.forceViewMode)
           } else {
@@ -212,16 +254,24 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
         }
       })
       .catch((e: AxiosError) => {
+        if (!isActive || requestId !== requestIdRef.current) return
         setIsError(e.message)
       })
       .finally(() => {
+        if (!isActive || requestId !== requestIdRef.current) return
         setIsLoading(false)
       })
+
+    return () => {
+      isActive = false
+    }
   }, [
     cluster,
+    partsOfUrl,
     data,
     customizationId,
     resolvedCustomizationId,
+    resolvedCustomizationIdPrefill,
     isResolutionReady,
     fallbackToManualMode,
     applyForceViewMode,

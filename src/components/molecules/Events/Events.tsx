@@ -2,7 +2,7 @@
 // ------------------------------------------------------------
 // Simple, self-contained React component implementing:
 // - WebSocket connection to your events endpoint
-// - Handling of INITIAL, PAGE, ADDED, MODIFIED, DELETED, PAGE_ERROR
+// - Handling of INITIAL, PAGE, ADDED, MODIFIED, DELETED, PAGE_ERROR, INITIAL_ERROR, SERVER_LOG
 // - Infinite scroll via IntersectionObserver (sends { type: "SCROLL" })
 // - Lightweight CSS-in-JS styling
 // - Minimal reconnection logic (bounded exponential backoff)
@@ -10,7 +10,7 @@
 // ------------------------------------------------------------
 
 import React, { FC, useCallback, useEffect, useReducer, useRef, useState } from 'react'
-import { theme as antdtheme, Flex, Tooltip, Empty } from 'antd'
+import { theme as antdtheme, Flex, Tooltip, Empty, Alert } from 'antd'
 import { pluralByKind } from 'utils/pluralByKind'
 import { useKinds } from 'hooks/useKinds'
 import { ResumeCircleIcon, PauseCircleIcon, LockedIcon, UnlockedIcon } from 'components/atoms'
@@ -96,6 +96,7 @@ export const Events: FC<TEventsProps> = ({
   // Connection state & errors for small status UI
   const [connStatus, setConnStatus] = useState<'connecting' | 'open' | 'closed'>('connecting')
   const [lastError, setLastError] = useState<string | undefined>(undefined)
+  const [fatalError, setFatalError] = useState<string | undefined>(undefined)
 
   // ------------------ Refs (mutable, do not trigger render) ------------------
   const wsRef = useRef<WebSocket | null>(null) // current WebSocket instance
@@ -155,11 +156,35 @@ export const Events: FC<TEventsProps> = ({
       }
       if (!frame) return
 
+      if (frame.type === 'SERVER_LOG') {
+        const level = frame.level || 'info'
+        const msg = frame.message
+        // eslint-disable-next-line no-console
+        ;(console[level] || console.log).call(console, '[Events][server]', msg)
+        return
+      }
+
+      if (frame.type === 'INITIAL_ERROR') {
+        const needsCodeSuffix = typeof frame.statusCode === 'number' && !frame.message.includes(`(${frame.statusCode})`)
+        const msg = needsCodeSuffix ? `${frame.message} (${frame.statusCode})` : frame.message
+        setFatalError(msg)
+        setLastError(msg)
+        fetchingRef.current = false
+        // eslint-disable-next-line no-console
+        console.error('[Events][initial]', {
+          message: frame.message,
+          statusCode: frame.statusCode,
+          reason: frame.reason,
+        })
+        return
+      }
+
       if (frame.type === 'INITIAL') {
         dispatch({ type: 'RESET', items: frame.items })
         setContToken(frame.continue)
         setHasMore(Boolean(frame.continue))
         setLastError(undefined)
+        setFatalError(undefined)
         fetchingRef.current = false
 
         const snapshotRV = frame.resourceVersion || getMaxRV(frame.items)
@@ -361,6 +386,29 @@ export const Events: FC<TEventsProps> = ({
       ? navigationDataArr.items[0].spec?.baseFactoriesMapping
       : undefined
 
+  const listContent = (() => {
+    if (fatalError && state.order.length === 0) return <Alert type="error" message={fatalError} showIcon />
+    if (state.order.length > 0) {
+      return state.order.map(k => (
+        <EventRow
+          key={k}
+          e={state.byKey[k]}
+          theme={theme}
+          baseprefix={baseprefix}
+          cluster={cluster}
+          getPlural={getPlural}
+          baseFactoryNamespacedAPIKey={baseFactoryNamespacedAPIKey}
+          baseFactoryClusterSceopedAPIKey={baseFactoryClusterSceopedAPIKey}
+          baseFactoryNamespacedBuiltinKey={baseFactoryNamespacedBuiltinKey}
+          baseFactoryClusterSceopedBuiltinKey={baseFactoryClusterSceopedBuiltinKey}
+          baseNamespaceFactoryKey={baseNamespaceFactoryKey}
+          baseFactoriesMapping={baseFactoriesMapping}
+        />
+      ))
+    }
+    return <Empty description="No events" />
+  })()
+
   return (
     <Styled.Root $substractHeight={substractHeight || 340}>
       <Styled.Header>
@@ -407,26 +455,7 @@ export const Events: FC<TEventsProps> = ({
 
       {/* Scrollable list of event rows */}
       <Styled.List ref={listRef} onScroll={onScroll}>
-        {state.order.length > 0 ? (
-          state.order.map(k => (
-            <EventRow
-              key={k}
-              e={state.byKey[k]}
-              theme={theme}
-              baseprefix={baseprefix}
-              cluster={cluster}
-              getPlural={getPlural}
-              baseFactoryNamespacedAPIKey={baseFactoryNamespacedAPIKey}
-              baseFactoryClusterSceopedAPIKey={baseFactoryClusterSceopedAPIKey}
-              baseFactoryNamespacedBuiltinKey={baseFactoryNamespacedBuiltinKey}
-              baseFactoryClusterSceopedBuiltinKey={baseFactoryClusterSceopedBuiltinKey}
-              baseNamespaceFactoryKey={baseNamespaceFactoryKey}
-              baseFactoriesMapping={baseFactoriesMapping}
-            />
-          ))
-        ) : (
-          <Empty description="No events" />
-        )}
+        {listContent}
         {/* Infinite scroll sentinel */}
         <Styled.Sentinel ref={sentinelRef} />
       </Styled.List>

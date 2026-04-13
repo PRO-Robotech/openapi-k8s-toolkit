@@ -3,7 +3,7 @@ import { getApiResourceTypes, getApiResourceTypesByApiGroup } from 'api/getApiRe
 import { TApiGroupList, TApiGroupResourceTypeList } from 'localTypes/k8s'
 
 /* /apis/ */
-export const useApisResourceTypes = ({ cluster }: { cluster: string }) => {
+export const useApisResourceTypes = ({ cluster, enabler }: { cluster: string; enabler?: boolean }) => {
   return useQuery({
     queryKey: ['useApisResourceTypes', cluster],
     queryFn: async () => {
@@ -17,6 +17,7 @@ export const useApisResourceTypes = ({ cluster }: { cluster: string }) => {
       return data as TApiGroupList
     },
     refetchInterval: 5000,
+    enabled: enabler ?? true,
   })
 }
 
@@ -25,10 +26,12 @@ export const useApiResourceTypesByGroup = ({
   cluster,
   apiGroup,
   apiVersion,
+  enabler,
 }: {
   cluster: string
   apiGroup: string
   apiVersion: string
+  enabler?: boolean
 }) => {
   return useQuery({
     queryKey: ['useApiResourceTypesByGroup', cluster, apiGroup, apiVersion],
@@ -47,5 +50,6 @@ export const useApiResourceTypesByGroup = ({
       return data as TApiGroupResourceTypeList
     },
     refetchInterval: 5000,
+    enabled: enabler ?? true,
   })
 }

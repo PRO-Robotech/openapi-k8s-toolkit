@@ -6,6 +6,7 @@ import {
   collectArrayLengths,
   templateMatchesArray,
   buildConcretePathForNewItem,
+  getConcretePathsForNewArrayItem,
   scrubLiteralWildcardKeys,
   type TTemplate,
 } from './prefills'
@@ -120,6 +121,21 @@ describe('prefills helpers', () => {
       const arrayPath: (string | number)[] = ['spec', 'containers']
 
       expect(buildConcretePathForNewItem(tpl, arrayPath, 0)).toEqual(['spec', 'containers', 0, 'image'])
+    })
+  })
+
+  describe('getConcretePathsForNewArrayItem', () => {
+    test('materializes only matching wildcard templates for the new item path', () => {
+      const templates = [
+        { wildcardPath: ['spec', 'rules', '*', 'value'] },
+        { wildcardPath: ['spec', 'rules', '*', 'name'] },
+        { wildcardPath: ['spec', 'other', '*', 'value'] },
+      ]
+
+      expect(getConcretePathsForNewArrayItem(templates, ['spec', 'rules'], 2)).toEqual([
+        ['spec', 'rules', 2, 'value'],
+        ['spec', 'rules', 2, 'name'],
+      ])
     })
   })
 

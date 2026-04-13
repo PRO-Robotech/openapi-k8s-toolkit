@@ -3,7 +3,7 @@ import { getBuiltinResourceTypes } from 'api/getBuiltinResourceTypes'
 import { TBuiltinResourceTypeList } from 'localTypes/k8s'
 
 /* /api/v1 */
-export const useBuiltinResourceTypes = ({ cluster }: { cluster: string }) => {
+export const useBuiltinResourceTypes = ({ cluster, enabler }: { cluster: string; enabler?: boolean }) => {
   return useQuery({
     queryKey: ['useBuiltinResourceTypes', cluster],
     queryFn: async () => {
@@ -17,5 +17,6 @@ export const useBuiltinResourceTypes = ({ cluster }: { cluster: string }) => {
       return data as TBuiltinResourceTypeList
     },
     refetchInterval: 5000,
+    enabled: enabler ?? true,
   })
 }

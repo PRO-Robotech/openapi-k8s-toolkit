@@ -1,3 +1,4 @@
+import { CSSProperties } from 'react'
 import { CardProps, FlexProps, RowProps, ColProps, ButtonProps, TabsProps } from 'antd'
 import type { TextProps } from 'antd/es/typography/Text'
 import type { LinkProps } from 'antd/es/typography/Link'
@@ -20,7 +21,16 @@ export type TAntdRowProps = { id: number | string } & Omit<RowProps, 'id' | 'chi
 
 export type TAntdColProps = { id: number | string } & Omit<ColProps, 'id' | 'children'>
 
-export type TAntdTabsProps = { id: number | string } & Omit<TabsProps, 'id' | 'children'>
+export type TAntdTabsProps = {
+  id: number | string
+  // If true, active tab key is synced with URL hash fragment (#tabKey).
+  syncActiveKeyWithHash?: boolean
+  // If true, tab labels become links that can be opened in a new browser tab.
+  allowOpenInNewBrowserTab?: boolean
+  // If true, inactive tab pane content is unmounted on tab change.
+  // True by default
+  unmountOnTabChange?: boolean
+} & Omit<TabsProps, 'id' | 'children'>
 
 export type TAntdButtonProps = { id: number | string; text: string } & Omit<ButtonProps, 'id' | 'children'>
 
@@ -29,4 +39,23 @@ export type TAntdIconsProps = {
   iconName: Exclude<keyof typeof AntIcons, 'createFromIconfontCN'> // https://5x.ant.design/components/icon/
   iconProps?: AntdIconProps // color can be like token.colorSuccess
   containerStyle?: React.CSSProperties
+}
+
+export type TAntdResultProps = {
+  id: number | string
+  reqIndex?: number | number[]
+  /** Dot-separated path to the array in the response to check for emptiness.
+   *  Default: ".items" (K8s list response format). Can be changed for non-K8s
+   *  APIs, e.g. ".data.results".
+   *  When reqIndex is an array, itemsPath can also be an array — each position
+   *  maps to the corresponding reqIndex (e.g. reqIndex: [0,1], itemsPath: [".items", ".data.results"]). */
+  itemsPath?: string | string[]
+  /** Whether to check if the array at `itemsPath` is empty and show 404 when
+   *  it is. Default: true — antdResult reacts to empty responses by default.
+   *  Set to false to explicitly disable this check. */
+  checkEmpty?: boolean
+  status?: 'success' | 'error' | 'info' | 'warning' | '403' | '404' | '500' | 403 | 404 | 500
+  title?: string
+  subTitle?: string
+  style?: CSSProperties
 }

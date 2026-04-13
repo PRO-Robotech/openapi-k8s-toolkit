@@ -1,7 +1,6 @@
 /* eslint-disable react/no-unstable-nested-components */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-array-index-key */
-/* eslint-disable no-console */
 import React, { FC } from 'react'
 import jp from 'jsonpath'
 import { Typography, Popover, Flex } from 'antd'
@@ -12,6 +11,8 @@ import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/h
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { truncate } from '../../utils/truncate'
 import { parseAll } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../PerRequestError'
 import { parseLabelsArrayOfAny } from '../../utils/Labels'
 import { handleLabelsToSearchParamsLinkClick } from './utils'
 
@@ -41,20 +42,16 @@ export const LabelsToSearchParams: FC<{
   } = data
   const navigate = useNavigate()
 
-  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiQueryLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
   }
 
-  if (isMultiQueryErrors) {
-    return (
-      <div>
-        <h4>Errors:</h4>
-        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
-      </div>
-    )
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
@@ -105,11 +102,9 @@ export const LabelsToSearchParams: FC<{
 
   if (!labelsRaw) {
     if (errorArrayOfObjects) {
-      console.log(errorArrayOfObjects)
       // return <div>{errorArrayOfObjects}</div>
       return renderErrorFallback()
     }
-    console.log('Not a valid data structure')
     // return <div>Not a valid data structure</div>
     return renderErrorFallback()
   }

@@ -238,7 +238,8 @@ describe('useActionsDropdownPermissions - per-action permissions', () => {
         text: 'Trigger Run',
         createEndpoint: '/api/jobs',
         cronJobName: 'my-cron',
-        jobTemplate: "{reqs[0]['spec','jobTemplate']}",
+        reqIndex: '0',
+        jsonPathToObj: '.spec.jobTemplate',
         permissionContext: { cluster: '{2}', plural: 'jobs' },
       },
     }

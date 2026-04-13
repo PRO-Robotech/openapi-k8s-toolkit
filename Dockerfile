@@ -3,6 +3,9 @@ FROM node:24.11.1 AS builder
 
 WORKDIR /app
 
+ARG STORYBOOK_BASE_PATH=/
+ENV STORYBOOK_BASE_PATH=$STORYBOOK_BASE_PATH
+
 COPY package*.json ./
 RUN npm install
 

@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 import type { Decorator, Preview } from '@storybook/react'
 import { ConfigProvider, theme as antdTheme } from 'antd'
 import { initialize, mswLoader } from 'msw-storybook-addon'
@@ -5,7 +7,11 @@ import styled from 'styled-components'
 import { getConfigProviderProps } from './_constants/colors'
 import './preview.css'
 
-initialize()
+initialize({
+  serviceWorker: {
+    url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
+  },
+})
 
 type TDefaultColorProviderProps = {
   $color: string

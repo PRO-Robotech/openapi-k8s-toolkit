@@ -1,0 +1,148 @@
+{{- $expose   := .Values.expose -}}
+{{- $tls      := $expose.tls -}}
+{{- $istio    := $expose.istio -}}
+{{- $ingress  := $expose.ingress -}}
+
+{{- if $expose.enabled -}}
+  {{ if eq $expose.resourceType "istio" }}
+    {{- if $istio.gateway.enabled -}}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: {{ $istio.gateway.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+  {{- include "openapi-k8s-toolkit.selectorLabels" . | nindent 4 }}
+  {{- with $istio.gateway.labels }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $istio.gateway.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+  {{- with $istio.gateway.istioLabelsSelector }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "{{ .Values.externalDomain }}"
+    {{ if or (eq $tls.certSource "certmanager") (eq $tls.certSource "secret") }}
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - "{{ .Values.externalDomain }}"
+      tls:
+        mode: SIMPLE
+    {{ end }}
+    {{ if eq $tls.certSource "certmanager" }}
+        credentialName: {{ include "openapi-k8s-toolkit.fullname" . }}-expose
+    {{ end }}
+    {{ if eq $tls.certSource "secret" }}
+        credentialName: {{ $tls.secret.secretName }}
+    {{ end }}
+    {{- end }}
+
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ include "openapi-k8s-toolkit.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+  {{- include "openapi-k8s-toolkit.selectorLabels" . | nindent 4 }}
+  {{- with $istio.virtualService.labels }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $istio.virtualService.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  hosts:
+    - "{{ .Values.externalDomain }}"
+  gateways:
+    - {{ $istio.gateway.name }}
+  http:
+    - name: redirect-to-root
+      match:
+        - uri:
+            exact: {{ $expose.path }}
+      redirect:
+        uri: {{ $expose.path }}/
+        redirectCode: 302
+    - name: main
+      match:
+        - uri:
+            prefix: {{ $expose.path }}
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: {{ include "openapi-k8s-toolkit.fullname" . }}
+            port:
+              number: {{ .Values.service.port }}
+
+  {{ else if eq $expose.resourceType "ingress" }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "openapi-k8s-toolkit.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+  {{- include "openapi-k8s-toolkit.selectorLabels" . | nindent 4 }}
+  {{- with $ingress.labels }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- if or $ingress.annotations (eq $ingress.ingressClassName "nginx") }}
+  annotations:
+    {{- if $ingress.annotations }}
+    kubernetes.io/ingress.class: nginx
+
+    {{- /* Аналог redirect scheme: https */ -}}
+    {{- if or (eq $tls.certSource "certmanager") (eq $tls.certSource "secret") }}
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    {{- end }}
+
+    {{- end }}
+    {{- with $ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  {{- if $ingress.ingressClassName }}
+  ingressClassName: {{ $ingress.ingressClassName }}
+  {{- end }}
+  {{ if or (eq $tls.certSource "certmanager") (eq $tls.certSource "secret") }}
+  tls:
+    - hosts:
+        - "{{ .Values.externalDomain }}"
+    {{ if eq $tls.certSource "certmanager" }}
+      secretName: {{ include "openapi-k8s-toolkit.fullname" . }}-expose
+    {{ end }}
+    {{ if eq $tls.certSource "secret" }}
+      secretName: {{ $tls.secret.secretName }}
+    {{ end }}
+  {{- end }}
+  rules:
+    - host: "{{ .Values.externalDomain }}"
+      http:
+        paths:
+          - path: {{ $expose.path }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "openapi-k8s-toolkit.fullname" . }}
+                port:
+                  number: {{ .Values.service.port }}
+  {{- end }}
+{{- end }}

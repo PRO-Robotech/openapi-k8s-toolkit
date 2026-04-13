@@ -64,7 +64,7 @@ export const TolerationsEditModal: FC<TTolerationsEditModalProps> = ({
     form
       .validateFields()
       .then(() => {
-        console.log(JSON.stringify(tolerations))
+        // console.log(JSON.stringify(tolerations))
         setIsLoading(true)
         setError(undefined)
         patchEntryWithReplaceOp({ endpoint, pathToValue, body: tolerations })
@@ -106,6 +106,11 @@ export const TolerationsEditModal: FC<TTolerationsEditModalProps> = ({
       width={editModalWidth || 520}
       destroyOnHidden
       centered
+      styles={{
+        header: {
+          paddingRight: '30px',
+        },
+      }}
     >
       {error && <Alert type="error" message="Error while submitting" description={error?.response?.data?.message} />}
       {modalDescriptionText && (

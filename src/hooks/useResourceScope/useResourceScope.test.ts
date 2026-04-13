@@ -91,4 +91,14 @@ describe('useResourceScope', () => {
     useResourceScope({ cluster: 'c1', plural: '' } as any)
     expect(mockUseQuery.mock.calls[0][0].enabled).toBe(false)
   })
+
+  test('disabled when enabler is false', () => {
+    useResourceScope({
+      cluster: 'c1',
+      plural: 'pods',
+      enabler: false,
+    })
+
+    expect(mockUseQuery.mock.calls[0][0].enabled).toBe(false)
+  })
 })

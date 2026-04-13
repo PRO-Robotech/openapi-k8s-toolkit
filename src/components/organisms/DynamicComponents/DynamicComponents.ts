@@ -12,6 +12,7 @@ import {
   PartsOfUrl,
   MultiQuery,
   ParsedText,
+  MappedParsedText,
   ProjectInfoCard,
   MarketplaceCard,
   ContentCard,
@@ -50,6 +51,8 @@ import {
   Base64Icon,
   UsageGraphCard,
   ActionsDropdown,
+  Volumes,
+  AntdResult,
 } from './molecules'
 import { TDynamicComponentsAppTypeMap } from './types'
 
@@ -64,9 +67,11 @@ export const DynamicComponents: TRendererComponents<TDynamicComponentsAppTypeMap
   antdTabs: AntdTabs,
   antdButton: AntdButton,
   antdIcons: AntdIcons,
+  antdResult: AntdResult,
   partsOfUrl: PartsOfUrl,
   multiQuery: MultiQuery,
   parsedText: ParsedText,
+  MappedParsedText,
   ProjectInfoCard,
   MarketplaceCard,
   ContentCard,
@@ -104,4 +109,5 @@ export const DynamicComponents: TRendererComponents<TDynamicComponentsAppTypeMap
   Base64Icon,
   UsageGraphCard,
   ActionsDropdown,
+  Volumes,
 }

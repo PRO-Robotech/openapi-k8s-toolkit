@@ -36,6 +36,11 @@ export const ConfirmModal: FC<TConfirmModalProps> = ({
       okButtonProps={{ danger }}
       width={width}
       centered
+      styles={{
+        header: {
+          paddingRight: '30px',
+        },
+      }}
     >
       {children}
     </Modal>

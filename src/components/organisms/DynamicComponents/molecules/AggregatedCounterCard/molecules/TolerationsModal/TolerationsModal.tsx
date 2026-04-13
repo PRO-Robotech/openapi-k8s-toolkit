@@ -7,6 +7,8 @@ import { notification } from 'antd'
 import { useMultiQuery } from '../../../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../../../utils'
+import { useAutoPerRequestError } from '../../../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../../../PerRequestError'
 import { TolerationsEditModal } from '../../../../atoms'
 import { getTolerationsItemsInside } from '../../../../utils/Tolerations'
 import type { TTolerationsBaseProps, TTolerationsModalProps as TModalInner } from '../../../../types/Tolerations'
@@ -38,20 +40,16 @@ export const TolerationsModal: FC<TTolerationsModalProps> = ({
 }) => {
   const [api, contextHolder] = notification.useNotification()
 
-  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryErrors, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiQueryLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
+  const { shouldShowError, errorToShow } = useAutoPerRequestError({ reqIndex })
 
   if (isMultiQueryLoading) {
     return <div>Loading...</div>
   }
 
-  if (isMultiQueryErrors) {
-    return (
-      <div>
-        <h4>Errors:</h4>
-        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
-      </div>
-    )
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
@@ -62,7 +60,7 @@ export const TolerationsModal: FC<TTolerationsModalProps> = ({
   const jsonRoot = multiQueryData[`req${reqIndex}`]
 
   if (jsonRoot === undefined) {
-    console.log(`Item Counter: No root for json path`)
+    // console.log(`Item Counter: No root for json path`)
     return <div>No root for json path</div>
   }
 
@@ -105,7 +103,7 @@ export const TolerationsModal: FC<TTolerationsModalProps> = ({
   }
 
   if (errorArrayOfObjects) {
-    console.log(`Item Counter: ${errorArrayOfObjects}`)
+    // console.log(`Item Counter: ${errorArrayOfObjects}`)
     return (
       <>
         {contextHolder}

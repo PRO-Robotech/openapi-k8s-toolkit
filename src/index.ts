@@ -3,7 +3,14 @@ export * from './utils'
 
 /* api reqs */
 export { getClusterList } from './api/getClusterList'
-export { createNewEntry, updateEntry, deleteEntry } from './api/forms'
+export {
+  createNewEntry,
+  updateEntry,
+  deleteEntry,
+  patchEntryWithReplaceOp,
+  patchEntryWithMergePatch,
+  patchEntryWithDeleteOp,
+} from './api/forms'
 export { getApiResources, getApiResourceSingle } from './api/getApiResource'
 export { getBuiltinResources, getBuiltinResourceSingle } from './api/getBuiltinResource'
 export { getCrdResources, getCrdResourceSingle } from './api/getCrdResource'
@@ -43,6 +50,7 @@ export { useK8sVerbs } from './hooks/useK8sVerbs'
 export { useK8sSmartResource, useManyK8sSmartResource, useSmartResourceParams } from './hooks/useK8sSmartResource'
 export { useResourceScope } from './hooks/useResourceScope'
 export { useKinds } from './hooks/useKinds'
+export { useKindsRaw } from './hooks/useKindsRaw'
 export { usePluginManifest } from './hooks/usePlugins'
 
 /* types */

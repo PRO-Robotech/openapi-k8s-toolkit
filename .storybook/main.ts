@@ -5,6 +5,19 @@ import path from 'path'
 
 const { parsed: options } = dotenv.config({ path: './.env.options' })
 
+const normalizeBasePath = (value?: string) => {
+  if (!value || value === '.' || value === './' || value === '/') {
+    return './'
+  }
+
+  const trimmed = value.trim().replace(/^\/+|\/+$/g, '')
+  return trimmed.length > 0 ? `/${trimmed}/` : './'
+}
+
+const storybookBasePath = normalizeBasePath(
+  process.env.STORYBOOK_BASE_PATH ?? process.env.BASEPREFIX ?? options?.STORYBOOK_BASE_PATH ?? options?.BASEPREFIX,
+)
+
 const config: StorybookConfig = {
   staticDirs: ['../public'], // ✅ serve /mockServiceWorker.js
   stories: ['./docs/**/*.tsx', '../src/**/*.mdx', '../src/**/*.stories.@(ts|tsx|js|jsx)'],
@@ -16,8 +29,7 @@ const config: StorybookConfig = {
   },
   async viteFinal(baseConfig) {
     return mergeConfig(baseConfig, {
-      // 👇 key bit for GitHub Pages
-      base: './',
+      base: storybookBasePath,
 
       resolve: {
         alias: {
@@ -66,7 +78,7 @@ const config: StorybookConfig = {
             changeOrigin: true,
             secure: false,
             ws: true,
-            rewrite: path => path.replace(/^\/api\/clusters\//, '/'),
+            rewrite: (path: string) => path.replace(/^\/api\/clusters\//, '/'),
             // bypass: function (req, res, proxyOptions) {
             //   const url = req.url || ''
             //   if (/^\/api\/clusters\/[^/]+\/k8s\//.test(url)) {
@@ -110,7 +122,7 @@ const config: StorybookConfig = {
             target: `${options?.KUBE_API_URL}/clusterlist`,
             changeOrigin: true,
             secure: false,
-            rewrite: path => path.replace(/^\/clusterlist/, ''),
+            rewrite: (path: string) => path.replace(/^\/clusterlist/, ''),
           },
           '^/api/clusters/.*/openapi-bff': {
             target: options?.BFF_URL,

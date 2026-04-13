@@ -1,0 +1,43 @@
+{{- $intTLS    := .Values.internalTLS -}}
+{{- $expose    := .Values.expose -}}
+
+{{- if or (eq $intTLS.certSource "certmanager") (and $expose.enabled (eq $expose.tls.certSource "certmanager")) }}
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "openapi-k8s-toolkit.fullname" . }}-selfsigned
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "openapi-k8s-toolkit.labels" . | nindent 4 }}
+spec:
+  selfSigned: {}
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "openapi-k8s-toolkit.fullname" . }}-ca
+  namespace: {{ .Release.Namespace }}
+spec:
+  commonName: sgroups-ca
+  isCA: true
+  issuerRef:
+    group: cert-manager.io
+    kind: Issuer
+    name: {{ include "openapi-k8s-toolkit.fullname" . }}-selfsigned
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  secretName: {{ include "openapi-k8s-toolkit.fullname" . }}-ca-secret
+
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "openapi-k8s-toolkit.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  ca:
+    secretName: {{ include "openapi-k8s-toolkit.fullname" . }}-ca-secret
+{{- end }}

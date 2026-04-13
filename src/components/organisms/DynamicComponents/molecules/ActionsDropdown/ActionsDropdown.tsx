@@ -1,14 +1,17 @@
-import { FC, ReactElement } from 'react'
-import { Dropdown, Button, Spin, Tooltip } from 'antd'
+import { FC, ReactElement, useRef, useState } from 'react'
+import { ConfigProvider, Dropdown, Button, Spin, Tooltip } from 'antd'
 import { DownOutlined, MoreOutlined, WarningOutlined } from '@ant-design/icons'
 import { ConfirmModal, DeleteModal, DeleteModalMany } from 'components/atoms'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
 import { getMenuItems, getVisibleActions } from './utils'
 import { useActionsDropdownPermissions, useActionsDropdownHandlers } from './hooks'
 import { renderActionModal } from './renderActionModal'
 import { ScaleModal } from './modals/ScaleModal'
+import { CreateFromFilesModal } from './modals/CreateFromFilesModal'
+import { DEFAULT_MENU_MAX_HEIGHT_PX, getDropdownPlacement, TActionsDropdownPlacement } from './dropdownPlacement'
 import { Styled } from './styled'
 
 export const ActionsDropdown: FC<{
@@ -17,7 +20,7 @@ export const ActionsDropdown: FC<{
 }> = ({ data, children }) => {
   const { buttonText = 'Actions', buttonVariant = 'default', containerStyle, actions, permissions } = data
 
-  const { data: multiQueryData, isLoading: isMultiQueryLoading, isError: isMultiQueryError, errors } = useMultiQuery()
+  const { data: multiQueryData, isLoading: isMultiQueryLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
@@ -39,6 +42,10 @@ export const ActionsDropdown: FC<{
     multiQueryData: safeMultiQueryData,
   })
 
+  const triggerRef = useRef<HTMLSpanElement | null>(null)
+  const [dropdownPlacement, setDropdownPlacement] = useState<TActionsDropdownPlacement>('bottomLeft')
+  const [menuMaxHeightPx, setMenuMaxHeightPx] = useState(DEFAULT_MENU_MAX_HEIGHT_PX)
+
   const {
     notificationContextHolder,
     activeAction,
@@ -51,6 +58,10 @@ export const ActionsDropdown: FC<{
     deleteChildrenModalData,
     rerunModalData,
     isRerunLoading,
+    drainModalData,
+    isDrainLoading,
+    rollbackModalData,
+    isRollbackLoading,
     handleActionClick,
     handleCloseModal,
     handleDeleteModalClose,
@@ -61,23 +72,34 @@ export const ActionsDropdown: FC<{
     handleDeleteChildrenClose,
     handleRerunConfirm,
     handleRerunCancel,
+    handleDrainConfirm,
+    handleDrainCancel,
+    handleRollbackConfirm,
+    handleRollbackCancel,
+    createFromFilesModalData,
+    isCreateFromFilesLoading,
+    handleCreateFromFilesConfirm,
+    handleCreateFromFilesCancel,
   } = useActionsDropdownHandlers({
     replaceValues,
     multiQueryData: safeMultiQueryData,
   })
 
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
+
   if (isMultiQueryLoading) {
     return <Spin size="small" />
   }
 
-  if (isMultiQueryError) {
-    const errorMessage = errors
-      .filter((e): e is Error | string => e !== null)
-      .map(e => (typeof e === 'string' ? e : e.message))
-      .join('; ')
+  if (shouldShowError) {
+    const resolveMessage = () => {
+      if (!errorToShow) return 'Failed to load data'
+      return typeof errorToShow === 'string' ? errorToShow : errorToShow.message
+    }
+    const errorMessage = resolveMessage()
 
     return (
-      <Tooltip title={errorMessage || 'Failed to load data'}>
+      <Tooltip title={errorMessage}>
         <WarningOutlined style={{ color: 'red' }} />
       </Tooltip>
     )
@@ -85,19 +107,30 @@ export const ActionsDropdown: FC<{
 
   const menuItems = getMenuItems(visibleActions, handleActionClick, effectivePermissions)
 
+  const handleDropdownOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      return
+    }
+
+    const triggerRect = triggerRef.current?.getBoundingClientRect()
+    if (!triggerRect) {
+      return
+    }
+
+    const { placement, maxMenuHeightPx } = getDropdownPlacement({
+      triggerTop: triggerRect.top,
+      triggerBottom: triggerRect.bottom,
+      viewportHeight: window.innerHeight,
+      actionsCount: menuItems.length,
+    })
+
+    setDropdownPlacement(placement)
+    setMenuMaxHeightPx(maxMenuHeightPx)
+  }
+
   const renderButton = () => {
     if (buttonVariant === 'icon') {
-      return (
-        <Styled.IconButton
-          type="text"
-          size="small"
-          onClick={e => {
-            e.stopPropagation()
-            e.preventDefault()
-          }}
-          icon={<MoreOutlined />}
-        />
-      )
+      return <Styled.IconButton type="text" size="small" icon={<MoreOutlined />} />
     }
     return (
       <Button>
@@ -110,9 +143,30 @@ export const ActionsDropdown: FC<{
   return (
     <div style={containerStyle}>
       {notificationContextHolder}
-      <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-        {renderButton()}
-      </Dropdown>
+      <ConfigProvider
+        theme={{ components: { Dropdown: { zIndexPopup: 2000 } } }}
+        getPopupContainer={trigger => trigger?.ownerDocument?.body ?? document.body}
+      >
+        <Dropdown
+          menu={{
+            items: menuItems,
+            style: { maxHeight: menuMaxHeightPx, overflowY: 'auto' },
+          }}
+          trigger={['click']}
+          placement={dropdownPlacement}
+          autoAdjustOverflow
+          onOpenChange={handleDropdownOpenChange}
+        >
+          <span
+            ref={triggerRef}
+            onClick={e => {
+              e.stopPropagation()
+            }}
+          >
+            {renderButton()}
+          </span>
+        </Dropdown>
+      </ConfigProvider>
 
       {activeAction && renderActionModal(activeAction, { open: modalOpen, onClose: handleCloseModal })}
 
@@ -158,6 +212,43 @@ export const ActionsDropdown: FC<{
         >
           This will create a new Job with the same spec.
         </ConfirmModal>
+      )}
+
+      {drainModalData && (
+        <ConfirmModal
+          title={`Drain node \u00AB${drainModalData.nodeName}\u00BB?`}
+          onConfirm={handleDrainConfirm}
+          onClose={handleDrainCancel}
+          confirmText="Drain"
+          confirmLoading={isDrainLoading}
+          danger
+        >
+          This will cordon the node and evict all eligible pods. DaemonSet pods will be skipped.
+        </ConfirmModal>
+      )}
+
+      {rollbackModalData && (
+        <ConfirmModal
+          title={`Rollback \u00AB${rollbackModalData.resourceName}\u00BB?`}
+          onConfirm={handleRollbackConfirm}
+          onClose={handleRollbackCancel}
+          confirmText="Rollback"
+          confirmLoading={isRollbackLoading}
+          danger
+        >
+          This will revert the resource to its previous revision.
+        </ConfirmModal>
+      )}
+
+      {createFromFilesModalData && (
+        <CreateFromFilesModal
+          open
+          onClose={handleCreateFromFilesCancel}
+          onConfirm={handleCreateFromFilesConfirm}
+          resourceKind={createFromFilesModalData.resourceKind}
+          namespace={createFromFilesModalData.namespace}
+          isLoading={isCreateFromFilesLoading}
+        />
       )}
 
       {children}

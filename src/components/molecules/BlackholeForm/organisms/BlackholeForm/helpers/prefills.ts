@@ -14,8 +14,11 @@ export const pathKey = (p: (string | number)[]) => JSON.stringify(p)
 export const toWildcardPath = (p: (string | number)[]) =>
   p.map(seg => (typeof seg === 'number' || (typeof seg === 'string' && /^\d+$/.test(seg)) ? '*' : seg))
 
-export type TTemplate = {
+export type TWildcardTemplate = {
   wildcardPath: (string | number)[]
+}
+
+export type TTemplate = TWildcardTemplate & {
   value: unknown
 }
 
@@ -33,7 +36,7 @@ export const collectArrayLengths = (obj: unknown, base: (string | number)[] = []
 // template wildcard path may contain '*' before the growing array;
 // treat '*' as "match anything" for the prefix.
 
-export const templateMatchesArray = (tpl: TTemplate, arrayPath: (string | number)[]) => {
+export const templateMatchesArray = (tpl: TWildcardTemplate, arrayPath: (string | number)[]) => {
   const w = tpl.wildcardPath
   if (w.length < arrayPath.length + 1) {
     dbg('⛔ length too short to match', { w, arrayPath })
@@ -50,7 +53,11 @@ export const templateMatchesArray = (tpl: TTemplate, arrayPath: (string | number
   return ok
 }
 
-export const buildConcretePathForNewItem = (tpl: TTemplate, arrayPath: (string | number)[], newIndex: number) => {
+export const buildConcretePathForNewItem = (
+  tpl: TWildcardTemplate,
+  arrayPath: (string | number)[],
+  newIndex: number,
+) => {
   const w = tpl.wildcardPath
   const realizedPrefix: (string | number)[] = []
   for (let i = 0; i < arrayPath.length; i++) {
@@ -60,6 +67,15 @@ export const buildConcretePathForNewItem = (tpl: TTemplate, arrayPath: (string |
   dbg('→ concrete path', { wildcard: w, arrayPath, newIndex, realizedPrefix, result })
   return result
 }
+
+export const getConcretePathsForNewArrayItem = (
+  templates: TWildcardTemplate[],
+  arrayPath: (string | number)[],
+  newIndex: number,
+) =>
+  templates
+    .filter(tpl => templateMatchesArray(tpl, arrayPath))
+    .map(tpl => buildConcretePathForNewItem(tpl, arrayPath, newIndex))
 
 // defensively remove literal "*" object keys before syncing/submit
 // Keeps your input type (object, array, whatever) without "unknown" noise

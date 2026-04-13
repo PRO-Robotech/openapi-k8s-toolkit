@@ -103,16 +103,6 @@ describe('filterTolerations', () => {
 })
 
 describe('getTolerationsItemsInside', () => {
-  let consoleLogSpy: jest.SpyInstance
-
-  beforeEach(() => {
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
-  })
-
-  afterEach(() => {
-    consoleLogSpy.mockRestore()
-  })
-
   test('returns error when value is not an array', () => {
     expect(getTolerationsItemsInside(undefined as any)).toEqual({ error: 'Value on jsonPath is not an array' })
     expect(getTolerationsItemsInside(null as any)).toEqual({ error: 'Value on jsonPath is not an array' })
@@ -124,7 +114,6 @@ describe('getTolerationsItemsInside', () => {
     const res = getTolerationsItemsInside(value)
 
     expect(res).toEqual({ error: 'Error while flattening' })
-    expect(consoleLogSpy).toHaveBeenCalled()
   })
 
   test('returns counter and filtered tolerations for valid nested arrays', () => {

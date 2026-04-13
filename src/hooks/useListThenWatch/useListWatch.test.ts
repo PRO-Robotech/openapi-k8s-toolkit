@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable no-use-before-define */
 /* eslint-disable dot-notation */
@@ -158,10 +159,12 @@ describe('useListWatch', () => {
     ;(global as any).WebSocket = MockWebSocket as any
     jest.useFakeTimers()
     jest.spyOn(Math, 'random').mockReturnValue(1) // stabilize reconnect jitter
+    jest.spyOn(console, 'error').mockImplementation(() => {})
   })
 
   afterEach(() => {
     ;(Math.random as any).mockRestore?.()
+    ;(console.error as jest.Mock).mockRestore?.()
     jest.useRealTimers()
   })
 
@@ -216,9 +219,14 @@ describe('useListWatch', () => {
     expect(result.current.total).toBe(0)
 
     // initial error -> sets error
-    act(() => ws.message({ type: 'INITIAL_ERROR', message: 'bad init' }))
-    expect(result.current.lastError).toBe('bad init')
-    expect(onError).toHaveBeenCalledWith('bad init')
+    act(() => ws.message({ type: 'INITIAL_ERROR', message: 'bad init', statusCode: 403, reason: 'Forbidden' }))
+    expect(result.current.lastError).toBe('bad init (403)')
+    expect(onError).toHaveBeenCalledWith('bad init (403)')
+    expect(console.error).toHaveBeenCalledWith('[useListWatch][initial]', {
+      message: 'bad init',
+      statusCode: 403,
+      reason: 'Forbidden',
+    })
 
     // initial snapshot
     act(() =>

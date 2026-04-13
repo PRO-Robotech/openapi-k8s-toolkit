@@ -11,8 +11,17 @@ type TRawEntry = {
   apiVersion?: string
 }
 
-export const useSmartResourceParams = ({ cluster, namespace }: { cluster: string; namespace?: string }) => {
+export const useSmartResourceParams = ({
+  cluster,
+  namespace,
+  enabler,
+}: {
+  cluster?: string
+  namespace?: string
+  enabler?: boolean
+}) => {
   const [searchParams] = useSearchParams()
+  const clusterPrepared = cluster ?? ''
 
   const rawEntries = useMemo<TRawEntry[]>(() => {
     const raw = searchParams.get('resources')
@@ -26,22 +35,23 @@ export const useSmartResourceParams = ({ cluster, namespace }: { cluster: string
         const normalizedGroup = apiGroup === 'builtin' || apiGroup === '' ? undefined : apiGroup
 
         return {
-          cluster,
+          cluster: clusterPrepared,
           plural,
           apiGroup: normalizedGroup,
           apiVersion,
         }
       })
       .filter(e => Boolean(e.plural))
-  }, [searchParams, cluster])
+  }, [searchParams, clusterPrepared])
 
   const scopeQueries = useQueries({
     queries: rawEntries.map(e => {
       const isApi = Boolean(e.apiGroup)
+      const scopeEnabler = Boolean((enabler ?? true) && e.cluster && e.plural && (!isApi || e.apiVersion))
 
       return {
         queryKey: ['resource-scope', e.cluster, isApi ? e.apiGroup : 'builtin', e.apiVersion ?? '', e.plural],
-        enabled: Boolean(e.cluster && e.plural && (!isApi || e.apiVersion)),
+        enabled: scopeEnabler,
         queryFn: () => {
           if (isApi) {
             return checkIfApiInstanceNamespaceScoped({

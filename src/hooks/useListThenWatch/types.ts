@@ -45,6 +45,8 @@ type TConsoleFrame = {
 type TInitialError = {
   type: 'INITIAL_ERROR'
   message: string
+  statusCode?: number
+  reason?: string
 }
 
 export type TServerFrame = TInitialFrame | TPageFrame | TPageErrorFrame | TDeltaFrame | TConsoleFrame | TInitialError

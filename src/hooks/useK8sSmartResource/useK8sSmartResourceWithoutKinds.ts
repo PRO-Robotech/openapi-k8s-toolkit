@@ -181,15 +181,17 @@ export const useK8sSmartResourceWithoutKinds = <T>({
     ? 'list'
     : 'disabled'
 
+  const watchHasBlockingError = used === 'watch' && Boolean(lastError) && (!hasInitial || status === 'closed')
+
   const isLoading =
     (isEnabled && verbsLoading) ||
     (used === 'watch' && status === 'connecting') ||
-    (used === 'watch' && status === 'open' && !hasInitial) ||
+    (used === 'watch' && status === 'open' && !hasInitial && !watchHasBlockingError) ||
     (used === 'list' && restLoading)
 
   let error: AxiosError | Error | string | undefined
   if (verbsIsError) error = verbsErrorObj as Error
-  else if (used === 'watch' && status === 'closed' && lastError) error = lastError
+  else if (watchHasBlockingError) error = lastError
   else if (used === 'list' && restIsError) error = restError as Error | undefined
 
   const isError = Boolean(error)

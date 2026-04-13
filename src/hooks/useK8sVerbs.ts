@@ -30,6 +30,7 @@ export const useK8sVerbs = ({
     uri,
     queryKey: ['k8s-verbs', cluster, group || '', version, plural],
     refetchInterval: false,
+    staleTime: 5 * 60 * 1000,
     isEnabled: Boolean(isEnabled && cluster && version && plural),
   })
 

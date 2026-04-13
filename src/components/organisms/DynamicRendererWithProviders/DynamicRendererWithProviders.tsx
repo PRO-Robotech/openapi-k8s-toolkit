@@ -1,7 +1,7 @@
 import React, { ReactElement } from 'react'
 import { useLocation } from 'react-router-dom'
 import { TItemTypeMap } from 'localTypes/dynamicRender'
-import { CursorDefaultDiv } from 'components/atoms'
+import { CursorDefaultDiv, ErrorBoundaryWithDataReset } from 'components/atoms'
 import { prepareUrlsToFetchForDynamicRenderer } from 'utils/prepareUrlsToFetchForDynamicRenderer'
 import { TUseK8sSmartResourceParams } from 'hooks/useK8sSmartResource'
 import { DynamicRenderer, TDynamicRendererProps } from '../DynamicRenderer'
@@ -10,6 +10,7 @@ import { FactoryConfigContextProvider } from './providers/factoryConfigProvider'
 import { PartsOfUrlProvider } from './providers/partsOfUrlContext'
 // import { MultiQueryProvider } from './multiQueryProvider'
 import { MultiQueryProvider } from './providers/hybridDataProvider'
+import { EffectiveAntdResultWrapper } from './EffectiveAntdResultWrapper'
 
 const STRING_KEYS = [
   'cluster',
@@ -29,10 +30,20 @@ export const DynamicRendererWithProviders = <T extends TItemTypeMap>(
     theme: 'dark' | 'light'
     nodeTerminalDefaultProfile?: string
     disableEventBubbling?: boolean
+    effectiveReqIndexes?: number[]
+    effectiveItemsPath?: string | string[]
   },
 ): ReactElement => {
   const location = useLocation()
-  const { urlsToFetch, dataToApplyToContext, theme, nodeTerminalDefaultProfile, disableEventBubbling } = props
+  const {
+    urlsToFetch,
+    dataToApplyToContext,
+    theme,
+    nodeTerminalDefaultProfile,
+    disableEventBubbling,
+    effectiveReqIndexes,
+    effectiveItemsPath,
+  } = props
 
   const directUrls = urlsToFetch.filter(el => typeof el === 'string') as string[]
   const k8sResourcesUrls = urlsToFetch.filter(el => typeof el !== 'string') as Pick<
@@ -82,7 +93,15 @@ export const DynamicRendererWithProviders = <T extends TItemTypeMap>(
               items={[...preparedK8sResoucesUrls, ...preparedUrlsToFetch]}
               dataToApplyToContext={dataToApplyToContext}
             >
-              <DynamicRenderer {...props} />
+              <ErrorBoundaryWithDataReset>
+                {effectiveReqIndexes && effectiveReqIndexes.length > 0 ? (
+                  <EffectiveAntdResultWrapper effectiveReqIndexes={effectiveReqIndexes} itemsPath={effectiveItemsPath}>
+                    <DynamicRenderer {...props} />
+                  </EffectiveAntdResultWrapper>
+                ) : (
+                  <DynamicRenderer {...props} />
+                )}
+              </ErrorBoundaryWithDataReset>
             </MultiQueryProvider>
           </PartsOfUrlProvider>
         </FactoryConfigContextProvider>

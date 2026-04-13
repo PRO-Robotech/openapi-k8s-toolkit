@@ -6,6 +6,8 @@ import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
 import { usePartsOfUrl } from '../../../DynamicRendererWithProviders/providers/partsOfUrlContext'
 import { parseAll } from '../utils'
+import { useAutoPerRequestError } from '../hooks/useAutoPerRequestError'
+import { PerRequestError } from '../PerRequestError'
 
 export const MarketplaceCard: FC<{ data: TDynamicComponentsAppTypeMap['MarketplaceCard']; children?: any }> = ({
   data,
@@ -15,7 +17,7 @@ export const MarketplaceCard: FC<{ data: TDynamicComponentsAppTypeMap['Marketpla
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id, cluster, namespace, ...props } = data
 
-  const { data: multiQueryData, isError, errors } = useMultiQuery()
+  const { data: multiQueryData } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
 
   const replaceValues = partsOfUrl.partsOfUrl.reduce<Record<string, string | undefined>>((acc, value, index) => {
@@ -27,13 +29,10 @@ export const MarketplaceCard: FC<{ data: TDynamicComponentsAppTypeMap['Marketpla
 
   const namespacePrepared = parseAll({ text: namespace, replaceValues, multiQueryData })
 
-  if (isError) {
-    return (
-      <div>
-        <h4>Errors:</h4>
-        <ul>{errors.map((e, i) => e && <li key={i}>{typeof e === 'string' ? e : e.message}</li>)}</ul>
-      </div>
-    )
+  const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
+
+  if (shouldShowError) {
+    return <PerRequestError error={errorToShow} />
   }
 
   return <Card cluster={clusterPrepared} namespace={namespacePrepared} {...props} />

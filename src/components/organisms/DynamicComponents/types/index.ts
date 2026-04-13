@@ -8,11 +8,13 @@ import {
   TAntdTabsProps,
   TAntdButtonProps,
   TAntdIconsProps,
+  TAntdResultProps,
 } from './antdComponents'
 import { TDefaultDivProps } from './DefaultDiv'
 import { TPartsOfUrlProps } from './partsOfUrl'
 import { TMultiQueryProps } from './multiQuery'
 import { TParsedTextProps } from './parsedText'
+import { TMappedParsedTextProps } from './MappedParsedText'
 import { TProjectInfoCardProps } from './ProjectInfoCard'
 import { TMarketplaceCardProps } from './MarketplaceCard'
 import { TContentCardProps } from './ContentCard'
@@ -48,6 +50,7 @@ import { TAggregatedCounterCardProps } from './AggregatedCounterCard'
 import { TBase64IconProps } from './Base64Icon'
 import { TUsageGraphCardProps } from './UsageGraphCard'
 import { TActionsDropdownProps } from './ActionsDropdown'
+import { TVolumesProps } from './Volumes'
 
 export type TDynamicComponentsAppTypeMap = {
   antdText: TAntdTextProps
@@ -63,6 +66,7 @@ export type TDynamicComponentsAppTypeMap = {
   partsOfUrl: TPartsOfUrlProps
   multiQuery: TMultiQueryProps
   parsedText: TParsedTextProps
+  MappedParsedText: TMappedParsedTextProps
   ProjectInfoCard: TProjectInfoCardProps
   MarketplaceCard: TMarketplaceCardProps
   ContentCard: TContentCardProps
@@ -100,4 +104,6 @@ export type TDynamicComponentsAppTypeMap = {
   Base64Icon: TBase64IconProps
   UsageGraphCard: TUsageGraphCardProps
   ActionsDropdown: TActionsDropdownProps
+  Volumes: TVolumesProps
+  antdResult: TAntdResultProps
 }

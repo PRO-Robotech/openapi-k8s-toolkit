@@ -98,7 +98,8 @@ export type TScaleActionProps = TActionBaseProps & {
 export type TTriggerRunActionProps = TActionBaseProps & {
   createEndpoint: string
   cronJobName: string
-  jobTemplate: string
+  reqIndex: string
+  jsonPathToObj: string
 }
 
 export type TDeleteChildrenActionProps = TActionBaseProps & {
@@ -108,8 +109,9 @@ export type TDeleteChildrenActionProps = TActionBaseProps & {
 
 export type TRerunLastActionProps = TActionBaseProps & {
   createEndpoint: string
-  sourceJobSpec: string
   sourceJobName: string
+  reqIndex: string
+  jsonPathToObj: string
 }
 
 export type TDrainActionProps = TActionBaseProps & {
@@ -121,6 +123,21 @@ export type TRollbackActionProps = TActionBaseProps & {
   bffEndpoint: string
   resourceName: string
   resourceEndpoint: string
+}
+
+export type TResourceKind = 'ConfigMap' | 'Secret'
+
+export type TDownloadAsFilesActionProps = TActionBaseProps & {
+  endpoint: string
+  resourceKind: TResourceKind
+  name: string
+}
+
+export type TCreateFromFilesActionProps = TActionBaseProps & {
+  createEndpoint: string
+  namespace: string
+  resourceKind: TResourceKind
+  apiVersion?: string
 }
 
 export type TActionUnion =
@@ -143,6 +160,8 @@ export type TActionUnion =
   | { type: 'rerunLast'; props: TRerunLastActionProps }
   | { type: 'drain'; props: TDrainActionProps }
   | { type: 'rollback'; props: TRollbackActionProps }
+  | { type: 'downloadAsFiles'; props: TDownloadAsFilesActionProps }
+  | { type: 'createFromFiles'; props: TCreateFromFilesActionProps }
 
 /** Per-action permission map. Key = "${actionType}-${index}", value = whether action is allowed. */
 export type TActionsPermissions = Record<string, boolean | undefined>

@@ -26,4 +26,6 @@ export const ACTION_REQUIRED_PERMISSIONS: Record<TActionUnion['type'], TRequired
   rerunLast: { verb: 'create' },
   drain: { verb: 'patch' },
   rollback: { verb: 'patch' },
+  downloadAsFiles: { verb: 'get' },
+  createFromFiles: { verb: 'create' },
 }

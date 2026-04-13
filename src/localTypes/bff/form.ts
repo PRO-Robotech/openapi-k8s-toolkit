@@ -21,7 +21,9 @@ export type TPrepareFormReq = {
         prefillValueNamespaceOnly?: string
       }
   cluster: string
+  partsOfUrl: string[]
   customizationId?: string
+  customizationIdPrefill?: string
 }
 
 export type TPrepareFormRes =

@@ -63,7 +63,7 @@ export const TaintsEditModal: FC<TTaintsEditModalProps> = ({
     form
       .validateFields()
       .then(() => {
-        console.log(JSON.stringify(taints))
+        // console.log(JSON.stringify(taints))
         setIsLoading(true)
         setError(undefined)
         patchEntryWithReplaceOp({ endpoint, pathToValue, body: taints })
@@ -104,6 +104,11 @@ export const TaintsEditModal: FC<TTaintsEditModalProps> = ({
       width={editModalWidth || 520}
       destroyOnHidden
       centered
+      styles={{
+        header: {
+          paddingRight: '30px',
+        },
+      }}
     >
       {error && <Alert type="error" message="Error while submitting" description={error?.response?.data?.message} />}
       {modalDescriptionText && (

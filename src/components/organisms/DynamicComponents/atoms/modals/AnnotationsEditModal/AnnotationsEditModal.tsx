@@ -72,7 +72,7 @@ export const AnnotationsEditModal: FC<TAnnotationsEditModalProps> = ({
         annotations.forEach(({ key, value }) => {
           result[key] = value || ''
         })
-        console.log(JSON.stringify(result))
+        // console.log(JSON.stringify(result))
         setIsLoading(true)
         setError(undefined)
         patchEntryWithReplaceOp({ endpoint, pathToValue, body: result })
@@ -111,6 +111,11 @@ export const AnnotationsEditModal: FC<TAnnotationsEditModalProps> = ({
       width={editModalWidth || 520}
       destroyOnHidden
       centered
+      styles={{
+        header: {
+          paddingRight: '30px',
+        },
+      }}
     >
       {error && <Alert type="error" message="Error while submitting" description={error?.response?.data?.message} />}
       {modalDescriptionText && (

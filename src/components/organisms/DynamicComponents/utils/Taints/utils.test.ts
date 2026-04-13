@@ -63,16 +63,6 @@ describe('filterTaintLikes', () => {
 })
 
 describe('getTaintsItemsInside', () => {
-  let consoleLogSpy: jest.SpyInstance
-
-  beforeEach(() => {
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
-  })
-
-  afterEach(() => {
-    consoleLogSpy.mockRestore()
-  })
-
   test('returns error when value is not an array', () => {
     expect(getTaintsItemsInside(undefined as any)).toEqual({ error: 'Value on jsonPath is not an array' })
     expect(getTaintsItemsInside(null as any)).toEqual({ error: 'Value on jsonPath is not an array' })
@@ -84,7 +74,6 @@ describe('getTaintsItemsInside', () => {
     const res = getTaintsItemsInside(value)
 
     expect(res).toEqual({ error: 'Error while flattening' })
-    expect(consoleLogSpy).toHaveBeenCalled()
   })
 
   test('returns counter and filtered taints for valid nested arrays', () => {

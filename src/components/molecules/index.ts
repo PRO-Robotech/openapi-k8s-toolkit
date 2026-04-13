@@ -14,10 +14,11 @@ export type { TManageableSidebarProviderProps, TManageableSidebarProps } from '.
 export {
   EnrichedTableProvider,
   EnrichedTable,
+  ClusterListTable,
   getEnrichedColumns,
   getEnrichedColumnsWithControls,
 } from './EnrichedTable'
-export type { TEnrichedTableProviderProps, TEnrichedTableProps } from './EnrichedTable'
+export type { TEnrichedTableProviderProps, TEnrichedTableProps, TClusterListTableProps } from './EnrichedTable'
 
 /* YamlEditorSingleton */
 export { YamlEditorSingleton } from './YamlEditorSingleton'

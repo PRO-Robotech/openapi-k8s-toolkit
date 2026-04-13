@@ -5,11 +5,13 @@ export const useDirectUnknownResource = <T>({
   uri,
   queryKey,
   refetchInterval,
+  staleTime,
   isEnabled,
 }: {
   uri: string
   queryKey: string[]
   refetchInterval?: number | false
+  staleTime?: number
   isEnabled?: boolean
 }): UseQueryResult<T, Error> => {
   return useQuery({
@@ -27,6 +29,7 @@ export const useDirectUnknownResource = <T>({
       return data as T
     },
     refetchInterval: refetchInterval !== undefined ? refetchInterval : 5000,
+    staleTime,
     enabled: isEnabled,
   })
 }

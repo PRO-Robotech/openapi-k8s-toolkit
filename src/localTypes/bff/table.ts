@@ -3,6 +3,7 @@ import {
   TAdditionalPrinterColumnsUndefinedValues,
   TAdditionalPrinterColumnsTrimLengths,
   TAdditionalPrinterColumnsColWidths,
+  TAdditionalPrinterColumnsTooltips,
   TAdditionalPrinterColumnsKeyTypeProps,
   TAdditionalPrinterColumnsCustomSortersAndFilters,
 } from 'localTypes/richTable'
@@ -26,6 +27,7 @@ export type TPrepareTableRes = {
   additionalPrinterColumnsUndefinedValues?: TAdditionalPrinterColumnsUndefinedValues
   additionalPrinterColumnsTrimLengths?: TAdditionalPrinterColumnsTrimLengths
   additionalPrinterColumnsColWidths?: TAdditionalPrinterColumnsColWidths
+  additionalPrinterColumnsTooltips?: TAdditionalPrinterColumnsTooltips
   additionalPrinterColumnsKeyTypeProps?: TAdditionalPrinterColumnsKeyTypeProps
   additionalPrinterColumnsCustomSortersAndFilters?: TAdditionalPrinterColumnsCustomSortersAndFilters
   withoutControls?: boolean

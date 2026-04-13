@@ -9,7 +9,10 @@ import '@testing-library/jest-dom'
 import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import axios from 'axios'
+import { App as AntdApp } from 'antd'
 import { BlackholeForm, TBlackholeFormProps } from './BlackholeForm'
+
+const renderWithApp = (ui: React.ReactElement) => render(<AntdApp>{ui}</AntdApp>)
 
 // -----------------------------
 // Global DOM polyfills for jsdom
@@ -136,22 +139,31 @@ jest.mock('./helpers/debugs', () => ({
   prettyPath: (p: any) => (Array.isArray(p) ? p.join('.') : String(p)),
 }))
 
+const expandWildcardTemplatesMock = jest.fn<any, [any, any, any?]>(() => [])
 const isPrefixMock = jest.fn((full: any[], prefix: any[]) => {
   if (!Array.isArray(full) || !Array.isArray(prefix) || prefix.length > full.length) return false
   return prefix.every((seg, idx) => full[idx] === seg)
 })
 jest.mock('./helpers/hiddenExpanded', () => ({
   sanitizeWildcardPath: (p: any) => p,
-  expandWildcardTemplates: () => [],
+  expandWildcardTemplates: (templates: any, values: any, opts?: any) =>
+    expandWildcardTemplatesMock(templates, values, opts),
   toStringPath: (p: any) => p,
   isPrefix: (full: any[], prefix: any[]) => isPrefixMock(full, prefix),
 }))
 
+const collectArrayLengthsMock = jest.fn<any, [any, any?, any?]>(() => new Map())
+const templateMatchesArrayMock = jest.fn<boolean, [any, any]>(() => false)
+const buildConcretePathForNewItemMock = jest.fn<any, [any, any, any]>((_tpl: any, arrayPath: any, newIndex: any) => [
+  ...arrayPath,
+  newIndex,
+])
 jest.mock('./helpers/prefills', () => ({
   toWildcardPath: (p: any) => p,
-  collectArrayLengths: () => new Map(),
-  templateMatchesArray: () => false,
-  buildConcretePathForNewItem: (_tpl: any, arrayPath: any, newIndex: any) => [...arrayPath, newIndex],
+  collectArrayLengths: (obj: any, base?: any, out?: any) => collectArrayLengthsMock(obj, base, out),
+  templateMatchesArray: (tpl: any, arrayPath: any) => templateMatchesArrayMock(tpl, arrayPath),
+  buildConcretePathForNewItem: (tpl: any, arrayPath: any, newIndex: any) =>
+    buildConcretePathForNewItemMock(tpl, arrayPath, newIndex),
   scrubLiteralWildcardKeys: (v: any) => v,
 }))
 
@@ -177,8 +189,20 @@ jest.mock('./utilsErrorHandler', () => ({
 const getObjectFormItemsDraftMock = jest.fn()
 jest.mock('./utils', () => {
   const React = require('react')
+  const { Form: AntForm } = require('antd')
   return {
-    getObjectFormItemsDraft: (args: any) => getObjectFormItemsDraftMock(args),
+    getObjectFormItemsDraft: (args: any) => {
+      const original = getObjectFormItemsDraftMock(args)
+      // Render a hidden Form.Item for namespace so Form.useWatch can pick it up
+      return React.createElement(
+        React.Fragment,
+        null,
+        original,
+        args.namespaceData
+          ? React.createElement(AntForm.Item, { name: ['metadata', 'namespace'], noStyle: true })
+          : null,
+      )
+    },
   }
 })
 
@@ -323,6 +347,13 @@ const editPrefills = {
 // -----------------------------
 beforeEach(() => {
   jest.clearAllMocks()
+  expandWildcardTemplatesMock.mockImplementation(() => [])
+  collectArrayLengthsMock.mockImplementation(() => new Map())
+  templateMatchesArrayMock.mockImplementation(() => false)
+  buildConcretePathForNewItemMock.mockImplementation((_tpl: any, arrayPath: any, newIndex: any) => [
+    ...arrayPath,
+    newIndex,
+  ])
   isPrefixMock.mockImplementation((full: any[], prefix: any[]) => {
     if (!Array.isArray(full) || !Array.isArray(prefix) || prefix.length > full.length) return false
     return prefix.every((seg, idx) => full[idx] === seg)
@@ -343,9 +374,9 @@ beforeEach(() => {
   // Default axios behaviour: resolve with empty object
   axiosPostMock.mockResolvedValue({ data: {} })
 
-  // Default API calls resolve
-  createNewEntryMock.mockResolvedValue({ ok: true })
-  updateEntryMock.mockResolvedValue({ ok: true })
+  // Default API calls resolve with AxiosResponse shape
+  createNewEntryMock.mockResolvedValue({ data: { metadata: { name: 'test-resource' } } })
+  updateEntryMock.mockResolvedValue({ data: { metadata: { name: 'test-resource' } } })
 })
 
 // -----------------------------
@@ -353,7 +384,7 @@ beforeEach(() => {
 // -----------------------------
 describe('BlackholeForm', () => {
   test('renders YAML editor with correct editorUri in create mode', () => {
-    render(<BlackholeForm {...baseProps} />)
+    renderWithApp(<BlackholeForm {...baseProps} />)
 
     expect(screen.getByTestId('yaml-editor')).toHaveAttribute(
       'data-editor-uri',
@@ -362,7 +393,7 @@ describe('BlackholeForm', () => {
   })
 
   test('renders YAML editor with correct editorUri in edit mode', () => {
-    render(<BlackholeForm {...baseProps} isCreate={false} formsPrefills={editPrefills} />)
+    renderWithApp(<BlackholeForm {...baseProps} isCreate={false} formsPrefills={editPrefills} />)
 
     expect(screen.getByTestId('yaml-editor')).toHaveAttribute(
       'data-editor-uri',
@@ -380,7 +411,7 @@ describe('BlackholeForm', () => {
     })
 
     const user = userEvent.setup()
-    render(<BlackholeForm {...baseProps} isCreate />)
+    renderWithApp(<BlackholeForm {...baseProps} isCreate />)
 
     await user.click(screen.getByRole('button', { name: /submit/i }))
 
@@ -402,13 +433,14 @@ describe('BlackholeForm', () => {
     })
 
     const user = userEvent.setup()
-    render(<BlackholeForm {...baseProps} isCreate backlink="/list" />)
+    renderWithApp(<BlackholeForm {...baseProps} isCreate backlink="/list" />)
 
     await user.click(screen.getByRole('button', { name: /submit/i }))
 
     await waitFor(() => {
       expect(createNewEntryMock).toHaveBeenCalled()
       expect(navigateMock).toHaveBeenCalledWith('/list')
+      expect(screen.getByText(/Deployment "test-resource" created successfully/)).toBeInTheDocument()
     })
   })
 
@@ -421,7 +453,7 @@ describe('BlackholeForm', () => {
     })
 
     const user = userEvent.setup()
-    render(<BlackholeForm {...baseProps} isCreate={false} formsPrefills={editPrefills} />)
+    renderWithApp(<BlackholeForm {...baseProps} isCreate={false} formsPrefills={editPrefills} />)
 
     await user.click(screen.getByRole('button', { name: /submit/i }))
 
@@ -443,13 +475,14 @@ describe('BlackholeForm', () => {
     })
 
     const user = userEvent.setup()
-    render(<BlackholeForm {...baseProps} isCreate={false} formsPrefills={editPrefills} backlink="/details" />)
+    renderWithApp(<BlackholeForm {...baseProps} isCreate={false} formsPrefills={editPrefills} backlink="/details" />)
 
     await user.click(screen.getByRole('button', { name: /submit/i }))
 
     await waitFor(() => {
       expect(updateEntryMock).toHaveBeenCalled()
       expect(navigateMock).toHaveBeenCalledWith('/details')
+      expect(screen.getByText(/Deployment "test-resource" updated successfully/)).toBeInTheDocument()
     })
   })
 
@@ -458,7 +491,7 @@ describe('BlackholeForm', () => {
       data: { status: { allowed: args.verb === 'create' ? false : true } },
     }))
 
-    render(<BlackholeForm {...baseProps} isCreate />)
+    renderWithApp(<BlackholeForm {...baseProps} isCreate />)
 
     expect(screen.getByRole('button', { name: /submit/i })).toBeDisabled()
   })
@@ -468,13 +501,13 @@ describe('BlackholeForm', () => {
       data: { status: { allowed: args.verb === 'update' ? false : true } },
     }))
 
-    render(<BlackholeForm {...baseProps} isCreate={false} formsPrefills={editPrefills} />)
+    renderWithApp(<BlackholeForm {...baseProps} isCreate={false} formsPrefills={editPrefills} />)
 
     expect(screen.getByRole('button', { name: /submit/i })).toBeDisabled()
   })
 
   test('calls usePermissions with correct create/edit enablers and request identity fields', () => {
-    render(
+    renderWithApp(
       <BlackholeForm {...baseProps} isCreate urlParamsForPermissions={{ apiGroup: 'apps', plural: 'deployments' }} />,
     )
 
@@ -509,7 +542,7 @@ describe('BlackholeForm', () => {
     })
 
     const user = userEvent.setup()
-    render(
+    renderWithApp(
       <BlackholeForm
         {...baseProps}
         isCreate
@@ -545,7 +578,7 @@ describe('BlackholeForm', () => {
     })
 
     const user = userEvent.setup()
-    render(
+    renderWithApp(
       <BlackholeForm
         {...baseProps}
         isCreate
@@ -575,7 +608,7 @@ describe('BlackholeForm', () => {
     })
 
     const user = userEvent.setup()
-    render(<BlackholeForm {...baseProps} isCreate />)
+    renderWithApp(<BlackholeForm {...baseProps} isCreate />)
 
     const draftArgs = getObjectFormItemsDraftMock.mock.calls.at(-1)?.[0]
     expect(draftArgs).toBeTruthy()
@@ -620,7 +653,7 @@ describe('BlackholeForm', () => {
     })
 
     const user = userEvent.setup()
-    render(<BlackholeForm {...baseProps} isCreate />)
+    renderWithApp(<BlackholeForm {...baseProps} isCreate />)
 
     const draftArgs = getObjectFormItemsDraftMock.mock.calls.at(-1)?.[0]
     expect(draftArgs).toBeTruthy()
@@ -672,7 +705,7 @@ describe('BlackholeForm', () => {
     })
 
     const user = userEvent.setup()
-    render(<BlackholeForm {...baseProps} isCreate />)
+    renderWithApp(<BlackholeForm {...baseProps} isCreate />)
 
     await user.click(screen.getByTestId('yaml-editor-trigger-change'))
     await waitFor(() => expect(materializeAdditionalFromValuesMock).toHaveBeenCalled())
@@ -701,7 +734,7 @@ describe('BlackholeForm', () => {
     })
 
     const user = userEvent.setup()
-    render(<BlackholeForm {...baseProps} isCreate />)
+    renderWithApp(<BlackholeForm {...baseProps} isCreate />)
 
     const draftArgs = getObjectFormItemsDraftMock.mock.calls.at(-1)?.[0]
     expect(draftArgs).toBeTruthy()
@@ -753,7 +786,7 @@ describe('BlackholeForm', () => {
     })
 
     const user = userEvent.setup()
-    render(<BlackholeForm {...baseProps} isCreate />)
+    renderWithApp(<BlackholeForm {...baseProps} isCreate />)
 
     await user.click(screen.getByTestId('yaml-editor-trigger-paste'))
     await waitFor(() => expect(materializeAdditionalFromValuesMock).toHaveBeenCalled())
@@ -812,7 +845,7 @@ describe('BlackholeForm', () => {
     })
 
     const user = userEvent.setup()
-    render(<BlackholeForm {...baseProps} isCreate />)
+    renderWithApp(<BlackholeForm {...baseProps} isCreate />)
 
     const draftArgs = getObjectFormItemsDraftMock.mock.calls.at(-1)?.[0]
     expect(draftArgs).toBeTruthy()
@@ -856,7 +889,7 @@ describe('BlackholeForm', () => {
     })
 
     const user = userEvent.setup()
-    render(<BlackholeForm {...baseProps} isCreate />)
+    renderWithApp(<BlackholeForm {...baseProps} isCreate />)
 
     await user.click(screen.getByTestId('yaml-editor-trigger-array-add'))
     await user.click(screen.getByTestId('yaml-editor-trigger-array-remove'))
@@ -924,7 +957,7 @@ describe('BlackholeForm', () => {
     })
 
     const user = userEvent.setup()
-    render(<BlackholeForm {...baseProps} isCreate />)
+    renderWithApp(<BlackholeForm {...baseProps} isCreate />)
 
     const draftArgs = getObjectFormItemsDraftMock.mock.calls.at(-1)?.[0]
     expect(draftArgs).toBeTruthy()
@@ -983,7 +1016,7 @@ describe('BlackholeForm', () => {
     })
 
     const user = userEvent.setup()
-    render(<BlackholeForm {...baseProps} isCreate />)
+    renderWithApp(<BlackholeForm {...baseProps} isCreate />)
 
     await user.click(screen.getByRole('button', { name: /submit/i }))
 
@@ -999,7 +1032,7 @@ describe('BlackholeForm', () => {
     })
 
     const user = userEvent.setup()
-    render(<BlackholeForm {...baseProps} isCreate />)
+    renderWithApp(<BlackholeForm {...baseProps} isCreate />)
 
     await user.click(screen.getByRole('button', { name: /submit/i }))
 
@@ -1022,7 +1055,7 @@ describe('BlackholeForm', () => {
     })
 
     const user = userEvent.setup()
-    render(<BlackholeForm {...baseProps} isCreate />)
+    renderWithApp(<BlackholeForm {...baseProps} isCreate />)
 
     await user.click(screen.getByRole('button', { name: /submit/i }))
     expect(await screen.findByText(/boom/i)).toBeInTheDocument()
@@ -1037,7 +1070,7 @@ describe('BlackholeForm', () => {
   test('Cancel navigates to backlink', async () => {
     const user = userEvent.setup()
 
-    render(<BlackholeForm {...baseProps} backlink="/back" />)
+    renderWithApp(<BlackholeForm {...baseProps} backlink="/back" />)
 
     await user.click(screen.getByRole('button', { name: /cancel/i }))
 
@@ -1045,8 +1078,146 @@ describe('BlackholeForm', () => {
   })
 
   test('does not render Cancel button when backlink is not provided', () => {
-    render(<BlackholeForm {...baseProps} backlink={undefined} />)
+    renderWithApp(<BlackholeForm {...baseProps} backlink={undefined} />)
 
     expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument()
+  })
+
+  // -----------------------------------------------
+  // resolvedBacklink / namespace injection tests
+  // -----------------------------------------------
+
+  test('submit (create) injects namespace into api-table backlink when namespace segment is missing', async () => {
+    axiosPostMock.mockImplementation(async (url: string) => {
+      if (String(url).includes('getYamlValuesByFromValues')) {
+        return { data: 'YAML_BODY_CREATE_NS' }
+      }
+      return { data: {} }
+    })
+
+    const user = userEvent.setup()
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        isCreate
+        isNameSpaced={['team-a']}
+        prefillValueNamespaceOnly="team-a"
+        backlink="/ui/cluster1/api-table/apps/v1/deployments"
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /submit/i }))
+
+    await waitFor(() => {
+      expect(createNewEntryMock).toHaveBeenCalled()
+      expect(navigateMock).toHaveBeenCalledWith('/ui/cluster1/team-a/api-table/apps/v1/deployments')
+    })
+  })
+
+  test('submit (create) injects namespace into builtin-table backlink when namespace segment is missing', async () => {
+    axiosPostMock.mockImplementation(async (url: string) => {
+      if (String(url).includes('getYamlValuesByFromValues')) {
+        return { data: 'YAML_BODY_CREATE_NS' }
+      }
+      return { data: {} }
+    })
+
+    const user = userEvent.setup()
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        isCreate
+        isNameSpaced={['kube-system']}
+        prefillValueNamespaceOnly="kube-system"
+        backlink="/ui/cluster1/builtin-table/pods"
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /submit/i }))
+
+    await waitFor(() => {
+      expect(createNewEntryMock).toHaveBeenCalled()
+      expect(navigateMock).toHaveBeenCalledWith('/ui/cluster1/kube-system/builtin-table/pods')
+    })
+  })
+
+  test('submit does NOT modify backlink when namespace segment is already present', async () => {
+    axiosPostMock.mockImplementation(async (url: string) => {
+      if (String(url).includes('getYamlValuesByFromValues')) {
+        return { data: 'YAML_BODY_CREATE_NS' }
+      }
+      return { data: {} }
+    })
+
+    const user = userEvent.setup()
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        isCreate
+        isNameSpaced={['default']}
+        prefillValueNamespaceOnly="default"
+        backlink="/ui/cluster1/existing-ns/api-table/apps/v1/deployments"
+      />,
+    )
+
+    // Wait for form initialValues to propagate so Form.useWatch picks up the namespace
+    await waitFor(() => {
+      expect(axiosPostMock).toHaveBeenCalled()
+    })
+
+    await user.click(screen.getByRole('button', { name: /submit/i }))
+
+    await waitFor(() => {
+      expect(createNewEntryMock).toHaveBeenCalled()
+      expect(navigateMock).toHaveBeenCalledWith('/ui/cluster1/existing-ns/api-table/apps/v1/deployments')
+    })
+  })
+
+  test('submit does NOT modify backlink when path has no table pattern', async () => {
+    axiosPostMock.mockImplementation(async (url: string) => {
+      if (String(url).includes('getYamlValuesByFromValues')) {
+        return { data: 'YAML_BODY_CREATE_NS' }
+      }
+      return { data: {} }
+    })
+
+    const user = userEvent.setup()
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        isCreate
+        isNameSpaced={['default']}
+        prefillValueNamespaceOnly="default"
+        backlink="/some/other/path"
+      />,
+    )
+
+    // Wait for form initialValues to propagate so Form.useWatch picks up the namespace
+    await waitFor(() => {
+      expect(axiosPostMock).toHaveBeenCalled()
+    })
+
+    await user.click(screen.getByRole('button', { name: /submit/i }))
+
+    await waitFor(() => {
+      expect(createNewEntryMock).toHaveBeenCalled()
+      expect(navigateMock).toHaveBeenCalledWith('/some/other/path')
+    })
+  })
+
+  test('cancel button uses original backlink, not resolved', async () => {
+    const user = userEvent.setup()
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        isNameSpaced={['team-a']}
+        prefillValueNamespaceOnly="team-a"
+        backlink="/ui/cluster1/api-table/apps/v1/deployments"
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /cancel/i }))
+
+    expect(navigateMock).toHaveBeenCalledWith('/ui/cluster1/api-table/apps/v1/deployments')
   })
 })

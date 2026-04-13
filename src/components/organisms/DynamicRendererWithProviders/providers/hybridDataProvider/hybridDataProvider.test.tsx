@@ -16,9 +16,9 @@ jest.mock('@tanstack/react-query', () => {
   }
 })
 
-const useK8sSmartResourceMock = jest.fn()
+const useManyK8sSmartResourceMock = jest.fn()
 jest.mock('hooks/useK8sSmartResource', () => ({
-  useK8sSmartResource: (args: any) => useK8sSmartResourceMock(args),
+  useManyK8sSmartResource: (args: any) => useManyK8sSmartResourceMock(args),
 }))
 
 // -------------------- test helpers --------------------
@@ -61,65 +61,23 @@ const Output = () => {
 }
 
 /**
- * Two-phase stable K8s mock:
- * For each distinct params.id:
- *  - 1st call returns base
- *  - 2nd call returns base with a NEW ref for data if it's an object
- *    and a NEW ref for error if it's an object (e.g., Error)
- *
- * This causes K8sFetcher useEffect deps to change once after RESET,
- * letting it re-dispatch SET_ENTRY.
+ * Helper: create a useManyK8sSmartResource mock that returns results
+ * based on each item's `id` field.
  */
-const makeTwoPhaseK8sMock = (
+const makeK8sResultsMock = (
   byId: Record<string, { data: any; isLoading?: boolean; isError?: boolean; error?: any }>,
 ) => {
-  const counters = new Map<string, number>()
-  const secondDataRefs = new Map<string, any>()
-  const secondErrRefs = new Map<string, any>()
-
-  return (params: any) => {
-    const id = params?.id ?? 'unknown'
-    const base = byId[id] ?? { data: undefined, isLoading: false, isError: false, error: null }
-
-    const n = (counters.get(id) ?? 0) + 1
-    counters.set(id, n)
-
-    const isLoading = base.isLoading ?? false
-    const isError = base.isError ?? false
-    const error = base.error ?? null
-
-    if (n === 1) {
-      return { data: base.data, isLoading, isError, error }
-    }
-
-    // second-phase data ref
-    if (!secondDataRefs.has(id)) {
-      const d = base.data
-      secondDataRefs.set(id, d && typeof d === 'object' ? { ...d } : d)
-    }
-
-    // second-phase error ref
-    if (!secondErrRefs.has(id)) {
-      const e = error
-
-      if (e instanceof Error) {
-        // new ref + preserves message
-        secondErrRefs.set(id, new Error(e.message))
-      } else if (e && typeof e === 'object') {
-        // best-effort clone for AxiosError-like objects
-        secondErrRefs.set(id, { ...(e as any) })
-      } else {
-        secondErrRefs.set(id, e)
+  return (paramsList: any[]) =>
+    paramsList.map((params: any) => {
+      const id = params?.id ?? 'unknown'
+      const base = byId[id] ?? { data: undefined, isLoading: false, isError: false, error: undefined }
+      return {
+        data: base.data,
+        isLoading: base.isLoading ?? false,
+        isError: base.isError ?? false,
+        error: base.error ?? undefined,
       }
-    }
-
-    return {
-      data: secondDataRefs.get(id),
-      isLoading,
-      isError,
-      error: secondErrRefs.get(id),
-    }
-  }
+    })
 }
 
 const makeStableUrlResults = (...results: any[]) =>
@@ -156,8 +114,8 @@ describe('MultiQueryProvider / useMultiQuery', () => {
     const u1Data = { u: 1 }
     const u2Data = { u: 2 }
 
-    useK8sSmartResourceMock.mockImplementation(
-      makeTwoPhaseK8sMock({
+    useManyK8sSmartResourceMock.mockImplementation(
+      makeK8sResultsMock({
         k1: { data: k1Data },
         k2: { data: k2Data },
       }),
@@ -200,8 +158,8 @@ describe('MultiQueryProvider / useMultiQuery', () => {
     const k2Data = { k: 2 }
     const u1Data = { u: 1 }
 
-    useK8sSmartResourceMock.mockImplementation(
-      makeTwoPhaseK8sMock({
+    useManyK8sSmartResourceMock.mockImplementation(
+      makeK8sResultsMock({
         k1: { data: k1Data },
         k2: { data: k2Data },
       }),
@@ -230,11 +188,8 @@ describe('MultiQueryProvider / useMultiQuery', () => {
   })
 
   test('isLoading true if any K8s entry is loading', async () => {
-    // IMPORTANT:
-    // Provide a real object for data so the two-phase mock can change refs
-    // and re-trigger K8sFetcher effect after RESET.
-    useK8sSmartResourceMock.mockImplementation(
-      makeTwoPhaseK8sMock({
+    useManyK8sSmartResourceMock.mockImplementation(
+      makeK8sResultsMock({
         k1: { data: { k: 1 }, isLoading: true },
         k2: { data: { k: 2 }, isLoading: false },
       }),
@@ -254,8 +209,8 @@ describe('MultiQueryProvider / useMultiQuery', () => {
   })
 
   test('isLoading true if any URL query is loading', async () => {
-    useK8sSmartResourceMock.mockImplementation(
-      makeTwoPhaseK8sMock({
+    useManyK8sSmartResourceMock.mockImplementation(
+      makeK8sResultsMock({
         k1: { data: { k: 1 } },
       }),
     )
@@ -276,10 +231,8 @@ describe('MultiQueryProvider / useMultiQuery', () => {
   })
 
   test('isError true and errors array populated when any K8s entry errors', async () => {
-    // IMPORTANT:
-    // Use Error object so two-phase can change error ref after RESET.
-    useK8sSmartResourceMock.mockImplementation(
-      makeTwoPhaseK8sMock({
+    useManyK8sSmartResourceMock.mockImplementation(
+      makeK8sResultsMock({
         k1: { data: { k: 1 }, isError: true, error: new Error('k8s boom') },
         k2: { data: { k: 2 }, isError: false },
       }),
@@ -302,8 +255,8 @@ describe('MultiQueryProvider / useMultiQuery', () => {
   })
 
   test('isError true and errors array populated when any URL query errors', async () => {
-    useK8sSmartResourceMock.mockImplementation(
-      makeTwoPhaseK8sMock({
+    useManyK8sSmartResourceMock.mockImplementation(
+      makeK8sResultsMock({
         k1: { data: { k: 1 } },
       }),
     )
@@ -331,6 +284,7 @@ describe('MultiQueryProvider / useMultiQuery', () => {
   })
 
   test('handles empty items list', () => {
+    useManyK8sSmartResourceMock.mockImplementation(() => [])
     useQueriesMock.mockImplementation(() => [])
 
     render(
@@ -341,5 +295,192 @@ describe('MultiQueryProvider / useMultiQuery', () => {
 
     expect(screen.getByTestId('isLoading').textContent).toBe('false')
     expect(screen.getByTestId('isError').textContent).toBe('false')
+  })
+
+  // -------------------- proving the aggregation problem --------------------
+
+  describe('aggregated isError misleads per-request consumers', () => {
+    test('when only req1 (URL) fails, isError is true but req0 data is fully available', async () => {
+      const k1Data = { metadata: { name: 'my-resource' }, spec: { replicas: 3 } }
+
+      useManyK8sSmartResourceMock.mockImplementation(
+        makeK8sResultsMock({
+          k1: { data: k1Data, isError: false },
+        }),
+      )
+
+      useQueriesMock.mockImplementation(({ queries }: any) =>
+        makeStableUrlResults({ data: undefined, isError: true, error: new Error('404 Not Found') }).slice(
+          0,
+          queries.length,
+        ),
+      )
+
+      render(
+        <MultiQueryProvider items={[{ id: 'k1' } as any, 'https://example.com/missing']}>
+          <Output />
+        </MultiQueryProvider>,
+      )
+
+      await waitFor(() => {
+        // isError is true globally — ANY molecule checking this will think everything failed
+        expect(screen.getByTestId('isError').textContent).toBe('true')
+      })
+
+      // But req0 data is perfectly fine — a molecule using req0 should NOT show error
+      expect(screen.getByTestId('data-req0').textContent).toBe(JSON.stringify(k1Data))
+      // req0 has no error
+      expect(screen.getByTestId('err-0').textContent).toBe('null')
+      // req1 is the only one with an error
+      expect(screen.getByTestId('err-1').textContent).toBe('404 Not Found')
+    })
+
+    test('when only req0 (K8s) fails, isError is true but req1 data is fully available', async () => {
+      const u1Data = { items: [{ name: 'ns-1' }, { name: 'ns-2' }] }
+
+      useManyK8sSmartResourceMock.mockImplementation(
+        makeK8sResultsMock({
+          k1: { data: undefined, isError: true, error: new Error('forbidden') },
+        }),
+      )
+
+      useQueriesMock.mockImplementation(({ queries }: any) =>
+        makeStableUrlResults({ data: u1Data, isError: false }).slice(0, queries.length),
+      )
+
+      render(
+        <MultiQueryProvider items={[{ id: 'k1' } as any, 'https://example.com/namespaces']}>
+          <Output />
+        </MultiQueryProvider>,
+      )
+
+      await waitFor(() => {
+        expect(screen.getByTestId('isError').textContent).toBe('true')
+      })
+
+      // req1 data is available despite global isError being true
+      expect(screen.getByTestId('data-req1').textContent).toBe(JSON.stringify(u1Data))
+      expect(screen.getByTestId('err-0').textContent).toBe('forbidden')
+      expect(screen.getByTestId('err-1').textContent).toBe('null')
+    })
+  })
+
+  // -------------------- red-phase: per-request error helpers --------------------
+
+  describe('per-request error helpers (hasErrorForReq, getErrorForReq)', () => {
+    /**
+     * These tests target `hasErrorForReq` and `getErrorForReq` — helpers that
+     * do not exist yet on MultiQueryContextValue. They will FAIL until
+     * Task 3 adds them to the provider. This is intentional TDD red-phase.
+     */
+
+    const PerRequestOutput = () => {
+      const ctx = useMultiQuery()
+      const hasHelper = typeof ctx.hasErrorForReq === 'function'
+      const getHelper = typeof ctx.getErrorForReq === 'function'
+
+      return (
+        <div>
+          <div data-testid="has-helper">{String(hasHelper)}</div>
+          <div data-testid="get-helper">{String(getHelper)}</div>
+          {hasHelper && (
+            <>
+              <div data-testid="has-err-0">{String(ctx.hasErrorForReq(0))}</div>
+              <div data-testid="has-err-1">{String(ctx.hasErrorForReq(1))}</div>
+              <div data-testid="has-err-99">{String(ctx.hasErrorForReq(99))}</div>
+            </>
+          )}
+          {getHelper && (
+            <>
+              <div data-testid="get-err-0">{normalizeErr(ctx.getErrorForReq(0))}</div>
+              <div data-testid="get-err-1">{normalizeErr(ctx.getErrorForReq(1))}</div>
+              <div data-testid="get-err-99">{normalizeErr(ctx.getErrorForReq(99))}</div>
+            </>
+          )}
+        </div>
+      )
+    }
+
+    test('hasErrorForReq and getErrorForReq exist on context', async () => {
+      useManyK8sSmartResourceMock.mockImplementation(makeK8sResultsMock({ k1: { data: { k: 1 } } }))
+      useQueriesMock.mockImplementation(({ queries }: any) =>
+        makeStableUrlResults({ data: { u: 1 } }).slice(0, queries.length),
+      )
+
+      render(
+        <MultiQueryProvider items={[{ id: 'k1' } as any, 'https://example.com/a']}>
+          <PerRequestOutput />
+        </MultiQueryProvider>,
+      )
+
+      await waitFor(() => {
+        expect(screen.getByTestId('has-helper').textContent).toBe('true')
+        expect(screen.getByTestId('get-helper').textContent).toBe('true')
+      })
+    })
+
+    test('hasErrorForReq returns false for successful req, true for failed req', async () => {
+      useManyK8sSmartResourceMock.mockImplementation(
+        makeK8sResultsMock({
+          k1: { data: { k: 1 }, isError: false },
+        }),
+      )
+
+      useQueriesMock.mockImplementation(({ queries }: any) =>
+        makeStableUrlResults({ data: undefined, isError: true, error: new Error('url failed') }).slice(
+          0,
+          queries.length,
+        ),
+      )
+
+      render(
+        <MultiQueryProvider items={[{ id: 'k1' } as any, 'https://example.com/bad']}>
+          <PerRequestOutput />
+        </MultiQueryProvider>,
+      )
+
+      await waitFor(() => {
+        expect(screen.getByTestId('has-helper').textContent).toBe('true')
+      })
+
+      // req0 (K8s) succeeded
+      expect(screen.getByTestId('has-err-0').textContent).toBe('false')
+      // req1 (URL) failed
+      expect(screen.getByTestId('has-err-1').textContent).toBe('true')
+      // out-of-bounds index → false
+      expect(screen.getByTestId('has-err-99').textContent).toBe('false')
+    })
+
+    test('getErrorForReq returns null for successful req, Error for failed req', async () => {
+      useManyK8sSmartResourceMock.mockImplementation(
+        makeK8sResultsMock({
+          k1: { data: { k: 1 }, isError: false },
+        }),
+      )
+
+      useQueriesMock.mockImplementation(({ queries }: any) =>
+        makeStableUrlResults({ data: undefined, isError: true, error: new Error('url failed') }).slice(
+          0,
+          queries.length,
+        ),
+      )
+
+      render(
+        <MultiQueryProvider items={[{ id: 'k1' } as any, 'https://example.com/bad']}>
+          <PerRequestOutput />
+        </MultiQueryProvider>,
+      )
+
+      await waitFor(() => {
+        expect(screen.getByTestId('get-helper').textContent).toBe('true')
+      })
+
+      // req0 (K8s) succeeded → null
+      expect(screen.getByTestId('get-err-0').textContent).toBe('null')
+      // req1 (URL) failed → error message
+      expect(screen.getByTestId('get-err-1').textContent).toBe('url failed')
+      // out-of-bounds → null
+      expect(screen.getByTestId('get-err-99').textContent).toBe('null')
+    })
   })
 })

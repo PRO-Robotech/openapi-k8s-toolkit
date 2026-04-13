@@ -1,0 +1,27 @@
+{{- if and .Values.expose.enabled (eq .Values.expose.tls.certSource "certmanager") }}
+{{- $extIssuer    := .Values.expose.tls.certmanager.existingIssuer -}}
+{{- $issuerKind   := "Issuer" -}}
+{{- $issuerName   := (include "openapi-k8s-toolkit.fullname" .) -}}
+{{- if and $extIssuer.kind $extIssuer.name }}
+{{- $issuerKind   = $extIssuer.kind -}}
+{{- $issuerName   = $extIssuer.name -}}
+{{- end }}
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "openapi-k8s-toolkit.fullname" . }}-expose
+  namespace: {{ .Release.Namespace }}
+  labels:
+  {{- include "openapi-k8s-toolkit.selectorLabels" . | nindent 4 }}
+spec:
+  issuerRef:
+    group: cert-manager.io
+    kind: {{ $issuerKind }}
+    name: {{ $issuerName }}
+  dnsNames:
+    - "{{ $.Values.externalDomain }}"
+  commonName: "{{ $.Values.externalDomain }}"
+  secretName: {{ include "openapi-k8s-toolkit.fullname" . }}-expose
+{{- end }}

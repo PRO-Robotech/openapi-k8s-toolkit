@@ -54,16 +54,19 @@ export const useBuiltinResourceSingle = ({
   plural,
   name,
   refetchInterval,
+  enabler,
 }: {
   cluster: string
   namespace?: string
   plural: string
   name: string
   refetchInterval?: number | false
+  enabler?: boolean
 }) => {
   return useQuery({
     queryKey: ['useBuiltinResourceSingle', cluster, namespace, plural, name],
     queryFn: async () => (await getBuiltinResourceSingle<TSingleResource>({ cluster, namespace, plural, name })).data,
     refetchInterval: refetchInterval !== undefined ? refetchInterval : 5000,
+    enabled: enabler ?? true,
   })
 }
