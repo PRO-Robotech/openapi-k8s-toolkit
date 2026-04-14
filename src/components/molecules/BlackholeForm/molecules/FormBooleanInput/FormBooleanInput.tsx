@@ -1,12 +1,13 @@
 /* eslint-disable no-unneeded-ternary */
 /* eslint-disable no-nested-ternary */
 import React, { FC } from 'react'
-import { Flex, Switch, Tooltip, Button, Typography } from 'antd'
+import { Flex, Switch, Tooltip, Button } from 'antd'
 import { getStringByName } from 'utils/getStringByName'
 import { TFormName } from 'localTypes/form'
 import { MinusIcon, BackToDefaultIcon } from 'components/atoms'
-import { ResetedFormItem, CustomSizeTitle, HiddenContainer } from '../../atoms'
+import { ResetedFormItem, CustomSizeTitle, HiddenContainer, DefaultValueButton } from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
+import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 import { Styled } from './styled'
 
 type TFormBooleanInputProps = {
@@ -38,6 +39,8 @@ export const FormBooleanInput: FC<TFormBooleanInputProps> = ({
   defaultValue,
 }) => {
   const designNewLayout = useDesignNewLayout()
+  const formFieldName = arrName || name
+  const defaultBtn = useDefaultValueButton(formFieldName, defaultValue)
 
   const title = <>{getStringByName(name)}</>
 
@@ -67,10 +70,13 @@ export const FormBooleanInput: FC<TFormBooleanInputProps> = ({
         >
           <Switch size="small" />
         </ResetedFormItem>
-        {defaultValue !== undefined && (
-          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-            Default: {String(defaultValue)}
-          </Typography.Text>
+        {defaultBtn.visible && (
+          <DefaultValueButton
+            defaultValue={defaultValue!}
+            isApplied={defaultBtn.isApplied}
+            onApply={defaultBtn.onApply}
+            onClear={defaultBtn.onClear}
+          />
         )}
         <Styled.CrossContainer
           onClick={() => {

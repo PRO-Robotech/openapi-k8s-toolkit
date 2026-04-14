@@ -6,12 +6,13 @@ import { getStringByName } from 'utils/getStringByName'
 // import { isMultilineString } from 'utils/isMultilineString'
 import { TFormName, TPersistedControls } from 'localTypes/form'
 import { MinusIcon, feedbackIcons } from 'components/atoms'
-import { PersistedCheckbox, HiddenContainer, ResetedFormItem, CustomSizeTitle } from '../../atoms'
+import { PersistedCheckbox, HiddenContainer, ResetedFormItem, CustomSizeTitle, DefaultValueButton } from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
 import { toBase64, fromBase64 } from './helpers'
 import { Styled } from './styled'
 import { getRequiredRule } from '../helpers/validation'
 import { buildPlaceholder } from '../helpers/buildPlaceholder'
+import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 
 type TFormStringMultilineInputProps = {
   name: TFormName
@@ -56,6 +57,7 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
   const formFieldName = arrName || fixedName
   const formValue = Form.useWatch(formFieldName)
   const form = Form.useFormInstance()
+  const defaultBtn = useDefaultValueButton(formFieldName, defaultValue)
 
   // Derive multiline based on current local value
   // const isMultiline = useMemo(() => isMultilineString(formValue), [formValue])
@@ -96,6 +98,14 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
             </Button>
           )}
           <PersistedCheckbox formName={persistName || name} persistedControls={persistedControls} type="str" />
+          {defaultBtn.visible && (
+            <DefaultValueButton
+              defaultValue={defaultValue!}
+              isApplied={defaultBtn.isApplied}
+              onApply={defaultBtn.onApply}
+              onClear={defaultBtn.onClear}
+            />
+          )}
         </Flex>
       </Flex>
       <ResetedFormItem

@@ -2,9 +2,10 @@ import React, { FC } from 'react'
 import { Flex, Typography, Select, Button } from 'antd'
 import { TFormName, TNamespaceData } from 'localTypes/form'
 import { MinusIcon, feedbackIcons } from 'components/atoms'
-import { CustomSizeTitle, HiddenContainer, ResetedFormItem } from '../../atoms'
+import { CustomSizeTitle, HiddenContainer, ResetedFormItem, DefaultValueButton } from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
 import { getRequiredRule } from '../helpers/validation'
+import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 
 type TFormNamespaceInputProps = {
   name: TFormName
@@ -27,6 +28,7 @@ export const FormNamespaceInput: FC<TFormNamespaceInputProps> = ({
   defaultValue,
 }) => {
   const designNewLayout = useDesignNewLayout()
+  const defaultBtn = useDefaultValueButton(name, defaultValue)
 
   if (!namespaceData) {
     return null
@@ -45,6 +47,14 @@ export const FormNamespaceInput: FC<TFormNamespaceInputProps> = ({
             <Button size="small" type="text" onClick={() => removeField({ path: name })}>
               <MinusIcon />
             </Button>
+          )}
+          {defaultBtn.visible && (
+            <DefaultValueButton
+              defaultValue={defaultValue!}
+              isApplied={defaultBtn.isApplied}
+              onApply={defaultBtn.onApply}
+              onClear={defaultBtn.onClear}
+            />
           )}
         </Flex>
       </Flex>
