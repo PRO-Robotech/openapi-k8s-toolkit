@@ -5,11 +5,19 @@ import { TFormName } from 'localTypes/form'
 import { useDefaultValueButton } from './useDefaultValueButton'
 
 /**
+ * Silent value holder — accepts value/onChange from Form.Item without
+ * rendering a real DOM input, so React never fires controlled/uncontrolled
+ * warnings when setFieldValue toggles between undefined and a value.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const ValueHolder: FC<Record<string, unknown>> = _props => null
+
+/**
  * Wrapper that provides Ant Design Form context required by useDefaultValueButton.
  *
  * IMPORTANT: Form.useWatch only sees values for fields that have a matching
- * Form.Item rendered in the DOM. We render a hidden Form.Item with the
- * target field name so useWatch can pick up initialValues.
+ * Form.Item rendered in the DOM. We render a Form.Item with a ValueHolder
+ * so useWatch can pick up initialValues.
  */
 // eslint-disable-next-line react/prop-types
 const makeWrapper = (fieldName: TFormName, initialValues?: Record<string, unknown>): FC<PropsWithChildren> => {
@@ -18,7 +26,7 @@ const makeWrapper = (fieldName: TFormName, initialValues?: Record<string, unknow
     return (
       <Form form={form} initialValues={initialValues}>
         <Form.Item name={fieldName} noStyle>
-          <input />
+          <ValueHolder />
         </Form.Item>
         {children}
       </Form>
