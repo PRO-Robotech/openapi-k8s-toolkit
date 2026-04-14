@@ -40,12 +40,17 @@ export const useDefaultValueButton = (
     }
 
     const isEmpty = currentValue === undefined || currentValue === null || currentValue === ''
+      || (Array.isArray(currentValue) && currentValue.length === 0)
 
     if (isEmpty) {
       return { visible: true, isApplied: false, handleApply, handleClear }
     }
 
-    if (currentValue === defaultValue) {
+    const isEqualToDefault = Array.isArray(defaultValue) && Array.isArray(currentValue)
+      ? defaultValue.length === currentValue.length && defaultValue.every((v, i) => v === currentValue[i])
+      : currentValue === defaultValue
+
+    if (isEqualToDefault) {
       return { visible: true, isApplied: true, handleApply, handleClear }
     }
 

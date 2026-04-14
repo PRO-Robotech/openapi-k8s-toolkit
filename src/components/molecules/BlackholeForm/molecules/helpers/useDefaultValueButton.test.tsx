@@ -197,4 +197,88 @@ describe('useDefaultValueButton', () => {
       }
     })
   })
+
+  describe('string array defaults (listInput fields)', () => {
+    it('shows apply when field is empty and default is string[]', () => {
+      const { result } = renderHook(() => useDefaultValueButton('protocols', ['TCP', 'UDP']), {
+        wrapper: makeWrapper('protocols'),
+      })
+
+      expect(result.current.visible).toBe(true)
+      if (result.current.visible) {
+        expect(result.current.isApplied).toBe(false)
+      }
+    })
+
+    it('shows apply when field is empty array and default is string[]', async () => {
+      const { result } = renderHook(() => useDefaultValueButton('protocols', ['TCP', 'UDP']), {
+        wrapper: makeWrapper('protocols', { protocols: [] }),
+      })
+
+      await waitFor(() => {
+        expect(result.current.visible).toBe(true)
+      })
+      if (result.current.visible) {
+        expect(result.current.isApplied).toBe(false)
+      }
+    })
+
+    it('shows clear when field value deeply equals default array', async () => {
+      const { result } = renderHook(() => useDefaultValueButton('protocols', ['TCP', 'UDP']), {
+        wrapper: makeWrapper('protocols', { protocols: ['TCP', 'UDP'] }),
+      })
+
+      await waitFor(() => {
+        expect(result.current.visible).toBe(true)
+      })
+      if (result.current.visible) {
+        expect(result.current.isApplied).toBe(true)
+      }
+    })
+
+    it('hides button when field has different array value', async () => {
+      const { result } = renderHook(() => useDefaultValueButton('protocols', ['TCP', 'UDP']), {
+        wrapper: makeWrapper('protocols', { protocols: ['SCTP'] }),
+      })
+
+      await waitFor(() => {
+        expect(result.current.visible).toBe(false)
+      })
+    })
+
+    it('apply → clear round-trip works for array defaults', async () => {
+      const { result } = renderHook(() => useDefaultValueButton('protocols', ['TCP', 'UDP']), {
+        wrapper: makeWrapper('protocols'),
+      })
+
+      // initially: empty → show apply
+      expect(result.current.visible).toBe(true)
+      if (!result.current.visible) return
+      expect(result.current.isApplied).toBe(false)
+
+      // apply
+      act(() => {
+        result.current.visible && result.current.handleApply()
+      })
+
+      await waitFor(() => {
+        expect(result.current.visible).toBe(true)
+        if (result.current.visible) {
+          expect(result.current.isApplied).toBe(true)
+        }
+      })
+
+      // clear
+      act(() => {
+        result.current.visible && result.current.handleClear()
+      })
+
+      await waitFor(() => {
+        expect(result.current.visible).toBe(true)
+        if (result.current.visible) {
+          expect(result.current.isApplied).toBe(false)
+        }
+      })
+    })
+  })
 })
