@@ -102,8 +102,8 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
             <DefaultValueButton
               defaultValue={defaultValue!}
               isApplied={defaultBtn.isApplied}
-              onApply={defaultBtn.onApply}
-              onClear={defaultBtn.onClear}
+              onApply={defaultBtn.handleApply}
+              onClear={defaultBtn.handleClear}
             />
           )}
         </Flex>

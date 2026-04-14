@@ -4,7 +4,7 @@ import { TFormName } from 'localTypes/form'
 
 type TDefaultValueButtonState =
   | { visible: false }
-  | { visible: true; isApplied: boolean; onApply: () => void; onClear: () => void }
+  | { visible: true; isApplied: boolean; handleApply: () => void; handleClear: () => void }
 
 /**
  * Encapsulates the show/hide logic and apply/clear actions for the
@@ -26,11 +26,11 @@ export const useDefaultValueButton = (
   const form = Form.useFormInstance()
   const currentValue = Form.useWatch(formFieldName, form)
 
-  const onApply = useCallback(() => {
+  const handleApply = useCallback(() => {
     form.setFieldValue(formFieldName, defaultValue)
   }, [form, formFieldName, defaultValue])
 
-  const onClear = useCallback(() => {
+  const handleClear = useCallback(() => {
     form.setFieldValue(formFieldName, undefined)
   }, [form, formFieldName])
 
@@ -42,13 +42,13 @@ export const useDefaultValueButton = (
     const isEmpty = currentValue === undefined || currentValue === null || currentValue === ''
 
     if (isEmpty) {
-      return { visible: true, isApplied: false, onApply, onClear }
+      return { visible: true, isApplied: false, handleApply, handleClear }
     }
 
     if (currentValue === defaultValue) {
-      return { visible: true, isApplied: true, onApply, onClear }
+      return { visible: true, isApplied: true, handleApply, handleClear }
     }
 
     return { visible: false }
-  }, [defaultValue, currentValue, onApply, onClear])
+  }, [defaultValue, currentValue, handleApply, handleClear])
 }
