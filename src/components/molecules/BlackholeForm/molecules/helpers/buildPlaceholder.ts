@@ -10,7 +10,7 @@ import { getStringByName } from 'utils/getStringByName'
  * back to the field name, matching the pre-existing behavior.
  *
  * The field stays technically empty — this is a visual hint only. Applying
- * the default as a real value is handled by the DefaultValueButton in Stage 4.
+ * the default as a real value is handled by the DefaultValueButton.
  */
 export const buildPlaceholder = (name: TFormName, defaultValue?: string | number | boolean): string => {
   if (defaultValue !== undefined) {

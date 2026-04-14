@@ -40,7 +40,7 @@ const formatDefault = (value: TDefaultValueButtonProps['defaultValue']): string 
  * The parent decides *whether* this button should appear at all — typically
  * it should be hidden when the field already holds a user-entered value or
  * a prefill from CustomFormsPrefills, since prefills take precedence over
- * schema defaults (see Stage 2 design notes).
+ * schema defaults.
  */
 export const DefaultValueButton: FC<TDefaultValueButtonProps> = ({
   defaultValue,

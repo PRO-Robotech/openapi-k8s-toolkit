@@ -29,8 +29,7 @@ type TFormStringMultilineInputProps = {
   isBase64?: boolean
   /**
    * OpenAPI schema `default` value for this field.
-   * Wired through in Stage 1; will drive placeholder display and the
-   * "apply default" button in Stage 2/4.
+   * Drives placeholder hint and Apply Default / Clear button.
    */
   defaultValue?: string
 }
