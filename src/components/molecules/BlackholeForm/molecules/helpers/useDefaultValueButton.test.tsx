@@ -258,7 +258,7 @@ describe('useDefaultValueButton', () => {
 
       // apply
       act(() => {
-        result.current.visible && result.current.handleApply()
+        if (result.current.visible) result.current.handleApply()
       })
 
       await waitFor(() => {
@@ -270,7 +270,7 @@ describe('useDefaultValueButton', () => {
 
       // clear
       act(() => {
-        result.current.visible && result.current.handleClear()
+        if (result.current.visible) result.current.handleClear()
       })
 
       await waitFor(() => {
