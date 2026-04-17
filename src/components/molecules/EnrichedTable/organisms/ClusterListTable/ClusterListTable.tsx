@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React from 'react'
 import jp from 'jsonpath'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
@@ -9,12 +9,15 @@ import { TNavigationResource } from 'localTypes/navigations'
 import { getEnrichedColumns } from '../EnrichedTable'
 import { TableComponents } from '../EnrichedTable/atoms'
 
-export type TClusterListTableProps = {
+export type TClusterListTableProps<T extends AnyObject = AnyObject> = {
   theme: 'light' | 'dark'
-  dataSource: TableProps['dataSource']
-  columns: TableProps['columns']
+  dataSource: TableProps<T>['dataSource']
+  columns: TableProps<T>['columns']
   pathToNavigate?: string
   recordKeysForNavigation?: string | string[] // jsonpath or keys as string[]
+  rowClassName?: TableProps<T>['rowClassName']
+  onRow?: TableProps<T>['onRow']
+  rowClickable?: boolean
   navigationSettings?: {
     apiGroup: string
     apiVersion: string
@@ -31,22 +34,25 @@ export type TClusterListTableProps = {
   }
 }
 
-export const ClusterListTable: FC<TClusterListTableProps> = ({
+export const ClusterListTable = <T extends AnyObject = AnyObject>({
   theme,
   dataSource,
   columns,
   pathToNavigate,
   recordKeysForNavigation,
+  rowClassName,
+  onRow,
+  rowClickable = Boolean(pathToNavigate),
   navigationSettings,
   tableProps,
-}) => {
+}: TClusterListTableProps<T>) => {
   const navigate = useNavigate()
 
   if (!columns) {
     return null
   }
 
-  const rowKey = (record: AnyObject) => record.key
+  const rowKey = (record: T) => record.key
 
   const enrichedColumns = getEnrichedColumns({
     columns,
@@ -92,12 +98,14 @@ export const ClusterListTable: FC<TClusterListTableProps> = ({
   return (
     <TableComponents.TableContainer
       $isDark={theme === 'dark'}
-      $isCursorPointer={!!recordKeysForNavigation && (!!pathToNavigate || !!navigationSettings)}
+      $isCursorPointer={Boolean(
+        (recordKeysForNavigation && (!!pathToNavigate || !!navigationSettings)) || rowClickable,
+      )}
       $borderless={tableProps?.borderless}
       $isTotalLeft={tableProps?.isTotalLeft}
     >
       <TableComponents.HideableControls>
-        <Table<AnyObject>
+        <Table<T>
           rowKey={rowKey}
           dataSource={dataSource}
           columns={enrichedColumns}
@@ -114,9 +122,17 @@ export const ClusterListTable: FC<TClusterListTableProps> = ({
           }
           scroll={{ x: 'max-content', y: tableProps?.maxHeight }}
           virtual={tableProps?.virtual}
+          rowClassName={rowClassName}
           onRow={record => {
+            const consumerRowProps = onRow?.(record, undefined)
             return {
-              onClick: async () => {
+              ...consumerRowProps,
+              onClick: async event => {
+                consumerRowProps?.onClick?.(event)
+                if (event.defaultPrevented) {
+                  return
+                }
+
                 if (recordKeysForNavigation) {
                   const recordValueRaw = Array.isArray(recordKeysForNavigation)
                     ? get(record, recordKeysForNavigation)

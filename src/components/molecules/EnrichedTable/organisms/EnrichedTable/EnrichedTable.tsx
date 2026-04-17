@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unstable-nested-components */
-import React, { FC, ReactNode } from 'react'
+import React, { ReactNode } from 'react'
 import jp from 'jsonpath'
 import { useNavigate } from 'react-router-dom'
 import { Table, TableProps, PaginationProps, TablePaginationConfig } from 'antd'
@@ -17,11 +17,11 @@ import { TableComponents } from './atoms'
 import { TInternalDataForControls } from './types'
 import { getEnrichedColumns, getEnrichedColumnsWithControls } from './utils'
 
-export type TEnrichedTableProps = {
+export type TEnrichedTableProps<T extends AnyObject = AnyObject> = {
   theme: 'light' | 'dark'
   baseprefix?: string
-  dataSource: TableProps['dataSource']
-  columns: TableProps['columns']
+  dataSource: TableProps<T>['dataSource']
+  columns: TableProps<T>['columns']
   pathToNavigate?: string
   recordKeysForNavigation?: string | string[] // jsonpath or keys as string[]
   recordKeysForNavigationSecond?: string | string[] // jsonpath or keys as string[]
@@ -38,6 +38,9 @@ export type TEnrichedTableProps = {
     selectedRowKeys: React.Key[]
   }
   withoutControls?: boolean
+  rowClassName?: TableProps<T>['rowClassName']
+  onRow?: TableProps<T>['onRow']
+  rowClickable?: boolean
   tableProps?: {
     borderless?: boolean
     paginationPosition?: TablePaginationConfig['position']
@@ -50,7 +53,7 @@ export type TEnrichedTableProps = {
   }
 }
 
-export const EnrichedTable: FC<TEnrichedTableProps> = ({
+export const EnrichedTable = <T extends AnyObject = AnyObject>({
   theme,
   baseprefix,
   dataSource,
@@ -67,8 +70,11 @@ export const EnrichedTable: FC<TEnrichedTableProps> = ({
   additionalPrinterColumnsCustomSortersAndFilters,
   selectData,
   withoutControls = false,
+  rowClassName,
+  onRow,
+  rowClickable = Boolean(pathToNavigate),
   tableProps,
-}) => {
+}: TEnrichedTableProps<T>) => {
   const navigate = useNavigate()
 
   if (!columns) {
@@ -76,8 +82,7 @@ export const EnrichedTable: FC<TEnrichedTableProps> = ({
   }
 
   // for factory search
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rowKey = (record: any) => record.key
+  const rowKey = (record: T) => record.key
 
   const enrichedColumns = getEnrichedColumns({
     columns,
@@ -111,15 +116,53 @@ export const EnrichedTable: FC<TEnrichedTableProps> = ({
 
   const showTotal: PaginationProps['showTotal'] = total => `Total: ${total}`
 
+  const buildNavigationClickHandler = (record: T) => () => {
+    if (pathToNavigate && recordKeysForNavigation) {
+      const recordValueRaw = Array.isArray(recordKeysForNavigation)
+        ? get(record, recordKeysForNavigation)
+        : jp.query(record || {}, `$${recordKeysForNavigation}`)[0]
+
+      let recordValueRawSecond: string = ''
+      if (recordKeysForNavigationSecond) {
+        recordValueRawSecond = Array.isArray(recordKeysForNavigationSecond)
+          ? get(record, recordKeysForNavigationSecond)
+          : jp.query(record || {}, `$${recordKeysForNavigationSecond}`)[0]
+      } else {
+        recordValueRawSecond = 'no-second-record-keys'
+      }
+
+      let recordValueRawThird: string = ''
+      if (recordKeysForNavigationThird) {
+        recordValueRawThird = Array.isArray(recordKeysForNavigationThird)
+          ? get(record, recordKeysForNavigationThird)
+          : jp.query(record || {}, `$${recordKeysForNavigationThird}`)[0]
+      } else {
+        recordValueRawThird = 'no-second-record-keys'
+      }
+
+      const recordValue = typeof recordValueRaw === 'string' ? recordValueRaw : JSON.stringify(recordValueRaw)
+      const recordValueSecond =
+        typeof recordValueRawSecond === 'string' ? recordValueRawSecond : JSON.stringify(recordValueRawSecond)
+      const recordValueThird =
+        typeof recordValueRawThird === 'string' ? recordValueRawThird : JSON.stringify(recordValueRawThird)
+
+      const newPath = pathToNavigate
+        .replaceAll('~recordValue~', recordValue)
+        .replaceAll('~recordValueSecond~', recordValueSecond)
+        .replaceAll('~recordValueThird~', recordValueThird)
+      navigate(newPath)
+    }
+  }
+
   return (
     <TableComponents.TableContainer
       $isDark={theme === 'dark'}
-      $isCursorPointer={!!pathToNavigate}
+      $isCursorPointer={Boolean(pathToNavigate || rowClickable)}
       $borderless={tableProps?.borderless}
       $isTotalLeft={tableProps?.isTotalLeft}
     >
       <TableComponents.HideableControls>
-        <Table<AnyObject>
+        <Table<T>
           // for factory search
           rowKey={rowKey}
           dataSource={dataSource}
@@ -137,15 +180,15 @@ export const EnrichedTable: FC<TEnrichedTableProps> = ({
           }
           scroll={{ x: 'max-content', y: tableProps?.maxHeight }}
           virtual={tableProps?.virtual}
+          rowClassName={rowClassName}
           rowSelection={
             selectData
               ? {
                   type: 'checkbox',
                   columnWidth: 48,
                   selectedRowKeys: selectData.selectedRowKeys,
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  onChange: (selectedRowKeys: React.Key[], selectedRows: AnyObject[]) => {
-                    const rows = selectedRows as { internalDataForControls: TInternalDataForControls }[]
+                  onChange: (selectedRowKeys: React.Key[], selectedRows: T[]) => {
+                    const rows = selectedRows as unknown as { internalDataForControls: TInternalDataForControls }[]
                     selectData.onChange(
                       selectedRowKeys,
                       rows.map(({ internalDataForControls }) => ({
@@ -162,45 +205,15 @@ export const EnrichedTable: FC<TEnrichedTableProps> = ({
               : undefined
           }
           onRow={record => {
+            const consumerRowProps = onRow?.(record, undefined)
+            const navigationClickHandler = buildNavigationClickHandler(record)
+
             return {
-              onClick: () => {
-                if (pathToNavigate && recordKeysForNavigation) {
-                  const recordValueRaw = Array.isArray(recordKeysForNavigation)
-                    ? get(record, recordKeysForNavigation)
-                    : jp.query(record || {}, `$${recordKeysForNavigation}`)[0]
-
-                  let recordValueRawSecond: string = ''
-                  if (recordKeysForNavigationSecond) {
-                    recordValueRawSecond = Array.isArray(recordKeysForNavigationSecond)
-                      ? get(record, recordKeysForNavigationSecond)
-                      : jp.query(record || {}, `$${recordKeysForNavigationSecond}`)[0]
-                  } else {
-                    recordValueRawSecond = 'no-second-record-keys'
-                  }
-
-                  let recordValueRawThird: string = ''
-                  if (recordKeysForNavigationThird) {
-                    recordValueRawThird = Array.isArray(recordKeysForNavigationThird)
-                      ? get(record, recordKeysForNavigationThird)
-                      : jp.query(record || {}, `$${recordKeysForNavigationThird}`)[0]
-                  } else {
-                    recordValueRawThird = 'no-second-record-keys'
-                  }
-
-                  const recordValue =
-                    typeof recordValueRaw === 'string' ? recordValueRaw : JSON.stringify(recordValueRaw)
-                  const recordValueSecond =
-                    typeof recordValueRawSecond === 'string'
-                      ? recordValueRawSecond
-                      : JSON.stringify(recordValueRawSecond)
-                  const recordValueThird =
-                    typeof recordValueRawThird === 'string' ? recordValueRawThird : JSON.stringify(recordValueRawThird)
-
-                  const newPath = pathToNavigate
-                    .replaceAll('~recordValue~', recordValue)
-                    .replaceAll('~recordValueSecond~', recordValueSecond)
-                    .replaceAll('~recordValueThird~', recordValueThird)
-                  navigate(newPath)
+              ...consumerRowProps,
+              onClick: event => {
+                consumerRowProps?.onClick?.(event)
+                if (!event.defaultPrevented) {
+                  navigationClickHandler()
                 }
               },
             }
