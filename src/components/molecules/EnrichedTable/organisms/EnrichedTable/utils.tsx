@@ -3,6 +3,7 @@
 import { ReactNode } from 'react'
 import { NavigateFunction } from 'react-router-dom'
 import { TableProps, Dropdown, Tooltip, Flex } from 'antd'
+import { AnyObject } from 'antd/es/_util/type'
 import { CheckOutlined, CloseOutlined, SearchOutlined, MoreOutlined, QuestionCircleOutlined } from '@ant-design/icons'
 import { get } from 'lodash'
 import {
@@ -114,7 +115,7 @@ export const getCellRender = ({
   return <div>Raw: {JSON.stringify(value)}</div>
 }
 
-export const getEnrichedColumns = ({
+export const getEnrichedColumns = <T extends AnyObject = AnyObject>({
   columns,
   additionalPrinterColumnsUndefinedValues,
   additionalPrinterColumnsTrimLengths,
@@ -125,7 +126,7 @@ export const getEnrichedColumns = ({
   theme,
   getRowKey, // for factory search
 }: {
-  columns: TableProps['columns']
+  columns: TableProps<T>['columns']
   additionalPrinterColumnsUndefinedValues?: TAdditionalPrinterColumnsUndefinedValues
   additionalPrinterColumnsTrimLengths?: TAdditionalPrinterColumnsTrimLengths
   additionalPrinterColumnsColWidths?: TAdditionalPrinterColumnsColWidths
@@ -133,8 +134,8 @@ export const getEnrichedColumns = ({
   additionalPrinterColumnsKeyTypeProps?: TAdditionalPrinterColumnsKeyTypeProps
   additionalPrinterColumnsCustomSortersAndFilters?: TAdditionalPrinterColumnsCustomSortersAndFilters
   theme: 'dark' | 'light'
-  getRowKey: (record: any) => React.Key // for factory search
-}): TableProps['columns'] | undefined => {
+  getRowKey: (record: T) => React.Key // for factory search
+}): TableProps<T>['columns'] | undefined => {
   if (!columns) {
     return undefined
   }
@@ -155,6 +156,7 @@ export const getEnrichedColumns = ({
       additionalPrinterColumnsKeyTypeProps && el.key
         ? additionalPrinterColumnsKeyTypeProps[el.key.toString()]
         : undefined
+    const originalRender = el.render
 
     // for factory search
     const useFactorySearch = possibleCustomTypeWithProps?.type === 'factory'
@@ -268,15 +270,29 @@ export const getEnrichedColumns = ({
       ...el,
       title: columnTitle,
       showSorterTooltip: false,
-      render: (value: TJSON, record: unknown) =>
-        getCellRender({
+      render: (value: TJSON, record: unknown, index: number) => {
+        if (possibleCustomTypeWithProps?.type === 'factory') {
+          return getCellRender({
+            value,
+            record,
+            possibleTrimLength,
+            possibleUndefinedValue,
+            possibleCustomTypeWithProps,
+            theme,
+          })
+        }
+        if (originalRender) {
+          return originalRender(value, record as T, index)
+        }
+        return getCellRender({
           value,
           record,
           possibleTrimLength,
           possibleUndefinedValue,
           possibleCustomTypeWithProps,
           theme,
-        }),
+        })
+      },
       width: possibleColWidth,
       // for factory search
       onCell: (record: any): React.TdHTMLAttributes<HTMLTableCellElement> => {
@@ -400,7 +416,7 @@ export const getEnrichedColumns = ({
   })
 }
 
-export const getEnrichedColumnsWithControls = ({
+export const getEnrichedColumnsWithControls = <T extends AnyObject = AnyObject>({
   enrichedColumns,
   navigate,
   baseprefix,
@@ -409,12 +425,12 @@ export const getEnrichedColumnsWithControls = ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   deleteIcon,
 }: {
-  enrichedColumns: TableProps['columns']
+  enrichedColumns: TableProps<T>['columns']
   navigate: NavigateFunction
   baseprefix?: string
   editIcon?: ReactNode
   deleteIcon?: ReactNode
-}): TableProps['columns'] | undefined => {
+}): TableProps<T>['columns'] | undefined => {
   if (!enrichedColumns) {
     return undefined
   }
