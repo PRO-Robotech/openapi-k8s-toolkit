@@ -1,8 +1,8 @@
 import React, { FC, useState } from 'react'
-import { OpenAPIV2, IJsonSchema } from 'openapi-types'
 import { Typography, Tooltip, Input, Button, Form } from 'antd'
 import { getStringByName } from 'utils/getStringByName'
 import { TFormName, TExpandedControls, TPersistedControls } from 'localTypes/form'
+import { TFormSchemaNode, TFormSchemaProperties } from 'localTypes/formSchema'
 import { PlusIcon } from 'components/atoms'
 import { CustomCollapse, PersistedCheckbox, CustomSizeTitle, HiddenContainer } from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
@@ -32,11 +32,11 @@ type TFormObjectFromSwaggerProps = {
       path: TFormName
       name: string
       type: string
-      items?: { type: string }
-      nestedProperties?: OpenAPIV2.SchemaObject['properties']
+      items?: TFormSchemaNode
+      nestedProperties?: TFormSchemaProperties
       required?: string
     }) => void
-    additionalProperties: boolean | IJsonSchema | undefined
+    additionalProperties: boolean | TFormSchemaNode | undefined
   }
   onRemoveByMinus?: () => void
 }
@@ -103,8 +103,8 @@ export const FormObjectFromSwagger: FC<TFormObjectFromSwaggerProps> = ({
     if (additionalPropValue && additionalPropValue.length > 0) {
       const addProps = inputProps?.additionalProperties as {
         type: string
-        items?: { type: string }
-        properties?: OpenAPIV2.SchemaObject['properties']
+        items?: TFormSchemaNode
+        properties?: TFormSchemaProperties
         required?: string
       }
       const path = Array.isArray(name) ? [...name, String(collapseTitle)] : [name, String(collapseTitle)]

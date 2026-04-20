@@ -5,10 +5,10 @@
 /* eslint-disable consistent-return */
 // import { Form, Button, Alert } from 'antd'
 import { Form, Button } from 'antd'
-import { OpenAPIV2 } from 'openapi-types'
 import { getStringByName } from 'utils/getStringByName'
 import { TListInputCustomProps, TRangeInputCustomProps } from 'localTypes/formExtensions'
 import { TFormName, TExpandedControls, TNamespaceData, TPersistedControls, TUrlParams } from 'localTypes/form'
+import { TFormSchemaNode, TFormSchemaProperties } from 'localTypes/formSchema'
 import { PlusIcon } from 'components/atoms'
 import { deepMerge } from 'utils/deepMerge'
 import { getSortedPropertyKeys } from './helpers/getSortedPropertyKeys'
@@ -374,7 +374,7 @@ export const getArrayFormItemFromSwagger = ({
   urlParams,
   onRemoveByMinus,
 }: {
-  schema: OpenAPIV2.SchemaObject
+  schema: TFormSchemaNode
   name: TFormName
   arrKey?: number
   arrName?: TFormName
@@ -395,8 +395,8 @@ export const getArrayFormItemFromSwagger = ({
     path: TFormName
     name: string
     type: string
-    items?: { type: string }
-    nestedProperties?: OpenAPIV2.SchemaObject['properties']
+    items?: TFormSchemaNode
+    nestedProperties?: TFormSchemaProperties
     required?: string
   }) => void
   isAdditionalProperties?: boolean
@@ -442,17 +442,13 @@ export const getArrayFormItemFromSwagger = ({
           {(fields, { add, remove }, { errors }) => (
             <>
               {fields.map(field => {
-                const fieldType = (
-                  schema.items as (OpenAPIV2.ItemsObject & { properties?: OpenAPIV2.SchemaObject }) | undefined
-                )?.type
-                const description = (schema.items as (OpenAPIV2.ItemsObject & { description?: string }) | undefined)
-                  ?.description
-                const entry = schema.items as
-                  | (OpenAPIV2.ItemsObject & { properties?: OpenAPIV2.SchemaObject; required?: string[] })
-                  | undefined
+                const itemSchema = schema.items
+                const fieldType = itemSchema?.type
+                const description = itemSchema?.description
+                const entry = itemSchema
                 // additional properties are place near items
                 const additionalProperties = schema.properties as
-                  | Record<number, { properties?: OpenAPIV2.SchemaObject }>
+                  | Record<number, { properties?: TFormSchemaProperties }>
                   | undefined
                 return (
                   <ArrayInsideContainer key={field.key}>
@@ -569,7 +565,7 @@ export const getArrayFormItemFromSwagger = ({
                           })}
                         {fieldType === 'array' &&
                           getArrayFormItemFromSwagger({
-                            schema: schema.items as OpenAPIV2.SchemaObject,
+                            schema: schema.items as TFormSchemaNode,
                             name: Array.isArray(name) ? [...name, field.name] : [name, field.name],
                             arrKey: field.key,
                             arrName: [field.name],
@@ -680,9 +676,7 @@ export const getObjectFormItemsDraft = ({
   sortPaths,
   urlParams,
 }: {
-  properties: {
-    [name: string]: OpenAPIV2.SchemaObject
-  }
+  properties: TFormSchemaProperties
   name: TFormName
   arrKey?: number
   arrName?: TFormName
@@ -704,8 +698,8 @@ export const getObjectFormItemsDraft = ({
     path: TFormName
     name: string
     type: string
-    items?: { type: string }
-    nestedProperties?: OpenAPIV2.SchemaObject['properties']
+    items?: TFormSchemaNode
+    nestedProperties?: TFormSchemaProperties
     required?: string
   }) => void
   removeField: ({ path }: { path: TFormName }) => void
@@ -826,7 +820,7 @@ export const getObjectFormItemsDraft = ({
             forceNonRequired,
             description: properties[el].description,
             isEdit,
-            customProps: properties[el].customProps,
+            customProps: properties[el].customProps as TRangeInputCustomProps,
             persistedControls,
             urlParams,
           })
@@ -845,7 +839,7 @@ export const getObjectFormItemsDraft = ({
             required: required?.includes(el) ? [String(el)] : undefined,
             forceNonRequired,
             description: properties[el].description,
-            customProps: properties[el].customProps,
+            customProps: properties[el].customProps as TListInputCustomProps,
             removeField,
             persistedControls,
             urlParams,
@@ -916,9 +910,7 @@ export const getObjectFormItemsDraft = ({
         if (properties[el].additionalProperties) {
           const data = properties[el].properties
             ? getObjectFormItemsDraft({
-                properties: properties[el].properties as {
-                  [name: string]: OpenAPIV2.SchemaObject
-                },
+                properties: properties[el].properties as TFormSchemaProperties,
                 name: Array.isArray(name) ? [...name, String(el)] : [name, String(el)],
                 arrKey,
                 arrName: Array.isArray(arrName) ? [...arrName, String(el)] : undefined,
@@ -968,9 +960,7 @@ export const getObjectFormItemsDraft = ({
         }
         if (properties[el].type === 'object' && properties[el].properties) {
           return getObjectFormItemFromSwagger({
-            properties: properties[el].properties as {
-              [name: string]: OpenAPIV2.SchemaObject
-            },
+            properties: properties[el].properties as TFormSchemaProperties,
             name: Array.isArray(name) ? [...name, String(el)] : [name, String(el)],
             arrKey,
             arrName: Array.isArray(arrName) ? [...arrName, String(el)] : undefined,
@@ -1029,9 +1019,7 @@ export const getObjectFormItemFromSwagger = ({
   urlParams,
   onRemoveByMinus,
 }: {
-  properties: {
-    [name: string]: OpenAPIV2.SchemaObject
-  }
+  properties: TFormSchemaProperties
   name: TFormName
   arrKey?: number
   arrName?: TFormName
@@ -1054,8 +1042,8 @@ export const getObjectFormItemFromSwagger = ({
     path: TFormName
     name: string
     type: string
-    items?: { type: string }
-    nestedProperties?: OpenAPIV2.SchemaObject['properties']
+    items?: TFormSchemaNode
+    nestedProperties?: TFormSchemaProperties
     required?: string
   }) => void
   isAdditionalProperties?: boolean

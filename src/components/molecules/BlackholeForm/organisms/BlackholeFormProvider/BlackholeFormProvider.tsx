@@ -5,10 +5,10 @@ import React, { FC, useState, useEffect, ReactNode, useCallback, useRef } from '
 import { Alert, Spin } from 'antd'
 import axios, { AxiosError } from 'axios'
 import { TJSON } from 'localTypes/JSON'
-import { OpenAPIV2 } from 'openapi-types'
 import { TUrlParams } from 'localTypes/form'
 import { TPrepareFormReq, TPrepareFormRes } from 'localTypes/bff/form'
 import { TFormPrefill } from 'localTypes/formExtensions'
+import { TFormSchemaProperties } from 'localTypes/formSchema'
 import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
 import { YamlEditorSingleton } from '../../../YamlEditorSingleton'
 import { BlackholeForm } from '../BlackholeForm'
@@ -96,9 +96,7 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
   designNewLayoutHeight,
 }) => {
   const [preparedData, setPreparedData] = useState<{
-    properties?: {
-      [name: string]: OpenAPIV2.SchemaObject
-    }
+    properties?: TFormSchemaProperties
     required: string[]
     hiddenPaths?: string[][]
     expandedPaths: string[][]

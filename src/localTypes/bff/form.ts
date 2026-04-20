@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { OpenAPIV2 } from 'openapi-types'
 import { TJSON } from '../JSON'
 import { TFormName } from '../form'
 import { TFormPrefill } from '../formExtensions'
+import { TFormSchemaProperties } from '../formSchema'
 
 export type TPrepareFormReq = {
   data:
@@ -37,9 +37,7 @@ export type TPrepareFormRes =
     }
   | {
       result: 'success'
-      properties: {
-        [name: string]: OpenAPIV2.SchemaObject
-      }
+      properties: TFormSchemaProperties
       required: string[] | undefined
       hiddenPaths: string[][] | undefined
       expandedPaths: string[][] | undefined
@@ -55,14 +53,14 @@ export type TPrepareFormRes =
 export type TYamlByValuesReq = {
   values: any
   persistedKeys: TFormName[]
-  properties: OpenAPIV2.SchemaObject['properties']
+  properties: TFormSchemaProperties
 }
 
 export type TYamlByValuesRes = any
 
 export type TValuesByYamlReq = {
   values: Record<string, unknown>
-  properties: OpenAPIV2.SchemaObject['properties']
+  properties: TFormSchemaProperties
 }
 
 export type TValuesByYamlRes = any

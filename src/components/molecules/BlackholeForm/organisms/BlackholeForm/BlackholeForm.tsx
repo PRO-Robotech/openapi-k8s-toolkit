@@ -11,12 +11,12 @@ import { BugOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import axios, { isAxiosError } from 'axios'
 import _ from 'lodash'
-import { OpenAPIV2 } from 'openapi-types'
 import { TJSON } from 'localTypes/JSON'
 import { TFormName, TUrlParams } from 'localTypes/form'
 import { TFormPrefill } from 'localTypes/formExtensions'
 import { TRequestError } from 'localTypes/api'
 import { TYamlByValuesReq, TYamlByValuesRes, TValuesByYamlReq, TValuesByYamlRes } from 'localTypes/bff/form'
+import { TFormSchemaNode, TFormSchemaProperties } from 'localTypes/formSchema'
 import { usePermissions } from 'hooks/usePermissions'
 import { createNewEntry, updateEntry } from 'api/forms'
 import { filterSelectOptions } from 'utils/filterSelectOptions'
@@ -58,7 +58,7 @@ export type TBlackholeFormProps = {
     plural?: string
   }
   formsPrefills?: TFormPrefill
-  staticProperties: OpenAPIV2.SchemaObject['properties']
+  staticProperties: TFormSchemaProperties
   required: string[]
   hiddenPaths?: string[][]
   expandedPaths: string[][]
@@ -129,7 +129,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
     return backlink
   }, [backlink, namespaceFromFormData])
 
-  const [properties, setProperties] = useState<OpenAPIV2.SchemaObject['properties']>(staticProperties)
+  const [properties, setProperties] = useState<TFormSchemaProperties>(staticProperties)
   const [yamlValues, setYamlValues] = useState<Record<string, unknown>>()
   const debouncedSetYamlValues = useDebounceCallback(setYamlValues, 500)
 
@@ -769,7 +769,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
         }
       }
 
-      const getArrayItemType = (schemaProps: OpenAPIV2.SchemaObject['properties'], path: (string | number)[]) => {
+      const getArrayItemType = (schemaProps: TFormSchemaProperties, path: (string | number)[]) => {
         // Walk the schema roughly along the data path:
         // - string key → go into `.properties[key]`
         // - number index → for arrays, go into `.items`
@@ -1192,8 +1192,8 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
     path: TFormName
     name: string
     type: string
-    items?: { type: string }
-    nestedProperties?: OpenAPIV2.SchemaObject['properties']
+    items?: TFormSchemaNode
+    nestedProperties?: TFormSchemaProperties
     required?: string
   }) => {
     const arrPath = Array.isArray(path) ? path : [path]
