@@ -5,8 +5,10 @@ import { Flex, Typography, Tooltip, Select, Button } from 'antd'
 import { getStringByName } from 'utils/getStringByName'
 import { TFormName, TPersistedControls } from 'localTypes/form'
 import { MinusIcon, feedbackIcons } from 'components/atoms'
-import { PersistedCheckbox, HiddenContainer, ResetedFormItem, CustomSizeTitle } from '../../atoms'
+import { PersistedCheckbox, HiddenContainer, ResetedFormItem, CustomSizeTitle, DefaultValueButton } from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
+import { buildPlaceholder } from '../helpers/buildPlaceholder'
+import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 import { getRequiredRule } from '../helpers/validation'
 
 type TFormEnumStringInputProps = {
@@ -22,6 +24,7 @@ type TFormEnumStringInputProps = {
   options: string[]
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
+  defaultValue?: string
 }
 
 export const FormEnumStringInput: FC<TFormEnumStringInputProps> = ({
@@ -37,10 +40,13 @@ export const FormEnumStringInput: FC<TFormEnumStringInputProps> = ({
   options,
   persistedControls,
   onRemoveByMinus,
+  defaultValue,
 }) => {
   const designNewLayout = useDesignNewLayout()
 
   const fixedName = name === 'nodeName' ? 'nodeNameBecauseOfSuddenBug' : name
+  const formFieldName = arrName || fixedName
+  const defaultBtn = useDefaultValueButton(formFieldName, defaultValue)
 
   const title = (
     <>
@@ -67,16 +73,27 @@ export const FormEnumStringInput: FC<TFormEnumStringInputProps> = ({
             </Button>
           )}
           <PersistedCheckbox formName={persistName || name} persistedControls={persistedControls} type="str" />
+          {defaultBtn.visible && (
+            <DefaultValueButton
+              defaultValue={defaultValue!}
+              isApplied={defaultBtn.isApplied}
+              onApply={defaultBtn.handleApply}
+              onClear={defaultBtn.handleClear}
+            />
+          )}
         </Flex>
       </Flex>
       <ResetedFormItem
         key={arrKey !== undefined ? arrKey : Array.isArray(name) ? name.slice(-1)[0] : name}
-        name={arrName || fixedName}
+        name={formFieldName}
         rules={[getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name)]}
         validateTrigger="onBlur"
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
       >
-        <Select options={options.map(el => ({ value: el, label: el }))} placeholder={getStringByName(name)} />
+        <Select
+          options={options.map(el => ({ value: el, label: el }))}
+          placeholder={buildPlaceholder(name, defaultValue)}
+        />
       </ResetedFormItem>
     </HiddenContainer>
   )

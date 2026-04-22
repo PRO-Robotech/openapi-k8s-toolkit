@@ -5,8 +5,9 @@ import { Flex, Switch, Tooltip, Button } from 'antd'
 import { getStringByName } from 'utils/getStringByName'
 import { TFormName } from 'localTypes/form'
 import { MinusIcon, BackToDefaultIcon } from 'components/atoms'
-import { ResetedFormItem, CustomSizeTitle, HiddenContainer } from '../../atoms'
+import { ResetedFormItem, CustomSizeTitle, HiddenContainer, DefaultValueButton } from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
+import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 import { Styled } from './styled'
 
 type TFormBooleanInputProps = {
@@ -18,6 +19,7 @@ type TFormBooleanInputProps = {
   isAdditionalProperties?: boolean
   removeField: ({ path }: { path: TFormName }) => void
   onRemoveByMinus?: () => void
+  defaultValue?: boolean
 }
 
 export const FormBooleanInput: FC<TFormBooleanInputProps> = ({
@@ -29,8 +31,11 @@ export const FormBooleanInput: FC<TFormBooleanInputProps> = ({
   isAdditionalProperties,
   removeField,
   onRemoveByMinus,
+  defaultValue,
 }) => {
   const designNewLayout = useDesignNewLayout()
+  const formFieldName = arrName || name
+  const defaultBtn = useDefaultValueButton(formFieldName, defaultValue)
 
   const title = <>{getStringByName(name)}</>
 
@@ -56,10 +61,18 @@ export const FormBooleanInput: FC<TFormBooleanInputProps> = ({
       <Styled.SwitchAndCrossContainer>
         <ResetedFormItem
           key={arrKey !== undefined ? arrKey : Array.isArray(name) ? name.slice(-1)[0] : name}
-          name={arrName || name}
+          name={formFieldName}
         >
           <Switch size="small" />
         </ResetedFormItem>
+        {defaultBtn.visible && (
+          <DefaultValueButton
+            defaultValue={defaultValue!}
+            isApplied={defaultBtn.isApplied}
+            onApply={defaultBtn.handleApply}
+            onClear={defaultBtn.handleClear}
+          />
+        )}
         <Styled.CrossContainer
           onClick={() => {
             if (makeValueUndefined) {

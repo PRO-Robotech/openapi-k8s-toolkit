@@ -6,10 +6,12 @@ import { getStringByName } from 'utils/getStringByName'
 // import { isMultilineString } from 'utils/isMultilineString'
 import { TFormName, TPersistedControls } from 'localTypes/form'
 import { MinusIcon, feedbackIcons } from 'components/atoms'
-import { PersistedCheckbox, HiddenContainer, ResetedFormItem, CustomSizeTitle } from '../../atoms'
+import { PersistedCheckbox, HiddenContainer, ResetedFormItem, CustomSizeTitle, DefaultValueButton } from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
 import { toBase64, fromBase64 } from './helpers'
 import { Styled } from './styled'
+import { buildPlaceholder } from '../helpers/buildPlaceholder'
+import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 import { getRequiredRule } from '../helpers/validation'
 
 type TFormStringMultilineInputProps = {
@@ -25,6 +27,7 @@ type TFormStringMultilineInputProps = {
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
   isBase64?: boolean
+  defaultValue?: string
 }
 
 export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
@@ -40,13 +43,16 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
   persistedControls,
   onRemoveByMinus,
   isBase64,
+  defaultValue,
 }) => {
   const designNewLayout = useDesignNewLayout()
+  const placeholder = buildPlaceholder(name, defaultValue)
 
   const fixedName = name === 'nodeName' ? 'nodeNameBecauseOfSuddenBug' : name
   const formFieldName = arrName || fixedName
   const formValue = Form.useWatch(formFieldName)
   const form = Form.useFormInstance()
+  const defaultBtn = useDefaultValueButton(formFieldName, defaultValue)
 
   // Derive multiline based on current local value
   // const isMultiline = useMemo(() => isMultilineString(formValue), [formValue])
@@ -87,6 +93,14 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
             </Button>
           )}
           <PersistedCheckbox formName={persistName || name} persistedControls={persistedControls} type="str" />
+          {defaultBtn.visible && (
+            <DefaultValueButton
+              defaultValue={defaultValue!}
+              isApplied={defaultBtn.isApplied}
+              onApply={defaultBtn.handleApply}
+              onClear={defaultBtn.handleClear}
+            />
+          )}
         </Flex>
       </Flex>
       <ResetedFormItem
@@ -100,7 +114,7 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
         }}
       >
         <Input.TextArea
-          placeholder={getStringByName(name)}
+          placeholder={placeholder}
           // rows={isMultiline ? 4 : 1}
           rows={4}
           // autoSize={!isMultiline ? { minRows: 1, maxRows: 1 } : { minRows: 2, maxRows: 10 }}
@@ -110,7 +124,7 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
       {isBase64 && (
         <Styled.MarginBottom>
           <Input.TextArea
-            placeholder={getStringByName(name)}
+            placeholder={placeholder}
             value={decoded}
             onChange={e => {
               try {
