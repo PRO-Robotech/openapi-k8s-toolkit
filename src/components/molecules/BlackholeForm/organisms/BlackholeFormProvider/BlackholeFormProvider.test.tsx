@@ -16,12 +16,14 @@ jest.mock('hooks/useK8sSmartResource', () => ({
 }))
 const mockUseK8sSmartResource = useK8sSmartResource as jest.Mock
 
+const blackholeFormMock = jest.fn((props: any) => (
+  <div data-testid="blackhole-form">
+    kind:{props.kind}; type:{props.type}; gvr:{props.apiGroupApiVersion}
+  </div>
+))
+
 jest.mock('../BlackholeForm', () => ({
-  BlackholeForm: (props: any) => (
-    <div data-testid="blackhole-form">
-      kind:{props.kind}; type:{props.type}; gvr:{props.apiGroupApiVersion}
-    </div>
-  ),
+  BlackholeForm: (props: any) => blackholeFormMock(props),
 }))
 
 jest.mock('../../../YamlEditorSingleton', () => ({
@@ -94,6 +96,57 @@ describe('BlackholeFormProvider', () => {
       customizationId: undefined,
       customizationIdPrefill: undefined,
     })
+  })
+
+  test('passes prepared schema contract through to BlackholeForm', async () => {
+    mockPost.mockResolvedValue({
+      data: {
+        result: 'success',
+        properties: {
+          spec: {
+            type: 'object',
+            properties: {
+              replicas: { type: 'integer', default: 3 },
+            },
+          },
+        },
+        required: ['spec'],
+        hiddenPaths: [['spec', 'internalOnly']],
+        expandedPaths: [['spec']],
+        persistedPaths: [['spec', 'replicas']],
+        sortPaths: [['spec', 'replicas']],
+        kind: 'DemoApp',
+        isNamespaced: true,
+        namespacesData: ['ns1', 'ns2'],
+      },
+    })
+
+    render(<BlackholeFormProvider {...(baseProps as any)} isCreate backlink="/table" />)
+
+    await screen.findByTestId('blackhole-form')
+
+    expect(blackholeFormMock).toHaveBeenCalled()
+    expect(blackholeFormMock.mock.calls[0][0]).toEqual(
+      expect.objectContaining({
+        staticProperties: {
+          spec: {
+            type: 'object',
+            properties: {
+              replicas: { type: 'integer', default: 3 },
+            },
+          },
+        },
+        required: ['spec'],
+        hiddenPaths: [['spec', 'internalOnly']],
+        expandedPaths: [['spec']],
+        persistedPaths: [['spec', 'replicas']],
+        sortPaths: [['spec', 'replicas']],
+        kind: 'DemoApp',
+        isNameSpaced: ['ns1', 'ns2'],
+        backlink: '/table',
+        isCreate: true,
+      }),
+    )
   })
 
   test('sends direct customizationId for prefill when matching prefill exists', async () => {
