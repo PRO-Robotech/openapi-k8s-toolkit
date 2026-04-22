@@ -28,6 +28,7 @@ import {
   useUpdateIsTouchedPersisted,
 } from '../../organisms/BlackholeForm/context'
 import { resolveFormPath, normalizeNameToPath, listItemBasePath } from './utils'
+import { formatDefaultValue } from '../helpers/buildPlaceholder'
 import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 import { getRequiredRule } from '../helpers/validation'
 
@@ -290,11 +291,7 @@ export const FormListInput: FC<TFormListInputProps> = ({
         >
           <Select
             mode={customProps.mode}
-            placeholder={
-              defaultValue !== undefined
-                ? `Default: ${Array.isArray(defaultValue) ? defaultValue.join(', ') : defaultValue}`
-                : 'Select'
-            }
+            placeholder={defaultValue !== undefined ? `Default: ${formatDefaultValue(defaultValue)}` : 'Select'}
             options={uniqueOptions}
             filterOption={filterSelectOptions}
             disabled={isWaitingForRelatedValue}

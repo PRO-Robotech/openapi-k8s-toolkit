@@ -1,5 +1,6 @@
 import React, { FC } from 'react'
 import { Button, Tooltip } from 'antd'
+import { formatDefaultValue } from '../../molecules/helpers/buildPlaceholder'
 
 type TDefaultValueButtonProps = {
   defaultValue: string | number | boolean | string[]
@@ -9,14 +10,6 @@ type TDefaultValueButtonProps = {
   disabled?: boolean
 }
 
-const formatDefault = (value: TDefaultValueButtonProps['defaultValue']): string => {
-  if (Array.isArray(value)) {
-    return value.join(', ')
-  }
-
-  return String(value)
-}
-
 export const DefaultValueButton: FC<TDefaultValueButtonProps> = ({
   defaultValue,
   isApplied,
@@ -24,7 +17,7 @@ export const DefaultValueButton: FC<TDefaultValueButtonProps> = ({
   onClear,
   disabled,
 }) => {
-  const formatted = formatDefault(defaultValue)
+  const formatted = formatDefaultValue(defaultValue)
 
   if (isApplied) {
     return (

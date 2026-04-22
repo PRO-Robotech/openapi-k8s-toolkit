@@ -1,6 +1,18 @@
-import { buildPlaceholder } from './buildPlaceholder'
+import { buildPlaceholder, formatDefaultValue } from './buildPlaceholder'
 
 describe('buildPlaceholder', () => {
+  describe('formatDefaultValue', () => {
+    it('formats array defaults consistently', () => {
+      expect(formatDefaultValue(['TCP', 'UDP'])).toBe('TCP, UDP')
+    })
+
+    it('formats scalar defaults consistently', () => {
+      expect(formatDefaultValue(0)).toBe('0')
+      expect(formatDefaultValue(false)).toBe('false')
+      expect(formatDefaultValue('')).toBe('')
+    })
+  })
+
   it('returns the field name when no defaultValue is provided', () => {
     expect(buildPlaceholder('protocol')).toBe('protocol')
     expect(buildPlaceholder(['spec', 'protocol'])).toBe('protocol')
@@ -26,6 +38,10 @@ describe('buildPlaceholder', () => {
 
   it('formats an empty-string default', () => {
     expect(buildPlaceholder('label', '')).toBe('Default: ')
+  })
+
+  it('formats an array default', () => {
+    expect(buildPlaceholder('protocols', ['TCP', 'UDP'])).toBe('Default: TCP, UDP')
   })
 
   it('uses the last segment of an array name as the fallback', () => {

@@ -73,15 +73,17 @@ export const FormBooleanInput: FC<TFormBooleanInputProps> = ({
             onClear={defaultBtn.handleClear}
           />
         )}
-        <Styled.CrossContainer
-          onClick={() => {
-            if (makeValueUndefined) {
-              makeValueUndefined(name)
-            }
-          }}
-        >
-          <BackToDefaultIcon />
-        </Styled.CrossContainer>
+        {!defaultBtn.visible && (
+          <Styled.CrossContainer
+            onClick={() => {
+              if (makeValueUndefined) {
+                makeValueUndefined(name)
+              }
+            }}
+          >
+            <BackToDefaultIcon />
+          </Styled.CrossContainer>
+        )}
       </Styled.SwitchAndCrossContainer>
     </HiddenContainer>
   )
