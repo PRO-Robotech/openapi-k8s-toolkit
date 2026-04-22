@@ -1,4 +1,4 @@
-import { buildPlaceholder, formatDefaultValue } from './buildPlaceholder'
+import { buildPlaceholder, formatDefaultValue, getExampleTooltip } from './buildPlaceholder'
 
 describe('buildPlaceholder', () => {
   describe('formatDefaultValue', () => {
@@ -46,5 +46,54 @@ describe('buildPlaceholder', () => {
 
   it('uses the last segment of an array name as the fallback', () => {
     expect(buildPlaceholder(['spec', 'template', 'name'])).toBe('name')
+  })
+
+  describe('example priority', () => {
+    it('returns Example placeholder when only example is provided', () => {
+      expect(buildPlaceholder('image', undefined, 'registry.example.com/app:v1.2.3')).toBe(
+        'Example: registry.example.com/app:v1.2.3',
+      )
+    })
+
+    it('formats a numeric example', () => {
+      expect(buildPlaceholder('replicas', undefined, 5)).toBe('Example: 5')
+    })
+
+    it('prefers default over example when both are provided', () => {
+      expect(buildPlaceholder('image', 'nginx:latest', 'registry.example.com/app:v1.2.3')).toBe('Default: nginx:latest')
+    })
+
+    it('ignores example when default is a falsy but defined value', () => {
+      expect(buildPlaceholder('label', '', 'some-example')).toBe('Default: ')
+      expect(buildPlaceholder('count', 0, 42)).toBe('Default: 0')
+      expect(buildPlaceholder('flag', false, true)).toBe('Default: false')
+    })
+  })
+})
+
+describe('getExampleTooltip', () => {
+  it('returns undefined when example is not provided', () => {
+    expect(getExampleTooltip('nginx:latest', undefined)).toBeUndefined()
+    expect(getExampleTooltip(undefined, undefined)).toBeUndefined()
+  })
+
+  it('returns undefined when only example is provided (placeholder already shows it)', () => {
+    expect(getExampleTooltip(undefined, 'registry.example.com/app:v1.2.3')).toBeUndefined()
+  })
+
+  it('returns the formatted example when both default and example are provided', () => {
+    expect(getExampleTooltip('nginx:latest', 'registry.example.com/app:v1.2.3')).toBe(
+      'Example: registry.example.com/app:v1.2.3',
+    )
+  })
+
+  it('surfaces example tooltip even when default is falsy-but-defined', () => {
+    expect(getExampleTooltip('', 'some-example')).toBe('Example: some-example')
+    expect(getExampleTooltip(0, 42)).toBe('Example: 42')
+    expect(getExampleTooltip(false, true)).toBe('Example: true')
+  })
+
+  it('formats array examples with comma separation', () => {
+    expect(getExampleTooltip(['tcp'], ['TCP', 'UDP'])).toBe('Example: TCP, UDP')
   })
 })

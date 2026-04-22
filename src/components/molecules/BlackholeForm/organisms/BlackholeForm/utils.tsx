@@ -49,6 +49,7 @@ export const getStringFormItemFromSwagger = ({
   persistedControls,
   onRemoveByMinus,
   defaultValue,
+  example,
 }: {
   name: TFormName
   arrKey?: number
@@ -63,6 +64,7 @@ export const getStringFormItemFromSwagger = ({
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
   defaultValue?: string
+  example?: string
 }) => {
   if (Array.isArray(name) && name.length === 2 && name[0] === 'metadata' && name[1] === 'namespace' && namespaceData) {
     return (
@@ -91,6 +93,7 @@ export const getStringFormItemFromSwagger = ({
       persistedControls={persistedControls}
       onRemoveByMinus={onRemoveByMinus}
       defaultValue={defaultValue}
+      example={example}
     />
   )
 }
@@ -158,6 +161,7 @@ export const getNumberFormItemFromSwagger = ({
   persistedControls,
   onRemoveByMinus,
   defaultValue,
+  example,
 }: {
   isNumber?: boolean
   name: TFormName
@@ -172,6 +176,7 @@ export const getNumberFormItemFromSwagger = ({
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
   defaultValue?: number
+  example?: number
 }) => {
   return (
     <FormNumberInput
@@ -189,6 +194,7 @@ export const getNumberFormItemFromSwagger = ({
       persistedControls={persistedControls}
       onRemoveByMinus={onRemoveByMinus}
       defaultValue={defaultValue}
+      example={example}
     />
   )
 }
@@ -253,6 +259,7 @@ export const getStringMultilineFormItemFromSwagger = ({
   onRemoveByMinus,
   isBase64,
   defaultValue,
+  example,
 }: {
   name: TFormName
   arrKey?: number
@@ -267,6 +274,7 @@ export const getStringMultilineFormItemFromSwagger = ({
   onRemoveByMinus?: () => void
   isBase64?: boolean
   defaultValue?: string
+  example?: string
 }) => {
   return (
     <FormStringMultilineInput
@@ -284,6 +292,7 @@ export const getStringMultilineFormItemFromSwagger = ({
       onRemoveByMinus={onRemoveByMinus}
       isBase64={isBase64}
       defaultValue={defaultValue}
+      example={example}
     />
   )
 }
@@ -809,6 +818,7 @@ export const getObjectFormItemsDraft = ({
             removeField,
             persistedControls,
             defaultValue: extractStringDefault(properties[el].default),
+            example: extractStringDefault(properties[el].example),
           })
         }
         if (properties[el].type === 'number' || properties[el].type === 'integer') {
@@ -830,6 +840,7 @@ export const getObjectFormItemsDraft = ({
             removeField,
             persistedControls,
             defaultValue: extractNumberDefault(properties[el].default),
+            example: extractNumberDefault(properties[el].example),
           })
         }
         if (properties[el].type === 'rangeInputCpu' || properties[el].type === 'rangeInputMemory') {
@@ -892,6 +903,7 @@ export const getObjectFormItemsDraft = ({
             persistedControls,
             isBase64: properties[el].type === 'multilineStringBase64',
             defaultValue: extractStringDefault(properties[el].default),
+            example: extractStringDefault(properties[el].example),
           })
         }
         if (properties[el].type === 'boolean') {

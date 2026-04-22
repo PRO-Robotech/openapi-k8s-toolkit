@@ -6,11 +6,18 @@ import { getStringByName } from 'utils/getStringByName'
 // import { isMultilineString } from 'utils/isMultilineString'
 import { TFormName, TPersistedControls } from 'localTypes/form'
 import { MinusIcon, feedbackIcons } from 'components/atoms'
-import { PersistedCheckbox, HiddenContainer, ResetedFormItem, CustomSizeTitle, DefaultValueButton } from '../../atoms'
+import {
+  PersistedCheckbox,
+  HiddenContainer,
+  ResetedFormItem,
+  CustomSizeTitle,
+  DefaultValueButton,
+  ExampleTooltipIcon,
+} from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
 import { toBase64, fromBase64 } from './helpers'
 import { Styled } from './styled'
-import { buildPlaceholder } from '../helpers/buildPlaceholder'
+import { buildPlaceholder, getExampleTooltip } from '../helpers/buildPlaceholder'
 import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 import { getRequiredRule } from '../helpers/validation'
 
@@ -28,6 +35,7 @@ type TFormStringMultilineInputProps = {
   onRemoveByMinus?: () => void
   isBase64?: boolean
   defaultValue?: string
+  example?: string
 }
 
 export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
@@ -44,9 +52,11 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
   onRemoveByMinus,
   isBase64,
   defaultValue,
+  example,
 }) => {
   const designNewLayout = useDesignNewLayout()
-  const placeholder = buildPlaceholder(name, defaultValue)
+  const placeholder = buildPlaceholder(name, defaultValue, example)
+  const exampleTooltip = getExampleTooltip(defaultValue, example)
 
   const fixedName = name === 'nodeName' ? 'nodeNameBecauseOfSuddenBug' : name
   const formFieldName = arrName || fixedName
@@ -61,6 +71,7 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
     <>
       {getStringByName(name)}
       {required?.includes(getStringByName(name)) && <Typography.Text type="danger">*</Typography.Text>}
+      {exampleTooltip && <ExampleTooltipIcon tooltip={exampleTooltip} />}
     </>
   )
 

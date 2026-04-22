@@ -4,9 +4,16 @@ import { Flex, Input, Typography, Tooltip, Button } from 'antd'
 import { getStringByName } from 'utils/getStringByName'
 import { TFormName, TPersistedControls } from 'localTypes/form'
 import { MinusIcon, feedbackIcons } from 'components/atoms'
-import { PersistedCheckbox, HiddenContainer, ResetedFormItem, CustomSizeTitle, DefaultValueButton } from '../../atoms'
+import {
+  PersistedCheckbox,
+  HiddenContainer,
+  ResetedFormItem,
+  CustomSizeTitle,
+  DefaultValueButton,
+  ExampleTooltipIcon,
+} from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
-import { buildPlaceholder } from '../helpers/buildPlaceholder'
+import { buildPlaceholder, getExampleTooltip } from '../helpers/buildPlaceholder'
 import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 import { getRequiredRule } from '../helpers/validation'
 
@@ -23,6 +30,7 @@ type TFormStringInputProps = {
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
   defaultValue?: string
+  example?: string
 }
 
 export const FormStringInput: FC<TFormStringInputProps> = ({
@@ -38,17 +46,20 @@ export const FormStringInput: FC<TFormStringInputProps> = ({
   persistedControls,
   onRemoveByMinus,
   defaultValue,
+  example,
 }) => {
   const designNewLayout = useDesignNewLayout()
 
   const fixedName = name === 'nodeName' ? 'nodeNameBecauseOfSuddenBug' : name
   const formFieldName = arrName || fixedName
   const defaultBtn = useDefaultValueButton(formFieldName, defaultValue)
+  const exampleTooltip = getExampleTooltip(defaultValue, example)
 
   const title = (
     <>
       {getStringByName(name)}
       {required?.includes(getStringByName(name)) && <Typography.Text type="danger">*</Typography.Text>}
+      {exampleTooltip && <ExampleTooltipIcon tooltip={exampleTooltip} />}
     </>
   )
 
@@ -87,7 +98,7 @@ export const FormStringInput: FC<TFormStringInputProps> = ({
         validateTrigger="onBlur"
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
       >
-        <Input placeholder={buildPlaceholder(name, defaultValue)} />
+        <Input placeholder={buildPlaceholder(name, defaultValue, example)} />
       </ResetedFormItem>
     </HiddenContainer>
   )

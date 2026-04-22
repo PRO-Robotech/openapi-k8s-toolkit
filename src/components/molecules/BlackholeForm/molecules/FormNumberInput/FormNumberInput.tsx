@@ -5,9 +5,16 @@ import { Flex, InputNumber, Typography, Tooltip, Button } from 'antd'
 import { getStringByName } from 'utils/getStringByName'
 import { TFormName, TPersistedControls } from 'localTypes/form'
 import { MinusIcon, feedbackIcons } from 'components/atoms'
-import { PersistedCheckbox, HiddenContainer, ResetedFormItem, CustomSizeTitle, DefaultValueButton } from '../../atoms'
+import {
+  PersistedCheckbox,
+  HiddenContainer,
+  ResetedFormItem,
+  CustomSizeTitle,
+  DefaultValueButton,
+  ExampleTooltipIcon,
+} from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
-import { buildPlaceholder } from '../helpers/buildPlaceholder'
+import { buildPlaceholder, getExampleTooltip } from '../helpers/buildPlaceholder'
 import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 import { getRequiredRule } from '../helpers/validation'
 
@@ -25,6 +32,7 @@ type TFormNumberItemProps = {
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
   defaultValue?: number
+  example?: number
 }
 
 export const FormNumberInput: FC<TFormNumberItemProps> = ({
@@ -41,15 +49,18 @@ export const FormNumberInput: FC<TFormNumberItemProps> = ({
   persistedControls,
   onRemoveByMinus,
   defaultValue,
+  example,
 }) => {
   const designNewLayout = useDesignNewLayout()
   const formFieldName = arrName || name
   const defaultBtn = useDefaultValueButton(formFieldName, defaultValue)
+  const exampleTooltip = getExampleTooltip(defaultValue, example)
 
   const title = (
     <>
       {getStringByName(name)}
       {required?.includes(getStringByName(name)) && <Typography.Text type="danger">*</Typography.Text>}
+      {exampleTooltip && <ExampleTooltipIcon tooltip={exampleTooltip} />}
     </>
   )
 
@@ -88,7 +99,7 @@ export const FormNumberInput: FC<TFormNumberItemProps> = ({
         validateTrigger="onBlur"
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
       >
-        <InputNumber placeholder={buildPlaceholder(name, defaultValue)} step={isNumber ? 0.1 : 1} />
+        <InputNumber placeholder={buildPlaceholder(name, defaultValue, example)} step={isNumber ? 0.1 : 1} />
       </ResetedFormItem>
     </HiddenContainer>
   )
