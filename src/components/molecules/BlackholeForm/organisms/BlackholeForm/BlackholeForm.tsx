@@ -289,6 +289,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
                     message: `${kind} "${resName}" created successfully`,
                     placement: 'bottomRight',
                   })
+                  setIsLoading(false)
                   if (resolvedBacklink) {
                     navigate(resolvedBacklink)
                   }
@@ -310,6 +311,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
                     message: `${kind} "${resName}" updated successfully`,
                     placement: 'bottomRight',
                   })
+                  setIsLoading(false)
                   if (resolvedBacklink) {
                     navigate(resolvedBacklink)
                   }
