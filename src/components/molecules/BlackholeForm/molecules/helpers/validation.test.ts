@@ -94,7 +94,7 @@ describe('validation helpers', () => {
     ).toEqual([
       {
         name: ['spec'],
-        errors: ['Please satisfy exactly one of the following for spec: command or shell'],
+        errors: ['Please provide exactly one of the following for spec: [command], [shell]'],
       },
     ])
   })
@@ -122,7 +122,7 @@ describe('validation helpers', () => {
     ).toEqual([
       {
         name: ['spec'],
-        errors: ['Please satisfy exactly one of the following for spec: command or shell'],
+        errors: ['Please provide exactly one of the following for spec: [command], [shell]'],
       },
     ])
   })
@@ -143,5 +143,38 @@ describe('validation helpers', () => {
         values: {},
       }),
     ).toEqual([{ name: ['spec'], errors: [] }])
+  })
+
+  test('collectOneOfRequiredGroupStates validates oneOf groups on array items', () => {
+    expect(
+      collectOneOfRequiredGroupStates({
+        properties: {
+          containers: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                command: { type: 'string' },
+                shell: { type: 'string' },
+              },
+              oneOfRequiredGroups: [['command'], ['shell']],
+            },
+          },
+        },
+        values: {
+          containers: [
+            {
+              command: 'echo ok',
+              shell: '/bin/sh',
+            },
+          ],
+        },
+      }),
+    ).toEqual([
+      {
+        name: ['containers', 0],
+        errors: ['Please provide exactly one of the following for containers.0: [command], [shell]'],
+      },
+    ])
   })
 })

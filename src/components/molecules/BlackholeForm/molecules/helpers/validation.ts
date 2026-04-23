@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import get from 'lodash/get'
 import { Rule } from 'antd/es/form'
 import { TFormSchemaProperties } from 'localTypes/formSchema'
 import { TFormName } from 'localTypes/form'
@@ -20,11 +20,11 @@ const isPresentForOneOf = (value: unknown): boolean => {
   return true
 }
 
-const formatOneOfGroup = (group: string[]) => group.join(' and ')
+const formatOneOfGroup = (group: string[]) => `[${group.join(', ')}]`
 
 const getOneOfRequiredGroupsMessage = (name: TFormName, groups: string[][]): string => {
-  const groupText = groups.map(formatOneOfGroup).join(' or ')
-  return `Please satisfy exactly one of the following for ${prettyFieldPath(name)}: ${groupText}`
+  const groupText = groups.map(formatOneOfGroup).join(', ')
+  return `Please provide exactly one of the following for ${prettyFieldPath(name)}: ${groupText}`
 }
 
 const getOneOfRequiredGroupsError = ({
@@ -40,13 +40,40 @@ const getOneOfRequiredGroupsError = ({
     return undefined
   }
 
-  const satisfiedGroups = groups.filter(group => group.every(path => isPresentForOneOf(_.get(value, path))))
+  const satisfiedGroups = groups.filter(group => group.every(path => isPresentForOneOf(get(value, path))))
 
   if (satisfiedGroups.length === 1) {
     return undefined
   }
 
   return getOneOfRequiredGroupsMessage(name, groups)
+}
+
+const getCurrentOneOfRequiredGroupState = ({
+  path,
+  nodeOneOfRequiredGroups,
+  value,
+}: {
+  path: (string | number)[]
+  nodeOneOfRequiredGroups?: string[][]
+  value: unknown
+}): { name: TFormName; errors: string[] }[] => {
+  if (!nodeOneOfRequiredGroups || nodeOneOfRequiredGroups.length === 0) {
+    return []
+  }
+
+  const error = getOneOfRequiredGroupsError({
+    value,
+    name: path,
+    groups: nodeOneOfRequiredGroups,
+  })
+
+  return [
+    {
+      name: path,
+      errors: error ? [error] : [],
+    },
+  ]
 }
 
 export const collectOneOfRequiredGroupStates = ({
@@ -60,24 +87,12 @@ export const collectOneOfRequiredGroupStates = ({
 }): { name: TFormName; errors: string[] }[] => {
   return Object.entries(properties).flatMap(([key, node]) => {
     const path = [...currentPath, key]
-    const value = _.get(values, path)
-    const currentState =
-      node.oneOfRequiredGroups && node.oneOfRequiredGroups.length > 0
-        ? [
-            {
-              name: path,
-              errors: (() => {
-                const error = getOneOfRequiredGroupsError({
-                  value,
-                  name: path,
-                  groups: node.oneOfRequiredGroups,
-                })
-
-                return error ? [error] : []
-              })(),
-            },
-          ]
-        : []
+    const value = get(values, path)
+    const currentState = getCurrentOneOfRequiredGroupState({
+      path,
+      nodeOneOfRequiredGroups: node.oneOfRequiredGroups,
+      value,
+    })
 
     const nestedObjectStates =
       node.properties && value && typeof value === 'object' && !Array.isArray(value)
@@ -89,14 +104,21 @@ export const collectOneOfRequiredGroupStates = ({
         : []
 
     const nestedArrayStates =
-      node.type === 'array' && node.items?.properties && Array.isArray(value)
-        ? value.flatMap((_, index) =>
-            collectOneOfRequiredGroupStates({
-              properties: node.items!.properties!,
-              values,
-              currentPath: [...path, index],
+      node.type === 'array' && node.items && Array.isArray(value)
+        ? value.flatMap((_, index) => [
+            ...getCurrentOneOfRequiredGroupState({
+              path: [...path, index],
+              nodeOneOfRequiredGroups: node.items?.oneOfRequiredGroups,
+              value: get(values, [...path, index]),
             }),
-          )
+            ...(node.items?.properties
+              ? collectOneOfRequiredGroupStates({
+                  properties: node.items.properties,
+                  values,
+                  currentPath: [...path, index],
+                })
+              : []),
+          ])
         : []
 
     return [...currentState, ...nestedObjectStates, ...nestedArrayStates]

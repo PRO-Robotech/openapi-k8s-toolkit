@@ -248,23 +248,21 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
   })
 
   // --- Feature: submit handler ---
-  const syncOneOfValidationErrors = useCallback(
+  const computeOneOfValidationStates = useCallback(
     (values: Record<string, unknown>) => {
-      const nextStates = collectOneOfRequiredGroupStates({
+      return collectOneOfRequiredGroupStates({
         properties,
         values,
       })
-
-      setOneOfValidationErrors(
-        Object.fromEntries(
-          nextStates.map(({ name, errors }) => [pathKey(Array.isArray(name) ? name : [name]), errors]),
-        ),
-      )
-
-      return nextStates
     },
     [properties],
   )
+
+  const applyOneOfValidationErrors = useCallback((states: { name: TFormName; errors: string[] }[]) => {
+    setOneOfValidationErrors(
+      Object.fromEntries(states.map(({ name, errors }) => [pathKey(Array.isArray(name) ? name : [name]), errors])),
+    )
+  }, [])
 
   const onSubmit = () => {
     if (overflowRef.current) {
@@ -279,7 +277,8 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
       .then(() => {
         const valuesRaw = form.getFieldsValue()
         const values = scrubLiteralWildcardKeys(valuesRaw)
-        const oneOfStates = syncOneOfValidationErrors(values)
+        const oneOfStates = computeOneOfValidationStates(values)
+        applyOneOfValidationErrors(oneOfStates)
         const oneOfErrors = oneOfStates.filter(state => state.errors.length > 0)
 
         if (oneOfErrors.length > 0) {
@@ -656,7 +655,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
       // Get the most recent form values (or use the provided ones)
       const vRaw = values ?? form.getFieldsValue(true)
       const v = scrubLiteralWildcardKeys(vRaw)
-      syncOneOfValidationErrors(v)
+      applyOneOfValidationErrors(computeOneOfValidationStates(v))
 
       // resolve wildcard templates for hidden & expanded against current values ---
       wgroup('values→resolve wildcards')
@@ -902,11 +901,12 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
       properties,
       persistedKeys,
       debouncedPostValuesToYaml,
+      computeOneOfValidationStates,
+      applyOneOfValidationErrors,
       applyPrefillForNewArrayItem,
       applyPersistedForNewArrayItem,
       hiddenWildcardTemplates,
       expandedWildcardTemplates,
-      syncOneOfValidationErrors,
     ],
   )
 
