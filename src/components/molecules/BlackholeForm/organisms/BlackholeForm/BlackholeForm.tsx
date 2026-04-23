@@ -26,6 +26,7 @@ import { getPrefixSubarrays } from 'utils/getPrefixSubArrays'
 import { deepMerge } from 'utils/deepMerge'
 import { FlexGrow, Spacer } from 'components/atoms'
 import { YamlEditor } from '../../molecules'
+import { collectOneOfRequiredGroupStates } from '../../molecules/helpers/validation'
 import { getObjectFormItemsDraft } from './utils'
 import { pathKey, pruneAdditionalForValues, materializeAdditionalFromValues } from './helpers/casts'
 import {
@@ -132,6 +133,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
   const [properties, setProperties] = useState<TFormSchemaProperties>(staticProperties)
   const [yamlValues, setYamlValues] = useState<Record<string, unknown>>()
   const debouncedSetYamlValues = useDebounceCallback(setYamlValues, 500)
+  const [oneOfValidationErrors, setOneOfValidationErrors] = useState<Record<string, string[]>>({})
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<TRequestError>()
@@ -246,6 +248,24 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
   })
 
   // --- Feature: submit handler ---
+  const syncOneOfValidationErrors = useCallback(
+    (values: Record<string, unknown>) => {
+      const nextStates = collectOneOfRequiredGroupStates({
+        properties,
+        values,
+      })
+
+      setOneOfValidationErrors(
+        Object.fromEntries(
+          nextStates.map(({ name, errors }) => [pathKey(Array.isArray(name) ? name : [name]), errors]),
+        ),
+      )
+
+      return nextStates
+    },
+    [properties],
+  )
+
   const onSubmit = () => {
     if (overflowRef.current) {
       const { scrollHeight, clientHeight } = overflowRef.current
@@ -257,13 +277,30 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
     form
       .validateFields()
       .then(() => {
+        const valuesRaw = form.getFieldsValue()
+        const values = scrubLiteralWildcardKeys(valuesRaw)
+        const oneOfStates = syncOneOfValidationErrors(values)
+        const oneOfErrors = oneOfStates.filter(state => state.errors.length > 0)
+
+        if (oneOfErrors.length > 0) {
+          const keys = handleValidationError({
+            error: {
+              errorFields: oneOfErrors.map(({ name, errors }) => ({
+                name,
+                errors,
+                warnings: [],
+              })),
+            },
+            expandedKeys,
+          })
+          setExpandedKeys([...keys])
+          return
+        }
+
         setIsLoading(true)
         setError(undefined)
         const name = form.getFieldValue(['metadata', 'name'])
         const namespace = form.getFieldValue(['metadata', 'namespace'])
-
-        const valuesRaw = form.getFieldsValue()
-        const values = scrubLiteralWildcardKeys(valuesRaw)
         const payload: TYamlByValuesReq = {
           values,
           persistedKeys,
@@ -619,6 +656,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
       // Get the most recent form values (or use the provided ones)
       const vRaw = values ?? form.getFieldsValue(true)
       const v = scrubLiteralWildcardKeys(vRaw)
+      syncOneOfValidationErrors(v)
 
       // resolve wildcard templates for hidden & expanded against current values ---
       wgroup('values→resolve wildcards')
@@ -868,6 +906,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
       applyPersistedForNewArrayItem,
       hiddenWildcardTemplates,
       expandedWildcardTemplates,
+      syncOneOfValidationErrors,
     ],
   )
 
@@ -1334,6 +1373,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
                       isEdit: !isCreate,
                       expandedControls: { onExpandOpen, onExpandClose, expandedKeys },
                       persistedControls: { onPersistMark, onPersistUnmark, persistedKeys },
+                      objectValidationErrors: oneOfValidationErrors,
                       sortPaths,
                       urlParams,
                     })}

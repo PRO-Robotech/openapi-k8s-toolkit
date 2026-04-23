@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getRequiredRule, prettyFieldPath } from './validation'
+import { collectOneOfRequiredGroupStates, getRequiredRule, prettyFieldPath } from './validation'
 
 describe('validation helpers', () => {
   test('prettyFieldPath formats array path with dots', () => {
@@ -47,5 +47,101 @@ describe('validation helpers', () => {
       required: false,
       message: 'Please enter foo',
     })
+  })
+
+  test('collectOneOfRequiredGroupStates accepts exactly one satisfied group', () => {
+    expect(
+      collectOneOfRequiredGroupStates({
+        properties: {
+          spec: {
+            type: 'object',
+            properties: {
+              command: { type: 'string' },
+              shell: { type: 'string' },
+            },
+            oneOfRequiredGroups: [['command'], ['shell']],
+          },
+        },
+        values: {
+          spec: {
+            command: 'echo ok',
+          },
+        },
+      }),
+    ).toEqual([{ name: ['spec'], errors: [] }])
+  })
+
+  test('collectOneOfRequiredGroupStates reports error when no group is satisfied on a present object', () => {
+    expect(
+      collectOneOfRequiredGroupStates({
+        properties: {
+          spec: {
+            type: 'object',
+            properties: {
+              command: { type: 'string' },
+              shell: { type: 'string' },
+              mode: { type: 'string' },
+            },
+            oneOfRequiredGroups: [['command'], ['shell']],
+          },
+        },
+        values: {
+          spec: {
+            mode: 'interactive',
+          },
+        },
+      }),
+    ).toEqual([
+      {
+        name: ['spec'],
+        errors: ['Please satisfy exactly one of the following for spec: command or shell'],
+      },
+    ])
+  })
+
+  test('collectOneOfRequiredGroupStates reports error when multiple groups are satisfied', () => {
+    expect(
+      collectOneOfRequiredGroupStates({
+        properties: {
+          spec: {
+            type: 'object',
+            properties: {
+              command: { type: 'string' },
+              shell: { type: 'string' },
+            },
+            oneOfRequiredGroups: [['command'], ['shell']],
+          },
+        },
+        values: {
+          spec: {
+            command: 'echo ok',
+            shell: '/bin/sh',
+          },
+        },
+      }),
+    ).toEqual([
+      {
+        name: ['spec'],
+        errors: ['Please satisfy exactly one of the following for spec: command or shell'],
+      },
+    ])
+  })
+
+  test('collectOneOfRequiredGroupStates skips absent optional objects', () => {
+    expect(
+      collectOneOfRequiredGroupStates({
+        properties: {
+          spec: {
+            type: 'object',
+            properties: {
+              command: { type: 'string' },
+              shell: { type: 'string' },
+            },
+            oneOfRequiredGroups: [['command'], ['shell']],
+          },
+        },
+        values: {},
+      }),
+    ).toEqual([{ name: ['spec'], errors: [] }])
   })
 })

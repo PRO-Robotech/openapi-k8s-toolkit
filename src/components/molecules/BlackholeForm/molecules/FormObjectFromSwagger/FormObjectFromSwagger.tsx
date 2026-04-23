@@ -19,6 +19,8 @@ type TFormObjectFromSwaggerProps = {
   persistedControls: TPersistedControls
   collapseTitle: TFormName
   collapseFormName: TFormName
+  oneOfRequiredGroups?: string[][]
+  validationErrors?: string[]
   data?: JSX.Element
   inputProps?: {
     addField: ({
@@ -53,6 +55,8 @@ export const FormObjectFromSwagger: FC<TFormObjectFromSwaggerProps> = ({
   persistedControls,
   collapseTitle,
   collapseFormName,
+  oneOfRequiredGroups,
+  validationErrors,
   data,
   inputProps,
   onRemoveByMinus,
@@ -150,6 +154,7 @@ export const FormObjectFromSwagger: FC<TFormObjectFromSwaggerProps> = ({
         key={Array.isArray(name) ? name.join('-') : name}
       >
         {data}
+        {oneOfRequiredGroups && oneOfRequiredGroups.length > 0 ? <Form.ErrorList errors={validationErrors} /> : null}
         {inputProps && (
           <Input
             placeholder="Enter field name"

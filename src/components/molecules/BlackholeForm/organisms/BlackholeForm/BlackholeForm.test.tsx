@@ -466,6 +466,52 @@ describe('BlackholeForm', () => {
     })
   })
 
+  test('submit is blocked when oneOf required-groups are violated', async () => {
+    const { Form: AntForm } = require('antd')
+    const user = userEvent.setup()
+
+    getObjectFormItemsDraftMock.mockImplementation(() =>
+      React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(AntForm.Item, { name: ['spec', 'command'], noStyle: true }),
+        React.createElement(AntForm.Item, { name: ['spec', 'shell'], noStyle: true }),
+        React.createElement('div', { 'data-testid': 'draft-items' }),
+      ),
+    )
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        staticProperties={
+          {
+            spec: {
+              type: 'object',
+              properties: {
+                command: { type: 'string' },
+                shell: { type: 'string' },
+              },
+              oneOfRequiredGroups: [['command'], ['shell']],
+            },
+          } as any
+        }
+        prefillValuesSchema={{
+          spec: {
+            command: 'echo ok',
+            shell: '/bin/sh',
+          },
+        }}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /submit/i }))
+
+    await waitFor(() => {
+      expect(createNewEntryMock).not.toHaveBeenCalled()
+      expect(updateEntryMock).not.toHaveBeenCalled()
+    })
+  })
+
   test('submit (edit mode) calls updateEntry with correct endpoint/body', async () => {
     axiosPostMock.mockImplementation(async (url: string) => {
       if (String(url).includes('getYamlValuesByFromValues')) {

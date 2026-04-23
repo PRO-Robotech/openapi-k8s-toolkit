@@ -12,6 +12,7 @@ import { TFormSchemaNode, TFormSchemaProperties } from 'localTypes/formSchema'
 import { PlusIcon } from 'components/atoms'
 import { deepMerge } from 'utils/deepMerge'
 import { getSortedPropertyKeys } from './helpers/getSortedPropertyKeys'
+import { pathKey } from './helpers/casts'
 import {
   extractStringDefault,
   extractNumberDefault,
@@ -418,6 +419,7 @@ export const getArrayFormItemFromSwagger = ({
   isEdit,
   expandedControls,
   persistedControls,
+  objectValidationErrors,
   sortPaths,
   urlParams,
   onRemoveByMinus,
@@ -452,6 +454,7 @@ export const getArrayFormItemFromSwagger = ({
   isEdit: boolean
   expandedControls: TExpandedControls
   persistedControls: TPersistedControls
+  objectValidationErrors?: Record<string, string[]>
   sortPaths?: string[][]
   urlParams: TUrlParams
   onRemoveByMinus?: () => void
@@ -649,6 +652,7 @@ export const getArrayFormItemFromSwagger = ({
                       getObjectFormItemFromSwagger({
                         // merging properties near items by this
                         properties: deepMerge(entry.properties, additionalProperties?.[field.key]?.properties || {}),
+                        oneOfRequiredGroups: entry.oneOfRequiredGroups,
                         name: Array.isArray(name) ? [...name, field.name] : [name, field.name],
                         arrKey: field.key,
                         arrName: [field.name],
@@ -676,6 +680,7 @@ export const getArrayFormItemFromSwagger = ({
                         isEdit,
                         expandedControls,
                         persistedControls,
+                        objectValidationErrors,
                         sortPaths,
                         urlParams,
                         onRemoveByMinus: () => remove(field.name),
@@ -721,6 +726,7 @@ export const getObjectFormItemsDraft = ({
   isEdit,
   expandedControls,
   persistedControls,
+  objectValidationErrors,
   sortPaths,
   urlParams,
 }: {
@@ -754,6 +760,7 @@ export const getObjectFormItemsDraft = ({
   isEdit: boolean
   expandedControls: TExpandedControls
   persistedControls: TPersistedControls
+  objectValidationErrors?: Record<string, string[]>
   sortPaths?: string[][]
   urlParams: TUrlParams
 }) => {
@@ -996,6 +1003,7 @@ export const getObjectFormItemsDraft = ({
                 isEdit,
                 expandedControls,
                 persistedControls,
+                objectValidationErrors,
                 sortPaths,
                 urlParams,
               })
@@ -1023,6 +1031,7 @@ export const getObjectFormItemsDraft = ({
         if (properties[el].type === 'object' && properties[el].properties) {
           return getObjectFormItemFromSwagger({
             properties: properties[el].properties as TFormSchemaProperties,
+            oneOfRequiredGroups: properties[el].oneOfRequiredGroups,
             name: Array.isArray(name) ? [...name, String(el)] : [name, String(el)],
             arrKey,
             arrName: Array.isArray(arrName) ? [...arrName, String(el)] : undefined,
@@ -1048,6 +1057,7 @@ export const getObjectFormItemsDraft = ({
             isEdit,
             expandedControls,
             persistedControls,
+            objectValidationErrors,
             sortPaths,
             urlParams,
           })
@@ -1060,6 +1070,8 @@ export const getObjectFormItemsDraft = ({
 
 export const getObjectFormItemFromSwagger = ({
   properties,
+  oneOfRequiredGroups,
+  objectValidationErrors,
   name,
   arrKey,
   arrName,
@@ -1082,6 +1094,8 @@ export const getObjectFormItemFromSwagger = ({
   onRemoveByMinus,
 }: {
   properties: TFormSchemaProperties
+  oneOfRequiredGroups?: string[][]
+  objectValidationErrors?: Record<string, string[]>
   name: TFormName
   arrKey?: number
   arrName?: TFormName
@@ -1134,6 +1148,7 @@ export const getObjectFormItemFromSwagger = ({
     isEdit,
     expandedControls,
     persistedControls,
+    objectValidationErrors,
     sortPaths,
     urlParams,
   })
@@ -1144,6 +1159,8 @@ export const getObjectFormItemFromSwagger = ({
       persistName={persistName}
       selfRequired={selfRequired}
       description={description}
+      oneOfRequiredGroups={oneOfRequiredGroups}
+      validationErrors={objectValidationErrors?.[pathKey(Array.isArray(name) ? name : [name])]}
       isAdditionalProperties={isAdditionalProperties}
       removeField={removeField}
       expandedControls={expandedControls}

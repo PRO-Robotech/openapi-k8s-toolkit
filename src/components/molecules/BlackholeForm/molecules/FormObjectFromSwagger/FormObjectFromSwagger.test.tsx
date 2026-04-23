@@ -60,6 +60,30 @@ const TestHost: FC<{ initialKeys?: string[] }> = ({ initialKeys = [] }) => {
   )
 }
 
+const ErrorHost: FC = () => (
+  <Form>
+    <FormObjectFromSwagger
+      name={['spec']}
+      removeField={jest.fn()}
+      expandedControls={{
+        expandedKeys: [],
+        onExpandOpen: jest.fn(),
+        onExpandClose: jest.fn(),
+      }}
+      persistedControls={{
+        persistedKeys: [],
+        onPersistMark: jest.fn(),
+        onPersistUnmark: jest.fn(),
+      }}
+      collapseTitle="spec"
+      collapseFormName={['spec']}
+      oneOfRequiredGroups={[['command'], ['shell']]}
+      validationErrors={['Please satisfy exactly one of the following for spec: command or shell']}
+      data={<div data-testid="object-body">body</div>}
+    />
+  </Form>
+)
+
 describe('FormObjectFromSwagger', () => {
   let rafSpy: jest.SpyInstance
 
@@ -100,5 +124,14 @@ describe('FormObjectFromSwagger', () => {
     })
 
     useFormInstanceSpy.mockRestore()
+  })
+
+  test('renders object-level oneOf validation errors', async () => {
+    render(<ErrorHost />)
+
+    expect(screen.getByTestId('object-body')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Please satisfy exactly one of the following for spec: command or shell'),
+    ).toBeInTheDocument()
   })
 })

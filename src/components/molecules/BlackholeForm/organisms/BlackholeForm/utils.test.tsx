@@ -989,4 +989,28 @@ describe('getObjectFormItemFromSwagger', () => {
     expect(screen.getByTestId('object-from-swagger')).toBeInTheDocument()
     expect(screen.getByTestId('string-input')).toBeInTheDocument()
   })
+
+  test('forwards oneOfRequiredGroups to FormObjectFromSwagger', () => {
+    const properties = { inner: { type: 'string' } } as any
+
+    const el = getObjectFormItemFromSwagger({
+      properties,
+      name: ['spec', 'obj'] as any,
+      oneOfRequiredGroups: [['command'], ['shell']],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+
+    expect(FormObjectFromSwaggerMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        oneOfRequiredGroups: [['command'], ['shell']],
+      }),
+    )
+  })
 })
