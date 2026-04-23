@@ -1,6 +1,6 @@
 import React, { FC } from 'react'
 import { Tooltip } from 'antd'
-import { BulbOutlined } from '@ant-design/icons'
+import { Styled } from './styled'
 
 type TExampleTooltipIconProps = {
   tooltip: string
@@ -9,7 +9,7 @@ type TExampleTooltipIconProps = {
 export const ExampleTooltipIcon: FC<TExampleTooltipIconProps> = ({ tooltip }) => {
   return (
     <Tooltip title={tooltip}>
-      <BulbOutlined />
+      <Styled.BulbIcon />
     </Tooltip>
   )
 }
