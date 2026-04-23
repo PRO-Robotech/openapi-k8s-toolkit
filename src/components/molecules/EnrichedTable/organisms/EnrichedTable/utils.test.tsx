@@ -286,6 +286,44 @@ describe('getEnrichedColumns', () => {
     expect(res[0].onFilter('qux', record)).toBe(false)
   })
 
+  test('preserves native column render for non-factory columns', () => {
+    const originalRender = jest.fn(() => <span data-testid="native-render">native</span>)
+    const columns = [{ title: 'Name', key: 'name', dataIndex: 'name', render: originalRender }] as any
+
+    const res = getEnrichedColumns({
+      columns,
+      theme: 'light',
+      getRowKey: r => r.id,
+    }) as any[]
+
+    const rendered = res[0].render('value', { id: 'row-1' }, 3)
+    const { getByTestId } = mount(rendered)
+
+    expect(getByTestId('native-render')).toHaveTextContent('native')
+    expect(originalRender).toHaveBeenCalledWith('value', { id: 'row-1' }, 3)
+  })
+
+  test('factory type still overrides native column render', () => {
+    const originalRender = jest.fn(() => <span data-testid="native-render">native</span>)
+    const columns = [{ title: 'Factory', key: 'name', dataIndex: 'name', render: originalRender }] as any
+
+    const res = getEnrichedColumns({
+      columns,
+      additionalPrinterColumnsKeyTypeProps: {
+        name: { type: 'factory' },
+      } as any,
+      theme: 'dark',
+      getRowKey: r => r.id,
+    }) as any[]
+
+    const rendered = res[0].render('value', { id: 'row-1' }, 0)
+    const { getByTestId, queryByTestId } = mount(rendered)
+
+    expect(getByTestId('table-factory')).toHaveTextContent('dark')
+    expect(queryByTestId('native-render')).not.toBeInTheDocument()
+    expect(originalRender).not.toHaveBeenCalled()
+  })
+
   test('factory search: sorter compares DOM cell text', () => {
     const columns = [{ title: 'Factory', key: 'name', dataIndex: 'name' }] as any
 

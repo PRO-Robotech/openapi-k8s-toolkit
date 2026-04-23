@@ -28,8 +28,9 @@ import {
   useUpdateIsTouchedPersisted,
 } from '../../organisms/BlackholeForm/context'
 import { resolveFormPath, normalizeNameToPath, listItemBasePath } from './utils'
-import { getRequiredRule } from '../helpers/validation'
+import { formatDefaultValue } from '../helpers/buildPlaceholder'
 import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
+import { getRequiredRule } from '../helpers/validation'
 
 type TFormListInputProps = {
   name: TFormName
@@ -45,10 +46,6 @@ type TFormListInputProps = {
   customProps: TListInputCustomProps
   urlParams: TUrlParams
   onRemoveByMinus?: () => void
-  /**
-   * OpenAPI schema `default` value for this field.
-   * Drives placeholder hint and Apply Default / Clear button.
-   */
   defaultValue?: string | string[]
 }
 
@@ -286,7 +283,7 @@ export const FormListInput: FC<TFormListInputProps> = ({
       <Flex gap={8} align="center">
         <ResetedFormItem
           key={arrKey !== undefined ? arrKey : Array.isArray(name) ? name.slice(-1)[0] : name}
-          name={arrName || fixedName}
+          name={formFieldName}
           rules={[getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name)]}
           validateTrigger="onBlur"
           hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
@@ -294,11 +291,7 @@ export const FormListInput: FC<TFormListInputProps> = ({
         >
           <Select
             mode={customProps.mode}
-            placeholder={
-              defaultValue !== undefined
-                ? `Default: ${Array.isArray(defaultValue) ? defaultValue.join(', ') : defaultValue}`
-                : 'Select'
-            }
+            placeholder={defaultValue !== undefined ? `Default: ${formatDefaultValue(defaultValue)}` : 'Select'}
             options={uniqueOptions}
             filterOption={filterSelectOptions}
             disabled={isWaitingForRelatedValue}

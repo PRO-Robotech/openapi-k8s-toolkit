@@ -6,8 +6,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { MutableRefObject } from 'react'
 import _ from 'lodash'
-import { OpenAPIV2 } from 'openapi-types'
 import { TFormName } from 'localTypes/form'
+import { TFormSchemaNode, TFormSchemaProperties } from 'localTypes/formSchema'
 
 export const pathKey = (p: (string | number)[]) => JSON.stringify(p)
 
@@ -20,10 +20,10 @@ export const pathKey = (p: (string | number)[]) => JSON.stringify(p)
  * @returns A new pruned copy of the schema `properties`.
  */
 export const pruneAdditionalForValues = (
-  props: OpenAPIV2.SchemaObject['properties'],
+  props: TFormSchemaProperties,
   values: Record<string, unknown>,
   blockedPathsRef: MutableRefObject<Set<string>>,
-): OpenAPIV2.SchemaObject['properties'] => {
+): TFormSchemaProperties => {
   // Deep clone the schema properties to avoid mutating the original object
   const next = _.cloneDeep(props) || {}
 
@@ -56,7 +56,7 @@ export const pruneAdditionalForValues = (
           }
 
           // Recursively continue down into child nodes
-          walk(child as OpenAPIV2.SchemaObject, vo?.[k], [...path, k])
+          walk(child as TFormSchemaNode, vo?.[k], [...path, k])
         })
       }
     }
@@ -66,7 +66,7 @@ export const pruneAdditionalForValues = (
       valueNode.forEach((item, idx) => {
         // If array items have specific indexed schema properties, walk into them
         if ((schemaNode as any).properties?.[idx]) {
-          walk(schemaNode.items as OpenAPIV2.SchemaObject, item, [...path, idx])
+          walk(schemaNode.items as TFormSchemaNode, item, [...path, idx])
         }
       })
     }
@@ -74,7 +74,7 @@ export const pruneAdditionalForValues = (
 
   // Start traversal at each top-level property in the cloned schema
   Object.keys(next || {}).forEach(top => {
-    walk(next[top] as OpenAPIV2.SchemaObject, (values as any)?.[top], [top])
+    walk(next[top] as TFormSchemaNode, (values as any)?.[top], [top])
   })
 
   // Return the pruned schema
@@ -107,10 +107,10 @@ export const pruneAdditionalForValues = (
  *   - `toPersist`: list of field paths that should be persisted (saved)
  */
 export const materializeAdditionalFromValues = (
-  props: OpenAPIV2.SchemaObject['properties'],
+  props: TFormSchemaProperties,
   values: Record<string, unknown>,
   blockedPathsRef: MutableRefObject<Set<string>>,
-): { props: OpenAPIV2.SchemaObject['properties']; toExpand: TFormName[]; toPersist: TFormName[] } => {
+): { props: TFormSchemaProperties; toExpand: TFormName[]; toPersist: TFormName[] } => {
   // Create a deep copy of the schema to avoid mutating the original definition
   const next = _.cloneDeep(props) || {}
 
@@ -124,9 +124,9 @@ export const materializeAdditionalFromValues = (
    *
    * This is used when a new field appears in the data but doesn't yet exist in the schema.
    */
-  const makeChildFromAP = (ap: any): OpenAPIV2.SchemaObject => {
+  const makeChildFromAP = (ap: any): TFormSchemaNode => {
     const t = ap?.type ?? 'object'
-    const child: OpenAPIV2.SchemaObject = { type: t } as any
+    const child: TFormSchemaNode = { type: t } as any
 
     // Copy common schema details (if present)
     if (ap?.properties) (child as any).properties = _.cloneDeep(ap.properties)
@@ -155,7 +155,7 @@ export const materializeAdditionalFromValues = (
    * @param valueNode - Corresponding value node in the data
    * @param path - Array of keys/indexes representing the traversal path
    */
-  const walk = (schemaNode: OpenAPIV2.SchemaObject | undefined, valueNode: unknown, path: (string | number)[]) => {
+  const walk = (schemaNode: TFormSchemaNode | undefined, valueNode: unknown, path: (string | number)[]) => {
     if (!schemaNode) return
 
     // --- Handle OBJECT nodes ---
@@ -204,7 +204,7 @@ export const materializeAdditionalFromValues = (
       if (schemaNode.properties && valueNode && typeof valueNode === 'object' && !Array.isArray(valueNode)) {
         const vo = valueNode as Record<string, unknown>
         Object.keys(schemaNode.properties).forEach(k => {
-          walk(schemaNode.properties![k] as OpenAPIV2.SchemaObject, vo?.[k], [...path, k])
+          walk(schemaNode.properties![k] as TFormSchemaNode, vo?.[k], [...path, k])
         })
       }
     }
@@ -224,14 +224,14 @@ export const materializeAdditionalFromValues = (
           }
         }
         // Recursively walk each array item
-        walk(schemaNode.items as OpenAPIV2.SchemaObject, itemVal, [...path, idx])
+        walk(schemaNode.items as TFormSchemaNode, itemVal, [...path, idx])
       })
     }
   }
 
   // Start traversal from top-level schema properties
   Object.keys(next || {}).forEach(top => {
-    walk(next[top] as OpenAPIV2.SchemaObject, (values as any)?.[top], [top])
+    walk(next[top] as TFormSchemaNode, (values as any)?.[top], [top])
   })
 
   // Return updated schema and tracking info

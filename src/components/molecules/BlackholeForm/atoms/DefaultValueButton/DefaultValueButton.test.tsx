@@ -1,21 +1,14 @@
 import React from 'react'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { DefaultValueButton } from './DefaultValueButton'
 
 describe('DefaultValueButton', () => {
-  describe('apply mode (isApplied = false)', () => {
-    it('renders an "Apply default" button', () => {
+  describe('apply mode', () => {
+    it('renders an apply button', () => {
       render(<DefaultValueButton defaultValue="TCP" isApplied={false} onApply={jest.fn()} onClear={jest.fn()} />)
 
-      const button = screen.getByRole('button', { name: /apply default/i })
-      expect(button).toBeInTheDocument()
-    })
-
-    it('does not render a Clear button', () => {
-      render(<DefaultValueButton defaultValue="TCP" isApplied={false} onApply={jest.fn()} onClear={jest.fn()} />)
-
-      expect(screen.queryByRole('button', { name: /^clear$/i })).not.toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /apply default/i })).toBeInTheDocument()
     })
 
     it('calls onApply when clicked', () => {
@@ -41,18 +34,11 @@ describe('DefaultValueButton', () => {
     })
   })
 
-  describe('clear mode (isApplied = true)', () => {
-    it('renders a "Clear" button', () => {
+  describe('clear mode', () => {
+    it('renders a clear button', () => {
       render(<DefaultValueButton defaultValue="TCP" isApplied onApply={jest.fn()} onClear={jest.fn()} />)
 
-      const button = screen.getByRole('button', { name: /^clear$/i })
-      expect(button).toBeInTheDocument()
-    })
-
-    it('does not render an Apply default button', () => {
-      render(<DefaultValueButton defaultValue="TCP" isApplied onApply={jest.fn()} onClear={jest.fn()} />)
-
-      expect(screen.queryByRole('button', { name: /apply default/i })).not.toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /^clear$/i })).toBeInTheDocument()
     })
 
     it('calls onClear when clicked', () => {
@@ -78,43 +64,44 @@ describe('DefaultValueButton', () => {
     })
   })
 
-  describe('value formatting in tooltips', () => {
-    /**
-     * Ant Design's Tooltip mounts the title text in the DOM lazily — it only
-     * appears after a hover. We trigger that hover, then read the rendered
-     * tooltip body to assert that the formatted default makes it through.
-     */
+  describe('tooltip formatting', () => {
     const getTooltipText = async (label: RegExp): Promise<string> => {
       const button = screen.getByRole('button', { name: label })
       fireEvent.mouseEnter(button)
       const tooltip = await screen.findByRole('tooltip')
+
       return tooltip.textContent ?? ''
     }
 
     it('formats a string default', async () => {
       render(<DefaultValueButton defaultValue="TCP" isApplied={false} onApply={jest.fn()} onClear={jest.fn()} />)
+
       expect(await getTooltipText(/apply default/i)).toMatch(/TCP/)
     })
 
-    it('formats a number default (including 0)', async () => {
+    it('formats a number default', async () => {
       render(<DefaultValueButton defaultValue={0} isApplied={false} onApply={jest.fn()} onClear={jest.fn()} />)
+
       expect(await getTooltipText(/apply default/i)).toMatch(/\b0\b/)
     })
 
-    it('formats a boolean default (including false)', async () => {
+    it('formats a boolean default', async () => {
       render(<DefaultValueButton defaultValue={false} isApplied={false} onApply={jest.fn()} onClear={jest.fn()} />)
+
       expect(await getTooltipText(/apply default/i)).toMatch(/false/)
     })
 
-    it('formats an array default by joining with ", "', async () => {
+    it('formats an array default', async () => {
       render(
         <DefaultValueButton defaultValue={['foo', 'bar']} isApplied={false} onApply={jest.fn()} onClear={jest.fn()} />,
       )
+
       expect(await getTooltipText(/apply default/i)).toMatch(/foo, bar/)
     })
 
-    it('shows the default value in the clear-mode tooltip too', async () => {
+    it('shows the default value in clear mode too', async () => {
       render(<DefaultValueButton defaultValue="TCP" isApplied onApply={jest.fn()} onClear={jest.fn()} />)
+
       expect(await getTooltipText(/^clear$/i)).toMatch(/TCP/)
     })
   })

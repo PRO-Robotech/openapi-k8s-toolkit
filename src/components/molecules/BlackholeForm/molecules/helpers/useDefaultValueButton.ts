@@ -6,29 +6,17 @@ type TDefaultValueButtonState =
   | { visible: false }
   | { visible: true; isApplied: boolean; handleApply: () => void; handleClear: () => void }
 
-/**
- * Encapsulates the show/hide logic and apply/clear actions for the
- * DefaultValueButton atom. Must be called inside a Form context.
- *
- * Rules:
- * - If `defaultValue` is undefined → button hidden (no default in schema)
- * - If the field is empty (undefined, null, '') → show "Apply default"
- * - If the field's current value === defaultValue → show "Clear"
- * - Otherwise (user typed something else, or prefill set a different value) → hidden
- *
- * This automatically respects the Prefill > Default > Empty priority:
- * if a prefill filled the field with a non-default value, the button stays hidden.
- */
 export const useDefaultValueButton = (
   formFieldName: TFormName,
   defaultValue: string | number | boolean | string[] | undefined,
+  nullable?: boolean,
 ): TDefaultValueButtonState => {
   const form = Form.useFormInstance()
   const currentValue = Form.useWatch(formFieldName, form)
 
   const handleApply = useCallback(() => {
     form.setFieldValue(formFieldName, defaultValue)
-  }, [form, formFieldName, defaultValue])
+  }, [defaultValue, form, formFieldName])
 
   const handleClear = useCallback(() => {
     form.setFieldValue(formFieldName, undefined)
@@ -36,6 +24,12 @@ export const useDefaultValueButton = (
 
   return useMemo(() => {
     if (defaultValue === undefined) {
+      return { visible: false }
+    }
+
+    // When the field is nullable and the user has explicitly set null, yield to NullToggleButton —
+    // "Apply default" would silently overwrite that deliberate null.
+    if (nullable && currentValue === null) {
       return { visible: false }
     }
 
@@ -59,5 +53,5 @@ export const useDefaultValueButton = (
     }
 
     return { visible: false }
-  }, [defaultValue, currentValue, handleApply, handleClear])
+  }, [nullable, currentValue, defaultValue, handleApply, handleClear])
 }

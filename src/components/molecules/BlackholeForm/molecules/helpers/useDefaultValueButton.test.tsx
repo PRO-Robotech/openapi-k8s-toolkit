@@ -1,28 +1,17 @@
 import React, { FC, PropsWithChildren } from 'react'
-import { renderHook, act, waitFor } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { Form } from 'antd'
 import { TFormName } from 'localTypes/form'
 import { useDefaultValueButton } from './useDefaultValueButton'
 
-/**
- * Silent value holder — accepts value/onChange from Form.Item without
- * rendering a real DOM input, so React never fires controlled/uncontrolled
- * warnings when setFieldValue toggles between undefined and a value.
- */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ValueHolder: FC<Record<string, unknown>> = _props => null
 
-/**
- * Wrapper that provides Ant Design Form context required by useDefaultValueButton.
- *
- * IMPORTANT: Form.useWatch only sees values for fields that have a matching
- * Form.Item rendered in the DOM. We render a Form.Item with a ValueHolder
- * so useWatch can pick up initialValues.
- */
 // eslint-disable-next-line react/prop-types
 const makeWrapper = (fieldName: TFormName, initialValues?: Record<string, unknown>): FC<PropsWithChildren> => {
   const Wrapper: FC<PropsWithChildren> = ({ children }) => {
     const [form] = Form.useForm()
+
     return (
       <Form form={form} initialValues={initialValues}>
         <Form.Item name={fieldName} noStyle>
@@ -32,6 +21,7 @@ const makeWrapper = (fieldName: TFormName, initialValues?: Record<string, unknow
       </Form>
     )
   }
+
   return Wrapper
 }
 
@@ -64,12 +54,13 @@ describe('useDefaultValueButton', () => {
       await waitFor(() => {
         expect(result.current.visible).toBe(true)
       })
+
       if (result.current.visible) {
         expect(result.current.isApplied).toBe(true)
       }
     })
 
-    it('returns visible: false when field has a different value (user input or prefill)', async () => {
+    it('returns visible: false when field has a different value', async () => {
       const { result } = renderHook(() => useDefaultValueButton('protocol', 'TCP'), {
         wrapper: makeWrapper('protocol', { protocol: 'UDP' }),
       })
@@ -81,7 +72,7 @@ describe('useDefaultValueButton', () => {
   })
 
   describe('falsy defaults', () => {
-    it('handles default 0 correctly (field empty → show apply)', () => {
+    it('handles default 0 correctly', () => {
       const { result } = renderHook(() => useDefaultValueButton('minReady', 0), {
         wrapper: makeWrapper('minReady'),
       })
@@ -92,7 +83,7 @@ describe('useDefaultValueButton', () => {
       }
     })
 
-    it('handles default false correctly (field empty → show apply)', () => {
+    it('handles default false correctly', () => {
       const { result } = renderHook(() => useDefaultValueButton('debug', false), {
         wrapper: makeWrapper('debug'),
       })
@@ -103,7 +94,7 @@ describe('useDefaultValueButton', () => {
       }
     })
 
-    it('handles default 0 when field value is 0 (isApplied: true)', async () => {
+    it('handles default 0 when field value is 0', async () => {
       const { result } = renderHook(() => useDefaultValueButton('minReady', 0), {
         wrapper: makeWrapper('minReady', { minReady: 0 }),
       })
@@ -111,6 +102,7 @@ describe('useDefaultValueButton', () => {
       await waitFor(() => {
         expect(result.current.visible).toBe(true)
       })
+
       if (result.current.visible) {
         expect(result.current.isApplied).toBe(true)
       }
@@ -184,6 +176,7 @@ describe('useDefaultValueButton', () => {
       await waitFor(() => {
         expect(result.current.visible).toBe(true)
       })
+
       if (result.current.visible) {
         expect(result.current.isApplied).toBe(true)
       }
@@ -200,13 +193,14 @@ describe('useDefaultValueButton', () => {
       await waitFor(() => {
         expect(result.current.visible).toBe(true)
       })
+
       if (result.current.visible) {
         expect(result.current.isApplied).toBe(true)
       }
     })
   })
 
-  describe('string array defaults (listInput fields)', () => {
+  describe('string array defaults', () => {
     it('shows apply when field is empty and default is string[]', () => {
       const { result } = renderHook(() => useDefaultValueButton('protocols', ['TCP', 'UDP']), {
         wrapper: makeWrapper('protocols'),
@@ -226,6 +220,7 @@ describe('useDefaultValueButton', () => {
       await waitFor(() => {
         expect(result.current.visible).toBe(true)
       })
+
       if (result.current.visible) {
         expect(result.current.isApplied).toBe(false)
       }
@@ -239,6 +234,7 @@ describe('useDefaultValueButton', () => {
       await waitFor(() => {
         expect(result.current.visible).toBe(true)
       })
+
       if (result.current.visible) {
         expect(result.current.isApplied).toBe(true)
       }
@@ -254,19 +250,19 @@ describe('useDefaultValueButton', () => {
       })
     })
 
-    it('apply → clear round-trip works for array defaults', async () => {
+    it('apply -> clear round-trip works for array defaults', async () => {
       const { result } = renderHook(() => useDefaultValueButton('protocols', ['TCP', 'UDP']), {
         wrapper: makeWrapper('protocols'),
       })
 
-      // initially: empty → show apply
       expect(result.current.visible).toBe(true)
       if (!result.current.visible) return
       expect(result.current.isApplied).toBe(false)
 
-      // apply
       act(() => {
-        if (result.current.visible) result.current.handleApply()
+        if (result.current.visible) {
+          result.current.handleApply()
+        }
       })
 
       await waitFor(() => {
@@ -276,9 +272,10 @@ describe('useDefaultValueButton', () => {
         }
       })
 
-      // clear
       act(() => {
-        if (result.current.visible) result.current.handleClear()
+        if (result.current.visible) {
+          result.current.handleClear()
+        }
       })
 
       await waitFor(() => {
