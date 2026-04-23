@@ -115,6 +115,7 @@ export const getEnumStringFormItemFromSwagger = ({
   persistedControls,
   onRemoveByMinus,
   defaultValue,
+  example,
   nullable,
 }: {
   name: TFormName
@@ -130,6 +131,7 @@ export const getEnumStringFormItemFromSwagger = ({
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
   defaultValue?: string
+  example?: string
   nullable?: boolean
 }) => {
   return (
@@ -148,6 +150,7 @@ export const getEnumStringFormItemFromSwagger = ({
       persistedControls={persistedControls}
       onRemoveByMinus={onRemoveByMinus}
       defaultValue={defaultValue}
+      example={example}
       nullable={nullable}
     />
   )
@@ -806,6 +809,7 @@ export const getObjectFormItemsDraft = ({
             persistedControls,
             options: properties[el].enum || [],
             defaultValue: extractStringDefault(properties[el].default),
+            example: extractStringDefault(properties[el].example),
             nullable: properties[el].nullable,
           })
         }

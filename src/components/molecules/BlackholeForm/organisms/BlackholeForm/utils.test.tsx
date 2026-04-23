@@ -795,6 +795,25 @@ describe('getObjectFormItemsDraft', () => {
     expect(FormEnumStringInputMock).toHaveBeenCalledWith(expect.objectContaining({ defaultValue: 'info' }))
   })
 
+  test('passes string example to FormEnumStringInput', () => {
+    const properties = { logLevel: { type: 'string', enum: ['info', 'warn'], example: 'warn' } } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormEnumStringInputMock).toHaveBeenCalledWith(expect.objectContaining({ example: 'warn' }))
+  })
+
   test('ignores invalid default shapes instead of passing them to inputs', () => {
     const properties = {
       replicas: { type: 'integer', default: '3' },

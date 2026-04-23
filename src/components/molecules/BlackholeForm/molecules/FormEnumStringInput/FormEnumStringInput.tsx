@@ -11,10 +11,11 @@ import {
   ResetedFormItem,
   CustomSizeTitle,
   DefaultValueButton,
+  ExampleTooltipIcon,
   NullToggleButton,
 } from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
-import { buildPlaceholder } from '../helpers/buildPlaceholder'
+import { buildPlaceholder, getExampleTooltip } from '../helpers/buildPlaceholder'
 import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 import { useNullToggleButton } from '../helpers/useNullToggleButton'
 import { getRequiredRule } from '../helpers/validation'
@@ -33,6 +34,7 @@ type TFormEnumStringInputProps = {
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
   defaultValue?: string
+  example?: string
   nullable?: boolean
 }
 
@@ -50,6 +52,7 @@ export const FormEnumStringInput: FC<TFormEnumStringInputProps> = ({
   persistedControls,
   onRemoveByMinus,
   defaultValue,
+  example,
   nullable,
 }) => {
   const designNewLayout = useDesignNewLayout()
@@ -58,11 +61,13 @@ export const FormEnumStringInput: FC<TFormEnumStringInputProps> = ({
   const formFieldName = arrName || fixedName
   const defaultBtn = useDefaultValueButton(formFieldName, defaultValue, nullable)
   const nullBtn = useNullToggleButton(formFieldName, nullable)
+  const exampleTooltip = getExampleTooltip(defaultValue, example)
 
   const title = (
     <>
       {getStringByName(name)}
       {required?.includes(getStringByName(name)) && <Typography.Text type="danger">*</Typography.Text>}
+      {exampleTooltip && <ExampleTooltipIcon tooltip={exampleTooltip} />}
     </>
   )
 
@@ -108,7 +113,7 @@ export const FormEnumStringInput: FC<TFormEnumStringInputProps> = ({
       >
         <Select
           options={options.map(el => ({ value: el, label: el }))}
-          placeholder={buildPlaceholder(name, defaultValue)}
+          placeholder={buildPlaceholder(name, defaultValue, example)}
           disabled={nullBtn.visible && nullBtn.isNull}
         />
       </ResetedFormItem>
