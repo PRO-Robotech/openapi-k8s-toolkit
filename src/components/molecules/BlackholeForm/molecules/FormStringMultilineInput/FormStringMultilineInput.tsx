@@ -13,12 +13,14 @@ import {
   CustomSizeTitle,
   DefaultValueButton,
   ExampleTooltipIcon,
+  NullToggleButton,
 } from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
 import { toBase64, fromBase64 } from './helpers'
 import { Styled } from './styled'
 import { buildPlaceholder, getExampleTooltip } from '../helpers/buildPlaceholder'
 import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
+import { useNullToggleButton } from '../helpers/useNullToggleButton'
 import { getRequiredRule } from '../helpers/validation'
 
 type TFormStringMultilineInputProps = {
@@ -36,6 +38,7 @@ type TFormStringMultilineInputProps = {
   isBase64?: boolean
   defaultValue?: string
   example?: string
+  nullable?: boolean
 }
 
 export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
@@ -53,6 +56,7 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
   isBase64,
   defaultValue,
   example,
+  nullable,
 }) => {
   const designNewLayout = useDesignNewLayout()
   const placeholder = buildPlaceholder(name, defaultValue, example)
@@ -62,7 +66,8 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
   const formFieldName = arrName || fixedName
   const formValue = Form.useWatch(formFieldName)
   const form = Form.useFormInstance()
-  const defaultBtn = useDefaultValueButton(formFieldName, defaultValue)
+  const defaultBtn = useDefaultValueButton(formFieldName, defaultValue, nullable)
+  const nullBtn = useNullToggleButton(formFieldName, nullable)
 
   // Derive multiline based on current local value
   // const isMultiline = useMemo(() => isMultilineString(formValue), [formValue])
@@ -112,12 +117,17 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
               onClear={defaultBtn.handleClear}
             />
           )}
+          {nullBtn.visible && (
+            <NullToggleButton isNull={nullBtn.isNull} onSetNull={nullBtn.handleSetNull} onClear={nullBtn.handleClear} />
+          )}
         </Flex>
       </Flex>
       <ResetedFormItem
         key={arrKey !== undefined ? arrKey : Array.isArray(name) ? name.slice(-1)[0] : name}
         name={arrName || fixedName}
-        rules={[getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name)]}
+        rules={[
+          getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name, nullable),
+        ]}
         validateTrigger="onBlur"
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
         style={{
@@ -130,6 +140,7 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
           rows={4}
           // autoSize={!isMultiline ? { minRows: 1, maxRows: 1 } : { minRows: 2, maxRows: 10 }}
           autoSize={{ minRows: 2, maxRows: 10 }}
+          disabled={nullBtn.visible && nullBtn.isNull}
         />
       </ResetedFormItem>
       {isBase64 && (

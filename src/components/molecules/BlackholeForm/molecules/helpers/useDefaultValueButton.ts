@@ -9,6 +9,7 @@ type TDefaultValueButtonState =
 export const useDefaultValueButton = (
   formFieldName: TFormName,
   defaultValue: string | number | boolean | string[] | undefined,
+  nullable?: boolean,
 ): TDefaultValueButtonState => {
   const form = Form.useFormInstance()
   const currentValue = Form.useWatch(formFieldName, form)
@@ -23,6 +24,12 @@ export const useDefaultValueButton = (
 
   return useMemo(() => {
     if (defaultValue === undefined) {
+      return { visible: false }
+    }
+
+    // When the field is nullable and the user has explicitly set null, yield to NullToggleButton —
+    // "Apply default" would silently overwrite that deliberate null.
+    if (nullable && currentValue === null) {
       return { visible: false }
     }
 
@@ -46,5 +53,5 @@ export const useDefaultValueButton = (
     }
 
     return { visible: false }
-  }, [currentValue, defaultValue, handleApply, handleClear])
+  }, [nullable, currentValue, defaultValue, handleApply, handleClear])
 }

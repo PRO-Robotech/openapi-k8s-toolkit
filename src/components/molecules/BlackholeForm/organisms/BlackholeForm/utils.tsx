@@ -50,6 +50,7 @@ export const getStringFormItemFromSwagger = ({
   onRemoveByMinus,
   defaultValue,
   example,
+  nullable,
 }: {
   name: TFormName
   arrKey?: number
@@ -65,6 +66,7 @@ export const getStringFormItemFromSwagger = ({
   onRemoveByMinus?: () => void
   defaultValue?: string
   example?: string
+  nullable?: boolean
 }) => {
   if (Array.isArray(name) && name.length === 2 && name[0] === 'metadata' && name[1] === 'namespace' && namespaceData) {
     return (
@@ -94,6 +96,7 @@ export const getStringFormItemFromSwagger = ({
       onRemoveByMinus={onRemoveByMinus}
       defaultValue={defaultValue}
       example={example}
+      nullable={nullable}
     />
   )
 }
@@ -112,6 +115,7 @@ export const getEnumStringFormItemFromSwagger = ({
   persistedControls,
   onRemoveByMinus,
   defaultValue,
+  nullable,
 }: {
   name: TFormName
   arrKey?: number
@@ -126,6 +130,7 @@ export const getEnumStringFormItemFromSwagger = ({
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
   defaultValue?: string
+  nullable?: boolean
 }) => {
   return (
     <FormEnumStringInput
@@ -143,6 +148,7 @@ export const getEnumStringFormItemFromSwagger = ({
       persistedControls={persistedControls}
       onRemoveByMinus={onRemoveByMinus}
       defaultValue={defaultValue}
+      nullable={nullable}
     />
   )
 }
@@ -162,6 +168,7 @@ export const getNumberFormItemFromSwagger = ({
   onRemoveByMinus,
   defaultValue,
   example,
+  nullable,
 }: {
   isNumber?: boolean
   name: TFormName
@@ -177,6 +184,7 @@ export const getNumberFormItemFromSwagger = ({
   onRemoveByMinus?: () => void
   defaultValue?: number
   example?: number
+  nullable?: boolean
 }) => {
   return (
     <FormNumberInput
@@ -195,6 +203,7 @@ export const getNumberFormItemFromSwagger = ({
       onRemoveByMinus={onRemoveByMinus}
       defaultValue={defaultValue}
       example={example}
+      nullable={nullable}
     />
   )
 }
@@ -260,6 +269,7 @@ export const getStringMultilineFormItemFromSwagger = ({
   isBase64,
   defaultValue,
   example,
+  nullable,
 }: {
   name: TFormName
   arrKey?: number
@@ -275,6 +285,7 @@ export const getStringMultilineFormItemFromSwagger = ({
   isBase64?: boolean
   defaultValue?: string
   example?: string
+  nullable?: boolean
 }) => {
   return (
     <FormStringMultilineInput
@@ -293,6 +304,7 @@ export const getStringMultilineFormItemFromSwagger = ({
       isBase64={isBase64}
       defaultValue={defaultValue}
       example={example}
+      nullable={nullable}
     />
   )
 }
@@ -794,6 +806,7 @@ export const getObjectFormItemsDraft = ({
             persistedControls,
             options: properties[el].enum || [],
             defaultValue: extractStringDefault(properties[el].default),
+            nullable: properties[el].nullable,
           })
         }
         if (
@@ -819,6 +832,7 @@ export const getObjectFormItemsDraft = ({
             persistedControls,
             defaultValue: extractStringDefault(properties[el].default),
             example: extractStringDefault(properties[el].example),
+            nullable: properties[el].nullable,
           })
         }
         if (properties[el].type === 'number' || properties[el].type === 'integer') {
@@ -841,6 +855,7 @@ export const getObjectFormItemsDraft = ({
             persistedControls,
             defaultValue: extractNumberDefault(properties[el].default),
             example: extractNumberDefault(properties[el].example),
+            nullable: properties[el].nullable,
           })
         }
         if (properties[el].type === 'rangeInputCpu' || properties[el].type === 'rangeInputMemory') {
@@ -904,6 +919,7 @@ export const getObjectFormItemsDraft = ({
             isBase64: properties[el].type === 'multilineStringBase64',
             defaultValue: extractStringDefault(properties[el].default),
             example: extractStringDefault(properties[el].example),
+            nullable: properties[el].nullable,
           })
         }
         if (properties[el].type === 'boolean') {
