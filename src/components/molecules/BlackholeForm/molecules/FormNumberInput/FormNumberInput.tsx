@@ -5,9 +5,11 @@ import { Flex, InputNumber, Typography, Tooltip, Button } from 'antd'
 import { getStringByName } from 'utils/getStringByName'
 import { TFormName, TPersistedControls } from 'localTypes/form'
 import { MinusIcon, feedbackIcons } from 'components/atoms'
-import { PersistedCheckbox, HiddenContainer, ResetedFormItem, CustomSizeTitle } from '../../atoms'
+import { PersistedCheckbox, HiddenContainer, ResetedFormItem, CustomSizeTitle, DefaultValueButton } from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
 import { getRequiredRule } from '../helpers/validation'
+import { buildPlaceholder } from '../helpers/buildPlaceholder'
+import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 
 type TFormNumberItemProps = {
   isNumber?: boolean
@@ -22,6 +24,11 @@ type TFormNumberItemProps = {
   removeField: ({ path }: { path: TFormName }) => void
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
+  /**
+   * OpenAPI schema `default` value for this field.
+   * Drives placeholder hint and Apply Default / Clear button.
+   */
+  defaultValue?: number
 }
 
 export const FormNumberInput: FC<TFormNumberItemProps> = ({
@@ -37,8 +44,11 @@ export const FormNumberInput: FC<TFormNumberItemProps> = ({
   removeField,
   persistedControls,
   onRemoveByMinus,
+  defaultValue,
 }) => {
   const designNewLayout = useDesignNewLayout()
+  const formFieldName = arrName || name
+  const defaultBtn = useDefaultValueButton(formFieldName, defaultValue)
 
   const title = (
     <>
@@ -65,16 +75,24 @@ export const FormNumberInput: FC<TFormNumberItemProps> = ({
             </Button>
           )}
           <PersistedCheckbox formName={persistName || name} persistedControls={persistedControls} type="number" />
+          {defaultBtn.visible && (
+            <DefaultValueButton
+              defaultValue={defaultValue!}
+              isApplied={defaultBtn.isApplied}
+              onApply={defaultBtn.handleApply}
+              onClear={defaultBtn.handleClear}
+            />
+          )}
         </Flex>
       </Flex>
       <ResetedFormItem
         key={arrKey !== undefined ? arrKey : Array.isArray(name) ? name.slice(-1)[0] : name}
-        name={arrName || name}
+        name={formFieldName}
         rules={[getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name)]}
         validateTrigger="onBlur"
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
       >
-        <InputNumber placeholder={getStringByName(name)} step={isNumber ? 0.1 : 1} />
+        <InputNumber placeholder={buildPlaceholder(name, defaultValue)} step={isNumber ? 0.1 : 1} />
       </ResetedFormItem>
     </HiddenContainer>
   )

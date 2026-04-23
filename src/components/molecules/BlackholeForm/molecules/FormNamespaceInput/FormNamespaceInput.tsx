@@ -2,15 +2,21 @@ import React, { FC } from 'react'
 import { Flex, Typography, Select, Button } from 'antd'
 import { TFormName, TNamespaceData } from 'localTypes/form'
 import { MinusIcon, feedbackIcons } from 'components/atoms'
-import { CustomSizeTitle, HiddenContainer, ResetedFormItem } from '../../atoms'
+import { CustomSizeTitle, HiddenContainer, ResetedFormItem, DefaultValueButton } from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
 import { getRequiredRule } from '../helpers/validation'
+import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 
 type TFormNamespaceInputProps = {
   name: TFormName
   namespaceData: TNamespaceData
   isAdditionalProperties?: boolean
   removeField: ({ path }: { path: TFormName }) => void
+  /**
+   * OpenAPI schema `default` value for this field.
+   * Drives placeholder hint and Apply Default / Clear button.
+   */
+  defaultValue?: string
 }
 
 export const FormNamespaceInput: FC<TFormNamespaceInputProps> = ({
@@ -18,12 +24,16 @@ export const FormNamespaceInput: FC<TFormNamespaceInputProps> = ({
   namespaceData,
   isAdditionalProperties,
   removeField,
+  defaultValue,
 }) => {
   const designNewLayout = useDesignNewLayout()
+  const defaultBtn = useDefaultValueButton(name, defaultValue)
 
   if (!namespaceData) {
     return null
   }
+
+  const placeholder = defaultValue !== undefined ? `Default: ${defaultValue}` : 'Select namespace'
 
   return (
     <HiddenContainer name={name}>
@@ -37,6 +47,14 @@ export const FormNamespaceInput: FC<TFormNamespaceInputProps> = ({
               <MinusIcon />
             </Button>
           )}
+          {defaultBtn.visible && (
+            <DefaultValueButton
+              defaultValue={defaultValue!}
+              isApplied={defaultBtn.isApplied}
+              onApply={defaultBtn.handleApply}
+              onClear={defaultBtn.handleClear}
+            />
+          )}
         </Flex>
       </Flex>
       <ResetedFormItem
@@ -46,7 +64,7 @@ export const FormNamespaceInput: FC<TFormNamespaceInputProps> = ({
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
       >
         <Select
-          placeholder="Select namespace"
+          placeholder={placeholder}
           options={namespaceData.selectValues}
           filterOption={namespaceData.filterSelectOptions}
           allowClear
