@@ -5,11 +5,20 @@ import { Flex, Typography, Tooltip, Select, Button } from 'antd'
 import { getStringByName } from 'utils/getStringByName'
 import { TFormName, TPersistedControls } from 'localTypes/form'
 import { MinusIcon, feedbackIcons } from 'components/atoms'
-import { PersistedCheckbox, HiddenContainer, ResetedFormItem, CustomSizeTitle, DefaultValueButton } from '../../atoms'
+import {
+  PersistedCheckbox,
+  HiddenContainer,
+  ResetedFormItem,
+  CustomSizeTitle,
+  DefaultValueButton,
+  ExampleTooltipIcon,
+  NullToggleButton,
+} from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
-import { getRequiredRule } from '../helpers/validation'
-import { buildPlaceholder } from '../helpers/buildPlaceholder'
+import { buildPlaceholder, getExampleTooltip } from '../helpers/buildPlaceholder'
 import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
+import { useNullToggleButton } from '../helpers/useNullToggleButton'
+import { getRequiredRule } from '../helpers/validation'
 
 type TFormEnumStringInputProps = {
   name: TFormName
@@ -24,11 +33,9 @@ type TFormEnumStringInputProps = {
   options: string[]
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
-  /**
-   * OpenAPI schema `default` value for this field.
-   * Drives placeholder hint and Apply Default / Clear button.
-   */
   defaultValue?: string
+  example?: string
+  nullable?: boolean
 }
 
 export const FormEnumStringInput: FC<TFormEnumStringInputProps> = ({
@@ -45,17 +52,22 @@ export const FormEnumStringInput: FC<TFormEnumStringInputProps> = ({
   persistedControls,
   onRemoveByMinus,
   defaultValue,
+  example,
+  nullable,
 }) => {
   const designNewLayout = useDesignNewLayout()
 
   const fixedName = name === 'nodeName' ? 'nodeNameBecauseOfSuddenBug' : name
   const formFieldName = arrName || fixedName
-  const defaultBtn = useDefaultValueButton(formFieldName, defaultValue)
+  const defaultBtn = useDefaultValueButton(formFieldName, defaultValue, nullable)
+  const nullBtn = useNullToggleButton(formFieldName, nullable)
+  const exampleTooltip = getExampleTooltip(defaultValue, example)
 
   const title = (
     <>
       {getStringByName(name)}
       {required?.includes(getStringByName(name)) && <Typography.Text type="danger">*</Typography.Text>}
+      {exampleTooltip && <ExampleTooltipIcon tooltip={exampleTooltip} />}
     </>
   )
 
@@ -85,18 +97,24 @@ export const FormEnumStringInput: FC<TFormEnumStringInputProps> = ({
               onClear={defaultBtn.handleClear}
             />
           )}
+          {nullBtn.visible && (
+            <NullToggleButton isNull={nullBtn.isNull} onSetNull={nullBtn.handleSetNull} onClear={nullBtn.handleClear} />
+          )}
         </Flex>
       </Flex>
       <ResetedFormItem
         key={arrKey !== undefined ? arrKey : Array.isArray(name) ? name.slice(-1)[0] : name}
         name={formFieldName}
-        rules={[getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name)]}
+        rules={[
+          getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name, nullable),
+        ]}
         validateTrigger="onBlur"
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
       >
         <Select
           options={options.map(el => ({ value: el, label: el }))}
-          placeholder={buildPlaceholder(name, defaultValue)}
+          placeholder={buildPlaceholder(name, defaultValue, example)}
+          disabled={nullBtn.visible && nullBtn.isNull}
         />
       </ResetedFormItem>
     </HiddenContainer>

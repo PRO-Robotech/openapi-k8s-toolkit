@@ -1,5 +1,5 @@
-import { OpenAPIV2 } from 'openapi-types'
 import { TFormName } from 'localTypes/form'
+import { TFormSchemaProperties } from 'localTypes/formSchema'
 
 // Function to sort properties based on sortPaths
 export const getSortedPropertyKeys = ({
@@ -9,9 +9,7 @@ export const getSortedPropertyKeys = ({
 }: {
   name: TFormName
   sortPaths?: string[][]
-  properties: {
-    [name: string]: OpenAPIV2.SchemaObject
-  }
+  properties: TFormSchemaProperties
 }): (keyof typeof properties)[] => {
   if (!sortPaths || sortPaths.length === 0) {
     return Object.keys(properties) as (keyof typeof properties)[]

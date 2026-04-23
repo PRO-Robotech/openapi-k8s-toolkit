@@ -19,10 +19,6 @@ type TFormBooleanInputProps = {
   isAdditionalProperties?: boolean
   removeField: ({ path }: { path: TFormName }) => void
   onRemoveByMinus?: () => void
-  /**
-   * OpenAPI schema `default` value for this field.
-   * Drives placeholder hint and Apply Default / Clear button.
-   */
   defaultValue?: boolean
 }
 
@@ -65,7 +61,7 @@ export const FormBooleanInput: FC<TFormBooleanInputProps> = ({
       <Styled.SwitchAndCrossContainer>
         <ResetedFormItem
           key={arrKey !== undefined ? arrKey : Array.isArray(name) ? name.slice(-1)[0] : name}
-          name={arrName || name}
+          name={formFieldName}
         >
           <Switch size="small" />
         </ResetedFormItem>
@@ -77,15 +73,17 @@ export const FormBooleanInput: FC<TFormBooleanInputProps> = ({
             onClear={defaultBtn.handleClear}
           />
         )}
-        <Styled.CrossContainer
-          onClick={() => {
-            if (makeValueUndefined) {
-              makeValueUndefined(name)
-            }
-          }}
-        >
-          <BackToDefaultIcon />
-        </Styled.CrossContainer>
+        {!defaultBtn.visible && (
+          <Styled.CrossContainer
+            onClick={() => {
+              if (makeValueUndefined) {
+                makeValueUndefined(name)
+              }
+            }}
+          >
+            <BackToDefaultIcon />
+          </Styled.CrossContainer>
+        )}
       </Styled.SwitchAndCrossContainer>
     </HiddenContainer>
   )

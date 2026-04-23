@@ -562,6 +562,25 @@ describe('getObjectFormItemsDraft', () => {
     expect(screen.getByTestId('string-input')).toBeInTheDocument()
   })
 
+  test('passes string default to FormStringInput', () => {
+    const properties = { image: { type: 'string', default: 'nginx:latest' } } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormStringInputMock).toHaveBeenCalledWith(expect.objectContaining({ defaultValue: 'nginx:latest' }))
+  })
+
   test('routes x-kubernetes-int-or-string branch', () => {
     const properties = { size: { type: 'string', 'x-kubernetes-int-or-string': true } } as any
 
@@ -598,6 +617,25 @@ describe('getObjectFormItemsDraft', () => {
 
     render(<div>{el}</div>)
     expect(screen.getByTestId('number-input')).toBeInTheDocument()
+  })
+
+  test('passes numeric default to FormNumberInput', () => {
+    const properties = { replicas: { type: 'integer', default: 3 } } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: ['replicas'],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormNumberInputMock).toHaveBeenCalledWith(expect.objectContaining({ defaultValue: 3 }))
   })
 
   test('routes range input', () => {
@@ -638,6 +676,25 @@ describe('getObjectFormItemsDraft', () => {
     expect(screen.getByTestId('list-input')).toBeInTheDocument()
   })
 
+  test('passes string[] default to FormListInput', () => {
+    const properties = { tags: { type: 'listInput', customProps: {}, default: ['a', 'b'] } } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormListInputMock).toHaveBeenCalledWith(expect.objectContaining({ defaultValue: ['a', 'b'] }))
+  })
+
   test('routes multilineString + multilineStringBase64', () => {
     const properties = {
       a: { type: 'multilineString' },
@@ -660,6 +717,27 @@ describe('getObjectFormItemsDraft', () => {
     expect(FormStringMultilineInputMock).toHaveBeenCalled()
   })
 
+  test('passes string default to FormStringMultilineInput', () => {
+    const properties = {
+      script: { type: 'multilineString', default: 'echo hello' },
+    } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormStringMultilineInputMock).toHaveBeenCalledWith(expect.objectContaining({ defaultValue: 'echo hello' }))
+  })
+
   test('routes boolean', () => {
     const properties = { enabled: { type: 'boolean' } } as any
 
@@ -677,6 +755,89 @@ describe('getObjectFormItemsDraft', () => {
 
     render(<div>{el}</div>)
     expect(screen.getByTestId('boolean-input')).toBeInTheDocument()
+  })
+
+  test('passes boolean default to FormBooleanInput', () => {
+    const properties = { enabled: { type: 'boolean', default: true } } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormBooleanInputMock).toHaveBeenCalledWith(expect.objectContaining({ defaultValue: true }))
+  })
+
+  test('passes string default to FormEnumStringInput', () => {
+    const properties = { logLevel: { type: 'string', enum: ['info', 'warn'], default: 'info' } } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormEnumStringInputMock).toHaveBeenCalledWith(expect.objectContaining({ defaultValue: 'info' }))
+  })
+
+  test('passes string example to FormEnumStringInput', () => {
+    const properties = { logLevel: { type: 'string', enum: ['info', 'warn'], example: 'warn' } } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormEnumStringInputMock).toHaveBeenCalledWith(expect.objectContaining({ example: 'warn' }))
+  })
+
+  test('ignores invalid default shapes instead of passing them to inputs', () => {
+    const properties = {
+      replicas: { type: 'integer', default: '3' },
+      enabled: { type: 'boolean', default: 'true' },
+      tags: { type: 'listInput', customProps: {}, default: [1, 2] },
+    } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+
+    expect(FormNumberInputMock).toHaveBeenCalledWith(expect.objectContaining({ defaultValue: undefined }))
+    expect(FormBooleanInputMock).toHaveBeenCalledWith(expect.objectContaining({ defaultValue: undefined }))
+    expect(FormListInputMock).toHaveBeenCalledWith(expect.objectContaining({ defaultValue: undefined }))
   })
 
   test('routes array property', () => {
@@ -827,5 +988,29 @@ describe('getObjectFormItemFromSwagger', () => {
 
     expect(screen.getByTestId('object-from-swagger')).toBeInTheDocument()
     expect(screen.getByTestId('string-input')).toBeInTheDocument()
+  })
+
+  test('forwards oneOfRequiredGroups to FormObjectFromSwagger', () => {
+    const properties = { inner: { type: 'string' } } as any
+
+    const el = getObjectFormItemFromSwagger({
+      properties,
+      name: ['spec', 'obj'] as any,
+      oneOfRequiredGroups: [['command'], ['shell']],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+
+    expect(FormObjectFromSwaggerMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        oneOfRequiredGroups: [['command'], ['shell']],
+      }),
+    )
   })
 })

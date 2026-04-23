@@ -2,7 +2,7 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import _ from 'lodash'
-import { OpenAPIV2 } from 'openapi-types'
+import { TFormSchemaProperties } from 'localTypes/formSchema'
 import { parseQuotaValueCpu, parseQuotaValueMemoryAndStorage } from 'utils/parseForQuotaValues'
 
 type Path = (string | number)[]
@@ -36,7 +36,7 @@ const findAllPathsForObject = (obj: any, targetKey: string, targetValue: any, cu
   return paths
 }
 
-export const normalizeValuesForQuotasToNumber = (object: any, properties: OpenAPIV2.SchemaObject['properties']) => {
+export const normalizeValuesForQuotasToNumber = (object: any, properties: TFormSchemaProperties) => {
   const newObject = _.cloneDeep(object)
   const cpuPaths = findAllPathsForObject(properties, 'type', 'rangeInputCpu')
   const memoryPaths = findAllPathsForObject(properties, 'type', 'rangeInputMemory')

@@ -1,20 +1,42 @@
 import { TFormName } from 'localTypes/form'
 import { getStringByName } from 'utils/getStringByName'
 
-/**
- * Builds the placeholder string for form field inputs.
- *
- * If an OpenAPI schema `default` is provided, the placeholder surfaces it as
- * a hint (e.g. `Default: TCP`) so the user knows what the API server will
- * substitute if they leave the field empty. Otherwise the placeholder falls
- * back to the field name, matching the pre-existing behavior.
- *
- * The field stays technically empty — this is a visual hint only. Applying
- * the default as a real value is handled by the DefaultValueButton.
- */
-export const buildPlaceholder = (name: TFormName, defaultValue?: string | number | boolean): string => {
-  if (defaultValue !== undefined) {
-    return `Default: ${String(defaultValue)}`
+export const formatDefaultValue = (defaultValue: string | number | boolean | string[]): string => {
+  if (Array.isArray(defaultValue)) {
+    return defaultValue.join(', ')
   }
+
+  return String(defaultValue)
+}
+
+export const buildPlaceholder = (
+  name: TFormName,
+  defaultValue?: string | number | boolean | string[],
+  example?: string | number | boolean | string[],
+): string => {
+  if (defaultValue !== undefined) {
+    return `Default: ${formatDefaultValue(defaultValue)}`
+  }
+
+  if (example !== undefined) {
+    return `Example: ${formatDefaultValue(example)}`
+  }
+
   return getStringByName(name)
+}
+
+/**
+ * Returns a tooltip body with the example when both `default` and `example` are set —
+ * `default` occupies the placeholder, so `example` would otherwise be lost. Returns
+ * `undefined` when no dedicated tooltip is needed (example is either absent or already
+ * surfaced as the placeholder).
+ */
+export const getExampleTooltip = (
+  defaultValue?: string | number | boolean | string[],
+  example?: string | number | boolean | string[],
+): string | undefined => {
+  if (example === undefined) return undefined
+  if (defaultValue === undefined) return undefined
+
+  return `Example: ${formatDefaultValue(example)}`
 }

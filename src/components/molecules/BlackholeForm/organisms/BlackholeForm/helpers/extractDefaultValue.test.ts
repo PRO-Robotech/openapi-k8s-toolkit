@@ -1,8 +1,8 @@
 import {
-  extractStringDefault,
-  extractNumberDefault,
   extractBooleanDefault,
   extractListInputDefault,
+  extractNumberDefault,
+  extractStringDefault,
 } from './extractDefaultValue'
 
 describe('extractStringDefault', () => {

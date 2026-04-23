@@ -6,13 +6,22 @@ import { getStringByName } from 'utils/getStringByName'
 // import { isMultilineString } from 'utils/isMultilineString'
 import { TFormName, TPersistedControls } from 'localTypes/form'
 import { MinusIcon, feedbackIcons } from 'components/atoms'
-import { PersistedCheckbox, HiddenContainer, ResetedFormItem, CustomSizeTitle, DefaultValueButton } from '../../atoms'
+import {
+  PersistedCheckbox,
+  HiddenContainer,
+  ResetedFormItem,
+  CustomSizeTitle,
+  DefaultValueButton,
+  ExampleTooltipIcon,
+  NullToggleButton,
+} from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
 import { toBase64, fromBase64 } from './helpers'
 import { Styled } from './styled'
-import { getRequiredRule } from '../helpers/validation'
-import { buildPlaceholder } from '../helpers/buildPlaceholder'
+import { buildPlaceholder, getExampleTooltip } from '../helpers/buildPlaceholder'
 import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
+import { useNullToggleButton } from '../helpers/useNullToggleButton'
+import { getRequiredRule } from '../helpers/validation'
 
 type TFormStringMultilineInputProps = {
   name: TFormName
@@ -27,11 +36,9 @@ type TFormStringMultilineInputProps = {
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
   isBase64?: boolean
-  /**
-   * OpenAPI schema `default` value for this field.
-   * Drives placeholder hint and Apply Default / Clear button.
-   */
   defaultValue?: string
+  example?: string
+  nullable?: boolean
 }
 
 export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
@@ -48,15 +55,19 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
   onRemoveByMinus,
   isBase64,
   defaultValue,
+  example,
+  nullable,
 }) => {
   const designNewLayout = useDesignNewLayout()
-  const placeholder = buildPlaceholder(name, defaultValue)
+  const placeholder = buildPlaceholder(name, defaultValue, example)
+  const exampleTooltip = getExampleTooltip(defaultValue, example)
 
   const fixedName = name === 'nodeName' ? 'nodeNameBecauseOfSuddenBug' : name
   const formFieldName = arrName || fixedName
   const formValue = Form.useWatch(formFieldName)
   const form = Form.useFormInstance()
-  const defaultBtn = useDefaultValueButton(formFieldName, defaultValue)
+  const defaultBtn = useDefaultValueButton(formFieldName, defaultValue, nullable)
+  const nullBtn = useNullToggleButton(formFieldName, nullable)
 
   // Derive multiline based on current local value
   // const isMultiline = useMemo(() => isMultilineString(formValue), [formValue])
@@ -65,6 +76,7 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
     <>
       {getStringByName(name)}
       {required?.includes(getStringByName(name)) && <Typography.Text type="danger">*</Typography.Text>}
+      {exampleTooltip && <ExampleTooltipIcon tooltip={exampleTooltip} />}
     </>
   )
 
@@ -105,12 +117,17 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
               onClear={defaultBtn.handleClear}
             />
           )}
+          {nullBtn.visible && (
+            <NullToggleButton isNull={nullBtn.isNull} onSetNull={nullBtn.handleSetNull} onClear={nullBtn.handleClear} />
+          )}
         </Flex>
       </Flex>
       <ResetedFormItem
         key={arrKey !== undefined ? arrKey : Array.isArray(name) ? name.slice(-1)[0] : name}
         name={arrName || fixedName}
-        rules={[getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name)]}
+        rules={[
+          getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name, nullable),
+        ]}
         validateTrigger="onBlur"
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
         style={{
@@ -123,6 +140,7 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
           rows={4}
           // autoSize={!isMultiline ? { minRows: 1, maxRows: 1 } : { minRows: 2, maxRows: 10 }}
           autoSize={{ minRows: 2, maxRows: 10 }}
+          disabled={nullBtn.visible && nullBtn.isNull}
         />
       </ResetedFormItem>
       {isBase64 && (
