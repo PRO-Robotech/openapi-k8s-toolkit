@@ -424,6 +424,28 @@ describe('BlackholeForm', () => {
     expect(callArg.body).toBe('YAML_BODY_CREATE')
   })
 
+  test('submit (create mode) clears loading state after success without backlink', async () => {
+    axiosPostMock.mockImplementation(async (url: string) => {
+      if (String(url).includes('getYamlValuesByFromValues')) {
+        return { data: 'YAML_BODY_CREATE' }
+      }
+      return { data: {} }
+    })
+
+    const user = userEvent.setup()
+    renderWithApp(<BlackholeForm {...baseProps} isCreate />)
+
+    const submitButton = screen.getByRole('button', { name: /submit/i })
+    await user.click(submitButton)
+
+    await waitFor(() => {
+      expect(createNewEntryMock).toHaveBeenCalled()
+      expect(screen.getByText(/Deployment "test-resource" created successfully/)).toBeInTheDocument()
+      expect(submitButton).not.toHaveClass('ant-btn-loading')
+    })
+    expect(navigateMock).not.toHaveBeenCalled()
+  })
+
   test('submit (create mode) with backlink navigates after success', async () => {
     axiosPostMock.mockImplementation(async (url: string) => {
       if (String(url).includes('getYamlValuesByFromValues')) {
@@ -441,6 +463,52 @@ describe('BlackholeForm', () => {
       expect(createNewEntryMock).toHaveBeenCalled()
       expect(navigateMock).toHaveBeenCalledWith('/list')
       expect(screen.getByText(/Deployment "test-resource" created successfully/)).toBeInTheDocument()
+    })
+  })
+
+  test('submit is blocked when oneOf required-groups are violated', async () => {
+    const { Form: AntForm } = require('antd')
+    const user = userEvent.setup()
+
+    getObjectFormItemsDraftMock.mockImplementation(() =>
+      React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(AntForm.Item, { name: ['spec', 'command'], noStyle: true }),
+        React.createElement(AntForm.Item, { name: ['spec', 'shell'], noStyle: true }),
+        React.createElement('div', { 'data-testid': 'draft-items' }),
+      ),
+    )
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        staticProperties={
+          {
+            spec: {
+              type: 'object',
+              properties: {
+                command: { type: 'string' },
+                shell: { type: 'string' },
+              },
+              oneOfRequiredGroups: [['command'], ['shell']],
+            },
+          } as any
+        }
+        prefillValuesSchema={{
+          spec: {
+            command: 'echo ok',
+            shell: '/bin/sh',
+          },
+        }}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /submit/i }))
+
+    await waitFor(() => {
+      expect(createNewEntryMock).not.toHaveBeenCalled()
+      expect(updateEntryMock).not.toHaveBeenCalled()
     })
   })
 

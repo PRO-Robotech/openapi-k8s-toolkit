@@ -13,7 +13,14 @@ import { getStringByName } from 'utils/getStringByName'
 import { filterSelectOptions } from 'utils/filterSelectOptions'
 import { prepareTemplate } from 'utils/prepareTemplate'
 import { MinusIcon, feedbackIcons } from 'components/atoms'
-import { PersistedCheckbox, HiddenContainer, ResetedFormItem, CustomSizeTitle, HeightContainer } from '../../atoms'
+import {
+  PersistedCheckbox,
+  HiddenContainer,
+  ResetedFormItem,
+  CustomSizeTitle,
+  HeightContainer,
+  DefaultValueButton,
+} from '../../atoms'
 import {
   useDesignNewLayout,
   useOnValuesChangeCallback,
@@ -21,6 +28,8 @@ import {
   useUpdateIsTouchedPersisted,
 } from '../../organisms/BlackholeForm/context'
 import { resolveFormPath, normalizeNameToPath, listItemBasePath } from './utils'
+import { formatDefaultValue } from '../helpers/buildPlaceholder'
+import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 import { getRequiredRule } from '../helpers/validation'
 
 type TFormListInputProps = {
@@ -37,6 +46,7 @@ type TFormListInputProps = {
   customProps: TListInputCustomProps
   urlParams: TUrlParams
   onRemoveByMinus?: () => void
+  defaultValue?: string | string[]
 }
 
 export const FormListInput: FC<TFormListInputProps> = ({
@@ -53,6 +63,7 @@ export const FormListInput: FC<TFormListInputProps> = ({
   customProps,
   urlParams,
   onRemoveByMinus,
+  defaultValue,
 }) => {
   const designNewLayout = useDesignNewLayout()
   const onValuesChangeCallBack = useOnValuesChangeCallback()
@@ -64,6 +75,8 @@ export const FormListInput: FC<TFormListInputProps> = ({
   const fieldValue = Form.useWatch(name === 'nodeName' ? 'nodeNameBecauseOfSuddenBug' : name, form)
 
   const fixedName = name === 'nodeName' ? 'nodeNameBecauseOfSuddenBug' : name
+  const formFieldName = arrName || fixedName
+  const defaultBtn = useDefaultValueButton(formFieldName, defaultValue)
 
   // Build absolute path of this field from the full 'fixedName'
   const fullFieldPath = normalizeNameToPath(fixedName)
@@ -257,12 +270,20 @@ export const FormListInput: FC<TFormListInputProps> = ({
             </Button>
           )}
           <PersistedCheckbox formName={persistName || name} persistedControls={persistedControls} type="arr" />
+          {defaultBtn.visible && (
+            <DefaultValueButton
+              defaultValue={defaultValue!}
+              isApplied={defaultBtn.isApplied}
+              onApply={defaultBtn.handleApply}
+              onClear={defaultBtn.handleClear}
+            />
+          )}
         </Flex>
       </Flex>
       <Flex gap={8} align="center">
         <ResetedFormItem
           key={arrKey !== undefined ? arrKey : Array.isArray(name) ? name.slice(-1)[0] : name}
-          name={arrName || fixedName}
+          name={formFieldName}
           rules={[getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name)]}
           validateTrigger="onBlur"
           hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
@@ -270,7 +291,7 @@ export const FormListInput: FC<TFormListInputProps> = ({
         >
           <Select
             mode={customProps.mode}
-            placeholder="Select"
+            placeholder={defaultValue !== undefined ? `Default: ${formatDefaultValue(defaultValue)}` : 'Select'}
             options={uniqueOptions}
             filterOption={filterSelectOptions}
             disabled={isWaitingForRelatedValue}

@@ -11,12 +11,12 @@ import { BugOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import axios, { isAxiosError } from 'axios'
 import _ from 'lodash'
-import { OpenAPIV2 } from 'openapi-types'
 import { TJSON } from 'localTypes/JSON'
 import { TFormName, TUrlParams } from 'localTypes/form'
 import { TFormPrefill } from 'localTypes/formExtensions'
 import { TRequestError } from 'localTypes/api'
 import { TYamlByValuesReq, TYamlByValuesRes, TValuesByYamlReq, TValuesByYamlRes } from 'localTypes/bff/form'
+import { TFormSchemaNode, TFormSchemaProperties } from 'localTypes/formSchema'
 import { usePermissions } from 'hooks/usePermissions'
 import { createNewEntry, updateEntry } from 'api/forms'
 import { filterSelectOptions } from 'utils/filterSelectOptions'
@@ -26,6 +26,7 @@ import { getPrefixSubarrays } from 'utils/getPrefixSubArrays'
 import { deepMerge } from 'utils/deepMerge'
 import { FlexGrow, Spacer } from 'components/atoms'
 import { YamlEditor } from '../../molecules'
+import { collectOneOfRequiredGroupStates } from '../../molecules/helpers/validation'
 import { getObjectFormItemsDraft } from './utils'
 import { pathKey, pruneAdditionalForValues, materializeAdditionalFromValues } from './helpers/casts'
 import {
@@ -58,7 +59,7 @@ export type TBlackholeFormProps = {
     plural?: string
   }
   formsPrefills?: TFormPrefill
-  staticProperties: OpenAPIV2.SchemaObject['properties']
+  staticProperties: TFormSchemaProperties
   required: string[]
   hiddenPaths?: string[][]
   expandedPaths: string[][]
@@ -129,9 +130,10 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
     return backlink
   }, [backlink, namespaceFromFormData])
 
-  const [properties, setProperties] = useState<OpenAPIV2.SchemaObject['properties']>(staticProperties)
+  const [properties, setProperties] = useState<TFormSchemaProperties>(staticProperties)
   const [yamlValues, setYamlValues] = useState<Record<string, unknown>>()
   const debouncedSetYamlValues = useDebounceCallback(setYamlValues, 500)
+  const [oneOfValidationErrors, setOneOfValidationErrors] = useState<Record<string, string[]>>({})
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<TRequestError>()
@@ -246,6 +248,22 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
   })
 
   // --- Feature: submit handler ---
+  const computeOneOfValidationStates = useCallback(
+    (values: Record<string, unknown>) => {
+      return collectOneOfRequiredGroupStates({
+        properties,
+        values,
+      })
+    },
+    [properties],
+  )
+
+  const applyOneOfValidationErrors = useCallback((states: { name: TFormName; errors: string[] }[]) => {
+    setOneOfValidationErrors(
+      Object.fromEntries(states.map(({ name, errors }) => [pathKey(Array.isArray(name) ? name : [name]), errors])),
+    )
+  }, [])
+
   const onSubmit = () => {
     if (overflowRef.current) {
       const { scrollHeight, clientHeight } = overflowRef.current
@@ -257,13 +275,31 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
     form
       .validateFields()
       .then(() => {
+        const valuesRaw = form.getFieldsValue()
+        const values = scrubLiteralWildcardKeys(valuesRaw)
+        const oneOfStates = computeOneOfValidationStates(values)
+        applyOneOfValidationErrors(oneOfStates)
+        const oneOfErrors = oneOfStates.filter(state => state.errors.length > 0)
+
+        if (oneOfErrors.length > 0) {
+          const keys = handleValidationError({
+            error: {
+              errorFields: oneOfErrors.map(({ name, errors }) => ({
+                name,
+                errors,
+                warnings: [],
+              })),
+            },
+            expandedKeys,
+          })
+          setExpandedKeys([...keys])
+          return
+        }
+
         setIsLoading(true)
         setError(undefined)
         const name = form.getFieldValue(['metadata', 'name'])
         const namespace = form.getFieldValue(['metadata', 'namespace'])
-
-        const valuesRaw = form.getFieldsValue()
-        const values = scrubLiteralWildcardKeys(valuesRaw)
         const payload: TYamlByValuesReq = {
           values,
           persistedKeys,
@@ -289,6 +325,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
                     message: `${kind} "${resName}" created successfully`,
                     placement: 'bottomRight',
                   })
+                  setIsLoading(false)
                   if (resolvedBacklink) {
                     navigate(resolvedBacklink)
                   }
@@ -310,6 +347,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
                     message: `${kind} "${resName}" updated successfully`,
                     placement: 'bottomRight',
                   })
+                  setIsLoading(false)
                   if (resolvedBacklink) {
                     navigate(resolvedBacklink)
                   }
@@ -617,6 +655,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
       // Get the most recent form values (or use the provided ones)
       const vRaw = values ?? form.getFieldsValue(true)
       const v = scrubLiteralWildcardKeys(vRaw)
+      applyOneOfValidationErrors(computeOneOfValidationStates(v))
 
       // resolve wildcard templates for hidden & expanded against current values ---
       wgroup('values→resolve wildcards')
@@ -769,7 +808,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
         }
       }
 
-      const getArrayItemType = (schemaProps: OpenAPIV2.SchemaObject['properties'], path: (string | number)[]) => {
+      const getArrayItemType = (schemaProps: TFormSchemaProperties, path: (string | number)[]) => {
         // Walk the schema roughly along the data path:
         // - string key → go into `.properties[key]`
         // - number index → for arrays, go into `.items`
@@ -862,6 +901,8 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
       properties,
       persistedKeys,
       debouncedPostValuesToYaml,
+      computeOneOfValidationStates,
+      applyOneOfValidationErrors,
       applyPrefillForNewArrayItem,
       applyPersistedForNewArrayItem,
       hiddenWildcardTemplates,
@@ -1192,8 +1233,8 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
     path: TFormName
     name: string
     type: string
-    items?: { type: string }
-    nestedProperties?: OpenAPIV2.SchemaObject['properties']
+    items?: TFormSchemaNode
+    nestedProperties?: TFormSchemaProperties
     required?: string
   }) => {
     const arrPath = Array.isArray(path) ? path : [path]
@@ -1332,6 +1373,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
                       isEdit: !isCreate,
                       expandedControls: { onExpandOpen, onExpandClose, expandedKeys },
                       persistedControls: { onPersistMark, onPersistUnmark, persistedKeys },
+                      objectValidationErrors: oneOfValidationErrors,
                       sortPaths,
                       urlParams,
                     })}

@@ -5,13 +5,20 @@
 /* eslint-disable consistent-return */
 // import { Form, Button, Alert } from 'antd'
 import { Form, Button } from 'antd'
-import { OpenAPIV2 } from 'openapi-types'
 import { getStringByName } from 'utils/getStringByName'
 import { TListInputCustomProps, TRangeInputCustomProps } from 'localTypes/formExtensions'
 import { TFormName, TExpandedControls, TNamespaceData, TPersistedControls, TUrlParams } from 'localTypes/form'
+import { TFormSchemaNode, TFormSchemaProperties } from 'localTypes/formSchema'
 import { PlusIcon } from 'components/atoms'
 import { deepMerge } from 'utils/deepMerge'
 import { getSortedPropertyKeys } from './helpers/getSortedPropertyKeys'
+import { pathKey } from './helpers/casts'
+import {
+  extractStringDefault,
+  extractNumberDefault,
+  extractBooleanDefault,
+  extractListInputDefault,
+} from './helpers/extractDefaultValue'
 import { ResetedFormItem, ArrayInsideContainer, HiddenContainer } from '../../atoms'
 import { prettyFieldPath } from '../../molecules/helpers/validation'
 import {
@@ -42,6 +49,9 @@ export const getStringFormItemFromSwagger = ({
   removeField,
   persistedControls,
   onRemoveByMinus,
+  defaultValue,
+  example,
+  nullable,
 }: {
   name: TFormName
   arrKey?: number
@@ -55,6 +65,9 @@ export const getStringFormItemFromSwagger = ({
   removeField: ({ path }: { path: TFormName }) => void
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
+  defaultValue?: string
+  example?: string
+  nullable?: boolean
 }) => {
   if (Array.isArray(name) && name.length === 2 && name[0] === 'metadata' && name[1] === 'namespace' && namespaceData) {
     return (
@@ -82,6 +95,9 @@ export const getStringFormItemFromSwagger = ({
       removeField={removeField}
       persistedControls={persistedControls}
       onRemoveByMinus={onRemoveByMinus}
+      defaultValue={defaultValue}
+      example={example}
+      nullable={nullable}
     />
   )
 }
@@ -99,6 +115,9 @@ export const getEnumStringFormItemFromSwagger = ({
   options,
   persistedControls,
   onRemoveByMinus,
+  defaultValue,
+  example,
+  nullable,
 }: {
   name: TFormName
   arrKey?: number
@@ -112,6 +131,9 @@ export const getEnumStringFormItemFromSwagger = ({
   options: string[]
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
+  defaultValue?: string
+  example?: string
+  nullable?: boolean
 }) => {
   return (
     <FormEnumStringInput
@@ -128,6 +150,9 @@ export const getEnumStringFormItemFromSwagger = ({
       options={options}
       persistedControls={persistedControls}
       onRemoveByMinus={onRemoveByMinus}
+      defaultValue={defaultValue}
+      example={example}
+      nullable={nullable}
     />
   )
 }
@@ -145,6 +170,9 @@ export const getNumberFormItemFromSwagger = ({
   removeField,
   persistedControls,
   onRemoveByMinus,
+  defaultValue,
+  example,
+  nullable,
 }: {
   isNumber?: boolean
   name: TFormName
@@ -158,6 +186,9 @@ export const getNumberFormItemFromSwagger = ({
   removeField: ({ path }: { path: TFormName }) => void
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
+  defaultValue?: number
+  example?: number
+  nullable?: boolean
 }) => {
   return (
     <FormNumberInput
@@ -174,6 +205,9 @@ export const getNumberFormItemFromSwagger = ({
       removeField={removeField}
       persistedControls={persistedControls}
       onRemoveByMinus={onRemoveByMinus}
+      defaultValue={defaultValue}
+      example={example}
+      nullable={nullable}
     />
   )
 }
@@ -237,6 +271,9 @@ export const getStringMultilineFormItemFromSwagger = ({
   persistedControls,
   onRemoveByMinus,
   isBase64,
+  defaultValue,
+  example,
+  nullable,
 }: {
   name: TFormName
   arrKey?: number
@@ -250,6 +287,9 @@ export const getStringMultilineFormItemFromSwagger = ({
   persistedControls: TPersistedControls
   onRemoveByMinus?: () => void
   isBase64?: boolean
+  defaultValue?: string
+  example?: string
+  nullable?: boolean
 }) => {
   return (
     <FormStringMultilineInput
@@ -266,6 +306,9 @@ export const getStringMultilineFormItemFromSwagger = ({
       persistedControls={persistedControls}
       onRemoveByMinus={onRemoveByMinus}
       isBase64={isBase64}
+      defaultValue={defaultValue}
+      example={example}
+      nullable={nullable}
     />
   )
 }
@@ -284,6 +327,7 @@ export const getListInputFormItemFromSwagger = ({
   customProps,
   urlParams,
   onRemoveByMinus,
+  defaultValue,
 }: {
   name: TFormName
   arrKey?: number
@@ -298,6 +342,7 @@ export const getListInputFormItemFromSwagger = ({
   customProps: TListInputCustomProps
   urlParams: TUrlParams
   onRemoveByMinus?: () => void
+  defaultValue?: string | string[]
 }) => {
   return (
     <FormListInput
@@ -315,6 +360,7 @@ export const getListInputFormItemFromSwagger = ({
       customProps={customProps}
       urlParams={urlParams}
       onRemoveByMinus={onRemoveByMinus}
+      defaultValue={defaultValue}
     />
   )
 }
@@ -328,6 +374,7 @@ export const getBooleanFormItemFromSwagger = ({
   isAdditionalProperties,
   removeField,
   onRemoveByMinus,
+  defaultValue,
 }: {
   name: TFormName
   arrKey?: number
@@ -337,6 +384,7 @@ export const getBooleanFormItemFromSwagger = ({
   isAdditionalProperties?: boolean
   removeField: ({ path }: { path: TFormName }) => void
   onRemoveByMinus?: () => void
+  defaultValue?: boolean
 }) => {
   return (
     <FormBooleanInput
@@ -349,6 +397,7 @@ export const getBooleanFormItemFromSwagger = ({
       isAdditionalProperties={isAdditionalProperties}
       removeField={removeField}
       onRemoveByMinus={onRemoveByMinus}
+      defaultValue={defaultValue}
     />
   )
 }
@@ -370,11 +419,12 @@ export const getArrayFormItemFromSwagger = ({
   isEdit,
   expandedControls,
   persistedControls,
+  objectValidationErrors,
   sortPaths,
   urlParams,
   onRemoveByMinus,
 }: {
-  schema: OpenAPIV2.SchemaObject
+  schema: TFormSchemaNode
   name: TFormName
   arrKey?: number
   arrName?: TFormName
@@ -395,8 +445,8 @@ export const getArrayFormItemFromSwagger = ({
     path: TFormName
     name: string
     type: string
-    items?: { type: string }
-    nestedProperties?: OpenAPIV2.SchemaObject['properties']
+    items?: TFormSchemaNode
+    nestedProperties?: TFormSchemaProperties
     required?: string
   }) => void
   isAdditionalProperties?: boolean
@@ -404,6 +454,7 @@ export const getArrayFormItemFromSwagger = ({
   isEdit: boolean
   expandedControls: TExpandedControls
   persistedControls: TPersistedControls
+  objectValidationErrors?: Record<string, string[]>
   sortPaths?: string[][]
   urlParams: TUrlParams
   onRemoveByMinus?: () => void
@@ -442,17 +493,13 @@ export const getArrayFormItemFromSwagger = ({
           {(fields, { add, remove }, { errors }) => (
             <>
               {fields.map(field => {
-                const fieldType = (
-                  schema.items as (OpenAPIV2.ItemsObject & { properties?: OpenAPIV2.SchemaObject }) | undefined
-                )?.type
-                const description = (schema.items as (OpenAPIV2.ItemsObject & { description?: string }) | undefined)
-                  ?.description
-                const entry = schema.items as
-                  | (OpenAPIV2.ItemsObject & { properties?: OpenAPIV2.SchemaObject; required?: string[] })
-                  | undefined
+                const itemSchema = schema.items
+                const fieldType = itemSchema?.type
+                const description = itemSchema?.description
+                const entry = itemSchema
                 // additional properties are place near items
                 const additionalProperties = schema.properties as
-                  | Record<number, { properties?: OpenAPIV2.SchemaObject }>
+                  | Record<number, { properties?: TFormSchemaProperties }>
                   | undefined
                 return (
                   <ArrayInsideContainer key={field.key}>
@@ -569,7 +616,7 @@ export const getArrayFormItemFromSwagger = ({
                           })}
                         {fieldType === 'array' &&
                           getArrayFormItemFromSwagger({
-                            schema: schema.items as OpenAPIV2.SchemaObject,
+                            schema: schema.items as TFormSchemaNode,
                             name: Array.isArray(name) ? [...name, field.name] : [name, field.name],
                             arrKey: field.key,
                             arrName: [field.name],
@@ -605,6 +652,7 @@ export const getArrayFormItemFromSwagger = ({
                       getObjectFormItemFromSwagger({
                         // merging properties near items by this
                         properties: deepMerge(entry.properties, additionalProperties?.[field.key]?.properties || {}),
+                        oneOfRequiredGroups: entry.oneOfRequiredGroups,
                         name: Array.isArray(name) ? [...name, field.name] : [name, field.name],
                         arrKey: field.key,
                         arrName: [field.name],
@@ -632,6 +680,7 @@ export const getArrayFormItemFromSwagger = ({
                         isEdit,
                         expandedControls,
                         persistedControls,
+                        objectValidationErrors,
                         sortPaths,
                         urlParams,
                         onRemoveByMinus: () => remove(field.name),
@@ -677,12 +726,11 @@ export const getObjectFormItemsDraft = ({
   isEdit,
   expandedControls,
   persistedControls,
+  objectValidationErrors,
   sortPaths,
   urlParams,
 }: {
-  properties: {
-    [name: string]: OpenAPIV2.SchemaObject
-  }
+  properties: TFormSchemaProperties
   name: TFormName
   arrKey?: number
   arrName?: TFormName
@@ -704,14 +752,15 @@ export const getObjectFormItemsDraft = ({
     path: TFormName
     name: string
     type: string
-    items?: { type: string }
-    nestedProperties?: OpenAPIV2.SchemaObject['properties']
+    items?: TFormSchemaNode
+    nestedProperties?: TFormSchemaProperties
     required?: string
   }) => void
   removeField: ({ path }: { path: TFormName }) => void
   isEdit: boolean
   expandedControls: TExpandedControls
   persistedControls: TPersistedControls
+  objectValidationErrors?: Record<string, string[]>
   sortPaths?: string[][]
   urlParams: TUrlParams
 }) => {
@@ -766,6 +815,9 @@ export const getObjectFormItemsDraft = ({
             removeField,
             persistedControls,
             options: properties[el].enum || [],
+            defaultValue: extractStringDefault(properties[el].default),
+            example: extractStringDefault(properties[el].example),
+            nullable: properties[el].nullable,
           })
         }
         if (
@@ -789,6 +841,9 @@ export const getObjectFormItemsDraft = ({
             isAdditionalProperties: properties[el].isAdditionalProperties,
             removeField,
             persistedControls,
+            defaultValue: extractStringDefault(properties[el].default),
+            example: extractStringDefault(properties[el].example),
+            nullable: properties[el].nullable,
           })
         }
         if (properties[el].type === 'number' || properties[el].type === 'integer') {
@@ -809,6 +864,9 @@ export const getObjectFormItemsDraft = ({
             isAdditionalProperties: properties[el].isAdditionalProperties,
             removeField,
             persistedControls,
+            defaultValue: extractNumberDefault(properties[el].default),
+            example: extractNumberDefault(properties[el].example),
+            nullable: properties[el].nullable,
           })
         }
         if (properties[el].type === 'rangeInputCpu' || properties[el].type === 'rangeInputMemory') {
@@ -826,7 +884,7 @@ export const getObjectFormItemsDraft = ({
             forceNonRequired,
             description: properties[el].description,
             isEdit,
-            customProps: properties[el].customProps,
+            customProps: properties[el].customProps as TRangeInputCustomProps,
             persistedControls,
             urlParams,
           })
@@ -845,10 +903,11 @@ export const getObjectFormItemsDraft = ({
             required: required?.includes(el) ? [String(el)] : undefined,
             forceNonRequired,
             description: properties[el].description,
-            customProps: properties[el].customProps,
+            customProps: properties[el].customProps as TListInputCustomProps,
             removeField,
             persistedControls,
             urlParams,
+            defaultValue: extractListInputDefault(properties[el].default),
           })
         }
         if (properties[el].type === 'multilineString' || properties[el].type === 'multilineStringBase64') {
@@ -869,6 +928,9 @@ export const getObjectFormItemsDraft = ({
             removeField,
             persistedControls,
             isBase64: properties[el].type === 'multilineStringBase64',
+            defaultValue: extractStringDefault(properties[el].default),
+            example: extractStringDefault(properties[el].example),
+            nullable: properties[el].nullable,
           })
         }
         if (properties[el].type === 'boolean') {
@@ -880,6 +942,7 @@ export const getObjectFormItemsDraft = ({
             makeValueUndefined,
             isAdditionalProperties: properties[el].isAdditionalProperties,
             removeField,
+            defaultValue: extractBooleanDefault(properties[el].default),
           })
         }
         if (properties[el].type === 'array') {
@@ -916,9 +979,7 @@ export const getObjectFormItemsDraft = ({
         if (properties[el].additionalProperties) {
           const data = properties[el].properties
             ? getObjectFormItemsDraft({
-                properties: properties[el].properties as {
-                  [name: string]: OpenAPIV2.SchemaObject
-                },
+                properties: properties[el].properties as TFormSchemaProperties,
                 name: Array.isArray(name) ? [...name, String(el)] : [name, String(el)],
                 arrKey,
                 arrName: Array.isArray(arrName) ? [...arrName, String(el)] : undefined,
@@ -942,6 +1003,7 @@ export const getObjectFormItemsDraft = ({
                 isEdit,
                 expandedControls,
                 persistedControls,
+                objectValidationErrors,
                 sortPaths,
                 urlParams,
               })
@@ -968,9 +1030,8 @@ export const getObjectFormItemsDraft = ({
         }
         if (properties[el].type === 'object' && properties[el].properties) {
           return getObjectFormItemFromSwagger({
-            properties: properties[el].properties as {
-              [name: string]: OpenAPIV2.SchemaObject
-            },
+            properties: properties[el].properties as TFormSchemaProperties,
+            oneOfRequiredGroups: properties[el].oneOfRequiredGroups,
             name: Array.isArray(name) ? [...name, String(el)] : [name, String(el)],
             arrKey,
             arrName: Array.isArray(arrName) ? [...arrName, String(el)] : undefined,
@@ -996,6 +1057,7 @@ export const getObjectFormItemsDraft = ({
             isEdit,
             expandedControls,
             persistedControls,
+            objectValidationErrors,
             sortPaths,
             urlParams,
           })
@@ -1008,6 +1070,8 @@ export const getObjectFormItemsDraft = ({
 
 export const getObjectFormItemFromSwagger = ({
   properties,
+  oneOfRequiredGroups,
+  objectValidationErrors,
   name,
   arrKey,
   arrName,
@@ -1029,9 +1093,9 @@ export const getObjectFormItemFromSwagger = ({
   urlParams,
   onRemoveByMinus,
 }: {
-  properties: {
-    [name: string]: OpenAPIV2.SchemaObject
-  }
+  properties: TFormSchemaProperties
+  oneOfRequiredGroups?: string[][]
+  objectValidationErrors?: Record<string, string[]>
   name: TFormName
   arrKey?: number
   arrName?: TFormName
@@ -1054,8 +1118,8 @@ export const getObjectFormItemFromSwagger = ({
     path: TFormName
     name: string
     type: string
-    items?: { type: string }
-    nestedProperties?: OpenAPIV2.SchemaObject['properties']
+    items?: TFormSchemaNode
+    nestedProperties?: TFormSchemaProperties
     required?: string
   }) => void
   isAdditionalProperties?: boolean
@@ -1084,6 +1148,7 @@ export const getObjectFormItemFromSwagger = ({
     isEdit,
     expandedControls,
     persistedControls,
+    objectValidationErrors,
     sortPaths,
     urlParams,
   })
@@ -1094,6 +1159,8 @@ export const getObjectFormItemFromSwagger = ({
       persistName={persistName}
       selfRequired={selfRequired}
       description={description}
+      oneOfRequiredGroups={oneOfRequiredGroups}
+      validationErrors={objectValidationErrors?.[pathKey(Array.isArray(name) ? name : [name])]}
       isAdditionalProperties={isAdditionalProperties}
       removeField={removeField}
       expandedControls={expandedControls}

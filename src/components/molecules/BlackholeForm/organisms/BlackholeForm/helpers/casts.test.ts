@@ -1,6 +1,6 @@
 /* eslint-disable max-lines-per-function */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { OpenAPIV2 } from 'openapi-types'
+import { TFormSchemaProperties } from 'localTypes/formSchema'
 import { pathKey, pruneAdditionalForValues, materializeAdditionalFromValues } from './casts'
 
 const makeBlocked = (paths: (string | number)[][] = []) =>
@@ -17,7 +17,7 @@ describe('casts helpers', () => {
 
   describe('pruneAdditionalForValues', () => {
     it('removes isAdditionalProperties fields missing from values (nested object)', () => {
-      const props: OpenAPIV2.SchemaObject['properties'] = {
+      const props: TFormSchemaProperties = {
         spec: {
           type: 'object',
           properties: {
@@ -61,7 +61,7 @@ describe('casts helpers', () => {
     })
 
     it('keeps isAdditionalProperties fields when present in values', () => {
-      const props: OpenAPIV2.SchemaObject['properties'] = {
+      const props: TFormSchemaProperties = {
         spec: {
           type: 'object',
           properties: {
@@ -79,7 +79,7 @@ describe('casts helpers', () => {
     })
 
     it('removes isAdditionalProperties fields when path is blocked even if value exists', () => {
-      const props: OpenAPIV2.SchemaObject['properties'] = {
+      const props: TFormSchemaProperties = {
         spec: {
           type: 'object',
           properties: {
@@ -104,7 +104,7 @@ describe('casts helpers', () => {
        * for arrays it only recurses into items if schemaNode.properties?.[idx] exists.
        * We provide that shape to exercise this branch.
        */
-      const props: OpenAPIV2.SchemaObject['properties'] = {
+      const props: TFormSchemaProperties = {
         spec: {
           type: 'array',
           items: {
@@ -136,7 +136,7 @@ describe('casts helpers', () => {
     })
 
     it('does not crash when array value exists but indexed schema properties are missing', () => {
-      const props: OpenAPIV2.SchemaObject['properties'] = {
+      const props: TFormSchemaProperties = {
         spec: {
           type: 'array',
           items: {
@@ -162,7 +162,7 @@ describe('casts helpers', () => {
 
   describe('materializeAdditionalFromValues', () => {
     it('materializes new properties from additionalProperties and tracks toExpand', () => {
-      const props: OpenAPIV2.SchemaObject['properties'] = {
+      const props: TFormSchemaProperties = {
         spec: {
           type: 'object',
           additionalProperties: {
@@ -203,7 +203,7 @@ describe('casts helpers', () => {
     })
 
     it('skips materialization for blocked paths', () => {
-      const props: OpenAPIV2.SchemaObject['properties'] = {
+      const props: TFormSchemaProperties = {
         spec: {
           type: 'object',
           additionalProperties: {
@@ -223,7 +223,7 @@ describe('casts helpers', () => {
     })
 
     it('merges nested additionalProperties.properties into an existing additional child', () => {
-      const props: OpenAPIV2.SchemaObject['properties'] = {
+      const props: TFormSchemaProperties = {
         spec: {
           type: 'object',
           additionalProperties: {
@@ -253,7 +253,7 @@ describe('casts helpers', () => {
     })
 
     it('tracks toPersist for empty object, empty string, 0, and empty array', () => {
-      const props: OpenAPIV2.SchemaObject['properties'] = {
+      const props: TFormSchemaProperties = {
         spec: {
           type: 'object',
           additionalProperties: {
@@ -296,7 +296,7 @@ describe('casts helpers', () => {
     })
 
     it('recurses existing properties even when additionalProperties is absent', () => {
-      const props: OpenAPIV2.SchemaObject['properties'] = {
+      const props: TFormSchemaProperties = {
         spec: {
           type: 'object',
           properties: {
@@ -333,7 +333,7 @@ describe('casts helpers', () => {
        * - (schemaNode as any).properties exists so the initializer path runs
        * - items are walked
        */
-      const props: OpenAPIV2.SchemaObject['properties'] = {
+      const props: TFormSchemaProperties = {
         spec: {
           type: 'array',
           items: {
@@ -366,7 +366,7 @@ describe('casts helpers', () => {
     })
 
     it('does not crash when valueNode for object is not an object', () => {
-      const props: OpenAPIV2.SchemaObject['properties'] = {
+      const props: TFormSchemaProperties = {
         spec: {
           type: 'object',
           additionalProperties: { type: 'string' } as any,
