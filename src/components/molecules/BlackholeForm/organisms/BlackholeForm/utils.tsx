@@ -5,6 +5,7 @@
 /* eslint-disable consistent-return */
 // import { Form, Button, Alert } from 'antd'
 import { Form, Button } from 'antd'
+import type { ValidatorRule } from 'rc-field-form/lib/interface'
 import { getStringByName } from 'utils/getStringByName'
 import { TListInputCustomProps, TRangeInputCustomProps } from 'localTypes/formExtensions'
 import { TFormName, TExpandedControls, TNamespaceData, TPersistedControls, TUrlParams } from 'localTypes/form'
@@ -20,7 +21,7 @@ import {
   extractListInputDefault,
 } from './helpers/extractDefaultValue'
 import { ResetedFormItem, ArrayInsideContainer, HiddenContainer } from '../../atoms'
-import { prettyFieldPath } from '../../molecules/helpers/validation'
+import { getArrayItemsRule, prettyFieldPath } from '../../molecules/helpers/validation'
 import {
   FormNamespaceInput,
   FormStringInput,
@@ -352,6 +353,8 @@ export const getListInputFormItemFromSwagger = ({
   urlParams,
   onRemoveByMinus,
   defaultValue,
+  minItems,
+  maxItems,
 }: {
   name: TFormName
   arrKey?: number
@@ -367,6 +370,8 @@ export const getListInputFormItemFromSwagger = ({
   urlParams: TUrlParams
   onRemoveByMinus?: () => void
   defaultValue?: string | string[]
+  minItems?: number
+  maxItems?: number
 }) => {
   return (
     <FormListInput
@@ -385,6 +390,8 @@ export const getListInputFormItemFromSwagger = ({
       urlParams={urlParams}
       onRemoveByMinus={onRemoveByMinus}
       defaultValue={defaultValue}
+      minItems={minItems}
+      maxItems={maxItems}
     />
   )
 }
@@ -485,6 +492,26 @@ export const getArrayFormItemFromSwagger = ({
 }) => {
   // typescript as below are needed because of dereference procedure
   if (schema.type === 'array') {
+    const requiredArrayRule: ValidatorRule | undefined =
+      !forceNonRequired && required?.includes(getStringByName(name))
+        ? {
+            validator: async (_: unknown, value: unknown) => {
+              if (!Array.isArray(value) || value.length < 1) {
+                return Promise.reject(new Error(`Please enter ${prettyFieldPath(name)}`))
+              }
+            },
+          }
+        : undefined
+    const arrayItemsRule = getArrayItemsRule({
+      minItems: schema.minItems,
+      maxItems: schema.maxItems,
+      name,
+    }) as ValidatorRule | undefined
+    const arrayRules: ValidatorRule[] = []
+
+    if (requiredArrayRule) arrayRules.push(requiredArrayRule)
+    if (arrayItemsRule) arrayRules.push(arrayItemsRule)
+
     return (
       <HiddenContainer name={name} key={`${arrKey}-${JSON.stringify(name)}`}>
         <FormArrayHeader
@@ -500,19 +527,7 @@ export const getArrayFormItemFromSwagger = ({
         <Styled.ResetedFormList
           key={arrKey !== undefined ? arrKey : Array.isArray(name) ? name.slice(-1)[0] : name}
           name={arrName || name}
-          rules={
-            !forceNonRequired && required?.includes(getStringByName(name))
-              ? [
-                  {
-                    validator: async (_, value) => {
-                      if (!value || value.length < 1) {
-                        return Promise.reject(new Error(`Please enter ${prettyFieldPath(name)}`))
-                      }
-                    },
-                  },
-                ]
-              : undefined
-          }
+          rules={arrayRules.length > 0 ? arrayRules : undefined}
         >
           {(fields, { add, remove }, { errors }) => (
             <>
@@ -612,6 +627,8 @@ export const getArrayFormItemFromSwagger = ({
                               .customProps,
                             urlParams,
                             onRemoveByMinus: () => remove(field.name),
+                            minItems: itemSchema?.minItems,
+                            maxItems: itemSchema?.maxItems,
                           })}
                         {(fieldType === 'multilineString' || fieldType === 'multilineStringBase64') &&
                           getStringMultilineFormItemFromSwagger({
@@ -725,6 +742,7 @@ export const getArrayFormItemFromSwagger = ({
                 <Button
                   type="text"
                   size="small"
+                  disabled={schema.maxItems !== undefined && fields.length >= schema.maxItems}
                   onClick={() => {
                     add()
                   }}
@@ -946,6 +964,8 @@ export const getObjectFormItemsDraft = ({
             persistedControls,
             urlParams,
             defaultValue: extractListInputDefault(properties[el].default),
+            minItems: properties[el].minItems,
+            maxItems: properties[el].maxItems,
           })
         }
         if (properties[el].type === 'multilineString' || properties[el].type === 'multilineStringBase64') {

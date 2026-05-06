@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   collectOneOfRequiredGroupStates,
+  getArrayItemsRule,
   getNumberRangeRule,
   getPatternRule,
   getRequiredRule,
@@ -102,6 +103,27 @@ describe('validation helpers', () => {
     )
     await expect(rule.validator(undefined, 'abcdefghijk')).rejects.toThrow(
       'Value must be between 3 and 10 characters for metadata.name',
+    )
+  })
+
+  test('getArrayItemsRule validates inclusive minItems and maxItems', async () => {
+    const rule: any = getArrayItemsRule({
+      name: ['spec', 'hosts'] as any,
+      minItems: 2,
+      maxItems: 4,
+    })
+
+    expect(typeof rule.validator).toBe('function')
+    await expect(rule.validator(undefined, ['a', 'b'])).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, ['a', 'b', 'c', 'd'])).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, undefined)).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, null)).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, 'not-array')).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, ['a'])).rejects.toThrow(
+      'Value must contain between 2 and 4 items for spec.hosts',
+    )
+    await expect(rule.validator(undefined, ['a', 'b', 'c', 'd', 'e'])).rejects.toThrow(
+      'Value must contain between 2 and 4 items for spec.hosts',
     )
   })
 

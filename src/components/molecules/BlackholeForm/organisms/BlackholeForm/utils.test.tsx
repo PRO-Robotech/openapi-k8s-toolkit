@@ -341,6 +341,51 @@ describe('getArrayFormItemFromSwagger', () => {
     await expect(validator({}, undefined)).rejects.toThrow('Please enter spec.names')
   })
 
+  test('array minItems and maxItems validator returns pretty-printed message', async () => {
+    const el = getArrayFormItemFromSwagger({
+      schema: { type: 'array', minItems: 2, maxItems: 4, items: { type: 'string' } } as any,
+      name: ['spec', 'names'] as any,
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+
+    const validator = resetedFormListLastRules?.[0]?.validator
+    expect(typeof validator).toBe('function')
+    await expect(validator({}, ['a'])).rejects.toThrow('Value must contain between 2 and 4 items for spec.names')
+    await expect(validator({}, ['a', 'b'])).resolves.toBeUndefined()
+    await expect(validator({}, ['a', 'b', 'c', 'd', 'e'])).rejects.toThrow(
+      'Value must contain between 2 and 4 items for spec.names',
+    )
+  })
+
+  test('array add button is disabled when maxItems is reached', () => {
+    resetedFormListFields = [
+      { key: 1, name: 0 },
+      { key: 2, name: 1 },
+    ]
+
+    const el = getArrayFormItemFromSwagger({
+      schema: { type: 'array', maxItems: 2, items: { type: 'string' } } as any,
+      name: ['spec', 'names'] as any,
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+
+    expect(screen.getByTestId('plus-icon').closest('button')).toBeDisabled()
+  })
+
   test('array of numbers routes to FormNumberInput', () => {
     const el = getArrayFormItemFromSwagger({
       schema: { type: 'array', items: { type: 'integer' } } as any,
@@ -375,7 +420,7 @@ describe('getArrayFormItemFromSwagger', () => {
 
   test('array of listInput routes to FormListInput', () => {
     const el = getArrayFormItemFromSwagger({
-      schema: { type: 'array', items: { type: 'listInput', customProps: {} } } as any,
+      schema: { type: 'array', items: { type: 'listInput', customProps: {}, minItems: 1, maxItems: 3 } } as any,
       name: ['spec', 'list'] as any,
       addField,
       removeField,
@@ -387,6 +432,7 @@ describe('getArrayFormItemFromSwagger', () => {
 
     render(<div>{el}</div>)
     expect(screen.getByTestId('list-input')).toBeInTheDocument()
+    expect(FormListInputMock).toHaveBeenCalledWith(expect.objectContaining({ minItems: 1, maxItems: 3 }))
   })
 
   test('array of multilineStringBase64 routes to FormStringMultilineInput', () => {
@@ -750,6 +796,25 @@ describe('getObjectFormItemsDraft', () => {
 
     render(<div>{el}</div>)
     expect(FormListInputMock).toHaveBeenCalledWith(expect.objectContaining({ defaultValue: ['a', 'b'] }))
+  })
+
+  test('passes minItems and maxItems to FormListInput', () => {
+    const properties = { tags: { type: 'listInput', customProps: {}, minItems: 2, maxItems: 5 } } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormListInputMock).toHaveBeenCalledWith(expect.objectContaining({ minItems: 2, maxItems: 5 }))
   })
 
   test('routes multilineString + multilineStringBase64', () => {

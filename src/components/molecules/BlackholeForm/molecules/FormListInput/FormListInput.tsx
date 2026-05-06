@@ -30,7 +30,7 @@ import {
 import { resolveFormPath, normalizeNameToPath, listItemBasePath } from './utils'
 import { formatDefaultValue } from '../helpers/buildPlaceholder'
 import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
-import { getRequiredRule } from '../helpers/validation'
+import { getArrayItemsRule, getRequiredRule } from '../helpers/validation'
 
 type TFormListInputProps = {
   name: TFormName
@@ -47,6 +47,8 @@ type TFormListInputProps = {
   urlParams: TUrlParams
   onRemoveByMinus?: () => void
   defaultValue?: string | string[]
+  minItems?: number
+  maxItems?: number
 }
 
 export const FormListInput: FC<TFormListInputProps> = ({
@@ -64,6 +66,8 @@ export const FormListInput: FC<TFormListInputProps> = ({
   urlParams,
   onRemoveByMinus,
   defaultValue,
+  minItems,
+  maxItems,
 }) => {
   const designNewLayout = useDesignNewLayout()
   const onValuesChangeCallBack = useOnValuesChangeCallback()
@@ -77,6 +81,7 @@ export const FormListInput: FC<TFormListInputProps> = ({
   const fixedName = name === 'nodeName' ? 'nodeNameBecauseOfSuddenBug' : name
   const formFieldName = arrName || fixedName
   const defaultBtn = useDefaultValueButton(formFieldName, defaultValue)
+  const arrayItemsRule = getArrayItemsRule({ minItems, maxItems, name })
 
   // Build absolute path of this field from the full 'fixedName'
   const fullFieldPath = normalizeNameToPath(fixedName)
@@ -284,7 +289,10 @@ export const FormListInput: FC<TFormListInputProps> = ({
         <ResetedFormItem
           key={arrKey !== undefined ? arrKey : Array.isArray(name) ? name.slice(-1)[0] : name}
           name={formFieldName}
-          rules={[getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name)]}
+          rules={[
+            getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name),
+            ...(arrayItemsRule ? [arrayItemsRule] : []),
+          ]}
           validateTrigger="onBlur"
           hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
           style={{ flex: 1 }}

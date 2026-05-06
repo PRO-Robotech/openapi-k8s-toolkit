@@ -298,6 +298,41 @@ export const getStringLengthRule = ({
   }
 }
 
+export const getArrayItemsRule = ({
+  minItems,
+  maxItems,
+  name,
+}: {
+  minItems?: number
+  maxItems?: number
+  name: TFormName
+}): Rule | undefined => {
+  if (minItems === undefined && maxItems === undefined) {
+    return undefined
+  }
+
+  let message = `Value must contain at most ${maxItems} items for ${prettyFieldPath(name)}`
+
+  if (minItems !== undefined && maxItems !== undefined) {
+    message = `Value must contain between ${minItems} and ${maxItems} items for ${prettyFieldPath(name)}`
+  } else if (minItems !== undefined) {
+    message = `Value must contain at least ${minItems} items for ${prettyFieldPath(name)}`
+  }
+
+  return {
+    validator: async (_, value) => {
+      if (value === undefined || value === null) return
+      if (!Array.isArray(value)) return
+      if (minItems !== undefined && value.length < minItems) {
+        throw new Error(message)
+      }
+      if (maxItems !== undefined && value.length > maxItems) {
+        throw new Error(message)
+      }
+    },
+  }
+}
+
 export const getNumberRangeRule = ({
   minimum,
   maximum,
