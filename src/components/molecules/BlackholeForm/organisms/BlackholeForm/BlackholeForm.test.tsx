@@ -832,6 +832,197 @@ describe('BlackholeForm', () => {
     })
   })
 
+  test('clears inactive branch data when user explicitly switches the selector', async () => {
+    const { Form: AntForm, Input: AntInput } = require('antd')
+    const user = userEvent.setup()
+
+    axiosPostMock.mockImplementation(async (url: string) => {
+      if (String(url).includes('getYamlValuesByFromValues')) {
+        return { data: 'YAML_BODY' }
+      }
+      return { data: {} }
+    })
+
+    getObjectFormItemsDraftMock.mockImplementation(() =>
+      React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(
+          AntForm.Item,
+          { name: ['spec', 'type'], noStyle: true },
+          React.createElement(AntInput, { 'data-testid': 'type-input' }),
+        ),
+        React.createElement(AntForm.Item, { name: ['spec', 'service', 'name'], noStyle: true }),
+        React.createElement(AntForm.Item, { name: ['spec', 'service', 'port'], noStyle: true }),
+        React.createElement(AntForm.Item, { name: ['spec', 'url'], noStyle: true }),
+      ),
+    )
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        isCreate
+        staticProperties={
+          {
+            spec: {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['service', 'url'] },
+                service: {
+                  type: 'object',
+                  properties: { name: { type: 'string' }, port: { type: 'integer' } },
+                },
+                url: { type: 'string' },
+              },
+              oneOfBranches: [
+                { match: { type: 'service' }, required: ['service'], forbidden: ['url'] },
+                { match: { type: 'url' }, required: ['url'], forbidden: ['service'] },
+              ],
+            },
+          } as any
+        }
+        prefillValuesSchema={{
+          spec: {
+            type: 'service',
+            service: { name: 'my-service', port: 8080 },
+          },
+        }}
+      />,
+    )
+
+    await waitFor(() => expect(axiosPostMock).toHaveBeenCalled())
+    axiosPostMock.mockClear()
+
+    const typeInput = screen.getByTestId('type-input')
+    await user.clear(typeInput)
+    await user.type(typeInput, 'url')
+
+    await waitFor(() => {
+      const calls = axiosPostMock.mock.calls.filter((c: any[]) => String(c[0]).includes('getYamlValuesByFromValues'))
+      expect(calls.length).toBeGreaterThan(0)
+      const payload = calls.at(-1)?.[1]
+      expect(payload.values.spec.type).toBe('url')
+      expect(payload.values.spec.service).toBeUndefined()
+    })
+  })
+
+  test('does not clean inactive branch data on initial mount even if data is contradictory', async () => {
+    axiosPostMock.mockImplementation(async (url: string) => {
+      if (String(url).includes('getYamlValuesByFromValues')) {
+        return { data: 'YAML_BODY' }
+      }
+      return { data: {} }
+    })
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        isCreate={false}
+        formsPrefills={editPrefills}
+        staticProperties={
+          {
+            spec: {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['service', 'url'] },
+                service: { type: 'object' },
+                url: { type: 'string' },
+              },
+              oneOfBranches: [
+                { match: { type: 'service' }, required: ['service'], forbidden: ['url'] },
+                { match: { type: 'url' }, required: ['url'], forbidden: ['service'] },
+              ],
+            },
+          } as any
+        }
+        prefillValuesSchema={{
+          spec: {
+            type: 'service',
+            url: 'https://example.com',
+          },
+        }}
+      />,
+    )
+
+    await waitFor(() => {
+      const syncCalls = axiosPostMock.mock.calls.filter((c: any[]) =>
+        String(c[0]).includes('getYamlValuesByFromValues'),
+      )
+      expect(syncCalls.length).toBeGreaterThan(0)
+      const initialPayload = syncCalls[0][1]
+      expect(initialPayload.values.spec.type).toBe('service')
+      expect(initialPayload.values.spec.url).toBe('https://example.com')
+    })
+  })
+
+  test('does not clean inactive branch data when changes come from YAML→form sync', async () => {
+    const { Form: AntForm } = require('antd')
+    const user = userEvent.setup()
+
+    axiosPostMock.mockImplementation(async (url: string) => {
+      if (String(url).includes('getFormValuesByYaml')) {
+        return { data: { spec: { type: 'url', service: { name: 'leaked' } } } }
+      }
+      if (String(url).includes('getYamlValuesByFromValues')) {
+        return { data: 'YAML_BODY' }
+      }
+      return { data: {} }
+    })
+
+    getObjectFormItemsDraftMock.mockImplementation(() =>
+      React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(AntForm.Item, { name: ['spec', 'type'], noStyle: true }),
+        React.createElement(AntForm.Item, { name: ['spec', 'service'], noStyle: true }),
+        React.createElement(AntForm.Item, { name: ['spec', 'url'], noStyle: true }),
+      ),
+    )
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        isCreate
+        staticProperties={
+          {
+            spec: {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['service', 'url'] },
+                service: { type: 'object', properties: { name: { type: 'string' } } },
+                url: { type: 'string' },
+              },
+              oneOfBranches: [
+                { match: { type: 'service' }, required: ['service'], forbidden: ['url'] },
+                { match: { type: 'url' }, required: ['url'], forbidden: ['service'] },
+              ],
+            },
+          } as any
+        }
+        prefillValuesSchema={{ spec: { type: 'service' } }}
+      />,
+    )
+
+    await waitFor(() => expect(axiosPostMock).toHaveBeenCalled())
+    axiosPostMock.mockClear()
+
+    await user.click(screen.getByTestId('yaml-editor-trigger-change'))
+
+    // The sync chain after YAML→form: form.setFieldsValue (does NOT trigger antd onValuesChange) →
+    // Form.useWatch picks up → useEffect on [allValues] fires onValuesChangeCallback() with NO
+    // changedValues → cleanup is skipped → form→YAML sync POST goes out with both fields preserved.
+    // We assert that the last form→YAML payload still carries both type='url' AND service.
+    await waitFor(() => {
+      const syncCalls = axiosPostMock.mock.calls.filter((c: any[]) =>
+        String(c[0]).includes('getYamlValuesByFromValues'),
+      )
+      expect(syncCalls.length).toBeGreaterThan(0)
+      const payload = syncCalls.at(-1)?.[1]
+      expect(payload.values.spec.type).toBe('url')
+      expect(payload.values.spec.service).toEqual({ name: 'leaked' })
+    })
+  })
+
   test('submit (edit mode) calls updateEntry with correct endpoint/body', async () => {
     axiosPostMock.mockImplementation(async (url: string) => {
       if (String(url).includes('getYamlValuesByFromValues')) {
