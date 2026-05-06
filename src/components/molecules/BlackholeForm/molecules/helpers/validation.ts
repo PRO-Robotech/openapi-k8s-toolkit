@@ -2,6 +2,7 @@ import get from 'lodash/get'
 import { Rule } from 'antd/es/form'
 import { TFormSchemaOneOfBranch, TFormSchemaProperties } from 'localTypes/formSchema'
 import { TFormName } from 'localTypes/form'
+import { matchesOneOfBranch } from './oneOfBranch'
 
 export const prettyFieldPath = (name: TFormName): string => {
   return Array.isArray(name) ? name.map(segment => String(segment)).join('.') : String(name)
@@ -57,16 +58,6 @@ const formatOneOfBranchMatch = (branch: TFormSchemaOneOfBranch): string => {
   }
 
   return matchEntries.map(([path, expectedValue]) => `${path}=${String(expectedValue)}`).join(', ')
-}
-
-const matchesOneOfBranch = (value: unknown, branch: TFormSchemaOneOfBranch): boolean => {
-  const matchEntries = Object.entries(branch.match || {})
-
-  if (matchEntries.length === 0) {
-    return false
-  }
-
-  return matchEntries.every(([path, expectedValue]) => get(value, path) === expectedValue)
 }
 
 const getOneOfBranchErrors = ({

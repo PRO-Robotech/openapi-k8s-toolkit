@@ -1,30 +1,12 @@
 import get from 'lodash/get'
 import has from 'lodash/has'
 import { TFormSchemaNode, TFormSchemaOneOfBranch, TFormSchemaProperties } from 'localTypes/formSchema'
-
-const toBranchPath = (path: string): (string | number)[] => path.split('.').filter(Boolean)
-
-const pathKey = (path: (string | number)[]): string => JSON.stringify(path)
-
-const matchesBranch = (value: unknown, branch: TFormSchemaOneOfBranch): boolean => {
-  const matchEntries = Object.entries(branch.match || {})
-
-  if (matchEntries.length === 0) {
-    return false
-  }
-
-  return matchEntries.every(([path, expectedValue]) => get(value, path) === expectedValue)
-}
-
-const collectMatchKeys = (branches: TFormSchemaOneOfBranch[]): string[] => {
-  const set = new Set<string>()
-  branches.forEach(branch => {
-    Object.keys(branch.match || {}).forEach(key => {
-      set.add(key)
-    })
-  })
-  return Array.from(set)
-}
+import {
+  collectInactiveOneOfBranchPaths,
+  collectOneOfBranchMatchKeys,
+  matchesOneOfBranch,
+  toOneOfBranchPath,
+} from '../../../molecules/helpers/oneOfBranch'
 
 const isAnyMatchKeyChangedAtNode = ({
   branches,
@@ -35,8 +17,8 @@ const isAnyMatchKeyChangedAtNode = ({
   nodePath: (string | number)[]
   changedValues: Record<string, unknown>
 }): boolean => {
-  return collectMatchKeys(branches).some(matchKey => {
-    const fullPath = [...nodePath, ...toBranchPath(matchKey)]
+  return collectOneOfBranchMatchKeys(branches).some(matchKey => {
+    const fullPath = [...nodePath, ...toOneOfBranchPath(matchKey)]
     return has(changedValues, fullPath)
   })
 }
@@ -66,40 +48,17 @@ const getCurrentNodeCleanupPaths = ({
     return []
   }
 
-  const matchedBranches = node.oneOfBranches.filter(branch => matchesBranch(value, branch))
+  const matchedBranches = node.oneOfBranches.filter(branch => matchesOneOfBranch(value, branch))
 
   if (matchedBranches.length !== 1) {
     return []
   }
 
   const [activeBranch] = matchedBranches
-  const visibleBranchPathKeys = new Set([
-    ...Object.keys(activeBranch.match || {}).map(matchPath => pathKey(toBranchPath(matchPath))),
-    ...(activeBranch.required || []).map(requiredPath => pathKey(toBranchPath(requiredPath))),
+  return collectInactiveOneOfBranchPaths({ branches: node.oneOfBranches, activeBranch }).map(branchPath => [
+    ...path,
+    ...branchPath,
   ])
-  const candidateCleanupPathKeys = new Set<string>()
-  const candidateCleanupPaths: (string | number)[][] = []
-  const addCandidatePath = (branchPath: string) => {
-    const normalizedPath = toBranchPath(branchPath)
-    const key = pathKey(normalizedPath)
-
-    if (visibleBranchPathKeys.has(key) || candidateCleanupPathKeys.has(key)) {
-      return
-    }
-
-    candidateCleanupPathKeys.add(key)
-    candidateCleanupPaths.push(normalizedPath)
-  }
-
-  ;(activeBranch.forbidden || []).forEach(addCandidatePath)
-  node.oneOfBranches
-    .filter(branch => branch !== activeBranch)
-    .forEach(branch => {
-      ;(branch.required || []).forEach(addCandidatePath)
-      ;(branch.forbidden || []).forEach(addCandidatePath)
-    })
-
-  return candidateCleanupPaths.map(branchPath => [...path, ...branchPath])
 }
 
 export const collectInactiveBranchCleanupPaths = ({
