@@ -187,6 +187,118 @@ describe('validation helpers', () => {
     ).toEqual([{ name: ['spec'], errors: [] }])
   })
 
+  test('collectOneOfRequiredGroupStates validates active oneOf branch required and forbidden fields', () => {
+    expect(
+      collectOneOfRequiredGroupStates({
+        properties: {
+          spec: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', enum: ['service', 'url'] },
+              service: { type: 'object' },
+              url: { type: 'string' },
+            },
+            oneOfBranches: [
+              {
+                match: { type: 'service' },
+                required: ['service'],
+                forbidden: ['url'],
+              },
+              {
+                match: { type: 'url' },
+                required: ['url'],
+                forbidden: ['service'],
+              },
+            ],
+          },
+        },
+        values: {
+          spec: {
+            type: 'service',
+            url: 'https://example.com',
+          },
+        },
+      }),
+    ).toEqual([
+      {
+        name: ['spec'],
+        errors: [
+          'Please provide required fields for spec when type=service: [service]',
+          'Please remove forbidden fields for spec when type=service: [url]',
+        ],
+      },
+    ])
+  })
+
+  test('collectOneOfRequiredGroupStates accepts valid oneOf branch state', () => {
+    expect(
+      collectOneOfRequiredGroupStates({
+        properties: {
+          spec: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', enum: ['service', 'url'] },
+              service: { type: 'object' },
+              url: { type: 'string' },
+            },
+            oneOfBranches: [
+              {
+                match: { type: 'service' },
+                required: ['service'],
+                forbidden: ['url'],
+              },
+              {
+                match: { type: 'url' },
+                required: ['url'],
+                forbidden: ['service'],
+              },
+            ],
+          },
+        },
+        values: {
+          spec: {
+            type: 'url',
+            url: 'https://example.com',
+          },
+        },
+      }),
+    ).toEqual([{ name: ['spec'], errors: [] }])
+  })
+
+  test('collectOneOfRequiredGroupStates skips branch validation until a selector branch is active', () => {
+    expect(
+      collectOneOfRequiredGroupStates({
+        properties: {
+          spec: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', enum: ['service', 'url'] },
+              service: { type: 'object' },
+              url: { type: 'string' },
+            },
+            oneOfBranches: [
+              {
+                match: { type: 'service' },
+                required: ['service'],
+                forbidden: ['url'],
+              },
+              {
+                match: { type: 'url' },
+                required: ['url'],
+                forbidden: ['service'],
+              },
+            ],
+          },
+        },
+        values: {
+          spec: {
+            type: '',
+          },
+        },
+      }),
+    ).toEqual([{ name: ['spec'], errors: [] }])
+  })
+
   test('collectOneOfRequiredGroupStates validates oneOf groups on array items', () => {
     expect(
       collectOneOfRequiredGroupStates({
@@ -216,6 +328,56 @@ describe('validation helpers', () => {
       {
         name: ['containers', 0],
         errors: ['Please provide exactly one of the following for containers.0: [command], [shell]'],
+      },
+    ])
+  })
+
+  test('collectOneOfRequiredGroupStates validates oneOf branches on array items', () => {
+    expect(
+      collectOneOfRequiredGroupStates({
+        properties: {
+          backends: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['service', 'url'] },
+                service: { type: 'object' },
+                url: { type: 'string' },
+              },
+              oneOfBranches: [
+                {
+                  match: { type: 'service' },
+                  required: ['service'],
+                  forbidden: ['url'],
+                },
+                {
+                  match: { type: 'url' },
+                  required: ['url'],
+                  forbidden: ['service'],
+                },
+              ],
+            },
+          },
+        },
+        values: {
+          backends: [
+            {
+              type: 'url',
+              service: {
+                name: 'demo',
+              },
+            },
+          ],
+        },
+      }),
+    ).toEqual([
+      {
+        name: ['backends', 0],
+        errors: [
+          'Please provide required fields for backends.0 when type=url: [url]',
+          'Please remove forbidden fields for backends.0 when type=url: [service]',
+        ],
       },
     ])
   })

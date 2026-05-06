@@ -1072,4 +1072,35 @@ describe('getObjectFormItemFromSwagger', () => {
       }),
     )
   })
+
+  test('forwards oneOfBranches to FormObjectFromSwagger', () => {
+    const properties = { inner: { type: 'string' } } as any
+    const oneOfBranches = [
+      {
+        match: { type: 'service' },
+        required: ['service'],
+        forbidden: ['url'],
+      },
+    ]
+
+    const el = getObjectFormItemFromSwagger({
+      properties,
+      name: ['spec', 'obj'] as any,
+      oneOfBranches,
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+
+    expect(FormObjectFromSwaggerMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        oneOfBranches,
+      }),
+    )
+  })
 })

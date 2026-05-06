@@ -1,6 +1,6 @@
 import get from 'lodash/get'
 import { Rule } from 'antd/es/form'
-import { TFormSchemaProperties } from 'localTypes/formSchema'
+import { TFormSchemaOneOfBranch, TFormSchemaProperties } from 'localTypes/formSchema'
 import { TFormName } from 'localTypes/form'
 
 export const prettyFieldPath = (name: TFormName): string => {
@@ -49,29 +49,112 @@ const getOneOfRequiredGroupsError = ({
   return getOneOfRequiredGroupsMessage(name, groups)
 }
 
+const formatOneOfBranchMatch = (branch: TFormSchemaOneOfBranch): string => {
+  const matchEntries = Object.entries(branch.match || {})
+
+  if (matchEntries.length === 0) {
+    return 'selected branch'
+  }
+
+  return matchEntries.map(([path, expectedValue]) => `${path}=${String(expectedValue)}`).join(', ')
+}
+
+const matchesOneOfBranch = (value: unknown, branch: TFormSchemaOneOfBranch): boolean => {
+  const matchEntries = Object.entries(branch.match || {})
+
+  if (matchEntries.length === 0) {
+    return false
+  }
+
+  return matchEntries.every(([path, expectedValue]) => get(value, path) === expectedValue)
+}
+
+const getOneOfBranchErrors = ({
+  value,
+  name,
+  branches,
+}: {
+  value: unknown
+  name: TFormName
+  branches: TFormSchemaOneOfBranch[]
+}): string[] => {
+  if (!isPresentForOneOf(value)) {
+    return []
+  }
+
+  const matchedBranches = branches.filter(branch => matchesOneOfBranch(value, branch))
+
+  if (matchedBranches.length === 0) {
+    return []
+  }
+
+  if (matchedBranches.length > 1) {
+    const branchText = matchedBranches.map(formatOneOfBranchMatch).join(', ')
+    return [`Please match exactly one branch for ${prettyFieldPath(name)}: ${branchText}`]
+  }
+
+  const [activeBranch] = matchedBranches
+  const branchText = formatOneOfBranchMatch(activeBranch)
+  const missingRequiredFields = (activeBranch.required || []).filter(path => !isPresentForOneOf(get(value, path)))
+  const presentForbiddenFields = (activeBranch.forbidden || []).filter(path => isPresentForOneOf(get(value, path)))
+  const errors: string[] = []
+
+  if (missingRequiredFields.length > 0) {
+    errors.push(
+      `Please provide required fields for ${prettyFieldPath(name)} when ${branchText}: ${formatOneOfGroup(
+        missingRequiredFields,
+      )}`,
+    )
+  }
+
+  if (presentForbiddenFields.length > 0) {
+    errors.push(
+      `Please remove forbidden fields for ${prettyFieldPath(name)} when ${branchText}: ${formatOneOfGroup(
+        presentForbiddenFields,
+      )}`,
+    )
+  }
+
+  return errors
+}
+
 const getCurrentOneOfRequiredGroupState = ({
   path,
   nodeOneOfRequiredGroups,
+  nodeOneOfBranches,
   value,
 }: {
   path: (string | number)[]
   nodeOneOfRequiredGroups?: string[][]
+  nodeOneOfBranches?: TFormSchemaOneOfBranch[]
   value: unknown
 }): { name: TFormName; errors: string[] }[] => {
-  if (!nodeOneOfRequiredGroups || nodeOneOfRequiredGroups.length === 0) {
+  const hasRequiredGroups = Boolean(nodeOneOfRequiredGroups && nodeOneOfRequiredGroups.length > 0)
+  const hasBranches = Boolean(nodeOneOfBranches && nodeOneOfBranches.length > 0)
+
+  if (!hasRequiredGroups && !hasBranches) {
     return []
   }
 
-  const error = getOneOfRequiredGroupsError({
-    value,
-    name: path,
-    groups: nodeOneOfRequiredGroups,
-  })
+  const requiredGroupError = hasRequiredGroups
+    ? getOneOfRequiredGroupsError({
+        value,
+        name: path,
+        groups: nodeOneOfRequiredGroups || [],
+      })
+    : undefined
+  const branchErrors = hasBranches
+    ? getOneOfBranchErrors({
+        value,
+        name: path,
+        branches: nodeOneOfBranches || [],
+      })
+    : []
 
   return [
     {
       name: path,
-      errors: error ? [error] : [],
+      errors: [...(requiredGroupError ? [requiredGroupError] : []), ...branchErrors],
     },
   ]
 }
@@ -91,6 +174,7 @@ export const collectOneOfRequiredGroupStates = ({
     const currentState = getCurrentOneOfRequiredGroupState({
       path,
       nodeOneOfRequiredGroups: node.oneOfRequiredGroups,
+      nodeOneOfBranches: node.oneOfBranches,
       value,
     })
 
@@ -109,6 +193,7 @@ export const collectOneOfRequiredGroupStates = ({
             ...getCurrentOneOfRequiredGroupState({
               path: [...path, index],
               nodeOneOfRequiredGroups: node.items?.oneOfRequiredGroups,
+              nodeOneOfBranches: node.items?.oneOfBranches,
               value: get(values, [...path, index]),
             }),
             ...(node.items?.properties

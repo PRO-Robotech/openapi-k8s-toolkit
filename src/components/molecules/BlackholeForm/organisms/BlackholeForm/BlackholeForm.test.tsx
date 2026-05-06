@@ -512,6 +512,123 @@ describe('BlackholeForm', () => {
     })
   })
 
+  test('submit is blocked when active oneOf branch required and forbidden fields are violated', async () => {
+    const { Form: AntForm } = require('antd')
+    const user = userEvent.setup()
+
+    getObjectFormItemsDraftMock.mockImplementation(() =>
+      React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(AntForm.Item, { name: ['spec', 'type'], noStyle: true }),
+        React.createElement(AntForm.Item, { name: ['spec', 'service'], noStyle: true }),
+        React.createElement(AntForm.Item, { name: ['spec', 'url'], noStyle: true }),
+        React.createElement('div', { 'data-testid': 'draft-items' }),
+      ),
+    )
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        staticProperties={
+          {
+            spec: {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['service', 'url'] },
+                service: { type: 'object' },
+                url: { type: 'string' },
+              },
+              oneOfBranches: [
+                {
+                  match: { type: 'service' },
+                  required: ['service'],
+                  forbidden: ['url'],
+                },
+                {
+                  match: { type: 'url' },
+                  required: ['url'],
+                  forbidden: ['service'],
+                },
+              ],
+            },
+          } as any
+        }
+        prefillValuesSchema={{
+          spec: {
+            type: 'service',
+            url: 'https://example.com',
+          },
+        }}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /submit/i }))
+
+    await waitFor(() => {
+      expect(createNewEntryMock).not.toHaveBeenCalled()
+      expect(updateEntryMock).not.toHaveBeenCalled()
+    })
+  })
+
+  test('submit proceeds when active oneOf branch state is valid', async () => {
+    const { Form: AntForm } = require('antd')
+    const user = userEvent.setup()
+
+    getObjectFormItemsDraftMock.mockImplementation(() =>
+      React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(AntForm.Item, { name: ['spec', 'type'], noStyle: true }),
+        React.createElement(AntForm.Item, { name: ['spec', 'service'], noStyle: true }),
+        React.createElement(AntForm.Item, { name: ['spec', 'url'], noStyle: true }),
+        React.createElement('div', { 'data-testid': 'draft-items' }),
+      ),
+    )
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        staticProperties={
+          {
+            spec: {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['service', 'url'] },
+                service: { type: 'object' },
+                url: { type: 'string' },
+              },
+              oneOfBranches: [
+                {
+                  match: { type: 'service' },
+                  required: ['service'],
+                  forbidden: ['url'],
+                },
+                {
+                  match: { type: 'url' },
+                  required: ['url'],
+                  forbidden: ['service'],
+                },
+              ],
+            },
+          } as any
+        }
+        prefillValuesSchema={{
+          spec: {
+            type: 'url',
+            url: 'https://example.com',
+          },
+        }}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /submit/i }))
+
+    await waitFor(() => {
+      expect(createNewEntryMock).toHaveBeenCalled()
+    })
+  })
+
   test('submit (edit mode) calls updateEntry with correct endpoint/body', async () => {
     axiosPostMock.mockImplementation(async (url: string) => {
       if (String(url).includes('getYamlValuesByFromValues')) {

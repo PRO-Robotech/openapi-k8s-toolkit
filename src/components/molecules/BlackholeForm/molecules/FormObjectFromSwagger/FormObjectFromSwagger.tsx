@@ -2,7 +2,7 @@ import React, { FC, useState } from 'react'
 import { Typography, Tooltip, Input, Button, Form } from 'antd'
 import { getStringByName } from 'utils/getStringByName'
 import { TFormName, TExpandedControls, TPersistedControls } from 'localTypes/form'
-import { TFormSchemaNode, TFormSchemaProperties } from 'localTypes/formSchema'
+import { TFormSchemaNode, TFormSchemaOneOfBranch, TFormSchemaProperties } from 'localTypes/formSchema'
 import { PlusIcon } from 'components/atoms'
 import { CustomCollapse, PersistedCheckbox, CustomSizeTitle, HiddenContainer } from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
@@ -20,6 +20,7 @@ type TFormObjectFromSwaggerProps = {
   collapseTitle: TFormName
   collapseFormName: TFormName
   oneOfRequiredGroups?: string[][]
+  oneOfBranches?: TFormSchemaOneOfBranch[]
   validationErrors?: string[]
   data?: JSX.Element
   inputProps?: {
@@ -56,6 +57,7 @@ export const FormObjectFromSwagger: FC<TFormObjectFromSwaggerProps> = ({
   collapseTitle,
   collapseFormName,
   oneOfRequiredGroups,
+  oneOfBranches,
   validationErrors,
   data,
   inputProps,
@@ -64,6 +66,8 @@ export const FormObjectFromSwagger: FC<TFormObjectFromSwaggerProps> = ({
   const designNewLayout = useDesignNewLayout()
   const form = Form.useFormInstance()
   const [additionalPropValue, setAddditionalPropValue] = useState<string>()
+  const hasOneOfValidation =
+    Boolean(oneOfRequiredGroups && oneOfRequiredGroups.length > 0) || Boolean(oneOfBranches && oneOfBranches.length > 0)
 
   const focusFieldInput = (path: TFormName) => {
     if (typeof window === 'undefined' || typeof document === 'undefined') {
@@ -154,7 +158,7 @@ export const FormObjectFromSwagger: FC<TFormObjectFromSwaggerProps> = ({
         key={Array.isArray(name) ? name.join('-') : name}
       >
         {data}
-        {oneOfRequiredGroups && oneOfRequiredGroups.length > 0 ? <Form.ErrorList errors={validationErrors} /> : null}
+        {hasOneOfValidation ? <Form.ErrorList errors={validationErrors} /> : null}
         {inputProps && (
           <Input
             placeholder="Enter field name"

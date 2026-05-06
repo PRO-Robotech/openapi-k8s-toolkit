@@ -669,6 +669,7 @@ export const getArrayFormItemFromSwagger = ({
                         // merging properties near items by this
                         properties: deepMerge(entry.properties, additionalProperties?.[field.key]?.properties || {}),
                         oneOfRequiredGroups: entry.oneOfRequiredGroups,
+                        oneOfBranches: entry.oneOfBranches,
                         name: Array.isArray(name) ? [...name, field.name] : [name, field.name],
                         arrKey: field.key,
                         arrName: [field.name],
@@ -1052,6 +1053,7 @@ export const getObjectFormItemsDraft = ({
           return getObjectFormItemFromSwagger({
             properties: properties[el].properties as TFormSchemaProperties,
             oneOfRequiredGroups: properties[el].oneOfRequiredGroups,
+            oneOfBranches: properties[el].oneOfBranches,
             name: Array.isArray(name) ? [...name, String(el)] : [name, String(el)],
             arrKey,
             arrName: Array.isArray(arrName) ? [...arrName, String(el)] : undefined,
@@ -1091,6 +1093,7 @@ export const getObjectFormItemsDraft = ({
 export const getObjectFormItemFromSwagger = ({
   properties,
   oneOfRequiredGroups,
+  oneOfBranches,
   objectValidationErrors,
   name,
   arrKey,
@@ -1115,6 +1118,7 @@ export const getObjectFormItemFromSwagger = ({
 }: {
   properties: TFormSchemaProperties
   oneOfRequiredGroups?: string[][]
+  oneOfBranches?: TFormSchemaNode['oneOfBranches']
   objectValidationErrors?: Record<string, string[]>
   name: TFormName
   arrKey?: number
@@ -1180,6 +1184,7 @@ export const getObjectFormItemFromSwagger = ({
       selfRequired={selfRequired}
       description={description}
       oneOfRequiredGroups={oneOfRequiredGroups}
+      oneOfBranches={oneOfBranches}
       validationErrors={objectValidationErrors?.[pathKey(Array.isArray(name) ? name : [name])]}
       isAdditionalProperties={isAdditionalProperties}
       removeField={removeField}
