@@ -202,6 +202,25 @@ describe('leaf form item helpers', () => {
     expect(FormStringInputMock).not.toHaveBeenCalled()
   })
 
+  test('getStringFormItemFromSwagger forwards defaultValue and contextNamespace to FormNamespaceInput', () => {
+    const el = getStringFormItemFromSwagger({
+      name: ['metadata', 'namespace'] as any,
+      namespaceData: { disabled: false, selectValues: [], filterSelectOptions: jest.fn() } as any,
+      removeField,
+      persistedControls,
+      defaultValue: 'monitoring',
+      urlParams: { namespace: 'team-a' } as any,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormNamespaceInputMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        defaultValue: 'monitoring',
+        contextNamespace: 'team-a',
+      }),
+    )
+  })
+
   test('getStringFormItemFromSwagger returns FormStringInput default', () => {
     const el = getStringFormItemFromSwagger({
       name: ['spec', 'name'] as any,

@@ -421,7 +421,15 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
       })
     }
 
-    if (prefillValueNamespaceOnly) {
+    // Schema-level default takes priority over URL context for metadata.namespace.
+    // When the schema declares a default, defer to FormNamespaceInput's cascade so it
+    // can validate the default against the cluster's namespace list and fall back when
+    // needed. Without this guard the URL pre-fill would write into initialValues first
+    // and the cascade would then treat the form as edit mode and skip itself.
+    const schemaNamespaceDefault = staticProperties.metadata?.properties?.namespace?.default
+    const hasSchemaNamespaceDefault = typeof schemaNamespaceDefault === 'string' && schemaNamespaceDefault.length > 0
+
+    if (prefillValueNamespaceOnly && !hasSchemaNamespaceDefault) {
       _.set(allValues, ['metadata', 'namespace'], prefillValueNamespaceOnly)
     }
 
@@ -433,7 +441,15 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
 
     const sorted = Object.fromEntries(Object.entries(allValues).sort(([a], [b]) => a.localeCompare(b)))
     return sorted
-  }, [formsPrefills, prefillValueNamespaceOnly, isCreate, apiGroupApiVersion, kind, normalizedPrefill])
+  }, [
+    formsPrefills,
+    prefillValueNamespaceOnly,
+    isCreate,
+    apiGroupApiVersion,
+    kind,
+    normalizedPrefill,
+    staticProperties,
+  ])
 
   // --- Feature: wild card prefills ---
   // Build wildcard-based prefill templates from both formsPrefills and normalizedPrefill

@@ -57,6 +57,7 @@ export const getStringFormItemFromSwagger = ({
   pattern,
   minLength,
   maxLength,
+  urlParams,
 }: {
   name: TFormName
   arrKey?: number
@@ -77,6 +78,7 @@ export const getStringFormItemFromSwagger = ({
   pattern?: string
   minLength?: number
   maxLength?: number
+  urlParams?: TUrlParams
 }) => {
   if (Array.isArray(name) && name.length === 2 && name[0] === 'metadata' && name[1] === 'namespace' && namespaceData) {
     return (
@@ -86,6 +88,8 @@ export const getStringFormItemFromSwagger = ({
         namespaceData={namespaceData}
         isAdditionalProperties={isAdditionalProperties}
         removeField={removeField}
+        defaultValue={defaultValue}
+        contextNamespace={urlParams?.namespace}
       />
     )
   }
@@ -574,6 +578,7 @@ export const getArrayFormItemFromSwagger = ({
                             pattern: itemSchema?.pattern,
                             minLength: itemSchema?.minLength,
                             maxLength: itemSchema?.maxLength,
+                            urlParams,
                           })}
                         {(fieldType === 'number' || fieldType === 'integer') &&
                           getNumberFormItemFromSwagger({
@@ -911,6 +916,7 @@ export const getObjectFormItemsDraft = ({
             pattern: properties[el].pattern,
             minLength: properties[el].minLength,
             maxLength: properties[el].maxLength,
+            urlParams,
           })
         }
         if (properties[el].type === 'number' || properties[el].type === 'integer') {

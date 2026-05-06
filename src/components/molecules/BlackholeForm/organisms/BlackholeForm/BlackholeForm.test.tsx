@@ -1182,6 +1182,70 @@ describe('BlackholeForm', () => {
     )
   })
 
+  test('initialValues skip URL namespace prefill when schema declares metadata.namespace.default', async () => {
+    axiosPostMock.mockImplementation(async (url: string) => {
+      if (String(url).includes('getYamlValuesByFromValues')) {
+        return { data: 'YAML_BODY' }
+      }
+      return { data: {} }
+    })
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        isCreate
+        isNameSpaced={['team-a', 'practice']}
+        prefillValueNamespaceOnly="team-a"
+        staticProperties={
+          {
+            metadata: {
+              type: 'object',
+              properties: {
+                namespace: {
+                  type: 'string',
+                  default: 'practice',
+                },
+              },
+            },
+          } as any
+        }
+      />,
+    )
+
+    await waitFor(() => {
+      const calls = axiosPostMock.mock.calls.filter((c: any[]) => String(c[0]).includes('getYamlValuesByFromValues'))
+      expect(calls.length).toBeGreaterThan(0)
+    })
+
+    const formSyncCall = axiosPostMock.mock.calls.find((c: any[]) => String(c[0]).includes('getYamlValuesByFromValues'))
+
+    // BlackholeForm yields to FormNamespaceInput cascade when schema has a namespace default,
+    // so initialValues must not pre-write metadata.namespace from URL.
+    expect(formSyncCall?.[1]?.values?.metadata?.namespace).toBeUndefined()
+  })
+
+  test('initialValues still use URL namespace prefill when schema has no namespace default', async () => {
+    axiosPostMock.mockImplementation(async (url: string) => {
+      if (String(url).includes('getYamlValuesByFromValues')) {
+        return { data: 'YAML_BODY' }
+      }
+      return { data: {} }
+    })
+
+    renderWithApp(
+      <BlackholeForm {...baseProps} isCreate isNameSpaced={['team-a']} prefillValueNamespaceOnly="team-a" />,
+    )
+
+    await waitFor(() => {
+      const calls = axiosPostMock.mock.calls.filter((c: any[]) => String(c[0]).includes('getYamlValuesByFromValues'))
+      expect(calls.length).toBeGreaterThan(0)
+    })
+
+    const formSyncCall = axiosPostMock.mock.calls.find((c: any[]) => String(c[0]).includes('getYamlValuesByFromValues'))
+
+    expect(formSyncCall?.[1]?.values?.metadata?.namespace).toBe('team-a')
+  })
+
   test('user-added additionalProperties field is persisted and sent in formSync payload', async () => {
     axiosPostMock.mockImplementation(async (url: string) => {
       if (String(url).includes('getYamlValuesByFromValues')) return { data: 'YAML_BODY_CREATE' }
