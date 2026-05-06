@@ -11,6 +11,54 @@ export const prettyFieldPath = (name: TFormName): string => {
 const isEmptyValue = (value: unknown): boolean =>
   value === undefined || value === '' || (Array.isArray(value) && value.length === 0)
 
+const INT32_MIN = -2147483648
+const INT32_MAX = 2147483647
+
+const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
+const DATE_TIME_PATTERN = /^(\d{4})-(\d{2})-(\d{2})[Tt](\d{2}):(\d{2}):(\d{2})(\.\d+)?([Zz]|[+-](\d{2}):(\d{2}))$/
+
+const isValidDateParts = (year: number, month: number, day: number): boolean => {
+  if (month < 1 || month > 12) return false
+
+  const isLeapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)
+  const daysByMonth = [31, isLeapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+  return day >= 1 && day <= daysByMonth[month - 1]
+}
+
+const matchesDateFormat = (value: string): boolean => {
+  const match = DATE_PATTERN.exec(value)
+  if (!match) return false
+
+  const [, year, month, day] = match.map(Number)
+
+  return isValidDateParts(year, month, day)
+}
+
+const matchesDateTimeFormat = (value: string): boolean => {
+  const match = DATE_TIME_PATTERN.exec(value)
+  if (!match) return false
+
+  const [, year, month, day, hour, minute, second, , , offsetHour, offsetMinute] = match
+  const parsedHour = Number(hour)
+  const parsedMinute = Number(minute)
+  const parsedSecond = Number(second)
+  const parsedOffsetHour = offsetHour === undefined ? undefined : Number(offsetHour)
+  const parsedOffsetMinute = offsetMinute === undefined ? undefined : Number(offsetMinute)
+
+  return (
+    isValidDateParts(Number(year), Number(month), Number(day)) &&
+    parsedHour >= 0 &&
+    parsedHour <= 23 &&
+    parsedMinute >= 0 &&
+    parsedMinute <= 59 &&
+    parsedSecond >= 0 &&
+    parsedSecond <= 59 &&
+    (parsedOffsetHour === undefined || (parsedOffsetHour >= 0 && parsedOffsetHour <= 23)) &&
+    (parsedOffsetMinute === undefined || (parsedOffsetMinute >= 0 && parsedOffsetMinute <= 59))
+  )
+}
+
 const isPresentForOneOf = (value: unknown): boolean => {
   if (value === null) return true
   if (value === undefined) return false
@@ -298,6 +346,30 @@ export const getStringLengthRule = ({
   }
 }
 
+export const getStringFormatRule = (format: string | undefined, name: TFormName): Rule | undefined => {
+  if (!format || (format !== 'date' && format !== 'date-time')) {
+    return undefined
+  }
+
+  const message =
+    format === 'date'
+      ? `Value must match date format for ${prettyFieldPath(name)}: YYYY-MM-DD`
+      : `Value must match date-time format for ${prettyFieldPath(name)}: RFC 3339 date-time`
+
+  return {
+    validator: async (_, value) => {
+      if (value === undefined || value === null || value === '') return
+      if (typeof value !== 'string') return
+
+      const matchesFormat = format === 'date' ? matchesDateFormat(value) : matchesDateTimeFormat(value)
+
+      if (!matchesFormat) {
+        throw new Error(message)
+      }
+    },
+  }
+}
+
 export const getArrayItemsRule = ({
   minItems,
   maxItems,
@@ -327,6 +399,24 @@ export const getArrayItemsRule = ({
         throw new Error(message)
       }
       if (maxItems !== undefined && value.length > maxItems) {
+        throw new Error(message)
+      }
+    },
+  }
+}
+
+export const getNumberFormatRule = (format: string | undefined, name: TFormName): Rule | undefined => {
+  if (format !== 'int32') {
+    return undefined
+  }
+
+  const message = `Value must be a 32-bit signed integer for ${prettyFieldPath(name)}`
+
+  return {
+    validator: async (_, value) => {
+      if (value === undefined || value === null || value === '') return
+      if (typeof value !== 'number') return
+      if (!Number.isInteger(value) || value < INT32_MIN || value > INT32_MAX) {
         throw new Error(message)
       }
     },

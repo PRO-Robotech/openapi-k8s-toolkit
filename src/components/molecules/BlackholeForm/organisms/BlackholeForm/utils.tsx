@@ -53,6 +53,7 @@ export const getStringFormItemFromSwagger = ({
   defaultValue,
   example,
   nullable,
+  format,
   pattern,
   minLength,
   maxLength,
@@ -72,6 +73,7 @@ export const getStringFormItemFromSwagger = ({
   defaultValue?: string
   example?: string
   nullable?: boolean
+  format?: string
   pattern?: string
   minLength?: number
   maxLength?: number
@@ -105,6 +107,7 @@ export const getStringFormItemFromSwagger = ({
       defaultValue={defaultValue}
       example={example}
       nullable={nullable}
+      format={format}
       pattern={pattern}
       minLength={minLength}
       maxLength={maxLength}
@@ -183,6 +186,7 @@ export const getNumberFormItemFromSwagger = ({
   defaultValue,
   example,
   nullable,
+  format,
   minimum,
   maximum,
 }: {
@@ -201,6 +205,7 @@ export const getNumberFormItemFromSwagger = ({
   defaultValue?: number
   example?: number
   nullable?: boolean
+  format?: string
   minimum?: number
   maximum?: number
 }) => {
@@ -222,6 +227,7 @@ export const getNumberFormItemFromSwagger = ({
       defaultValue={defaultValue}
       example={example}
       nullable={nullable}
+      format={format}
       minimum={minimum}
       maximum={maximum}
     />
@@ -290,6 +296,7 @@ export const getStringMultilineFormItemFromSwagger = ({
   defaultValue,
   example,
   nullable,
+  format,
   pattern,
   minLength,
   maxLength,
@@ -309,6 +316,7 @@ export const getStringMultilineFormItemFromSwagger = ({
   defaultValue?: string
   example?: string
   nullable?: boolean
+  format?: string
   pattern?: string
   minLength?: number
   maxLength?: number
@@ -331,6 +339,7 @@ export const getStringMultilineFormItemFromSwagger = ({
       defaultValue={defaultValue}
       example={example}
       nullable={nullable}
+      format={format}
       pattern={pattern}
       minLength={minLength}
       maxLength={maxLength}
@@ -561,6 +570,7 @@ export const getArrayFormItemFromSwagger = ({
                             removeField,
                             persistedControls,
                             onRemoveByMinus: () => remove(field.name),
+                            format: itemSchema?.format,
                             pattern: itemSchema?.pattern,
                             minLength: itemSchema?.minLength,
                             maxLength: itemSchema?.maxLength,
@@ -583,6 +593,7 @@ export const getArrayFormItemFromSwagger = ({
                             removeField,
                             persistedControls,
                             onRemoveByMinus: () => remove(field.name),
+                            format: itemSchema?.format,
                             minimum: itemSchema?.minimum,
                             maximum: itemSchema?.maximum,
                           })}
@@ -648,6 +659,7 @@ export const getArrayFormItemFromSwagger = ({
                             persistedControls,
                             onRemoveByMinus: () => remove(field.name),
                             isBase64: fieldType === 'multilineStringBase64',
+                            format: itemSchema?.format,
                             pattern: itemSchema?.pattern,
                             minLength: itemSchema?.minLength,
                             maxLength: itemSchema?.maxLength,
@@ -895,6 +907,7 @@ export const getObjectFormItemsDraft = ({
             defaultValue: extractStringDefault(properties[el].default),
             example: extractStringDefault(properties[el].example),
             nullable: properties[el].nullable,
+            format: properties[el].format,
             pattern: properties[el].pattern,
             minLength: properties[el].minLength,
             maxLength: properties[el].maxLength,
@@ -921,6 +934,7 @@ export const getObjectFormItemsDraft = ({
             defaultValue: extractNumberDefault(properties[el].default),
             example: extractNumberDefault(properties[el].example),
             nullable: properties[el].nullable,
+            format: properties[el].format,
             minimum: properties[el].minimum,
             maximum: properties[el].maximum,
           })
@@ -989,6 +1003,7 @@ export const getObjectFormItemsDraft = ({
             defaultValue: extractStringDefault(properties[el].default),
             example: extractStringDefault(properties[el].example),
             nullable: properties[el].nullable,
+            format: properties[el].format,
             pattern: properties[el].pattern,
             minLength: properties[el].minLength,
             maxLength: properties[el].maxLength,

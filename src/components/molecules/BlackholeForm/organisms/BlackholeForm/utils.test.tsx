@@ -646,6 +646,25 @@ describe('getObjectFormItemsDraft', () => {
     expect(FormStringInputMock).toHaveBeenCalledWith(expect.objectContaining({ pattern: '^https?://' }))
   })
 
+  test('passes string format to FormStringInput', () => {
+    const properties = { createdAt: { type: 'string', format: 'date-time' } } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['metadata'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormStringInputMock).toHaveBeenCalledWith(expect.objectContaining({ format: 'date-time' }))
+  })
+
   test('passes string minLength and maxLength to FormStringInput', () => {
     const properties = { name: { type: 'string', minLength: 3, maxLength: 63 } } as any
 
@@ -739,6 +758,25 @@ describe('getObjectFormItemsDraft', () => {
 
     render(<div>{el}</div>)
     expect(FormNumberInputMock).toHaveBeenCalledWith(expect.objectContaining({ minimum: 1, maximum: 65535 }))
+  })
+
+  test('passes number format to FormNumberInput', () => {
+    const properties = { replicas: { type: 'integer', format: 'int32' } } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormNumberInputMock).toHaveBeenCalledWith(expect.objectContaining({ format: 'int32' }))
   })
 
   test('routes range input', () => {
@@ -879,6 +917,27 @@ describe('getObjectFormItemsDraft', () => {
 
     render(<div>{el}</div>)
     expect(FormStringMultilineInputMock).toHaveBeenCalledWith(expect.objectContaining({ pattern: '^run:' }))
+  })
+
+  test('passes string format to FormStringMultilineInput', () => {
+    const properties = {
+      timestamp: { type: 'multilineString', format: 'date-time' },
+    } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormStringMultilineInputMock).toHaveBeenCalledWith(expect.objectContaining({ format: 'date-time' }))
   })
 
   test('passes string minLength and maxLength to FormStringMultilineInput', () => {

@@ -2,9 +2,11 @@
 import {
   collectOneOfRequiredGroupStates,
   getArrayItemsRule,
+  getNumberFormatRule,
   getNumberRangeRule,
   getPatternRule,
   getRequiredRule,
+  getStringFormatRule,
   getStringLengthRule,
   prettyFieldPath,
 } from './validation'
@@ -106,6 +108,42 @@ describe('validation helpers', () => {
     )
   })
 
+  test('getStringFormatRule validates date values', async () => {
+    const rule: any = getStringFormatRule('date', ['spec', 'startDate'] as any)
+
+    expect(typeof rule.validator).toBe('function')
+    await expect(rule.validator(undefined, '2026-05-06')).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, '2024-02-29')).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, '')).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, undefined)).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, '2026-02-29')).rejects.toThrow(
+      'Value must match date format for spec.startDate: YYYY-MM-DD',
+    )
+    await expect(rule.validator(undefined, '06.05.2026')).rejects.toThrow(
+      'Value must match date format for spec.startDate: YYYY-MM-DD',
+    )
+  })
+
+  test('getStringFormatRule validates date-time values', async () => {
+    const rule: any = getStringFormatRule('date-time', ['metadata', 'creationTimestamp'] as any)
+
+    expect(typeof rule.validator).toBe('function')
+    await expect(rule.validator(undefined, '2026-05-06T12:34:56Z')).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, '2026-05-06T12:34:56.789+03:00')).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, '')).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, '2026-05-06')).rejects.toThrow(
+      'Value must match date-time format for metadata.creationTimestamp: RFC 3339 date-time',
+    )
+    await expect(rule.validator(undefined, '2026-05-06T25:00:00Z')).rejects.toThrow(
+      'Value must match date-time format for metadata.creationTimestamp: RFC 3339 date-time',
+    )
+  })
+
+  test('getStringFormatRule ignores unsupported string formats', () => {
+    expect(getStringFormatRule('email', ['spec', 'owner'] as any)).toBeUndefined()
+    expect(getStringFormatRule(undefined, ['spec', 'owner'] as any)).toBeUndefined()
+  })
+
   test('getArrayItemsRule validates inclusive minItems and maxItems', async () => {
     const rule: any = getArrayItemsRule({
       name: ['spec', 'hosts'] as any,
@@ -125,6 +163,27 @@ describe('validation helpers', () => {
     await expect(rule.validator(undefined, ['a', 'b', 'c', 'd', 'e'])).rejects.toThrow(
       'Value must contain between 2 and 4 items for spec.hosts',
     )
+  })
+
+  test('getNumberFormatRule validates int32 values', async () => {
+    const rule: any = getNumberFormatRule('int32', ['spec', 'replicas'] as any)
+
+    expect(typeof rule.validator).toBe('function')
+    await expect(rule.validator(undefined, 0)).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, 2147483647)).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, -2147483648)).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, '')).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, 1.5)).rejects.toThrow(
+      'Value must be a 32-bit signed integer for spec.replicas',
+    )
+    await expect(rule.validator(undefined, 2147483648)).rejects.toThrow(
+      'Value must be a 32-bit signed integer for spec.replicas',
+    )
+  })
+
+  test('getNumberFormatRule ignores unsupported numeric formats', () => {
+    expect(getNumberFormatRule('int64', ['spec', 'id'] as any)).toBeUndefined()
+    expect(getNumberFormatRule(undefined, ['spec', 'id'] as any)).toBeUndefined()
   })
 
   test('getNumberRangeRule validates inclusive minimum and maximum', async () => {

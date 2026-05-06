@@ -17,7 +17,7 @@ import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
 import { buildPlaceholder, getExampleTooltip } from '../helpers/buildPlaceholder'
 import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 import { useNullToggleButton } from '../helpers/useNullToggleButton'
-import { getPatternRule, getRequiredRule, getStringLengthRule } from '../helpers/validation'
+import { getPatternRule, getRequiredRule, getStringFormatRule, getStringLengthRule } from '../helpers/validation'
 
 type TFormStringInputProps = {
   name: TFormName
@@ -34,6 +34,7 @@ type TFormStringInputProps = {
   defaultValue?: string
   example?: string
   nullable?: boolean
+  format?: string
   pattern?: string
   minLength?: number
   maxLength?: number
@@ -54,6 +55,7 @@ export const FormStringInput: FC<TFormStringInputProps> = ({
   defaultValue,
   example,
   nullable,
+  format,
   pattern,
   minLength,
   maxLength,
@@ -65,6 +67,7 @@ export const FormStringInput: FC<TFormStringInputProps> = ({
   const defaultBtn = useDefaultValueButton(formFieldName, defaultValue, nullable)
   const nullBtn = useNullToggleButton(formFieldName, nullable)
   const exampleTooltip = getExampleTooltip(defaultValue, example)
+  const formatRule = getStringFormatRule(format, name)
   const patternRule = getPatternRule(pattern, name)
   const lengthRule = getStringLengthRule({ minLength, maxLength, name })
 
@@ -112,6 +115,7 @@ export const FormStringInput: FC<TFormStringInputProps> = ({
         name={formFieldName}
         rules={[
           getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name, nullable),
+          ...(formatRule ? [formatRule] : []),
           ...(patternRule ? [patternRule] : []),
           ...(lengthRule ? [lengthRule] : []),
         ]}
