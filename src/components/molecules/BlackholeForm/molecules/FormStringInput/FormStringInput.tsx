@@ -17,7 +17,7 @@ import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
 import { buildPlaceholder, getExampleTooltip } from '../helpers/buildPlaceholder'
 import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 import { useNullToggleButton } from '../helpers/useNullToggleButton'
-import { getPatternRule, getRequiredRule } from '../helpers/validation'
+import { getPatternRule, getRequiredRule, getStringLengthRule } from '../helpers/validation'
 
 type TFormStringInputProps = {
   name: TFormName
@@ -35,6 +35,8 @@ type TFormStringInputProps = {
   example?: string
   nullable?: boolean
   pattern?: string
+  minLength?: number
+  maxLength?: number
 }
 
 export const FormStringInput: FC<TFormStringInputProps> = ({
@@ -53,6 +55,8 @@ export const FormStringInput: FC<TFormStringInputProps> = ({
   example,
   nullable,
   pattern,
+  minLength,
+  maxLength,
 }) => {
   const designNewLayout = useDesignNewLayout()
 
@@ -62,6 +66,7 @@ export const FormStringInput: FC<TFormStringInputProps> = ({
   const nullBtn = useNullToggleButton(formFieldName, nullable)
   const exampleTooltip = getExampleTooltip(defaultValue, example)
   const patternRule = getPatternRule(pattern, name)
+  const lengthRule = getStringLengthRule({ minLength, maxLength, name })
 
   const title = (
     <>
@@ -108,6 +113,7 @@ export const FormStringInput: FC<TFormStringInputProps> = ({
         rules={[
           getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name, nullable),
           ...(patternRule ? [patternRule] : []),
+          ...(lengthRule ? [lengthRule] : []),
         ]}
         validateTrigger="onBlur"
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}

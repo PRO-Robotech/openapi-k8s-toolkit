@@ -21,7 +21,7 @@ import { Styled } from './styled'
 import { buildPlaceholder, getExampleTooltip } from '../helpers/buildPlaceholder'
 import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 import { useNullToggleButton } from '../helpers/useNullToggleButton'
-import { getPatternRule, getRequiredRule } from '../helpers/validation'
+import { getPatternRule, getRequiredRule, getStringLengthRule } from '../helpers/validation'
 
 type TFormStringMultilineInputProps = {
   name: TFormName
@@ -40,6 +40,8 @@ type TFormStringMultilineInputProps = {
   example?: string
   nullable?: boolean
   pattern?: string
+  minLength?: number
+  maxLength?: number
 }
 
 export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
@@ -59,6 +61,8 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
   example,
   nullable,
   pattern,
+  minLength,
+  maxLength,
 }) => {
   const designNewLayout = useDesignNewLayout()
   const placeholder = buildPlaceholder(name, defaultValue, example)
@@ -71,6 +75,7 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
   const defaultBtn = useDefaultValueButton(formFieldName, defaultValue, nullable)
   const nullBtn = useNullToggleButton(formFieldName, nullable)
   const patternRule = !isBase64 ? getPatternRule(pattern, name) : undefined
+  const lengthRule = !isBase64 ? getStringLengthRule({ minLength, maxLength, name }) : undefined
 
   // Derive multiline based on current local value
   // const isMultiline = useMemo(() => isMultilineString(formValue), [formValue])
@@ -131,6 +136,7 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
         rules={[
           getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name, nullable),
           ...(patternRule ? [patternRule] : []),
+          ...(lengthRule ? [lengthRule] : []),
         ]}
         validateTrigger="onBlur"
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}

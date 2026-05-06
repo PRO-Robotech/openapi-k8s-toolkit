@@ -4,6 +4,7 @@ import {
   getNumberRangeRule,
   getPatternRule,
   getRequiredRule,
+  getStringLengthRule,
   prettyFieldPath,
 } from './validation'
 
@@ -81,6 +82,26 @@ describe('validation helpers', () => {
         pattern: '[',
         error: expect.any(SyntaxError),
       },
+    )
+  })
+
+  test('getStringLengthRule validates inclusive minLength and maxLength', async () => {
+    const rule: any = getStringLengthRule({
+      name: ['metadata', 'name'] as any,
+      minLength: 3,
+      maxLength: 10,
+    })
+
+    expect(typeof rule.validator).toBe('function')
+    await expect(rule.validator(undefined, 'abc')).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, 'abcdefghij')).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, '')).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, undefined)).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, 'ab')).rejects.toThrow(
+      'Value must be between 3 and 10 characters for metadata.name',
+    )
+    await expect(rule.validator(undefined, 'abcdefghijk')).rejects.toThrow(
+      'Value must be between 3 and 10 characters for metadata.name',
     )
   })
 

@@ -39,6 +39,8 @@ export interface TFormSchemaNode {
   example?: unknown
   nullable?: boolean
   pattern?: string
+  minLength?: number
+  maxLength?: number
   minimum?: number
   maximum?: number
   description?: string

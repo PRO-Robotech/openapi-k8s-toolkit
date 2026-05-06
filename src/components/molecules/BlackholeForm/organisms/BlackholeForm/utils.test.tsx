@@ -600,6 +600,25 @@ describe('getObjectFormItemsDraft', () => {
     expect(FormStringInputMock).toHaveBeenCalledWith(expect.objectContaining({ pattern: '^https?://' }))
   })
 
+  test('passes string minLength and maxLength to FormStringInput', () => {
+    const properties = { name: { type: 'string', minLength: 3, maxLength: 63 } } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['metadata'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormStringInputMock).toHaveBeenCalledWith(expect.objectContaining({ minLength: 3, maxLength: 63 }))
+  })
+
   test('routes x-kubernetes-int-or-string branch', () => {
     const properties = { size: { type: 'string', 'x-kubernetes-int-or-string': true } } as any
 
@@ -795,6 +814,29 @@ describe('getObjectFormItemsDraft', () => {
 
     render(<div>{el}</div>)
     expect(FormStringMultilineInputMock).toHaveBeenCalledWith(expect.objectContaining({ pattern: '^run:' }))
+  })
+
+  test('passes string minLength and maxLength to FormStringMultilineInput', () => {
+    const properties = {
+      script: { type: 'multilineString', minLength: 10, maxLength: 1000 },
+    } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormStringMultilineInputMock).toHaveBeenCalledWith(
+      expect.objectContaining({ minLength: 10, maxLength: 1000 }),
+    )
   })
 
   test('routes boolean', () => {

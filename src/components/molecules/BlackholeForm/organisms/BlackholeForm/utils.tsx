@@ -53,6 +53,8 @@ export const getStringFormItemFromSwagger = ({
   example,
   nullable,
   pattern,
+  minLength,
+  maxLength,
 }: {
   name: TFormName
   arrKey?: number
@@ -70,6 +72,8 @@ export const getStringFormItemFromSwagger = ({
   example?: string
   nullable?: boolean
   pattern?: string
+  minLength?: number
+  maxLength?: number
 }) => {
   if (Array.isArray(name) && name.length === 2 && name[0] === 'metadata' && name[1] === 'namespace' && namespaceData) {
     return (
@@ -101,6 +105,8 @@ export const getStringFormItemFromSwagger = ({
       example={example}
       nullable={nullable}
       pattern={pattern}
+      minLength={minLength}
+      maxLength={maxLength}
     />
   )
 }
@@ -284,6 +290,8 @@ export const getStringMultilineFormItemFromSwagger = ({
   example,
   nullable,
   pattern,
+  minLength,
+  maxLength,
 }: {
   name: TFormName
   arrKey?: number
@@ -301,6 +309,8 @@ export const getStringMultilineFormItemFromSwagger = ({
   example?: string
   nullable?: boolean
   pattern?: string
+  minLength?: number
+  maxLength?: number
 }) => {
   return (
     <FormStringMultilineInput
@@ -321,6 +331,8 @@ export const getStringMultilineFormItemFromSwagger = ({
       example={example}
       nullable={nullable}
       pattern={pattern}
+      minLength={minLength}
+      maxLength={maxLength}
     />
   )
 }
@@ -535,6 +547,8 @@ export const getArrayFormItemFromSwagger = ({
                             persistedControls,
                             onRemoveByMinus: () => remove(field.name),
                             pattern: itemSchema?.pattern,
+                            minLength: itemSchema?.minLength,
+                            maxLength: itemSchema?.maxLength,
                           })}
                         {(fieldType === 'number' || fieldType === 'integer') &&
                           getNumberFormItemFromSwagger({
@@ -618,6 +632,8 @@ export const getArrayFormItemFromSwagger = ({
                             onRemoveByMinus: () => remove(field.name),
                             isBase64: fieldType === 'multilineStringBase64',
                             pattern: itemSchema?.pattern,
+                            minLength: itemSchema?.minLength,
+                            maxLength: itemSchema?.maxLength,
                           })}
                         {fieldType === 'boolean' &&
                           getBooleanFormItemFromSwagger({
@@ -862,6 +878,8 @@ export const getObjectFormItemsDraft = ({
             example: extractStringDefault(properties[el].example),
             nullable: properties[el].nullable,
             pattern: properties[el].pattern,
+            minLength: properties[el].minLength,
+            maxLength: properties[el].maxLength,
           })
         }
         if (properties[el].type === 'number' || properties[el].type === 'integer') {
@@ -952,6 +970,8 @@ export const getObjectFormItemsDraft = ({
             example: extractStringDefault(properties[el].example),
             nullable: properties[el].nullable,
             pattern: properties[el].pattern,
+            minLength: properties[el].minLength,
+            maxLength: properties[el].maxLength,
           })
         }
         if (properties[el].type === 'boolean') {

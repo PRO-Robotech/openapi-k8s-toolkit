@@ -263,6 +263,41 @@ export const getPatternRule = (pattern: string | undefined, name: TFormName): Ru
   }
 }
 
+export const getStringLengthRule = ({
+  minLength,
+  maxLength,
+  name,
+}: {
+  minLength?: number
+  maxLength?: number
+  name: TFormName
+}): Rule | undefined => {
+  if (minLength === undefined && maxLength === undefined) {
+    return undefined
+  }
+
+  let message = `Value must be at most ${maxLength} characters for ${prettyFieldPath(name)}`
+
+  if (minLength !== undefined && maxLength !== undefined) {
+    message = `Value must be between ${minLength} and ${maxLength} characters for ${prettyFieldPath(name)}`
+  } else if (minLength !== undefined) {
+    message = `Value must be at least ${minLength} characters for ${prettyFieldPath(name)}`
+  }
+
+  return {
+    validator: async (_, value) => {
+      if (value === undefined || value === null || value === '') return
+      if (typeof value !== 'string') return
+      if (minLength !== undefined && value.length < minLength) {
+        throw new Error(message)
+      }
+      if (maxLength !== undefined && value.length > maxLength) {
+        throw new Error(message)
+      }
+    },
+  }
+}
+
 export const getNumberRangeRule = ({
   minimum,
   maximum,
