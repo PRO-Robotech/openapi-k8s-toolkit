@@ -153,3 +153,64 @@ export const getRequiredRule = (isRequired: boolean, name: TFormName, nullable?:
 
   return { required: true, message }
 }
+
+export const getPatternRule = (pattern: string | undefined, name: TFormName): Rule | undefined => {
+  if (!pattern) {
+    return undefined
+  }
+
+  let regexp: RegExp
+
+  try {
+    regexp = new RegExp(pattern)
+  } catch {
+    return undefined
+  }
+
+  const message = `Value must match pattern for ${prettyFieldPath(name)}: ${pattern}`
+
+  return {
+    validator: async (_, value) => {
+      if (value === undefined || value === null || value === '') return
+      if (typeof value !== 'string') return
+      if (!regexp.test(value)) {
+        throw new Error(message)
+      }
+    },
+  }
+}
+
+export const getNumberRangeRule = ({
+  minimum,
+  maximum,
+  name,
+}: {
+  minimum?: number
+  maximum?: number
+  name: TFormName
+}): Rule | undefined => {
+  if (minimum === undefined && maximum === undefined) {
+    return undefined
+  }
+
+  let message = `Value must be at most ${maximum} for ${prettyFieldPath(name)}`
+
+  if (minimum !== undefined && maximum !== undefined) {
+    message = `Value must be between ${minimum} and ${maximum} for ${prettyFieldPath(name)}`
+  } else if (minimum !== undefined) {
+    message = `Value must be at least ${minimum} for ${prettyFieldPath(name)}`
+  }
+
+  return {
+    validator: async (_, value) => {
+      if (value === undefined || value === null || value === '') return
+      if (typeof value !== 'number') return
+      if (minimum !== undefined && value < minimum) {
+        throw new Error(message)
+      }
+      if (maximum !== undefined && value > maximum) {
+        throw new Error(message)
+      }
+    },
+  }
+}

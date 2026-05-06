@@ -29,6 +29,9 @@ export interface TFormSchemaNode {
   default?: unknown
   example?: unknown
   nullable?: boolean
+  pattern?: string
+  minimum?: number
+  maximum?: number
   description?: string
   customProps?: unknown
   isAdditionalProperties?: boolean

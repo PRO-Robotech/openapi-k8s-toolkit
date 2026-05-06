@@ -1,5 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { collectOneOfRequiredGroupStates, getRequiredRule, prettyFieldPath } from './validation'
+import {
+  collectOneOfRequiredGroupStates,
+  getNumberRangeRule,
+  getPatternRule,
+  getRequiredRule,
+  prettyFieldPath,
+} from './validation'
 
 describe('validation helpers', () => {
   test('prettyFieldPath formats array path with dots', () => {
@@ -47,6 +53,42 @@ describe('validation helpers', () => {
       required: false,
       message: 'Please enter foo',
     })
+  })
+
+  test('getPatternRule validates string values against OpenAPI pattern', async () => {
+    const rule: any = getPatternRule('^https?://', ['spec', 'url'] as any)
+
+    expect(typeof rule.validator).toBe('function')
+    await expect(rule.validator(undefined, 'https://example.com')).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, 'http://example.com')).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, '')).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, undefined)).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, 'ftp://example.com')).rejects.toThrow(
+      'Value must match pattern for spec.url: ^https?://',
+    )
+  })
+
+  test('getPatternRule ignores invalid regex patterns instead of breaking form rendering', () => {
+    expect(getPatternRule('[', ['spec', 'url'] as any)).toBeUndefined()
+  })
+
+  test('getNumberRangeRule validates inclusive minimum and maximum', async () => {
+    const rule: any = getNumberRangeRule({
+      name: ['spec', 'service', 'port'] as any,
+      minimum: 1,
+      maximum: 65535,
+    })
+
+    expect(typeof rule.validator).toBe('function')
+    await expect(rule.validator(undefined, 1)).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, 65535)).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, undefined)).resolves.toBeUndefined()
+    await expect(rule.validator(undefined, 0)).rejects.toThrow(
+      'Value must be between 1 and 65535 for spec.service.port',
+    )
+    await expect(rule.validator(undefined, 65536)).rejects.toThrow(
+      'Value must be between 1 and 65535 for spec.service.port',
+    )
   })
 
   test('collectOneOfRequiredGroupStates accepts exactly one satisfied group', () => {

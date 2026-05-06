@@ -18,7 +18,7 @@ import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
 import { buildPlaceholder, getExampleTooltip } from '../helpers/buildPlaceholder'
 import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 import { useNullToggleButton } from '../helpers/useNullToggleButton'
-import { getRequiredRule } from '../helpers/validation'
+import { getNumberRangeRule, getRequiredRule } from '../helpers/validation'
 
 type TFormNumberItemProps = {
   isNumber?: boolean
@@ -36,6 +36,8 @@ type TFormNumberItemProps = {
   defaultValue?: number
   example?: number
   nullable?: boolean
+  minimum?: number
+  maximum?: number
 }
 
 export const FormNumberInput: FC<TFormNumberItemProps> = ({
@@ -54,12 +56,15 @@ export const FormNumberInput: FC<TFormNumberItemProps> = ({
   defaultValue,
   example,
   nullable,
+  minimum,
+  maximum,
 }) => {
   const designNewLayout = useDesignNewLayout()
   const formFieldName = arrName || name
   const defaultBtn = useDefaultValueButton(formFieldName, defaultValue, nullable)
   const nullBtn = useNullToggleButton(formFieldName, nullable)
   const exampleTooltip = getExampleTooltip(defaultValue, example)
+  const rangeRule = getNumberRangeRule({ minimum, maximum, name })
 
   const title = (
     <>
@@ -105,6 +110,7 @@ export const FormNumberInput: FC<TFormNumberItemProps> = ({
         name={formFieldName}
         rules={[
           getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name, nullable),
+          ...(rangeRule ? [rangeRule] : []),
         ]}
         validateTrigger="onBlur"
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
@@ -112,6 +118,8 @@ export const FormNumberInput: FC<TFormNumberItemProps> = ({
         <InputNumber
           placeholder={buildPlaceholder(name, defaultValue, example)}
           step={isNumber ? 0.1 : 1}
+          min={minimum}
+          max={maximum}
           disabled={nullBtn.visible && nullBtn.isNull}
         />
       </ResetedFormItem>

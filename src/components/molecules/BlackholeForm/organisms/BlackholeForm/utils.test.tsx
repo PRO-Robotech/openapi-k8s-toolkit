@@ -581,6 +581,25 @@ describe('getObjectFormItemsDraft', () => {
     expect(FormStringInputMock).toHaveBeenCalledWith(expect.objectContaining({ defaultValue: 'nginx:latest' }))
   })
 
+  test('passes string pattern to FormStringInput', () => {
+    const properties = { url: { type: 'string', pattern: '^https?://' } } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormStringInputMock).toHaveBeenCalledWith(expect.objectContaining({ pattern: '^https?://' }))
+  })
+
   test('routes x-kubernetes-int-or-string branch', () => {
     const properties = { size: { type: 'string', 'x-kubernetes-int-or-string': true } } as any
 
@@ -636,6 +655,25 @@ describe('getObjectFormItemsDraft', () => {
 
     render(<div>{el}</div>)
     expect(FormNumberInputMock).toHaveBeenCalledWith(expect.objectContaining({ defaultValue: 3 }))
+  })
+
+  test('passes minimum and maximum to FormNumberInput', () => {
+    const properties = { port: { type: 'integer', minimum: 1, maximum: 65535 } } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormNumberInputMock).toHaveBeenCalledWith(expect.objectContaining({ minimum: 1, maximum: 65535 }))
   })
 
   test('routes range input', () => {
@@ -736,6 +774,27 @@ describe('getObjectFormItemsDraft', () => {
 
     render(<div>{el}</div>)
     expect(FormStringMultilineInputMock).toHaveBeenCalledWith(expect.objectContaining({ defaultValue: 'echo hello' }))
+  })
+
+  test('passes string pattern to FormStringMultilineInput', () => {
+    const properties = {
+      script: { type: 'multilineString', pattern: '^run:' },
+    } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormStringMultilineInputMock).toHaveBeenCalledWith(expect.objectContaining({ pattern: '^run:' }))
   })
 
   test('routes boolean', () => {

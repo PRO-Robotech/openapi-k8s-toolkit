@@ -52,6 +52,7 @@ export const getStringFormItemFromSwagger = ({
   defaultValue,
   example,
   nullable,
+  pattern,
 }: {
   name: TFormName
   arrKey?: number
@@ -68,6 +69,7 @@ export const getStringFormItemFromSwagger = ({
   defaultValue?: string
   example?: string
   nullable?: boolean
+  pattern?: string
 }) => {
   if (Array.isArray(name) && name.length === 2 && name[0] === 'metadata' && name[1] === 'namespace' && namespaceData) {
     return (
@@ -98,6 +100,7 @@ export const getStringFormItemFromSwagger = ({
       defaultValue={defaultValue}
       example={example}
       nullable={nullable}
+      pattern={pattern}
     />
   )
 }
@@ -173,6 +176,8 @@ export const getNumberFormItemFromSwagger = ({
   defaultValue,
   example,
   nullable,
+  minimum,
+  maximum,
 }: {
   isNumber?: boolean
   name: TFormName
@@ -189,6 +194,8 @@ export const getNumberFormItemFromSwagger = ({
   defaultValue?: number
   example?: number
   nullable?: boolean
+  minimum?: number
+  maximum?: number
 }) => {
   return (
     <FormNumberInput
@@ -208,6 +215,8 @@ export const getNumberFormItemFromSwagger = ({
       defaultValue={defaultValue}
       example={example}
       nullable={nullable}
+      minimum={minimum}
+      maximum={maximum}
     />
   )
 }
@@ -274,6 +283,7 @@ export const getStringMultilineFormItemFromSwagger = ({
   defaultValue,
   example,
   nullable,
+  pattern,
 }: {
   name: TFormName
   arrKey?: number
@@ -290,6 +300,7 @@ export const getStringMultilineFormItemFromSwagger = ({
   defaultValue?: string
   example?: string
   nullable?: boolean
+  pattern?: string
 }) => {
   return (
     <FormStringMultilineInput
@@ -309,6 +320,7 @@ export const getStringMultilineFormItemFromSwagger = ({
       defaultValue={defaultValue}
       example={example}
       nullable={nullable}
+      pattern={pattern}
     />
   )
 }
@@ -522,6 +534,7 @@ export const getArrayFormItemFromSwagger = ({
                             removeField,
                             persistedControls,
                             onRemoveByMinus: () => remove(field.name),
+                            pattern: itemSchema?.pattern,
                           })}
                         {(fieldType === 'number' || fieldType === 'integer') &&
                           getNumberFormItemFromSwagger({
@@ -541,6 +554,8 @@ export const getArrayFormItemFromSwagger = ({
                             removeField,
                             persistedControls,
                             onRemoveByMinus: () => remove(field.name),
+                            minimum: itemSchema?.minimum,
+                            maximum: itemSchema?.maximum,
                           })}
                         {(fieldType === 'rangeInputCpu' || fieldType === 'rangeInputMemory') &&
                           getRangeInputFormItemFromSwagger({
@@ -602,6 +617,7 @@ export const getArrayFormItemFromSwagger = ({
                             persistedControls,
                             onRemoveByMinus: () => remove(field.name),
                             isBase64: fieldType === 'multilineStringBase64',
+                            pattern: itemSchema?.pattern,
                           })}
                         {fieldType === 'boolean' &&
                           getBooleanFormItemFromSwagger({
@@ -844,6 +860,7 @@ export const getObjectFormItemsDraft = ({
             defaultValue: extractStringDefault(properties[el].default),
             example: extractStringDefault(properties[el].example),
             nullable: properties[el].nullable,
+            pattern: properties[el].pattern,
           })
         }
         if (properties[el].type === 'number' || properties[el].type === 'integer') {
@@ -867,6 +884,8 @@ export const getObjectFormItemsDraft = ({
             defaultValue: extractNumberDefault(properties[el].default),
             example: extractNumberDefault(properties[el].example),
             nullable: properties[el].nullable,
+            minimum: properties[el].minimum,
+            maximum: properties[el].maximum,
           })
         }
         if (properties[el].type === 'rangeInputCpu' || properties[el].type === 'rangeInputMemory') {
@@ -931,6 +950,7 @@ export const getObjectFormItemsDraft = ({
             defaultValue: extractStringDefault(properties[el].default),
             example: extractStringDefault(properties[el].example),
             nullable: properties[el].nullable,
+            pattern: properties[el].pattern,
           })
         }
         if (properties[el].type === 'boolean') {
