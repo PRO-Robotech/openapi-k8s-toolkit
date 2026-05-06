@@ -2,9 +2,10 @@ import React, { FC, useEffect, useRef } from 'react'
 import { Flex, Typography, Select, Button, Form } from 'antd'
 import { TFormName, TNamespaceData } from 'localTypes/form'
 import { MinusIcon, feedbackIcons } from 'components/atoms'
-import { CustomSizeTitle, HiddenContainer, ResetedFormItem } from '../../atoms'
+import { CustomSizeTitle, HiddenContainer, ResetedFormItem, DefaultValueButton } from '../../atoms'
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
 import { getRequiredRule, prettyFieldPath } from '../helpers/validation'
+import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 
 type TFormNamespaceInputProps = {
   name: TFormName
@@ -12,8 +13,10 @@ type TFormNamespaceInputProps = {
   isAdditionalProperties?: boolean
   removeField: ({ path }: { path: TFormName }) => void
   /**
-   * YAML / OpenAPI default for the namespace field. Has priority over contextNamespace
-   * because it's an explicit declarative choice from the schema author.
+   * YAML / OpenAPI default for the namespace field. Drives placeholder hint and the
+   * Apply Default / Clear button, and has priority over contextNamespace in the
+   * one-shot mount cascade because it's an explicit declarative choice from the
+   * schema author.
    */
   defaultValue?: string
   /**
@@ -36,6 +39,7 @@ export const FormNamespaceInput: FC<TFormNamespaceInputProps> = ({
 }) => {
   const designNewLayout = useDesignNewLayout()
   const form = Form.useFormInstance()
+  const defaultBtn = useDefaultValueButton(name, defaultValue)
   const cascadeAppliedRef = useRef(false)
 
   useEffect(() => {
@@ -72,6 +76,8 @@ export const FormNamespaceInput: FC<TFormNamespaceInputProps> = ({
     return null
   }
 
+  const placeholder = defaultValue !== undefined ? `Default: ${defaultValue}` : 'Select namespace'
+
   return (
     <HiddenContainer name={name}>
       <Flex justify="space-between">
@@ -84,6 +90,14 @@ export const FormNamespaceInput: FC<TFormNamespaceInputProps> = ({
               <MinusIcon />
             </Button>
           )}
+          {defaultBtn.visible && (
+            <DefaultValueButton
+              defaultValue={defaultValue!}
+              isApplied={defaultBtn.isApplied}
+              onApply={defaultBtn.handleApply}
+              onClear={defaultBtn.handleClear}
+            />
+          )}
         </Flex>
       </Flex>
       <ResetedFormItem
@@ -93,7 +107,7 @@ export const FormNamespaceInput: FC<TFormNamespaceInputProps> = ({
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}
       >
         <Select
-          placeholder="Select namespace"
+          placeholder={placeholder}
           options={namespaceData.selectValues}
           filterOption={namespaceData.filterSelectOptions}
           allowClear

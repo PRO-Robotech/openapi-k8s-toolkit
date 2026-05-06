@@ -19,10 +19,15 @@ jest.mock('../../atoms', () => ({
   HiddenContainer: ({ children }: any) => <div>{children}</div>,
   CustomSizeTitle: ({ children }: any) => <div>{children}</div>,
   ResetedFormItem: ({ children, name }: any) => <Form.Item name={name}>{children}</Form.Item>,
+  DefaultValueButton: () => <button type="button" data-testid="default-value-button" aria-label="Apply default" />,
 }))
 
 jest.mock('../../organisms/BlackholeForm/context', () => ({
   useDesignNewLayout: () => false,
+}))
+
+jest.mock('../helpers/useDefaultValueButton', () => ({
+  useDefaultValueButton: () => ({ visible: false }),
 }))
 
 const buildNamespaceData = (values: string[]): NonNullable<TNamespaceData> => ({
