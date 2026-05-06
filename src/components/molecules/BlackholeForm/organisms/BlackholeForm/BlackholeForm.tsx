@@ -41,6 +41,7 @@ import {
 } from './helpers/prefills'
 import { DEBUG_PREFILLS, dbg, group, end, wdbg, wgroup, wend, prettyPath } from './helpers/debugs'
 import { sanitizeWildcardPath, expandWildcardTemplates, toStringPath, isPrefix } from './helpers/hiddenExpanded'
+import { collectOneOfBranchHiddenPaths } from './helpers/oneOfBranchVisibility'
 import { handleSubmitError, handleValidationError } from './utilsErrorHandler'
 import { Styled } from './styled'
 import {
@@ -554,14 +555,37 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
     return sanitized
   }, [expandedPaths])
 
+  const resolveHiddenPaths = useCallback(
+    (values: Record<string, unknown>): (string | number)[][] => {
+      const hiddenResolved = expandWildcardTemplates(hiddenWildcardTemplates, values, {
+        includeMissingExact: true,
+        includeMissingFinalForWildcard: true,
+      })
+      const oneOfBranchHiddenPaths = collectOneOfBranchHiddenPaths({
+        properties,
+        values,
+      })
+      const seen = new Set<string>()
+
+      return [...hiddenResolved, ...oneOfBranchHiddenPaths].filter(path => {
+        const key = JSON.stringify(path)
+
+        if (seen.has(key)) {
+          return false
+        }
+
+        seen.add(key)
+        return true
+      })
+    },
+    [hiddenWildcardTemplates, properties],
+  )
+
   useEffect(() => {
     if (!initialValues) return
     wgroup('initial resolve')
 
-    const hiddenResolved = expandWildcardTemplates(hiddenWildcardTemplates, initialValues as any, {
-      includeMissingExact: true,
-      includeMissingFinalForWildcard: true,
-    })
+    const hiddenResolved = resolveHiddenPaths(initialValues as Record<string, unknown>)
     wdbg('hidden resolved', hiddenResolved.map(prettyPath))
     setResolvedHiddenPaths(hiddenResolved as TFormName[])
 
@@ -602,7 +626,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
     })
 
     wend()
-  }, [initialValues, hiddenWildcardTemplates, expandedWildcardTemplates, persistedWildcardTemplates])
+  }, [initialValues, resolveHiddenPaths, expandedWildcardTemplates, persistedWildcardTemplates])
 
   const resolvedHiddenStringPaths = useMemo<string[][]>(
     () => resolvedHiddenPaths.map(toStringPath),
@@ -660,11 +684,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
       // resolve wildcard templates for hidden & expanded against current values ---
       wgroup('values→resolve wildcards')
 
-      const hiddenResolved = expandWildcardTemplates(
-        hiddenWildcardTemplates,
-        v,
-        { includeMissingExact: true, includeMissingFinalForWildcard: true }, // only hidden opts in
-      )
+      const hiddenResolved = resolveHiddenPaths(v)
       wdbg('hidden resolved', hiddenResolved.map(prettyPath))
 
       setResolvedHiddenPaths(hiddenResolved as TFormName[])
@@ -905,7 +925,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
       applyOneOfValidationErrors,
       applyPrefillForNewArrayItem,
       applyPersistedForNewArrayItem,
-      hiddenWildcardTemplates,
+      resolveHiddenPaths,
       expandedWildcardTemplates,
     ],
   )

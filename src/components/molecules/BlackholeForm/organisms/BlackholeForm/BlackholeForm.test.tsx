@@ -629,6 +629,209 @@ describe('BlackholeForm', () => {
     })
   })
 
+  test('create mode shows service branch and hides url branch when type=service', async () => {
+    const { HiddenContainer } = require('../../atoms')
+
+    getObjectFormItemsDraftMock.mockImplementation(() =>
+      React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(
+          HiddenContainer,
+          { name: ['spec', 'type'] },
+          React.createElement('div', { 'data-testid': 'type-selector' }, 'type'),
+        ),
+        React.createElement(
+          HiddenContainer,
+          { name: ['spec', 'service'] },
+          React.createElement('div', { 'data-testid': 'service-branch' }, 'service'),
+        ),
+        React.createElement(
+          HiddenContainer,
+          { name: ['spec', 'url'] },
+          React.createElement('div', { 'data-testid': 'url-branch' }, 'url'),
+        ),
+      ),
+    )
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        staticProperties={
+          {
+            spec: {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['service', 'url'] },
+                service: { type: 'object' },
+                url: { type: 'string' },
+              },
+              oneOfBranches: [
+                {
+                  match: { type: 'service' },
+                  required: ['service'],
+                  forbidden: ['url'],
+                },
+                {
+                  match: { type: 'url' },
+                  required: ['url'],
+                  forbidden: ['service'],
+                },
+              ],
+            },
+          } as any
+        }
+        prefillValuesSchema={{
+          spec: {
+            type: 'service',
+          },
+        }}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('type-selector')).toBeVisible()
+      expect(screen.getByTestId('service-branch')).toBeVisible()
+      expect(screen.getByTestId('url-branch')).not.toBeVisible()
+    })
+  })
+
+  test('create mode shows url branch and hides service branch when type=url', async () => {
+    const { HiddenContainer } = require('../../atoms')
+
+    getObjectFormItemsDraftMock.mockImplementation(() =>
+      React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(
+          HiddenContainer,
+          { name: ['spec', 'type'] },
+          React.createElement('div', { 'data-testid': 'type-selector' }, 'type'),
+        ),
+        React.createElement(
+          HiddenContainer,
+          { name: ['spec', 'service'] },
+          React.createElement('div', { 'data-testid': 'service-branch' }, 'service'),
+        ),
+        React.createElement(
+          HiddenContainer,
+          { name: ['spec', 'url'] },
+          React.createElement('div', { 'data-testid': 'url-branch' }, 'url'),
+        ),
+      ),
+    )
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        staticProperties={
+          {
+            spec: {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['service', 'url'] },
+                service: { type: 'object' },
+                url: { type: 'string' },
+              },
+              oneOfBranches: [
+                {
+                  match: { type: 'service' },
+                  required: ['service'],
+                  forbidden: ['url'],
+                },
+                {
+                  match: { type: 'url' },
+                  required: ['url'],
+                  forbidden: ['service'],
+                },
+              ],
+            },
+          } as any
+        }
+        prefillValuesSchema={{
+          spec: {
+            type: 'url',
+          },
+        }}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('type-selector')).toBeVisible()
+      expect(screen.getByTestId('url-branch')).toBeVisible()
+      expect(screen.getByTestId('service-branch')).not.toBeVisible()
+    })
+  })
+
+  test('edit mode keeps contradictory existing branch data visible on initial render', async () => {
+    const { HiddenContainer } = require('../../atoms')
+
+    getObjectFormItemsDraftMock.mockImplementation(() =>
+      React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(
+          HiddenContainer,
+          { name: ['spec', 'type'] },
+          React.createElement('div', { 'data-testid': 'type-selector' }, 'type'),
+        ),
+        React.createElement(
+          HiddenContainer,
+          { name: ['spec', 'service'] },
+          React.createElement('div', { 'data-testid': 'service-branch' }, 'service'),
+        ),
+        React.createElement(
+          HiddenContainer,
+          { name: ['spec', 'url'] },
+          React.createElement('div', { 'data-testid': 'url-branch' }, 'url'),
+        ),
+      ),
+    )
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        isCreate={false}
+        staticProperties={
+          {
+            spec: {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['service', 'url'] },
+                service: { type: 'object' },
+                url: { type: 'string' },
+              },
+              oneOfBranches: [
+                {
+                  match: { type: 'service' },
+                  required: ['service'],
+                  forbidden: ['url'],
+                },
+                {
+                  match: { type: 'url' },
+                  required: ['url'],
+                  forbidden: ['service'],
+                },
+              ],
+            },
+          } as any
+        }
+        prefillValuesSchema={{
+          spec: {
+            type: 'service',
+            url: 'https://example.com',
+          },
+        }}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('type-selector')).toBeVisible()
+      expect(screen.getByTestId('service-branch')).toBeVisible()
+      expect(screen.getByTestId('url-branch')).toBeVisible()
+    })
+  })
+
   test('submit (edit mode) calls updateEntry with correct endpoint/body', async () => {
     axiosPostMock.mockImplementation(async (url: string) => {
       if (String(url).includes('getYamlValuesByFromValues')) {
