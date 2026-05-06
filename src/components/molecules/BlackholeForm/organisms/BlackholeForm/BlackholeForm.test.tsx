@@ -904,6 +904,9 @@ describe('BlackholeForm', () => {
       expect(payload.values.spec.type).toBe('url')
       expect(payload.values.spec.service).toBeUndefined()
     })
+
+    expect(await screen.findByText(/Cleared 1 inactive branch field/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Removed spec\.service to match the new selector/i)).toBeInTheDocument()
   })
 
   test('does not clean inactive branch data on initial mount even if data is contradictory', async () => {

@@ -26,7 +26,7 @@ import { getPrefixSubarrays } from 'utils/getPrefixSubArrays'
 import { deepMerge } from 'utils/deepMerge'
 import { FlexGrow, Spacer } from 'components/atoms'
 import { YamlEditor } from '../../molecules'
-import { collectOneOfRequiredGroupStates } from '../../molecules/helpers/validation'
+import { collectOneOfRequiredGroupStates, prettyFieldPath } from '../../molecules/helpers/validation'
 import { getObjectFormItemsDraft } from './utils'
 import { pathKey, pruneAdditionalForValues, materializeAdditionalFromValues } from './helpers/casts'
 import {
@@ -692,9 +692,19 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
 
         if (inactiveCleanupPaths.length > 0) {
           inactiveCleanupPaths.forEach(path => {
-            form.setFieldValue(path as TFormName, undefined)
+            form.setFieldValue(path, undefined)
           })
           v = scrubLiteralWildcardKeys(form.getFieldsValue(true))
+
+          const formattedPaths = inactiveCleanupPaths.map(path => prettyFieldPath(path)).join(', ')
+          notificationApi.info({
+            message:
+              inactiveCleanupPaths.length === 1
+                ? 'Cleared 1 inactive branch field'
+                : `Cleared ${inactiveCleanupPaths.length} inactive branch fields`,
+            description: `Removed ${formattedPaths} to match the new selector.`,
+            placement: 'bottomRight',
+          })
         }
       }
 
@@ -946,6 +956,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
       applyPersistedForNewArrayItem,
       resolveHiddenPaths,
       expandedWildcardTemplates,
+      notificationApi,
     ],
   )
 
