@@ -245,14 +245,21 @@ export const getPatternRule = (pattern: string | undefined, name: TFormName): Ru
   }
 
   let regexp: RegExp
+  const fieldPath = prettyFieldPath(name)
 
   try {
     regexp = new RegExp(pattern)
-  } catch {
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn('[BlackholeForm] OpenAPI pattern cannot be compiled as JavaScript RegExp', {
+      fieldPath,
+      pattern,
+      error,
+    })
     return undefined
   }
 
-  const message = `Value must match pattern for ${prettyFieldPath(name)}: ${pattern}`
+  const message = `Value must match pattern for ${fieldPath}: ${pattern}`
 
   return {
     validator: async (_, value) => {

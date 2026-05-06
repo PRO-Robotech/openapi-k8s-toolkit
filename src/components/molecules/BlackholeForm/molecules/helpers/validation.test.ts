@@ -68,8 +68,20 @@ describe('validation helpers', () => {
     )
   })
 
-  test('getPatternRule ignores invalid regex patterns instead of breaking form rendering', () => {
+  test('getPatternRule warns and ignores invalid regex patterns instead of breaking form rendering', () => {
+    // eslint-disable-next-line no-console
+    ;(console.warn as jest.Mock).mockClear()
+
     expect(getPatternRule('[', ['spec', 'url'] as any)).toBeUndefined()
+    // eslint-disable-next-line no-console
+    expect(console.warn).toHaveBeenCalledWith(
+      '[BlackholeForm] OpenAPI pattern cannot be compiled as JavaScript RegExp',
+      {
+        fieldPath: 'spec.url',
+        pattern: '[',
+        error: expect.any(SyntaxError),
+      },
+    )
   })
 
   test('getNumberRangeRule validates inclusive minimum and maximum', async () => {
