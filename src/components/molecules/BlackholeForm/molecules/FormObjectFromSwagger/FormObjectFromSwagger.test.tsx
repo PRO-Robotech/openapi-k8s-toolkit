@@ -84,6 +84,36 @@ const ErrorHost: FC = () => (
   </Form>
 )
 
+const BranchErrorHost: FC = () => (
+  <Form>
+    <FormObjectFromSwagger
+      name={['spec']}
+      removeField={jest.fn()}
+      expandedControls={{
+        expandedKeys: [],
+        onExpandOpen: jest.fn(),
+        onExpandClose: jest.fn(),
+      }}
+      persistedControls={{
+        persistedKeys: [],
+        onPersistMark: jest.fn(),
+        onPersistUnmark: jest.fn(),
+      }}
+      collapseTitle="spec"
+      collapseFormName={['spec']}
+      oneOfBranches={[
+        {
+          match: { type: 'service' },
+          required: ['service'],
+          forbidden: ['url'],
+        },
+      ]}
+      validationErrors={['Please remove forbidden fields for spec when type=service: [url]']}
+      data={<div data-testid="object-body">body</div>}
+    />
+  </Form>
+)
+
 describe('FormObjectFromSwagger', () => {
   let rafSpy: jest.SpyInstance
 
@@ -132,6 +162,15 @@ describe('FormObjectFromSwagger', () => {
     expect(screen.getByTestId('object-body')).toBeInTheDocument()
     expect(
       await screen.findByText('Please satisfy exactly one of the following for spec: command or shell'),
+    ).toBeInTheDocument()
+  })
+
+  test('renders object-level oneOf branch validation errors', async () => {
+    render(<BranchErrorHost />)
+
+    expect(screen.getByTestId('object-body')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Please remove forbidden fields for spec when type=service: [url]'),
     ).toBeInTheDocument()
   })
 })

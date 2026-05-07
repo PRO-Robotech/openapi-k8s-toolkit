@@ -512,6 +512,520 @@ describe('BlackholeForm', () => {
     })
   })
 
+  test('submit is blocked when active oneOf branch required and forbidden fields are violated', async () => {
+    const { Form: AntForm } = require('antd')
+    const user = userEvent.setup()
+
+    getObjectFormItemsDraftMock.mockImplementation(() =>
+      React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(AntForm.Item, { name: ['spec', 'type'], noStyle: true }),
+        React.createElement(AntForm.Item, { name: ['spec', 'service'], noStyle: true }),
+        React.createElement(AntForm.Item, { name: ['spec', 'url'], noStyle: true }),
+        React.createElement('div', { 'data-testid': 'draft-items' }),
+      ),
+    )
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        staticProperties={
+          {
+            spec: {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['service', 'url'] },
+                service: { type: 'object' },
+                url: { type: 'string' },
+              },
+              oneOfBranches: [
+                {
+                  match: { type: 'service' },
+                  required: ['service'],
+                  forbidden: ['url'],
+                },
+                {
+                  match: { type: 'url' },
+                  required: ['url'],
+                  forbidden: ['service'],
+                },
+              ],
+            },
+          } as any
+        }
+        prefillValuesSchema={{
+          spec: {
+            type: 'service',
+            url: 'https://example.com',
+          },
+        }}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /submit/i }))
+
+    await waitFor(() => {
+      expect(createNewEntryMock).not.toHaveBeenCalled()
+      expect(updateEntryMock).not.toHaveBeenCalled()
+    })
+  })
+
+  test('submit proceeds when active oneOf branch state is valid', async () => {
+    const { Form: AntForm } = require('antd')
+    const user = userEvent.setup()
+
+    getObjectFormItemsDraftMock.mockImplementation(() =>
+      React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(AntForm.Item, { name: ['spec', 'type'], noStyle: true }),
+        React.createElement(AntForm.Item, { name: ['spec', 'service'], noStyle: true }),
+        React.createElement(AntForm.Item, { name: ['spec', 'url'], noStyle: true }),
+        React.createElement('div', { 'data-testid': 'draft-items' }),
+      ),
+    )
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        staticProperties={
+          {
+            spec: {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['service', 'url'] },
+                service: { type: 'object' },
+                url: { type: 'string' },
+              },
+              oneOfBranches: [
+                {
+                  match: { type: 'service' },
+                  required: ['service'],
+                  forbidden: ['url'],
+                },
+                {
+                  match: { type: 'url' },
+                  required: ['url'],
+                  forbidden: ['service'],
+                },
+              ],
+            },
+          } as any
+        }
+        prefillValuesSchema={{
+          spec: {
+            type: 'url',
+            url: 'https://example.com',
+          },
+        }}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /submit/i }))
+
+    await waitFor(() => {
+      expect(createNewEntryMock).toHaveBeenCalled()
+    })
+  })
+
+  test('create mode shows service branch and hides url branch when type=service', async () => {
+    const { HiddenContainer } = require('../../atoms')
+
+    getObjectFormItemsDraftMock.mockImplementation(() =>
+      React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(
+          HiddenContainer,
+          { name: ['spec', 'type'] },
+          React.createElement('div', { 'data-testid': 'type-selector' }, 'type'),
+        ),
+        React.createElement(
+          HiddenContainer,
+          { name: ['spec', 'service'] },
+          React.createElement('div', { 'data-testid': 'service-branch' }, 'service'),
+        ),
+        React.createElement(
+          HiddenContainer,
+          { name: ['spec', 'url'] },
+          React.createElement('div', { 'data-testid': 'url-branch' }, 'url'),
+        ),
+      ),
+    )
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        staticProperties={
+          {
+            spec: {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['service', 'url'] },
+                service: { type: 'object' },
+                url: { type: 'string' },
+              },
+              oneOfBranches: [
+                {
+                  match: { type: 'service' },
+                  required: ['service'],
+                  forbidden: ['url'],
+                },
+                {
+                  match: { type: 'url' },
+                  required: ['url'],
+                  forbidden: ['service'],
+                },
+              ],
+            },
+          } as any
+        }
+        prefillValuesSchema={{
+          spec: {
+            type: 'service',
+          },
+        }}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('type-selector')).toBeVisible()
+      expect(screen.getByTestId('service-branch')).toBeVisible()
+      expect(screen.getByTestId('url-branch')).not.toBeVisible()
+    })
+  })
+
+  test('create mode shows url branch and hides service branch when type=url', async () => {
+    const { HiddenContainer } = require('../../atoms')
+
+    getObjectFormItemsDraftMock.mockImplementation(() =>
+      React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(
+          HiddenContainer,
+          { name: ['spec', 'type'] },
+          React.createElement('div', { 'data-testid': 'type-selector' }, 'type'),
+        ),
+        React.createElement(
+          HiddenContainer,
+          { name: ['spec', 'service'] },
+          React.createElement('div', { 'data-testid': 'service-branch' }, 'service'),
+        ),
+        React.createElement(
+          HiddenContainer,
+          { name: ['spec', 'url'] },
+          React.createElement('div', { 'data-testid': 'url-branch' }, 'url'),
+        ),
+      ),
+    )
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        staticProperties={
+          {
+            spec: {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['service', 'url'] },
+                service: { type: 'object' },
+                url: { type: 'string' },
+              },
+              oneOfBranches: [
+                {
+                  match: { type: 'service' },
+                  required: ['service'],
+                  forbidden: ['url'],
+                },
+                {
+                  match: { type: 'url' },
+                  required: ['url'],
+                  forbidden: ['service'],
+                },
+              ],
+            },
+          } as any
+        }
+        prefillValuesSchema={{
+          spec: {
+            type: 'url',
+          },
+        }}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('type-selector')).toBeVisible()
+      expect(screen.getByTestId('url-branch')).toBeVisible()
+      expect(screen.getByTestId('service-branch')).not.toBeVisible()
+    })
+  })
+
+  test('edit mode keeps contradictory existing branch data visible on initial render', async () => {
+    const { HiddenContainer } = require('../../atoms')
+
+    getObjectFormItemsDraftMock.mockImplementation(() =>
+      React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(
+          HiddenContainer,
+          { name: ['spec', 'type'] },
+          React.createElement('div', { 'data-testid': 'type-selector' }, 'type'),
+        ),
+        React.createElement(
+          HiddenContainer,
+          { name: ['spec', 'service'] },
+          React.createElement('div', { 'data-testid': 'service-branch' }, 'service'),
+        ),
+        React.createElement(
+          HiddenContainer,
+          { name: ['spec', 'url'] },
+          React.createElement('div', { 'data-testid': 'url-branch' }, 'url'),
+        ),
+      ),
+    )
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        isCreate={false}
+        staticProperties={
+          {
+            spec: {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['service', 'url'] },
+                service: { type: 'object' },
+                url: { type: 'string' },
+              },
+              oneOfBranches: [
+                {
+                  match: { type: 'service' },
+                  required: ['service'],
+                  forbidden: ['url'],
+                },
+                {
+                  match: { type: 'url' },
+                  required: ['url'],
+                  forbidden: ['service'],
+                },
+              ],
+            },
+          } as any
+        }
+        prefillValuesSchema={{
+          spec: {
+            type: 'service',
+            url: 'https://example.com',
+          },
+        }}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('type-selector')).toBeVisible()
+      expect(screen.getByTestId('service-branch')).toBeVisible()
+      expect(screen.getByTestId('url-branch')).toBeVisible()
+    })
+  })
+
+  test('clears inactive branch data when user explicitly switches the selector', async () => {
+    const { Form: AntForm, Input: AntInput } = require('antd')
+    const user = userEvent.setup()
+
+    axiosPostMock.mockImplementation(async (url: string) => {
+      if (String(url).includes('getYamlValuesByFromValues')) {
+        return { data: 'YAML_BODY' }
+      }
+      return { data: {} }
+    })
+
+    getObjectFormItemsDraftMock.mockImplementation(() =>
+      React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(
+          AntForm.Item,
+          { name: ['spec', 'type'], noStyle: true },
+          React.createElement(AntInput, { 'data-testid': 'type-input' }),
+        ),
+        React.createElement(AntForm.Item, { name: ['spec', 'service', 'name'], noStyle: true }),
+        React.createElement(AntForm.Item, { name: ['spec', 'service', 'port'], noStyle: true }),
+        React.createElement(AntForm.Item, { name: ['spec', 'url'], noStyle: true }),
+      ),
+    )
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        isCreate
+        staticProperties={
+          {
+            spec: {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['service', 'url'] },
+                service: {
+                  type: 'object',
+                  properties: { name: { type: 'string' }, port: { type: 'integer' } },
+                },
+                url: { type: 'string' },
+              },
+              oneOfBranches: [
+                { match: { type: 'service' }, required: ['service'], forbidden: ['url'] },
+                { match: { type: 'url' }, required: ['url'], forbidden: ['service'] },
+              ],
+            },
+          } as any
+        }
+        prefillValuesSchema={{
+          spec: {
+            type: 'service',
+            service: { name: 'my-service', port: 8080 },
+          },
+        }}
+      />,
+    )
+
+    await waitFor(() => expect(axiosPostMock).toHaveBeenCalled())
+    axiosPostMock.mockClear()
+
+    const typeInput = screen.getByTestId('type-input')
+    await user.clear(typeInput)
+    await user.type(typeInput, 'url')
+
+    await waitFor(() => {
+      const calls = axiosPostMock.mock.calls.filter((c: any[]) => String(c[0]).includes('getYamlValuesByFromValues'))
+      expect(calls.length).toBeGreaterThan(0)
+      const payload = calls.at(-1)?.[1]
+      expect(payload.values.spec.type).toBe('url')
+      expect(payload.values.spec.service).toBeUndefined()
+    })
+
+    expect(await screen.findByText(/Cleared 1 inactive branch field/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Removed spec\.service to match the new selector/i)).toBeInTheDocument()
+  })
+
+  test('does not clean inactive branch data on initial mount even if data is contradictory', async () => {
+    axiosPostMock.mockImplementation(async (url: string) => {
+      if (String(url).includes('getYamlValuesByFromValues')) {
+        return { data: 'YAML_BODY' }
+      }
+      return { data: {} }
+    })
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        isCreate={false}
+        formsPrefills={editPrefills}
+        staticProperties={
+          {
+            spec: {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['service', 'url'] },
+                service: { type: 'object' },
+                url: { type: 'string' },
+              },
+              oneOfBranches: [
+                { match: { type: 'service' }, required: ['service'], forbidden: ['url'] },
+                { match: { type: 'url' }, required: ['url'], forbidden: ['service'] },
+              ],
+            },
+          } as any
+        }
+        prefillValuesSchema={{
+          spec: {
+            type: 'service',
+            url: 'https://example.com',
+          },
+        }}
+      />,
+    )
+
+    await waitFor(() => {
+      const syncCalls = axiosPostMock.mock.calls.filter((c: any[]) =>
+        String(c[0]).includes('getYamlValuesByFromValues'),
+      )
+      expect(syncCalls.length).toBeGreaterThan(0)
+      const initialPayload = syncCalls[0][1]
+      expect(initialPayload.values.spec.type).toBe('service')
+      expect(initialPayload.values.spec.url).toBe('https://example.com')
+    })
+  })
+
+  test('does not clean inactive branch data when changes come from YAML→form sync', async () => {
+    const { Form: AntForm } = require('antd')
+    const user = userEvent.setup()
+
+    axiosPostMock.mockImplementation(async (url: string) => {
+      if (String(url).includes('getFormValuesByYaml')) {
+        return { data: { spec: { type: 'url', service: { name: 'leaked' } } } }
+      }
+      if (String(url).includes('getYamlValuesByFromValues')) {
+        return { data: 'YAML_BODY' }
+      }
+      return { data: {} }
+    })
+
+    getObjectFormItemsDraftMock.mockImplementation(() =>
+      React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(AntForm.Item, { name: ['spec', 'type'], noStyle: true }),
+        React.createElement(AntForm.Item, { name: ['spec', 'service'], noStyle: true }),
+        React.createElement(AntForm.Item, { name: ['spec', 'url'], noStyle: true }),
+      ),
+    )
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        isCreate
+        staticProperties={
+          {
+            spec: {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['service', 'url'] },
+                service: { type: 'object', properties: { name: { type: 'string' } } },
+                url: { type: 'string' },
+              },
+              oneOfBranches: [
+                { match: { type: 'service' }, required: ['service'], forbidden: ['url'] },
+                { match: { type: 'url' }, required: ['url'], forbidden: ['service'] },
+              ],
+            },
+          } as any
+        }
+        prefillValuesSchema={{ spec: { type: 'service' } }}
+      />,
+    )
+
+    await waitFor(() => expect(axiosPostMock).toHaveBeenCalled())
+    axiosPostMock.mockClear()
+
+    await user.click(screen.getByTestId('yaml-editor-trigger-change'))
+
+    // The sync chain after YAML→form: form.setFieldsValue (does NOT trigger antd onValuesChange) →
+    // Form.useWatch picks up → useEffect on [allValues] fires onValuesChangeCallback() with NO
+    // changedValues → cleanup is skipped → form→YAML sync POST goes out with both fields preserved.
+    // We assert that the last form→YAML payload still carries both type='url' AND service.
+    await waitFor(() => {
+      const syncCalls = axiosPostMock.mock.calls.filter((c: any[]) =>
+        String(c[0]).includes('getYamlValuesByFromValues'),
+      )
+      expect(syncCalls.length).toBeGreaterThan(0)
+      const payload = syncCalls.at(-1)?.[1]
+      expect(payload.values.spec.type).toBe('url')
+      expect(payload.values.spec.service).toEqual({ name: 'leaked' })
+    })
+  })
+
   test('submit (edit mode) calls updateEntry with correct endpoint/body', async () => {
     axiosPostMock.mockImplementation(async (url: string) => {
       if (String(url).includes('getYamlValuesByFromValues')) {
@@ -666,6 +1180,70 @@ describe('BlackholeForm', () => {
     expect(createNewEntryMock.mock.calls[0][0].endpoint).toBe(
       '/api/clusters/c1/k8s/apis/apps/v1/namespaces/team-a/deployments/',
     )
+  })
+
+  test('initialValues skip URL namespace prefill when schema declares metadata.namespace.default', async () => {
+    axiosPostMock.mockImplementation(async (url: string) => {
+      if (String(url).includes('getYamlValuesByFromValues')) {
+        return { data: 'YAML_BODY' }
+      }
+      return { data: {} }
+    })
+
+    renderWithApp(
+      <BlackholeForm
+        {...baseProps}
+        isCreate
+        isNameSpaced={['team-a', 'practice']}
+        prefillValueNamespaceOnly="team-a"
+        staticProperties={
+          {
+            metadata: {
+              type: 'object',
+              properties: {
+                namespace: {
+                  type: 'string',
+                  default: 'practice',
+                },
+              },
+            },
+          } as any
+        }
+      />,
+    )
+
+    await waitFor(() => {
+      const calls = axiosPostMock.mock.calls.filter((c: any[]) => String(c[0]).includes('getYamlValuesByFromValues'))
+      expect(calls.length).toBeGreaterThan(0)
+    })
+
+    const formSyncCall = axiosPostMock.mock.calls.find((c: any[]) => String(c[0]).includes('getYamlValuesByFromValues'))
+
+    // BlackholeForm yields to FormNamespaceInput cascade when schema has a namespace default,
+    // so initialValues must not pre-write metadata.namespace from URL.
+    expect(formSyncCall?.[1]?.values?.metadata?.namespace).toBeUndefined()
+  })
+
+  test('initialValues still use URL namespace prefill when schema has no namespace default', async () => {
+    axiosPostMock.mockImplementation(async (url: string) => {
+      if (String(url).includes('getYamlValuesByFromValues')) {
+        return { data: 'YAML_BODY' }
+      }
+      return { data: {} }
+    })
+
+    renderWithApp(
+      <BlackholeForm {...baseProps} isCreate isNameSpaced={['team-a']} prefillValueNamespaceOnly="team-a" />,
+    )
+
+    await waitFor(() => {
+      const calls = axiosPostMock.mock.calls.filter((c: any[]) => String(c[0]).includes('getYamlValuesByFromValues'))
+      expect(calls.length).toBeGreaterThan(0)
+    })
+
+    const formSyncCall = axiosPostMock.mock.calls.find((c: any[]) => String(c[0]).includes('getYamlValuesByFromValues'))
+
+    expect(formSyncCall?.[1]?.values?.metadata?.namespace).toBe('team-a')
   })
 
   test('user-added additionalProperties field is persisted and sent in formSync payload', async () => {

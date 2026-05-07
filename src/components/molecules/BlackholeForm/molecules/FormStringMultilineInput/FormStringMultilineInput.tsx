@@ -21,7 +21,7 @@ import { Styled } from './styled'
 import { buildPlaceholder, getExampleTooltip } from '../helpers/buildPlaceholder'
 import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 import { useNullToggleButton } from '../helpers/useNullToggleButton'
-import { getRequiredRule } from '../helpers/validation'
+import { getPatternRule, getRequiredRule, getStringFormatRule, getStringLengthRule } from '../helpers/validation'
 
 type TFormStringMultilineInputProps = {
   name: TFormName
@@ -39,6 +39,10 @@ type TFormStringMultilineInputProps = {
   defaultValue?: string
   example?: string
   nullable?: boolean
+  format?: string
+  pattern?: string
+  minLength?: number
+  maxLength?: number
 }
 
 export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
@@ -57,6 +61,10 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
   defaultValue,
   example,
   nullable,
+  format,
+  pattern,
+  minLength,
+  maxLength,
 }) => {
   const designNewLayout = useDesignNewLayout()
   const placeholder = buildPlaceholder(name, defaultValue, example)
@@ -68,6 +76,9 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
   const form = Form.useFormInstance()
   const defaultBtn = useDefaultValueButton(formFieldName, defaultValue, nullable)
   const nullBtn = useNullToggleButton(formFieldName, nullable)
+  const formatRule = !isBase64 ? getStringFormatRule(format, name) : undefined
+  const patternRule = !isBase64 ? getPatternRule(pattern, name) : undefined
+  const lengthRule = !isBase64 ? getStringLengthRule({ minLength, maxLength, name }) : undefined
 
   // Derive multiline based on current local value
   // const isMultiline = useMemo(() => isMultilineString(formValue), [formValue])
@@ -127,6 +138,9 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
         name={arrName || fixedName}
         rules={[
           getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name, nullable),
+          ...(formatRule ? [formatRule] : []),
+          ...(patternRule ? [patternRule] : []),
+          ...(lengthRule ? [lengthRule] : []),
         ]}
         validateTrigger="onBlur"
         hasFeedback={designNewLayout ? { icons: feedbackIcons } : true}

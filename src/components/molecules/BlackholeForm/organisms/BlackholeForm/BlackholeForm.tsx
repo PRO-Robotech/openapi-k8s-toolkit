@@ -26,7 +26,7 @@ import { getPrefixSubarrays } from 'utils/getPrefixSubArrays'
 import { deepMerge } from 'utils/deepMerge'
 import { FlexGrow, Spacer } from 'components/atoms'
 import { YamlEditor } from '../../molecules'
-import { collectOneOfRequiredGroupStates } from '../../molecules/helpers/validation'
+import { collectOneOfRequiredGroupStates, prettyFieldPath } from '../../molecules/helpers/validation'
 import { getObjectFormItemsDraft } from './utils'
 import { pathKey, pruneAdditionalForValues, materializeAdditionalFromValues } from './helpers/casts'
 import {
@@ -41,6 +41,8 @@ import {
 } from './helpers/prefills'
 import { DEBUG_PREFILLS, dbg, group, end, wdbg, wgroup, wend, prettyPath } from './helpers/debugs'
 import { sanitizeWildcardPath, expandWildcardTemplates, toStringPath, isPrefix } from './helpers/hiddenExpanded'
+import { collectOneOfBranchHiddenPaths } from './helpers/oneOfBranchVisibility'
+import { collectInactiveBranchCleanupPaths } from './helpers/oneOfBranchCleanup'
 import { handleSubmitError, handleValidationError } from './utilsErrorHandler'
 import { Styled } from './styled'
 import {
@@ -419,7 +421,15 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
       })
     }
 
-    if (prefillValueNamespaceOnly) {
+    // Schema-level default takes priority over URL context for metadata.namespace.
+    // When the schema declares a default, defer to FormNamespaceInput's cascade so it
+    // can validate the default against the cluster's namespace list and fall back when
+    // needed. Without this guard the URL pre-fill would write into initialValues first
+    // and the cascade would then treat the form as edit mode and skip itself.
+    const schemaNamespaceDefault = staticProperties.metadata?.properties?.namespace?.default
+    const hasSchemaNamespaceDefault = typeof schemaNamespaceDefault === 'string' && schemaNamespaceDefault.length > 0
+
+    if (prefillValueNamespaceOnly && !hasSchemaNamespaceDefault) {
       _.set(allValues, ['metadata', 'namespace'], prefillValueNamespaceOnly)
     }
 
@@ -431,7 +441,15 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
 
     const sorted = Object.fromEntries(Object.entries(allValues).sort(([a], [b]) => a.localeCompare(b)))
     return sorted
-  }, [formsPrefills, prefillValueNamespaceOnly, isCreate, apiGroupApiVersion, kind, normalizedPrefill])
+  }, [
+    formsPrefills,
+    prefillValueNamespaceOnly,
+    isCreate,
+    apiGroupApiVersion,
+    kind,
+    normalizedPrefill,
+    staticProperties,
+  ])
 
   // --- Feature: wild card prefills ---
   // Build wildcard-based prefill templates from both formsPrefills and normalizedPrefill
@@ -554,14 +572,37 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
     return sanitized
   }, [expandedPaths])
 
+  const resolveHiddenPaths = useCallback(
+    (values: Record<string, unknown>): (string | number)[][] => {
+      const hiddenResolved = expandWildcardTemplates(hiddenWildcardTemplates, values, {
+        includeMissingExact: true,
+        includeMissingFinalForWildcard: true,
+      })
+      const oneOfBranchHiddenPaths = collectOneOfBranchHiddenPaths({
+        properties,
+        values,
+      })
+      const seen = new Set<string>()
+
+      return [...hiddenResolved, ...oneOfBranchHiddenPaths].filter(path => {
+        const key = JSON.stringify(path)
+
+        if (seen.has(key)) {
+          return false
+        }
+
+        seen.add(key)
+        return true
+      })
+    },
+    [hiddenWildcardTemplates, properties],
+  )
+
   useEffect(() => {
     if (!initialValues) return
     wgroup('initial resolve')
 
-    const hiddenResolved = expandWildcardTemplates(hiddenWildcardTemplates, initialValues as any, {
-      includeMissingExact: true,
-      includeMissingFinalForWildcard: true,
-    })
+    const hiddenResolved = resolveHiddenPaths(initialValues as Record<string, unknown>)
     wdbg('hidden resolved', hiddenResolved.map(prettyPath))
     setResolvedHiddenPaths(hiddenResolved as TFormName[])
 
@@ -602,7 +643,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
     })
 
     wend()
-  }, [initialValues, hiddenWildcardTemplates, expandedWildcardTemplates, persistedWildcardTemplates])
+  }, [initialValues, resolveHiddenPaths, expandedWildcardTemplates, persistedWildcardTemplates])
 
   const resolvedHiddenStringPaths = useMemo<string[][]>(
     () => resolvedHiddenPaths.map(toStringPath),
@@ -654,17 +695,41 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
     (values?: any, changedValues?: any) => {
       // Get the most recent form values (or use the provided ones)
       const vRaw = values ?? form.getFieldsValue(true)
-      const v = scrubLiteralWildcardKeys(vRaw)
+      let v = scrubLiteralWildcardKeys(vRaw)
+
+      // Clean inactive oneOf branch fields when the user explicitly switches a selector.
+      // Skipped when changedValues is undefined (initial mount, useEffect re-fires, YAML→form sync).
+      if (changedValues) {
+        const inactiveCleanupPaths = collectInactiveBranchCleanupPaths({
+          properties,
+          values: v,
+          changedValues,
+        })
+
+        if (inactiveCleanupPaths.length > 0) {
+          inactiveCleanupPaths.forEach(path => {
+            form.setFieldValue(path, undefined)
+          })
+          v = scrubLiteralWildcardKeys(form.getFieldsValue(true))
+
+          const formattedPaths = inactiveCleanupPaths.map(path => prettyFieldPath(path)).join(', ')
+          notificationApi.info({
+            message:
+              inactiveCleanupPaths.length === 1
+                ? 'Cleared 1 inactive branch field'
+                : `Cleared ${inactiveCleanupPaths.length} inactive branch fields`,
+            description: `Removed ${formattedPaths} to match the new selector.`,
+            placement: 'bottomRight',
+          })
+        }
+      }
+
       applyOneOfValidationErrors(computeOneOfValidationStates(v))
 
       // resolve wildcard templates for hidden & expanded against current values ---
       wgroup('values→resolve wildcards')
 
-      const hiddenResolved = expandWildcardTemplates(
-        hiddenWildcardTemplates,
-        v,
-        { includeMissingExact: true, includeMissingFinalForWildcard: true }, // only hidden opts in
-      )
+      const hiddenResolved = resolveHiddenPaths(v)
       wdbg('hidden resolved', hiddenResolved.map(prettyPath))
 
       setResolvedHiddenPaths(hiddenResolved as TFormName[])
@@ -905,8 +970,9 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
       applyOneOfValidationErrors,
       applyPrefillForNewArrayItem,
       applyPersistedForNewArrayItem,
-      hiddenWildcardTemplates,
+      resolveHiddenPaths,
       expandedWildcardTemplates,
+      notificationApi,
     ],
   )
 

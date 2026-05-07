@@ -1,7 +1,8 @@
 import get from 'lodash/get'
 import { Rule } from 'antd/es/form'
-import { TFormSchemaProperties } from 'localTypes/formSchema'
+import { TFormSchemaOneOfBranch, TFormSchemaProperties } from 'localTypes/formSchema'
 import { TFormName } from 'localTypes/form'
+import { matchesOneOfBranch } from './oneOfBranch'
 
 export const prettyFieldPath = (name: TFormName): string => {
   return Array.isArray(name) ? name.map(segment => String(segment)).join('.') : String(name)
@@ -9,6 +10,54 @@ export const prettyFieldPath = (name: TFormName): string => {
 
 const isEmptyValue = (value: unknown): boolean =>
   value === undefined || value === '' || (Array.isArray(value) && value.length === 0)
+
+const INT32_MIN = -2147483648
+const INT32_MAX = 2147483647
+
+const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
+const DATE_TIME_PATTERN = /^(\d{4})-(\d{2})-(\d{2})[Tt](\d{2}):(\d{2}):(\d{2})(\.\d+)?([Zz]|[+-](\d{2}):(\d{2}))$/
+
+const isValidDateParts = (year: number, month: number, day: number): boolean => {
+  if (month < 1 || month > 12) return false
+
+  const isLeapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)
+  const daysByMonth = [31, isLeapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+  return day >= 1 && day <= daysByMonth[month - 1]
+}
+
+const matchesDateFormat = (value: string): boolean => {
+  const match = DATE_PATTERN.exec(value)
+  if (!match) return false
+
+  const [, year, month, day] = match.map(Number)
+
+  return isValidDateParts(year, month, day)
+}
+
+const matchesDateTimeFormat = (value: string): boolean => {
+  const match = DATE_TIME_PATTERN.exec(value)
+  if (!match) return false
+
+  const [, year, month, day, hour, minute, second, , , offsetHour, offsetMinute] = match
+  const parsedHour = Number(hour)
+  const parsedMinute = Number(minute)
+  const parsedSecond = Number(second)
+  const parsedOffsetHour = offsetHour === undefined ? undefined : Number(offsetHour)
+  const parsedOffsetMinute = offsetMinute === undefined ? undefined : Number(offsetMinute)
+
+  return (
+    isValidDateParts(Number(year), Number(month), Number(day)) &&
+    parsedHour >= 0 &&
+    parsedHour <= 23 &&
+    parsedMinute >= 0 &&
+    parsedMinute <= 59 &&
+    parsedSecond >= 0 &&
+    parsedSecond <= 59 &&
+    (parsedOffsetHour === undefined || (parsedOffsetHour >= 0 && parsedOffsetHour <= 23)) &&
+    (parsedOffsetMinute === undefined || (parsedOffsetMinute >= 0 && parsedOffsetMinute <= 59))
+  )
+}
 
 const isPresentForOneOf = (value: unknown): boolean => {
   if (value === null) return true
@@ -49,29 +98,102 @@ const getOneOfRequiredGroupsError = ({
   return getOneOfRequiredGroupsMessage(name, groups)
 }
 
+const formatOneOfBranchMatch = (branch: TFormSchemaOneOfBranch): string => {
+  const matchEntries = Object.entries(branch.match || {})
+
+  if (matchEntries.length === 0) {
+    return 'selected branch'
+  }
+
+  return matchEntries.map(([path, expectedValue]) => `${path}=${String(expectedValue)}`).join(', ')
+}
+
+const getOneOfBranchErrors = ({
+  value,
+  name,
+  branches,
+}: {
+  value: unknown
+  name: TFormName
+  branches: TFormSchemaOneOfBranch[]
+}): string[] => {
+  if (!isPresentForOneOf(value)) {
+    return []
+  }
+
+  const matchedBranches = branches.filter(branch => matchesOneOfBranch(value, branch))
+
+  if (matchedBranches.length === 0) {
+    return []
+  }
+
+  if (matchedBranches.length > 1) {
+    const branchText = matchedBranches.map(formatOneOfBranchMatch).join(', ')
+    return [`Please match exactly one branch for ${prettyFieldPath(name)}: ${branchText}`]
+  }
+
+  const [activeBranch] = matchedBranches
+  const branchText = formatOneOfBranchMatch(activeBranch)
+  const missingRequiredFields = (activeBranch.required || []).filter(path => !isPresentForOneOf(get(value, path)))
+  const presentForbiddenFields = (activeBranch.forbidden || []).filter(path => isPresentForOneOf(get(value, path)))
+  const errors: string[] = []
+
+  if (missingRequiredFields.length > 0) {
+    errors.push(
+      `Please provide required fields for ${prettyFieldPath(name)} when ${branchText}: ${formatOneOfGroup(
+        missingRequiredFields,
+      )}`,
+    )
+  }
+
+  if (presentForbiddenFields.length > 0) {
+    errors.push(
+      `Please remove forbidden fields for ${prettyFieldPath(name)} when ${branchText}: ${formatOneOfGroup(
+        presentForbiddenFields,
+      )}`,
+    )
+  }
+
+  return errors
+}
+
 const getCurrentOneOfRequiredGroupState = ({
   path,
   nodeOneOfRequiredGroups,
+  nodeOneOfBranches,
   value,
 }: {
   path: (string | number)[]
   nodeOneOfRequiredGroups?: string[][]
+  nodeOneOfBranches?: TFormSchemaOneOfBranch[]
   value: unknown
 }): { name: TFormName; errors: string[] }[] => {
-  if (!nodeOneOfRequiredGroups || nodeOneOfRequiredGroups.length === 0) {
+  const hasRequiredGroups = Boolean(nodeOneOfRequiredGroups && nodeOneOfRequiredGroups.length > 0)
+  const hasBranches = Boolean(nodeOneOfBranches && nodeOneOfBranches.length > 0)
+
+  if (!hasRequiredGroups && !hasBranches) {
     return []
   }
 
-  const error = getOneOfRequiredGroupsError({
-    value,
-    name: path,
-    groups: nodeOneOfRequiredGroups,
-  })
+  const requiredGroupError = hasRequiredGroups
+    ? getOneOfRequiredGroupsError({
+        value,
+        name: path,
+        groups: nodeOneOfRequiredGroups || [],
+      })
+    : undefined
+  const branchErrors = hasBranches
+    ? getOneOfBranchErrors({
+        value,
+        name: path,
+        branches: nodeOneOfBranches || [],
+      })
+    : []
 
   return [
     {
       name: path,
-      errors: error ? [error] : [],
+      errors: [...(requiredGroupError ? [requiredGroupError] : []), ...branchErrors],
     },
   ]
 }
@@ -91,6 +213,7 @@ export const collectOneOfRequiredGroupStates = ({
     const currentState = getCurrentOneOfRequiredGroupState({
       path,
       nodeOneOfRequiredGroups: node.oneOfRequiredGroups,
+      nodeOneOfBranches: node.oneOfBranches,
       value,
     })
 
@@ -109,6 +232,7 @@ export const collectOneOfRequiredGroupStates = ({
             ...getCurrentOneOfRequiredGroupState({
               path: [...path, index],
               nodeOneOfRequiredGroups: node.items?.oneOfRequiredGroups,
+              nodeOneOfBranches: node.items?.oneOfBranches,
               value: get(values, [...path, index]),
             }),
             ...(node.items?.properties
@@ -152,4 +276,184 @@ export const getRequiredRule = (isRequired: boolean, name: TFormName, nullable?:
   }
 
   return { required: true, message }
+}
+
+export const getPatternRule = (pattern: string | undefined, name: TFormName): Rule | undefined => {
+  if (!pattern) {
+    return undefined
+  }
+
+  let regexp: RegExp
+  const fieldPath = prettyFieldPath(name)
+
+  try {
+    regexp = new RegExp(pattern)
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn('[BlackholeForm] OpenAPI pattern cannot be compiled as JavaScript RegExp', {
+      fieldPath,
+      pattern,
+      error,
+    })
+    return undefined
+  }
+
+  const message = `Value must match pattern for ${fieldPath}: ${pattern}`
+
+  return {
+    validator: async (_, value) => {
+      if (value === undefined || value === null || value === '') return
+      if (typeof value !== 'string') return
+      if (!regexp.test(value)) {
+        throw new Error(message)
+      }
+    },
+  }
+}
+
+export const getStringLengthRule = ({
+  minLength,
+  maxLength,
+  name,
+}: {
+  minLength?: number
+  maxLength?: number
+  name: TFormName
+}): Rule | undefined => {
+  if (minLength === undefined && maxLength === undefined) {
+    return undefined
+  }
+
+  let message = `Value must be at most ${maxLength} characters for ${prettyFieldPath(name)}`
+
+  if (minLength !== undefined && maxLength !== undefined) {
+    message = `Value must be between ${minLength} and ${maxLength} characters for ${prettyFieldPath(name)}`
+  } else if (minLength !== undefined) {
+    message = `Value must be at least ${minLength} characters for ${prettyFieldPath(name)}`
+  }
+
+  return {
+    validator: async (_, value) => {
+      if (value === undefined || value === null || value === '') return
+      if (typeof value !== 'string') return
+      if (minLength !== undefined && value.length < minLength) {
+        throw new Error(message)
+      }
+      if (maxLength !== undefined && value.length > maxLength) {
+        throw new Error(message)
+      }
+    },
+  }
+}
+
+export const getStringFormatRule = (format: string | undefined, name: TFormName): Rule | undefined => {
+  if (!format || (format !== 'date' && format !== 'date-time')) {
+    return undefined
+  }
+
+  const message =
+    format === 'date'
+      ? `Value must match date format for ${prettyFieldPath(name)}: YYYY-MM-DD`
+      : `Value must match date-time format for ${prettyFieldPath(name)}: RFC 3339 date-time`
+
+  return {
+    validator: async (_, value) => {
+      if (value === undefined || value === null || value === '') return
+      if (typeof value !== 'string') return
+
+      const matchesFormat = format === 'date' ? matchesDateFormat(value) : matchesDateTimeFormat(value)
+
+      if (!matchesFormat) {
+        throw new Error(message)
+      }
+    },
+  }
+}
+
+export const getArrayItemsRule = ({
+  minItems,
+  maxItems,
+  name,
+}: {
+  minItems?: number
+  maxItems?: number
+  name: TFormName
+}): Rule | undefined => {
+  if (minItems === undefined && maxItems === undefined) {
+    return undefined
+  }
+
+  let message = `Value must contain at most ${maxItems} items for ${prettyFieldPath(name)}`
+
+  if (minItems !== undefined && maxItems !== undefined) {
+    message = `Value must contain between ${minItems} and ${maxItems} items for ${prettyFieldPath(name)}`
+  } else if (minItems !== undefined) {
+    message = `Value must contain at least ${minItems} items for ${prettyFieldPath(name)}`
+  }
+
+  return {
+    validator: async (_, value) => {
+      if (value === undefined || value === null) return
+      if (!Array.isArray(value)) return
+      if (minItems !== undefined && value.length < minItems) {
+        throw new Error(message)
+      }
+      if (maxItems !== undefined && value.length > maxItems) {
+        throw new Error(message)
+      }
+    },
+  }
+}
+
+export const getNumberFormatRule = (format: string | undefined, name: TFormName): Rule | undefined => {
+  if (format !== 'int32') {
+    return undefined
+  }
+
+  const message = `Value must be a 32-bit signed integer for ${prettyFieldPath(name)}`
+
+  return {
+    validator: async (_, value) => {
+      if (value === undefined || value === null || value === '') return
+      if (typeof value !== 'number') return
+      if (!Number.isInteger(value) || value < INT32_MIN || value > INT32_MAX) {
+        throw new Error(message)
+      }
+    },
+  }
+}
+
+export const getNumberRangeRule = ({
+  minimum,
+  maximum,
+  name,
+}: {
+  minimum?: number
+  maximum?: number
+  name: TFormName
+}): Rule | undefined => {
+  if (minimum === undefined && maximum === undefined) {
+    return undefined
+  }
+
+  let message = `Value must be at most ${maximum} for ${prettyFieldPath(name)}`
+
+  if (minimum !== undefined && maximum !== undefined) {
+    message = `Value must be between ${minimum} and ${maximum} for ${prettyFieldPath(name)}`
+  } else if (minimum !== undefined) {
+    message = `Value must be at least ${minimum} for ${prettyFieldPath(name)}`
+  }
+
+  return {
+    validator: async (_, value) => {
+      if (value === undefined || value === null || value === '') return
+      if (typeof value !== 'number') return
+      if (minimum !== undefined && value < minimum) {
+        throw new Error(message)
+      }
+      if (maximum !== undefined && value > maximum) {
+        throw new Error(message)
+      }
+    },
+  }
 }

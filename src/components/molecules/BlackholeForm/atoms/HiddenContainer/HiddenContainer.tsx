@@ -18,8 +18,11 @@ export const HiddenContainer: FC<THiddenContainerProps> = ({ name, secondName, c
   const isHidden = !!hiddenPaths && !!nameArr && includesPath(hiddenPaths, nameArr)
 
   const isHiddenSecond = !!hiddenPaths && !!secondArr && includesPath(hiddenPaths, secondArr)
+  const shouldHide = !hiddenPaths || isHidden || isHiddenSecond
 
   return (
-    <PossibleHiddenContainer $isHidden={!hiddenPaths || isHidden || isHiddenSecond}>{children}</PossibleHiddenContainer>
+    <PossibleHiddenContainer $isHidden={shouldHide} aria-hidden={shouldHide} hidden={shouldHide || undefined}>
+      {children}
+    </PossibleHiddenContainer>
   )
 }

@@ -5,6 +5,7 @@
 /* eslint-disable consistent-return */
 // import { Form, Button, Alert } from 'antd'
 import { Form, Button } from 'antd'
+import type { ValidatorRule } from 'rc-field-form/lib/interface'
 import { getStringByName } from 'utils/getStringByName'
 import { TListInputCustomProps, TRangeInputCustomProps } from 'localTypes/formExtensions'
 import { TFormName, TExpandedControls, TNamespaceData, TPersistedControls, TUrlParams } from 'localTypes/form'
@@ -20,7 +21,7 @@ import {
   extractListInputDefault,
 } from './helpers/extractDefaultValue'
 import { ResetedFormItem, ArrayInsideContainer, HiddenContainer } from '../../atoms'
-import { prettyFieldPath } from '../../molecules/helpers/validation'
+import { getArrayItemsRule, prettyFieldPath } from '../../molecules/helpers/validation'
 import {
   FormNamespaceInput,
   FormStringInput,
@@ -52,6 +53,11 @@ export const getStringFormItemFromSwagger = ({
   defaultValue,
   example,
   nullable,
+  format,
+  pattern,
+  minLength,
+  maxLength,
+  urlParams,
 }: {
   name: TFormName
   arrKey?: number
@@ -68,6 +74,11 @@ export const getStringFormItemFromSwagger = ({
   defaultValue?: string
   example?: string
   nullable?: boolean
+  format?: string
+  pattern?: string
+  minLength?: number
+  maxLength?: number
+  urlParams?: TUrlParams
 }) => {
   if (Array.isArray(name) && name.length === 2 && name[0] === 'metadata' && name[1] === 'namespace' && namespaceData) {
     return (
@@ -77,6 +88,8 @@ export const getStringFormItemFromSwagger = ({
         namespaceData={namespaceData}
         isAdditionalProperties={isAdditionalProperties}
         removeField={removeField}
+        defaultValue={defaultValue}
+        contextNamespace={urlParams?.namespace}
       />
     )
   }
@@ -98,6 +111,10 @@ export const getStringFormItemFromSwagger = ({
       defaultValue={defaultValue}
       example={example}
       nullable={nullable}
+      format={format}
+      pattern={pattern}
+      minLength={minLength}
+      maxLength={maxLength}
     />
   )
 }
@@ -173,6 +190,9 @@ export const getNumberFormItemFromSwagger = ({
   defaultValue,
   example,
   nullable,
+  format,
+  minimum,
+  maximum,
 }: {
   isNumber?: boolean
   name: TFormName
@@ -189,6 +209,9 @@ export const getNumberFormItemFromSwagger = ({
   defaultValue?: number
   example?: number
   nullable?: boolean
+  format?: string
+  minimum?: number
+  maximum?: number
 }) => {
   return (
     <FormNumberInput
@@ -208,6 +231,9 @@ export const getNumberFormItemFromSwagger = ({
       defaultValue={defaultValue}
       example={example}
       nullable={nullable}
+      format={format}
+      minimum={minimum}
+      maximum={maximum}
     />
   )
 }
@@ -274,6 +300,10 @@ export const getStringMultilineFormItemFromSwagger = ({
   defaultValue,
   example,
   nullable,
+  format,
+  pattern,
+  minLength,
+  maxLength,
 }: {
   name: TFormName
   arrKey?: number
@@ -290,6 +320,10 @@ export const getStringMultilineFormItemFromSwagger = ({
   defaultValue?: string
   example?: string
   nullable?: boolean
+  format?: string
+  pattern?: string
+  minLength?: number
+  maxLength?: number
 }) => {
   return (
     <FormStringMultilineInput
@@ -309,6 +343,10 @@ export const getStringMultilineFormItemFromSwagger = ({
       defaultValue={defaultValue}
       example={example}
       nullable={nullable}
+      format={format}
+      pattern={pattern}
+      minLength={minLength}
+      maxLength={maxLength}
     />
   )
 }
@@ -328,6 +366,8 @@ export const getListInputFormItemFromSwagger = ({
   urlParams,
   onRemoveByMinus,
   defaultValue,
+  minItems,
+  maxItems,
 }: {
   name: TFormName
   arrKey?: number
@@ -343,6 +383,8 @@ export const getListInputFormItemFromSwagger = ({
   urlParams: TUrlParams
   onRemoveByMinus?: () => void
   defaultValue?: string | string[]
+  minItems?: number
+  maxItems?: number
 }) => {
   return (
     <FormListInput
@@ -361,6 +403,8 @@ export const getListInputFormItemFromSwagger = ({
       urlParams={urlParams}
       onRemoveByMinus={onRemoveByMinus}
       defaultValue={defaultValue}
+      minItems={minItems}
+      maxItems={maxItems}
     />
   )
 }
@@ -461,6 +505,26 @@ export const getArrayFormItemFromSwagger = ({
 }) => {
   // typescript as below are needed because of dereference procedure
   if (schema.type === 'array') {
+    const requiredArrayRule: ValidatorRule | undefined =
+      !forceNonRequired && required?.includes(getStringByName(name))
+        ? {
+            validator: async (_: unknown, value: unknown) => {
+              if (!Array.isArray(value) || value.length < 1) {
+                return Promise.reject(new Error(`Please enter ${prettyFieldPath(name)}`))
+              }
+            },
+          }
+        : undefined
+    const arrayItemsRule = getArrayItemsRule({
+      minItems: schema.minItems,
+      maxItems: schema.maxItems,
+      name,
+    }) as ValidatorRule | undefined
+    const arrayRules: ValidatorRule[] = []
+
+    if (requiredArrayRule) arrayRules.push(requiredArrayRule)
+    if (arrayItemsRule) arrayRules.push(arrayItemsRule)
+
     return (
       <HiddenContainer name={name} key={`${arrKey}-${JSON.stringify(name)}`}>
         <FormArrayHeader
@@ -476,19 +540,7 @@ export const getArrayFormItemFromSwagger = ({
         <Styled.ResetedFormList
           key={arrKey !== undefined ? arrKey : Array.isArray(name) ? name.slice(-1)[0] : name}
           name={arrName || name}
-          rules={
-            !forceNonRequired && required?.includes(getStringByName(name))
-              ? [
-                  {
-                    validator: async (_, value) => {
-                      if (!value || value.length < 1) {
-                        return Promise.reject(new Error(`Please enter ${prettyFieldPath(name)}`))
-                      }
-                    },
-                  },
-                ]
-              : undefined
-          }
+          rules={arrayRules.length > 0 ? arrayRules : undefined}
         >
           {(fields, { add, remove }, { errors }) => (
             <>
@@ -522,6 +574,11 @@ export const getArrayFormItemFromSwagger = ({
                             removeField,
                             persistedControls,
                             onRemoveByMinus: () => remove(field.name),
+                            format: itemSchema?.format,
+                            pattern: itemSchema?.pattern,
+                            minLength: itemSchema?.minLength,
+                            maxLength: itemSchema?.maxLength,
+                            urlParams,
                           })}
                         {(fieldType === 'number' || fieldType === 'integer') &&
                           getNumberFormItemFromSwagger({
@@ -541,6 +598,9 @@ export const getArrayFormItemFromSwagger = ({
                             removeField,
                             persistedControls,
                             onRemoveByMinus: () => remove(field.name),
+                            format: itemSchema?.format,
+                            minimum: itemSchema?.minimum,
+                            maximum: itemSchema?.maximum,
                           })}
                         {(fieldType === 'rangeInputCpu' || fieldType === 'rangeInputMemory') &&
                           getRangeInputFormItemFromSwagger({
@@ -583,6 +643,8 @@ export const getArrayFormItemFromSwagger = ({
                               .customProps,
                             urlParams,
                             onRemoveByMinus: () => remove(field.name),
+                            minItems: itemSchema?.minItems,
+                            maxItems: itemSchema?.maxItems,
                           })}
                         {(fieldType === 'multilineString' || fieldType === 'multilineStringBase64') &&
                           getStringMultilineFormItemFromSwagger({
@@ -602,6 +664,10 @@ export const getArrayFormItemFromSwagger = ({
                             persistedControls,
                             onRemoveByMinus: () => remove(field.name),
                             isBase64: fieldType === 'multilineStringBase64',
+                            format: itemSchema?.format,
+                            pattern: itemSchema?.pattern,
+                            minLength: itemSchema?.minLength,
+                            maxLength: itemSchema?.maxLength,
                           })}
                         {fieldType === 'boolean' &&
                           getBooleanFormItemFromSwagger({
@@ -653,6 +719,7 @@ export const getArrayFormItemFromSwagger = ({
                         // merging properties near items by this
                         properties: deepMerge(entry.properties, additionalProperties?.[field.key]?.properties || {}),
                         oneOfRequiredGroups: entry.oneOfRequiredGroups,
+                        oneOfBranches: entry.oneOfBranches,
                         name: Array.isArray(name) ? [...name, field.name] : [name, field.name],
                         arrKey: field.key,
                         arrName: [field.name],
@@ -692,6 +759,7 @@ export const getArrayFormItemFromSwagger = ({
                 <Button
                   type="text"
                   size="small"
+                  disabled={schema.maxItems !== undefined && fields.length >= schema.maxItems}
                   onClick={() => {
                     add()
                   }}
@@ -844,6 +912,11 @@ export const getObjectFormItemsDraft = ({
             defaultValue: extractStringDefault(properties[el].default),
             example: extractStringDefault(properties[el].example),
             nullable: properties[el].nullable,
+            format: properties[el].format,
+            pattern: properties[el].pattern,
+            minLength: properties[el].minLength,
+            maxLength: properties[el].maxLength,
+            urlParams,
           })
         }
         if (properties[el].type === 'number' || properties[el].type === 'integer') {
@@ -867,6 +940,9 @@ export const getObjectFormItemsDraft = ({
             defaultValue: extractNumberDefault(properties[el].default),
             example: extractNumberDefault(properties[el].example),
             nullable: properties[el].nullable,
+            format: properties[el].format,
+            minimum: properties[el].minimum,
+            maximum: properties[el].maximum,
           })
         }
         if (properties[el].type === 'rangeInputCpu' || properties[el].type === 'rangeInputMemory') {
@@ -908,6 +984,8 @@ export const getObjectFormItemsDraft = ({
             persistedControls,
             urlParams,
             defaultValue: extractListInputDefault(properties[el].default),
+            minItems: properties[el].minItems,
+            maxItems: properties[el].maxItems,
           })
         }
         if (properties[el].type === 'multilineString' || properties[el].type === 'multilineStringBase64') {
@@ -931,6 +1009,10 @@ export const getObjectFormItemsDraft = ({
             defaultValue: extractStringDefault(properties[el].default),
             example: extractStringDefault(properties[el].example),
             nullable: properties[el].nullable,
+            format: properties[el].format,
+            pattern: properties[el].pattern,
+            minLength: properties[el].minLength,
+            maxLength: properties[el].maxLength,
           })
         }
         if (properties[el].type === 'boolean') {
@@ -1032,6 +1114,7 @@ export const getObjectFormItemsDraft = ({
           return getObjectFormItemFromSwagger({
             properties: properties[el].properties as TFormSchemaProperties,
             oneOfRequiredGroups: properties[el].oneOfRequiredGroups,
+            oneOfBranches: properties[el].oneOfBranches,
             name: Array.isArray(name) ? [...name, String(el)] : [name, String(el)],
             arrKey,
             arrName: Array.isArray(arrName) ? [...arrName, String(el)] : undefined,
@@ -1071,6 +1154,7 @@ export const getObjectFormItemsDraft = ({
 export const getObjectFormItemFromSwagger = ({
   properties,
   oneOfRequiredGroups,
+  oneOfBranches,
   objectValidationErrors,
   name,
   arrKey,
@@ -1095,6 +1179,7 @@ export const getObjectFormItemFromSwagger = ({
 }: {
   properties: TFormSchemaProperties
   oneOfRequiredGroups?: string[][]
+  oneOfBranches?: TFormSchemaNode['oneOfBranches']
   objectValidationErrors?: Record<string, string[]>
   name: TFormName
   arrKey?: number
@@ -1160,6 +1245,7 @@ export const getObjectFormItemFromSwagger = ({
       selfRequired={selfRequired}
       description={description}
       oneOfRequiredGroups={oneOfRequiredGroups}
+      oneOfBranches={oneOfBranches}
       validationErrors={objectValidationErrors?.[pathKey(Array.isArray(name) ? name : [name])]}
       isAdditionalProperties={isAdditionalProperties}
       removeField={removeField}

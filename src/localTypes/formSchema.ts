@@ -14,6 +14,14 @@ export type TFormSchemaKnownType =
 
 type TFormSchemaLooseType = TFormSchemaKnownType | (string & {})
 
+export type TFormSchemaOneOfMatchValue = string | number | boolean
+
+export interface TFormSchemaOneOfBranch {
+  match?: Record<string, TFormSchemaOneOfMatchValue>
+  required?: string[]
+  forbidden?: string[]
+}
+
 /**
  * Mirror of the normalized form-schema contract returned by the BFF.
  * Toolkit components should consume this type instead of raw OpenAPI v2 types.
@@ -26,9 +34,18 @@ export interface TFormSchemaNode {
   required?: string[]
   enum?: string[]
   oneOfRequiredGroups?: string[][]
+  oneOfBranches?: TFormSchemaOneOfBranch[]
   default?: unknown
   example?: unknown
   nullable?: boolean
+  format?: string
+  pattern?: string
+  minLength?: number
+  maxLength?: number
+  minItems?: number
+  maxItems?: number
+  minimum?: number
+  maximum?: number
   description?: string
   customProps?: unknown
   isAdditionalProperties?: boolean

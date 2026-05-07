@@ -202,6 +202,25 @@ describe('leaf form item helpers', () => {
     expect(FormStringInputMock).not.toHaveBeenCalled()
   })
 
+  test('getStringFormItemFromSwagger forwards defaultValue and contextNamespace to FormNamespaceInput', () => {
+    const el = getStringFormItemFromSwagger({
+      name: ['metadata', 'namespace'] as any,
+      namespaceData: { disabled: false, selectValues: [], filterSelectOptions: jest.fn() } as any,
+      removeField,
+      persistedControls,
+      defaultValue: 'monitoring',
+      urlParams: { namespace: 'team-a' } as any,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormNamespaceInputMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        defaultValue: 'monitoring',
+        contextNamespace: 'team-a',
+      }),
+    )
+  })
+
   test('getStringFormItemFromSwagger returns FormStringInput default', () => {
     const el = getStringFormItemFromSwagger({
       name: ['spec', 'name'] as any,
@@ -341,6 +360,51 @@ describe('getArrayFormItemFromSwagger', () => {
     await expect(validator({}, undefined)).rejects.toThrow('Please enter spec.names')
   })
 
+  test('array minItems and maxItems validator returns pretty-printed message', async () => {
+    const el = getArrayFormItemFromSwagger({
+      schema: { type: 'array', minItems: 2, maxItems: 4, items: { type: 'string' } } as any,
+      name: ['spec', 'names'] as any,
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+
+    const validator = resetedFormListLastRules?.[0]?.validator
+    expect(typeof validator).toBe('function')
+    await expect(validator({}, ['a'])).rejects.toThrow('Value must contain between 2 and 4 items for spec.names')
+    await expect(validator({}, ['a', 'b'])).resolves.toBeUndefined()
+    await expect(validator({}, ['a', 'b', 'c', 'd', 'e'])).rejects.toThrow(
+      'Value must contain between 2 and 4 items for spec.names',
+    )
+  })
+
+  test('array add button is disabled when maxItems is reached', () => {
+    resetedFormListFields = [
+      { key: 1, name: 0 },
+      { key: 2, name: 1 },
+    ]
+
+    const el = getArrayFormItemFromSwagger({
+      schema: { type: 'array', maxItems: 2, items: { type: 'string' } } as any,
+      name: ['spec', 'names'] as any,
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+
+    expect(screen.getByTestId('plus-icon').closest('button')).toBeDisabled()
+  })
+
   test('array of numbers routes to FormNumberInput', () => {
     const el = getArrayFormItemFromSwagger({
       schema: { type: 'array', items: { type: 'integer' } } as any,
@@ -375,7 +439,7 @@ describe('getArrayFormItemFromSwagger', () => {
 
   test('array of listInput routes to FormListInput', () => {
     const el = getArrayFormItemFromSwagger({
-      schema: { type: 'array', items: { type: 'listInput', customProps: {} } } as any,
+      schema: { type: 'array', items: { type: 'listInput', customProps: {}, minItems: 1, maxItems: 3 } } as any,
       name: ['spec', 'list'] as any,
       addField,
       removeField,
@@ -387,6 +451,7 @@ describe('getArrayFormItemFromSwagger', () => {
 
     render(<div>{el}</div>)
     expect(screen.getByTestId('list-input')).toBeInTheDocument()
+    expect(FormListInputMock).toHaveBeenCalledWith(expect.objectContaining({ minItems: 1, maxItems: 3 }))
   })
 
   test('array of multilineStringBase64 routes to FormStringMultilineInput', () => {
@@ -581,6 +646,63 @@ describe('getObjectFormItemsDraft', () => {
     expect(FormStringInputMock).toHaveBeenCalledWith(expect.objectContaining({ defaultValue: 'nginx:latest' }))
   })
 
+  test('passes string pattern to FormStringInput', () => {
+    const properties = { url: { type: 'string', pattern: '^https?://' } } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormStringInputMock).toHaveBeenCalledWith(expect.objectContaining({ pattern: '^https?://' }))
+  })
+
+  test('passes string format to FormStringInput', () => {
+    const properties = { createdAt: { type: 'string', format: 'date-time' } } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['metadata'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormStringInputMock).toHaveBeenCalledWith(expect.objectContaining({ format: 'date-time' }))
+  })
+
+  test('passes string minLength and maxLength to FormStringInput', () => {
+    const properties = { name: { type: 'string', minLength: 3, maxLength: 63 } } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['metadata'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormStringInputMock).toHaveBeenCalledWith(expect.objectContaining({ minLength: 3, maxLength: 63 }))
+  })
+
   test('routes x-kubernetes-int-or-string branch', () => {
     const properties = { size: { type: 'string', 'x-kubernetes-int-or-string': true } } as any
 
@@ -636,6 +758,44 @@ describe('getObjectFormItemsDraft', () => {
 
     render(<div>{el}</div>)
     expect(FormNumberInputMock).toHaveBeenCalledWith(expect.objectContaining({ defaultValue: 3 }))
+  })
+
+  test('passes minimum and maximum to FormNumberInput', () => {
+    const properties = { port: { type: 'integer', minimum: 1, maximum: 65535 } } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormNumberInputMock).toHaveBeenCalledWith(expect.objectContaining({ minimum: 1, maximum: 65535 }))
+  })
+
+  test('passes number format to FormNumberInput', () => {
+    const properties = { replicas: { type: 'integer', format: 'int32' } } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormNumberInputMock).toHaveBeenCalledWith(expect.objectContaining({ format: 'int32' }))
   })
 
   test('routes range input', () => {
@@ -695,6 +855,25 @@ describe('getObjectFormItemsDraft', () => {
     expect(FormListInputMock).toHaveBeenCalledWith(expect.objectContaining({ defaultValue: ['a', 'b'] }))
   })
 
+  test('passes minItems and maxItems to FormListInput', () => {
+    const properties = { tags: { type: 'listInput', customProps: {}, minItems: 2, maxItems: 5 } } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormListInputMock).toHaveBeenCalledWith(expect.objectContaining({ minItems: 2, maxItems: 5 }))
+  })
+
   test('routes multilineString + multilineStringBase64', () => {
     const properties = {
       a: { type: 'multilineString' },
@@ -736,6 +915,71 @@ describe('getObjectFormItemsDraft', () => {
 
     render(<div>{el}</div>)
     expect(FormStringMultilineInputMock).toHaveBeenCalledWith(expect.objectContaining({ defaultValue: 'echo hello' }))
+  })
+
+  test('passes string pattern to FormStringMultilineInput', () => {
+    const properties = {
+      script: { type: 'multilineString', pattern: '^run:' },
+    } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormStringMultilineInputMock).toHaveBeenCalledWith(expect.objectContaining({ pattern: '^run:' }))
+  })
+
+  test('passes string format to FormStringMultilineInput', () => {
+    const properties = {
+      timestamp: { type: 'multilineString', format: 'date-time' },
+    } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormStringMultilineInputMock).toHaveBeenCalledWith(expect.objectContaining({ format: 'date-time' }))
+  })
+
+  test('passes string minLength and maxLength to FormStringMultilineInput', () => {
+    const properties = {
+      script: { type: 'multilineString', minLength: 10, maxLength: 1000 },
+    } as any
+
+    const el = getObjectFormItemsDraft({
+      properties,
+      name: ['spec'] as any,
+      required: [],
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+    expect(FormStringMultilineInputMock).toHaveBeenCalledWith(
+      expect.objectContaining({ minLength: 10, maxLength: 1000 }),
+    )
   })
 
   test('routes boolean', () => {
@@ -1010,6 +1254,37 @@ describe('getObjectFormItemFromSwagger', () => {
     expect(FormObjectFromSwaggerMock).toHaveBeenCalledWith(
       expect.objectContaining({
         oneOfRequiredGroups: [['command'], ['shell']],
+      }),
+    )
+  })
+
+  test('forwards oneOfBranches to FormObjectFromSwagger', () => {
+    const properties = { inner: { type: 'string' } } as any
+    const oneOfBranches = [
+      {
+        match: { type: 'service' },
+        required: ['service'],
+        forbidden: ['url'],
+      },
+    ]
+
+    const el = getObjectFormItemFromSwagger({
+      properties,
+      name: ['spec', 'obj'] as any,
+      oneOfBranches,
+      addField,
+      removeField,
+      isEdit: true,
+      expandedControls,
+      persistedControls,
+      urlParams,
+    })
+
+    render(<div>{el}</div>)
+
+    expect(FormObjectFromSwaggerMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        oneOfBranches,
       }),
     )
   })
