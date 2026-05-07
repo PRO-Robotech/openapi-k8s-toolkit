@@ -50,6 +50,7 @@ export type TEnrichedTableProps<T extends AnyObject = AnyObject> = {
     maxHeight?: number
     virtual?: boolean
     disablePagination?: boolean
+    loadingMinHeight?: number | string
   }
 }
 

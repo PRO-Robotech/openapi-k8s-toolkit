@@ -1,12 +1,13 @@
 import React, { FC, useState, useEffect, ReactNode } from 'react'
 import axios, { AxiosError } from 'axios'
 import { useLocation } from 'react-router-dom'
-import { Flex, Spin, Alert, TablePaginationConfig } from 'antd'
+import { Spin, Alert, TablePaginationConfig } from 'antd'
 import { TJSON } from 'localTypes/JSON'
 import { TPrepareTableReq, TPrepareTableRes } from 'localTypes/bff/table'
 import { TAdditionalPrinterColumns } from 'localTypes/richTable'
 import { usePermissions } from 'hooks/usePermissions'
 import { EnrichedTable } from '../EnrichedTable'
+import { Styled } from './styled'
 import { prepare } from './utils'
 
 export type TEnrichedTableProviderProps = {
@@ -55,6 +56,7 @@ export type TEnrichedTableProviderProps = {
     maxHeight?: number
     virtual?: boolean
     disablePagination?: boolean
+    loadingMinHeight?: number | string
   }
   withoutControls?: boolean
 
@@ -144,17 +146,17 @@ export const EnrichedTableProvider: FC<TEnrichedTableProviderProps> = ({
 
   // if (isNamespacedLoading) {
   //   return (
-  //     <Flex justify="center">
+  //     <Styled.LoadingContainer $minHeight={tableProps?.loadingMinHeight}>
   //       <Spin />
-  //     </Flex>
+  //     </Styled.LoadingContainer>
   //   )
   // }
 
   if (!preparedProps && isLoading) {
     return (
-      <Flex justify="center">
+      <Styled.LoadingContainer $minHeight={tableProps?.loadingMinHeight}>
         <Spin />
-      </Flex>
+      </Styled.LoadingContainer>
     )
   }
 
@@ -164,9 +166,9 @@ export const EnrichedTableProvider: FC<TEnrichedTableProviderProps> = ({
 
   if (!preparedProps) {
     return (
-      <Flex justify="center">
+      <Styled.LoadingContainer $minHeight={tableProps?.loadingMinHeight}>
         <Spin />
-      </Flex>
+      </Styled.LoadingContainer>
     )
   }
 

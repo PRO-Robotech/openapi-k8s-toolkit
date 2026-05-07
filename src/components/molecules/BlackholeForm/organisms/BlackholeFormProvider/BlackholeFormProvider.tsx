@@ -12,6 +12,7 @@ import { TFormSchemaProperties } from 'localTypes/formSchema'
 import { useK8sSmartResource } from 'hooks/useK8sSmartResource'
 import { YamlEditorSingleton } from '../../../YamlEditorSingleton'
 import { BlackholeForm } from '../BlackholeForm'
+import { Styled } from './styled'
 
 type TCustomFormsOverridesResponse = {
   items?: {
@@ -276,7 +277,11 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
   ])
 
   if (isLoading) {
-    return <Spin />
+    return (
+      <Styled.LoadingContainer $minHeight={designNewLayoutHeight}>
+        <Spin />
+      </Styled.LoadingContainer>
+    )
   }
 
   if (modeData?.current === 'Manual') {
