@@ -29,6 +29,7 @@ export type TClusterListTableProps<T extends AnyObject = AnyObject> = {
     paginationPosition?: TablePaginationConfig['position']
     isTotalLeft?: boolean
     maxHeight?: number
+    scroll?: TableProps<T>['scroll']
     virtual?: boolean
     disablePagination?: boolean
   }
@@ -120,7 +121,7 @@ export const ClusterListTable = <T extends AnyObject = AnyObject>({
                   showTotal,
                 }
           }
-          scroll={{ x: 'max-content', y: tableProps?.maxHeight }}
+          scroll={tableProps?.scroll || { x: 'max-content', y: tableProps?.maxHeight }}
           virtual={tableProps?.virtual}
           rowClassName={rowClassName}
           onRow={record => {

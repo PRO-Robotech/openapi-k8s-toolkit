@@ -293,7 +293,7 @@ export const getEnrichedColumns = <T extends AnyObject = AnyObject>({
           theme,
         })
       },
-      width: possibleColWidth,
+      width: possibleColWidth ?? el.width,
       // for factory search
       onCell: (record: any): React.TdHTMLAttributes<HTMLTableCellElement> => {
         const rowKey = getRowKey(record)
