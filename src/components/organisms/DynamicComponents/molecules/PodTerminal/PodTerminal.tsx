@@ -26,6 +26,7 @@ export const PodTerminal: FC<{ data: TDynamicComponentsAppTypeMap['PodTerminal']
     cluster,
     namespace,
     podName,
+    containerName,
     substractHeight,
     ...props
   } = data
@@ -42,6 +43,10 @@ export const PodTerminal: FC<{ data: TDynamicComponentsAppTypeMap['PodTerminal']
   const namespacePrepared = parseAll({ text: namespace, replaceValues, multiQueryData })
 
   const podNamePrepared = parseAll({ text: podName, replaceValues, multiQueryData })
+
+  const containerNamePrepared = containerName
+    ? parseAll({ text: containerName, replaceValues, multiQueryData })
+    : undefined
 
   // const {
   //   data: podInfo,
@@ -109,6 +114,7 @@ export const PodTerminal: FC<{ data: TDynamicComponentsAppTypeMap['PodTerminal']
         cluster={clusterPrepared}
         namespace={namespacePrepared}
         podName={podNamePrepared}
+        containerName={containerNamePrepared}
         containers={containers}
         substractHeight={substractHeight || 340}
         {...props}

@@ -3,6 +3,7 @@ export type TPodTerminalProps = {
   cluster: string
   namespace: string
   podName: string
+  containerName?: string
   substractHeight?: number
 }
 export type TNodeTerminalProps = {
