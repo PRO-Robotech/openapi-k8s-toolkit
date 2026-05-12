@@ -52,6 +52,11 @@ const meta: Meta<TArgs> = {
       description:
         'data.podName – name of the Pod to open the terminal into; can contain placeholders resolved via parseAll',
     },
+    containerName: {
+      control: 'text',
+      description:
+        'Optional: data.containerName – pin terminal to one running container; can contain placeholders resolved via parseAll',
+    },
     substractHeight: {
       control: 'number',
       description:
@@ -66,6 +71,7 @@ const meta: Meta<TArgs> = {
       cluster: args.cluster,
       namespace: args.namespace,
       podName: args.podName,
+      ...(args.containerName ? { containerName: args.containerName } : {}),
       substractHeight: args.substractHeight,
     }
 
