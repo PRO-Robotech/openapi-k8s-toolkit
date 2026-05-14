@@ -15,7 +15,13 @@ import '@testing-library/jest-dom'
 import { parseValueWithUnit, toBytes } from 'utils/converterBytes'
 import { parseCoresWithUnit, toCores } from 'utils/converterCores'
 
-import { getCellRender, getEnrichedColumns, getEnrichedColumnsWithControls } from './utils'
+import {
+  getCellRender,
+  getEnrichedColumns,
+  getEnrichedColumnsWithControls,
+  hasFactoryItemOfType,
+  isNameColumn,
+} from './utils'
 
 /* ----------------------------- mocks ----------------------------- */
 
@@ -187,6 +193,85 @@ describe('getEnrichedColumns', () => {
       getRowKey: r => r.id,
     })
     expect(res).toBeUndefined()
+  })
+
+  test('detects name columns by key, title and metadata.name dataIndex', () => {
+    expect(isNameColumn({ key: 'name', title: 'Anything', dataIndex: 'anything' })).toBe(true)
+    expect(isNameColumn({ key: 'other', title: 'Name', dataIndex: 'anything' })).toBe(true)
+    expect(isNameColumn({ key: 'other', title: 'Other', dataIndex: ['metadata', 'name'] })).toBe(true)
+    expect(isNameColumn({ key: 'namespace', title: 'Namespace', dataIndex: ['metadata', 'namespace'] })).toBe(false)
+  })
+
+  test('detects factory items by type inside custom props', () => {
+    expect(
+      hasFactoryItemOfType(
+        {
+          items: [{ type: 'ParsedText' }, { type: 'ActionsDropdown', data: { id: 'row-actions' } }],
+        },
+        'ActionsDropdown',
+      ),
+    ).toBe(true)
+    expect(hasFactoryItemOfType({ items: [{ type: 'ParsedText' }] }, 'ActionsDropdown')).toBe(false)
+    expect(hasFactoryItemOfType(undefined, 'ActionsDropdown')).toBe(false)
+  })
+
+  test('fixes the first name column to the left with a default width', () => {
+    const columns = [
+      { title: 'Name', key: 'Name', dataIndex: ['metadata', 'name'] },
+      { title: 'Image', key: 'Image', dataIndex: 'image' },
+    ] as any
+
+    const res = getEnrichedColumns({
+      columns,
+      theme: 'light',
+      getRowKey: r => r.id,
+    }) as any[]
+
+    expect(res[0].fixed).toBe('left')
+    expect(res[0].width).toBe(240)
+    expect(res[1].fixed).toBeUndefined()
+  })
+
+  test('preserves configured name column width when fixing it', () => {
+    const columns = [
+      { title: 'Name', key: 'Name', dataIndex: ['metadata', 'name'] },
+      { title: 'Container Name', key: 'containerName', dataIndex: 'containerName' },
+    ] as any
+
+    const res = getEnrichedColumns({
+      columns,
+      additionalPrinterColumnsColWidths: [{ key: 'Name', value: '320px' }],
+      theme: 'light',
+      getRowKey: r => r.id,
+    }) as any[]
+
+    expect(res[0].fixed).toBe('left')
+    expect(res[0].width).toBe('320px')
+    expect(res[1].fixed).toBeUndefined()
+  })
+
+  test('fixes custom ActionsDropdown factory columns to the right with a default width', () => {
+    const columns = [
+      { title: 'Name', key: 'Name', dataIndex: ['metadata', 'name'] },
+      { title: ' ', key: ' ', dataIndex: undefined },
+    ] as any
+
+    const res = getEnrichedColumns({
+      columns,
+      additionalPrinterColumnsKeyTypeProps: {
+        ' ': {
+          type: 'factory',
+          customProps: {
+            items: [{ type: 'ActionsDropdown', data: { id: 'pod-actions' } }],
+          },
+        },
+      } as any,
+      theme: 'light',
+      getRowKey: r => r.id,
+    }) as any[]
+
+    expect(res[1].fixed).toBe('right')
+    expect(res[1].width).toBe(60)
   })
 
   test('applies width, render, onCell and disables sorter when configured', () => {
@@ -458,6 +543,7 @@ describe('getEnrichedColumnsWithControls', () => {
 
     expect(res).toHaveLength(2)
     expect(res[1].key).toBe('controls')
+    expect(res[1].fixed).toBe('right')
     expect(typeof res[1].render).toBe('function')
   })
 
