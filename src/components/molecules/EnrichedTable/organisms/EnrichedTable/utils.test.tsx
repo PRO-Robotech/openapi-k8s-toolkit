@@ -232,6 +232,23 @@ describe('getEnrichedColumns', () => {
     expect(res[1].fixed).toBeUndefined()
   })
 
+  test('preserves explicit fixed value on name columns', () => {
+    const columns = [
+      { title: 'Name', key: 'Name', dataIndex: ['metadata', 'name'], fixed: 'right' },
+      { title: 'Image', key: 'Image', dataIndex: 'image' },
+    ] as any
+
+    const res = getEnrichedColumns({
+      columns,
+      theme: 'light',
+      getRowKey: r => r.id,
+    }) as any[]
+
+    expect(res[0].fixed).toBe('right')
+    expect(res[0].width).toBeUndefined()
+    expect(res[1].fixed).toBeUndefined()
+  })
+
   test('preserves configured name column width when fixing it', () => {
     const columns = [
       { title: 'Name', key: 'Name', dataIndex: ['metadata', 'name'] },
@@ -272,6 +289,30 @@ describe('getEnrichedColumns', () => {
 
     expect(res[1].fixed).toBe('right')
     expect(res[1].width).toBe(60)
+  })
+
+  test('preserves explicit fixed value on custom ActionsDropdown factory columns', () => {
+    const columns = [
+      { title: 'Name', key: 'Name', dataIndex: ['metadata', 'name'] },
+      { title: ' ', key: ' ', dataIndex: undefined, fixed: 'left' },
+    ] as any
+
+    const res = getEnrichedColumns({
+      columns,
+      additionalPrinterColumnsKeyTypeProps: {
+        ' ': {
+          type: 'factory',
+          customProps: {
+            items: [{ type: 'ActionsDropdown', data: { id: 'pod-actions' } }],
+          },
+        },
+      } as any,
+      theme: 'light',
+      getRowKey: r => r.id,
+    }) as any[]
+
+    expect(res[1].fixed).toBe('left')
+    expect(res[1].width).toBeUndefined()
   })
 
   test('applies width, render, onCell and disables sorter when configured', () => {

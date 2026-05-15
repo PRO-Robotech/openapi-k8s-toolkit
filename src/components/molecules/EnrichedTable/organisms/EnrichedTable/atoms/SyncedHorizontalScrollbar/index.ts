@@ -1,0 +1,1 @@
+export { SyncedHorizontalScrollbar } from './SyncedHorizontalScrollbar'
