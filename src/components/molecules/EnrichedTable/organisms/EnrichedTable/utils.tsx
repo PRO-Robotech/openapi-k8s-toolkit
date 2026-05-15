@@ -22,6 +22,97 @@ import { TableFactory } from '../../molecules'
 import { ShortenedTextWithTooltip, FilterDropdown, TrimmedTags, TextAlignContainer, TinyButton } from './atoms'
 import { TInternalDataForControls } from './types'
 
+const DEFAULT_FIXED_NAME_COLUMN_WIDTH = 240
+const DEFAULT_FIXED_ACTIONS_COLUMN_WIDTH = 60
+
+const stringifyColumnValue = (value: unknown): string | undefined => {
+  if (typeof value === 'string' || typeof value === 'number') {
+    return String(value).trim().toLowerCase()
+  }
+
+  return undefined
+}
+
+const getColumnDataPath = (dataIndex: unknown): string | undefined => {
+  if (Array.isArray(dataIndex)) {
+    return dataIndex.map(String).join('.').trim().toLowerCase()
+  }
+
+  return stringifyColumnValue(dataIndex)
+}
+
+export const isNameColumn = (column: { key?: React.Key; title?: unknown; dataIndex?: unknown }): boolean => {
+  const key = stringifyColumnValue(column.key)
+  const title = stringifyColumnValue(column.title)
+  const dataPath = getColumnDataPath(column.dataIndex)
+
+  return key === 'name' || title === 'name' || dataPath === 'name' || dataPath === 'metadata.name'
+}
+
+export const hasFactoryItemOfType = (customProps: unknown, itemType: string): boolean => {
+  if (typeof customProps !== 'object' || customProps === null) {
+    return false
+  }
+
+  if (!('items' in customProps) || !Array.isArray(customProps.items)) {
+    return false
+  }
+
+  return customProps.items.some(
+    item => typeof item === 'object' && item !== null && 'type' in item && item.type === itemType,
+  )
+}
+
+const getFixedColumnSide = ({
+  shouldFixNameColumn,
+  shouldFixActionsColumn,
+  currentFixed,
+}: {
+  shouldFixNameColumn: boolean
+  shouldFixActionsColumn: boolean
+  currentFixed?: 'left' | 'right' | boolean
+}) => {
+  if (shouldFixNameColumn) {
+    return 'left'
+  }
+
+  if (shouldFixActionsColumn) {
+    return 'right'
+  }
+
+  return currentFixed
+}
+
+const getFixedColumnWidth = ({
+  possibleColWidth,
+  currentWidth,
+  shouldFixNameColumn,
+  shouldFixActionsColumn,
+}: {
+  possibleColWidth?: string
+  currentWidth?: string | number
+  shouldFixNameColumn: boolean
+  shouldFixActionsColumn: boolean
+}) => {
+  if (possibleColWidth !== undefined) {
+    return possibleColWidth
+  }
+
+  if (currentWidth !== undefined) {
+    return currentWidth
+  }
+
+  if (shouldFixNameColumn) {
+    return DEFAULT_FIXED_NAME_COLUMN_WIDTH
+  }
+
+  if (shouldFixActionsColumn) {
+    return DEFAULT_FIXED_ACTIONS_COLUMN_WIDTH
+  }
+
+  return undefined
+}
+
 export const getCellRender = ({
   value,
   record,
@@ -140,6 +231,8 @@ export const getEnrichedColumns = <T extends AnyObject = AnyObject>({
     return undefined
   }
 
+  let hasFixedNameColumn = false
+
   // for factory search
   // return columns.map(el => {
   return columns.map((el, colIndex) => {
@@ -157,6 +250,14 @@ export const getEnrichedColumns = <T extends AnyObject = AnyObject>({
         ? additionalPrinterColumnsKeyTypeProps[el.key.toString()]
         : undefined
     const originalRender = el.render
+    const shouldFixNameColumn = !hasFixedNameColumn && isNameColumn(el)
+    const shouldFixActionsColumn =
+      possibleCustomTypeWithProps?.type === 'factory' &&
+      hasFactoryItemOfType(possibleCustomTypeWithProps.customProps, 'ActionsDropdown')
+
+    if (shouldFixNameColumn) {
+      hasFixedNameColumn = true
+    }
 
     // for factory search
     const useFactorySearch = possibleCustomTypeWithProps?.type === 'factory'
@@ -293,7 +394,17 @@ export const getEnrichedColumns = <T extends AnyObject = AnyObject>({
           theme,
         })
       },
-      width: possibleColWidth ?? el.width,
+      fixed: getFixedColumnSide({
+        shouldFixNameColumn,
+        shouldFixActionsColumn,
+        currentFixed: el.fixed,
+      }),
+      width: getFixedColumnWidth({
+        possibleColWidth,
+        currentWidth: el.width,
+        shouldFixNameColumn,
+        shouldFixActionsColumn,
+      }),
       // for factory search
       onCell: (record: any): React.TdHTMLAttributes<HTMLTableCellElement> => {
         const rowKey = getRowKey(record)
@@ -442,6 +553,7 @@ export const getEnrichedColumnsWithControls = <T extends AnyObject = AnyObject>(
       dataIndex: 'internalDataForControls',
       key: 'controls',
       className: 'controls',
+      fixed: 'right',
       width: 60,
       render: (value: TInternalDataForControls) => {
         return (

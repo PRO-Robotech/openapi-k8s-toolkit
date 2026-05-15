@@ -59,6 +59,24 @@ describe('EnrichedTable', () => {
     expect(containerProps.$isCursorPointer).toBe(true)
   })
 
+  test('fixes row selection column to the left when selection is enabled', () => {
+    render(
+      <EnrichedTable
+        {...baseProps}
+        selectData={{
+          selectedRowKeys: ['row-1'],
+          onChange: jest.fn(),
+        }}
+      />,
+    )
+
+    const tableProps = tableMock.mock.calls[0][0] as {
+      rowSelection?: { fixed?: string; columnWidth?: number }
+    }
+    expect(tableProps.rowSelection?.fixed).toBe('left')
+    expect(tableProps.rowSelection?.columnWidth).toBe(48)
+  })
+
   test('merges consumer onRow click with internal navigation', () => {
     const onClick = jest.fn()
 
