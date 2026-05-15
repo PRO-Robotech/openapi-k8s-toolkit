@@ -186,6 +186,7 @@ export const EnrichedTable = <T extends AnyObject = AnyObject>({
             selectData
               ? {
                   type: 'checkbox',
+                  fixed: 'left',
                   columnWidth: 48,
                   selectedRowKeys: selectData.selectedRowKeys,
                   onChange: (selectedRowKeys: React.Key[], selectedRows: T[]) => {
