@@ -57,6 +57,18 @@ const TableContainer = styled.div<TTableContainerProps>`
   && .ant-table-expanded-row-fixed {
     width: auto !important;
   }
+
+  /* Virtual tables keep rc-virtual-list's own scrollbar; the custom synced scrollbar is disabled for them. */
+  && .ant-table:not(.ant-table-virtual) .ant-table-content,
+  && .ant-table:not(.ant-table-virtual) .ant-table-body {
+    scrollbar-width: none;
+  }
+
+  && .ant-table:not(.ant-table-virtual) .ant-table-content::-webkit-scrollbar,
+  && .ant-table:not(.ant-table-virtual) .ant-table-body::-webkit-scrollbar {
+    height: 0;
+    width: 0;
+  }
 `
 
 const HideableControls = styled.div`

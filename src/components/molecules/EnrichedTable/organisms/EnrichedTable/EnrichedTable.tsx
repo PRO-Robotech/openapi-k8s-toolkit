@@ -14,6 +14,7 @@ import {
   TAdditionalPrinterColumnsTooltips,
 } from 'localTypes/richTable'
 import { TableComponents } from './atoms'
+import { SyncedHorizontalScrollbar } from './atoms/SyncedHorizontalScrollbar'
 import { TInternalDataForControls } from './types'
 import { getEnrichedColumns, getEnrichedColumnsWithControls } from './utils'
 
@@ -78,6 +79,7 @@ export const EnrichedTable = <T extends AnyObject = AnyObject>({
   tableProps,
 }: TEnrichedTableProps<T>) => {
   const navigate = useNavigate()
+  const tableContainerRef = React.useRef<HTMLDivElement>(null)
 
   if (!columns) {
     return null
@@ -158,6 +160,7 @@ export const EnrichedTable = <T extends AnyObject = AnyObject>({
 
   return (
     <TableComponents.TableContainer
+      ref={tableContainerRef}
       $isDark={theme === 'dark'}
       $isCursorPointer={Boolean(pathToNavigate || rowClickable)}
       $borderless={tableProps?.borderless}
@@ -187,6 +190,7 @@ export const EnrichedTable = <T extends AnyObject = AnyObject>({
             selectData
               ? {
                   type: 'checkbox',
+                  // Keep selection controls aligned with the fixed Name column.
                   fixed: 'left',
                   columnWidth: 48,
                   selectedRowKeys: selectData.selectedRowKeys,
@@ -222,6 +226,7 @@ export const EnrichedTable = <T extends AnyObject = AnyObject>({
             }
           }}
         />
+        <SyncedHorizontalScrollbar disabled={tableProps?.virtual} tableContainerRef={tableContainerRef} />
       </TableComponents.HideableControls>
     </TableComponents.TableContainer>
   )

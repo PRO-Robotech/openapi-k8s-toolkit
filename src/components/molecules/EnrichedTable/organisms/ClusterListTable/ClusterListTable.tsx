@@ -8,6 +8,7 @@ import { get } from 'lodash'
 import { TNavigationResource } from 'localTypes/navigations'
 import { getEnrichedColumns } from '../EnrichedTable'
 import { TableComponents } from '../EnrichedTable/atoms'
+import { SyncedHorizontalScrollbar } from '../EnrichedTable/atoms/SyncedHorizontalScrollbar'
 
 export type TClusterListTableProps<T extends AnyObject = AnyObject> = {
   theme: 'light' | 'dark'
@@ -48,6 +49,7 @@ export const ClusterListTable = <T extends AnyObject = AnyObject>({
   tableProps,
 }: TClusterListTableProps<T>) => {
   const navigate = useNavigate()
+  const tableContainerRef = React.useRef<HTMLDivElement>(null)
 
   if (!columns) {
     return null
@@ -98,6 +100,7 @@ export const ClusterListTable = <T extends AnyObject = AnyObject>({
 
   return (
     <TableComponents.TableContainer
+      ref={tableContainerRef}
       $isDark={theme === 'dark'}
       $isCursorPointer={Boolean(
         (recordKeysForNavigation && (!!pathToNavigate || !!navigationSettings)) || rowClickable,
@@ -156,6 +159,7 @@ export const ClusterListTable = <T extends AnyObject = AnyObject>({
             }
           }}
         />
+        <SyncedHorizontalScrollbar disabled={tableProps?.virtual} tableContainerRef={tableContainerRef} />
       </TableComponents.HideableControls>
     </TableComponents.TableContainer>
   )
