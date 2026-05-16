@@ -1,7 +1,7 @@
 import React, { FC, useState, useEffect, ReactNode } from 'react'
 import axios, { AxiosError } from 'axios'
 import { useLocation } from 'react-router-dom'
-import { Spin, Alert, TablePaginationConfig } from 'antd'
+import { Spin, Alert, TablePaginationConfig, TableProps } from 'antd'
 import { TJSON } from 'localTypes/JSON'
 import { TPrepareTableReq, TPrepareTableRes } from 'localTypes/bff/table'
 import { TAdditionalPrinterColumns } from 'localTypes/richTable'
@@ -54,6 +54,7 @@ export type TEnrichedTableProviderProps = {
     editIcon?: ReactNode
     deleteIcon?: ReactNode
     maxHeight?: number
+    scroll?: TableProps<TJSON>['scroll']
     virtual?: boolean
     disablePagination?: boolean
     loadingMinHeight?: number | string

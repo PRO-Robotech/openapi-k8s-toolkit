@@ -49,6 +49,7 @@ export type TEnrichedTableProps<T extends AnyObject = AnyObject> = {
     editIcon?: ReactNode
     deleteIcon?: ReactNode
     maxHeight?: number
+    scroll?: TableProps<T>['scroll']
     virtual?: boolean
     disablePagination?: boolean
     loadingMinHeight?: number | string
@@ -182,7 +183,7 @@ export const EnrichedTable = <T extends AnyObject = AnyObject>({
                   showTotal,
                 }
           }
-          scroll={{ x: 'max-content', y: tableProps?.maxHeight }}
+          scroll={tableProps?.scroll || { x: 'max-content', y: tableProps?.maxHeight }}
           virtual={tableProps?.virtual}
           rowClassName={rowClassName}
           rowSelection={

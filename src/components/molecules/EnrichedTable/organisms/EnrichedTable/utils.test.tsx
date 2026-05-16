@@ -342,6 +342,19 @@ describe('getEnrichedColumns', () => {
     expect(String(onCellAttrs['data-colkey'])).toContain('name')
   })
 
+  test('preserves column width when no additional width override is configured', () => {
+    const columns = [{ title: 'Name', key: 'name', dataIndex: 'name', width: 180, fixed: 'left' }] as any
+
+    const res = getEnrichedColumns({
+      columns,
+      theme: 'light',
+      getRowKey: r => r.id,
+    }) as any[]
+
+    expect(res[0].width).toBe(180)
+    expect(res[0].fixed).toBe('left')
+  })
+
   test('shows question icon with tooltip near title when additionalPrinterColumnsTooltips is configured', () => {
     const columns = [{ title: 'Name', key: 'name', dataIndex: 'name' }] as any
 
