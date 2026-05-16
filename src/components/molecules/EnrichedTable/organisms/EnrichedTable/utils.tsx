@@ -72,6 +72,10 @@ const getFixedColumnSide = ({
   shouldFixActionsColumn: boolean
   currentFixed?: 'left' | 'right' | boolean
 }) => {
+  if (currentFixed !== undefined) {
+    return currentFixed
+  }
+
   if (shouldFixNameColumn) {
     return 'left'
   }
@@ -80,7 +84,7 @@ const getFixedColumnSide = ({
     return 'right'
   }
 
-  return currentFixed
+  return undefined
 }
 
 const getFixedColumnWidth = ({
@@ -250,12 +254,15 @@ export const getEnrichedColumns = <T extends AnyObject = AnyObject>({
         ? additionalPrinterColumnsKeyTypeProps[el.key.toString()]
         : undefined
     const originalRender = el.render
-    const shouldFixNameColumn = !hasFixedNameColumn && isNameColumn(el)
+    const columnIsNameColumn = isNameColumn(el)
+    const canAutoFixColumn = el.fixed === undefined
+    const shouldFixNameColumn = canAutoFixColumn && !hasFixedNameColumn && columnIsNameColumn
     const shouldFixActionsColumn =
+      canAutoFixColumn &&
       possibleCustomTypeWithProps?.type === 'factory' &&
       hasFactoryItemOfType(possibleCustomTypeWithProps.customProps, 'ActionsDropdown')
 
-    if (shouldFixNameColumn) {
+    if (columnIsNameColumn && !hasFixedNameColumn) {
       hasFixedNameColumn = true
     }
 

@@ -21,10 +21,17 @@ jest.mock('antd', () => ({
 
 jest.mock('./atoms', () => ({
   TableComponents: {
-    TableContainer: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => {
-      tableContainerMock(props)
-      return <div data-testid="table-container">{children}</div>
-    },
+    TableContainer: React.forwardRef<HTMLDivElement, React.PropsWithChildren<Record<string, unknown>>>((props, ref) => {
+      // eslint-disable-next-line react/prop-types
+      const { children, ...restProps } = props
+
+      tableContainerMock(restProps)
+      return (
+        <div ref={ref} data-testid="table-container">
+          {children}
+        </div>
+      )
+    }),
     HideableControls: ({ children }: React.PropsWithChildren) => <div data-testid="hideable-controls">{children}</div>,
   },
 }))
