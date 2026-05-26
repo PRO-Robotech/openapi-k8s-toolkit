@@ -37,7 +37,11 @@ describe('buildPlaceholder', () => {
   })
 
   it('formats an empty-string default', () => {
-    expect(buildPlaceholder('label', '')).toBe('Default: ')
+    expect(buildPlaceholder('label', '')).toBe('label')
+  })
+
+  it('uses the field name for an empty array default', () => {
+    expect(buildPlaceholder('protocols', [])).toBe('protocols')
   })
 
   it('formats an array default', () => {
@@ -63,10 +67,14 @@ describe('buildPlaceholder', () => {
       expect(buildPlaceholder('image', 'nginx:latest', 'registry.example.com/app:v1.2.3')).toBe('Default: nginx:latest')
     })
 
-    it('ignores example when default is a falsy but defined value', () => {
-      expect(buildPlaceholder('label', '', 'some-example')).toBe('Default: ')
+    it('ignores example when default is an actionable falsy value', () => {
       expect(buildPlaceholder('count', 0, 42)).toBe('Default: 0')
       expect(buildPlaceholder('flag', false, true)).toBe('Default: false')
+    })
+
+    it('uses example when default is empty and non-actionable', () => {
+      expect(buildPlaceholder('label', '', 'some-example')).toBe('Example: some-example')
+      expect(buildPlaceholder('protocols', [], ['TCP'])).toBe('Example: TCP')
     })
   })
 })
@@ -87,10 +95,14 @@ describe('getExampleTooltip', () => {
     )
   })
 
-  it('surfaces example tooltip even when default is falsy-but-defined', () => {
-    expect(getExampleTooltip('', 'some-example')).toBe('Example: some-example')
+  it('surfaces example tooltip when default is actionable but falsy', () => {
     expect(getExampleTooltip(0, 42)).toBe('Example: 42')
     expect(getExampleTooltip(false, true)).toBe('Example: true')
+  })
+
+  it('does not surface example tooltip when empty default lets placeholder show example', () => {
+    expect(getExampleTooltip('', 'some-example')).toBeUndefined()
+    expect(getExampleTooltip([], ['TCP'])).toBeUndefined()
   })
 
   it('formats array examples with comma separation', () => {

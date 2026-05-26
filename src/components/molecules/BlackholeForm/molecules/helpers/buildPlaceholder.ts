@@ -1,7 +1,19 @@
 import { TFormName } from 'localTypes/form'
 import { getStringByName } from 'utils/getStringByName'
 
-export const formatDefaultValue = (defaultValue: string | number | boolean | string[]): string => {
+export type TDisplayableDefaultValue = string | number | boolean | string[]
+
+export const hasActionableDefaultValue = (
+  defaultValue: TDisplayableDefaultValue | undefined,
+): defaultValue is TDisplayableDefaultValue => {
+  if (defaultValue === undefined) return false
+  if (defaultValue === '') return false
+  if (Array.isArray(defaultValue) && defaultValue.length === 0) return false
+
+  return true
+}
+
+export const formatDefaultValue = (defaultValue: TDisplayableDefaultValue): string => {
   if (Array.isArray(defaultValue)) {
     return defaultValue.join(', ')
   }
@@ -11,10 +23,10 @@ export const formatDefaultValue = (defaultValue: string | number | boolean | str
 
 export const buildPlaceholder = (
   name: TFormName,
-  defaultValue?: string | number | boolean | string[],
-  example?: string | number | boolean | string[],
+  defaultValue?: TDisplayableDefaultValue,
+  example?: TDisplayableDefaultValue,
 ): string => {
-  if (defaultValue !== undefined) {
+  if (hasActionableDefaultValue(defaultValue)) {
     return `Default: ${formatDefaultValue(defaultValue)}`
   }
 
@@ -32,11 +44,11 @@ export const buildPlaceholder = (
  * surfaced as the placeholder).
  */
 export const getExampleTooltip = (
-  defaultValue?: string | number | boolean | string[],
-  example?: string | number | boolean | string[],
+  defaultValue?: TDisplayableDefaultValue,
+  example?: TDisplayableDefaultValue,
 ): string | undefined => {
   if (example === undefined) return undefined
-  if (defaultValue === undefined) return undefined
+  if (!hasActionableDefaultValue(defaultValue)) return undefined
 
   return `Example: ${formatDefaultValue(example)}`
 }
