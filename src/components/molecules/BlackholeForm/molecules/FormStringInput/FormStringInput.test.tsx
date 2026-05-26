@@ -17,9 +17,16 @@ const removeField = jest.fn()
 type TNestedArrayHarnessProps = {
   onSnapshot: (values: unknown) => void
   onValuesChangeCallback: () => void
+  defaultValue?: string
+  nullable?: boolean
 }
 
-const NestedArrayHarness = ({ onSnapshot, onValuesChangeCallback }: TNestedArrayHarnessProps) => {
+const NestedArrayHarness = ({
+  onSnapshot,
+  onValuesChangeCallback,
+  defaultValue,
+  nullable,
+}: TNestedArrayHarnessProps) => {
   const [form] = Form.useForm()
 
   return (
@@ -35,7 +42,8 @@ const NestedArrayHarness = ({ onSnapshot, onValuesChangeCallback }: TNestedArray
                   arrName={[field.name, 'azureDisk', 'cachingMode']}
                   removeField={removeField}
                   persistedControls={persistedControls}
-                  defaultValue="ReadWrite"
+                  defaultValue={defaultValue}
+                  nullable={nullable}
                 />
               ))
             }
@@ -58,7 +66,13 @@ describe('FormStringInput', () => {
     const onSnapshot = jest.fn()
     const onValuesChangeCallback = jest.fn()
 
-    render(<NestedArrayHarness onSnapshot={onSnapshot} onValuesChangeCallback={onValuesChangeCallback} />)
+    render(
+      <NestedArrayHarness
+        onSnapshot={onSnapshot}
+        onValuesChangeCallback={onValuesChangeCallback}
+        defaultValue="ReadWrite"
+      />,
+    )
 
     fireEvent.click(screen.getByRole('button', { name: 'Apply default' }))
     fireEvent.click(screen.getByRole('button', { name: 'snapshot' }))
@@ -76,5 +90,28 @@ describe('FormStringInput', () => {
     })
     expect(onSnapshot).not.toHaveBeenCalledWith(expect.objectContaining({ 0: expect.anything() }))
     expect(onValuesChangeCallback).toHaveBeenCalledTimes(1)
+  })
+
+  it('sets nullable fields to null at the absolute path when rendered inside Form.List', () => {
+    const onSnapshot = jest.fn()
+    const onValuesChangeCallback = jest.fn()
+
+    render(<NestedArrayHarness onSnapshot={onSnapshot} onValuesChangeCallback={onValuesChangeCallback} nullable />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Set null' }))
+    fireEvent.click(screen.getByRole('button', { name: 'snapshot' }))
+
+    expect(onSnapshot).toHaveBeenCalledWith({
+      spec: {
+        volumes: [
+          {
+            azureDisk: {
+              cachingMode: null,
+            },
+          },
+        ],
+      },
+    })
+    expect(onSnapshot).not.toHaveBeenCalledWith(expect.objectContaining({ 0: expect.anything() }))
   })
 })
