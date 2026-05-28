@@ -2,13 +2,18 @@ import React, { FC, PropsWithChildren } from 'react'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { Form } from 'antd'
 import { TFormName } from 'localTypes/form'
+import { OnValuesChangeCallbackProvider } from '../../organisms/BlackholeForm/context'
 import { useDefaultValueButton } from './useDefaultValueButton'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ValueHolder: FC<Record<string, unknown>> = _props => null
 
 // eslint-disable-next-line react/prop-types
-const makeWrapper = (fieldName: TFormName, initialValues?: Record<string, unknown>): FC<PropsWithChildren> => {
+const makeWrapper = (
+  fieldName: TFormName,
+  initialValues?: Record<string, unknown>,
+  onValuesChangeCallback?: () => void,
+): FC<PropsWithChildren> => {
   const Wrapper: FC<PropsWithChildren> = ({ children }) => {
     const [form] = Form.useForm()
 
@@ -17,7 +22,7 @@ const makeWrapper = (fieldName: TFormName, initialValues?: Record<string, unknow
         <Form.Item name={fieldName} noStyle>
           <ValueHolder />
         </Form.Item>
-        {children}
+        <OnValuesChangeCallbackProvider value={onValuesChangeCallback}>{children}</OnValuesChangeCallbackProvider>
       </Form>
     )
   }
@@ -30,6 +35,22 @@ describe('useDefaultValueButton', () => {
     it('returns visible: false when defaultValue is undefined', () => {
       const { result } = renderHook(() => useDefaultValueButton('protocol', undefined), {
         wrapper: makeWrapper('protocol'),
+      })
+
+      expect(result.current.visible).toBe(false)
+    })
+
+    it('returns visible: false when defaultValue is an empty string', () => {
+      const { result } = renderHook(() => useDefaultValueButton('protocol', ''), {
+        wrapper: makeWrapper('protocol'),
+      })
+
+      expect(result.current.visible).toBe(false)
+    })
+
+    it('returns visible: false when defaultValue is an empty array', () => {
+      const { result } = renderHook(() => useDefaultValueButton('protocols', []), {
+        wrapper: makeWrapper('protocols'),
       })
 
       expect(result.current.visible).toBe(false)
@@ -130,6 +151,23 @@ describe('useDefaultValueButton', () => {
         }
       })
     })
+
+    it('notifies form sync after applying default', async () => {
+      const onValuesChangeCallback = jest.fn()
+      const { result } = renderHook(() => useDefaultValueButton('replicas', 3), {
+        wrapper: makeWrapper('replicas', undefined, onValuesChangeCallback),
+      })
+
+      expect(result.current.visible).toBe(true)
+      const state = result.current
+      if (!state.visible) return
+
+      act(() => {
+        state.handleApply()
+      })
+
+      expect(onValuesChangeCallback).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('onClear action', () => {
@@ -154,6 +192,25 @@ describe('useDefaultValueButton', () => {
           expect(result.current.isApplied).toBe(false)
         }
       })
+    })
+
+    it('notifies form sync after clearing default', async () => {
+      const onValuesChangeCallback = jest.fn()
+      const { result } = renderHook(() => useDefaultValueButton('replicas', 3), {
+        wrapper: makeWrapper('replicas', { replicas: 3 }, onValuesChangeCallback),
+      })
+
+      await waitFor(() => {
+        expect(result.current.visible).toBe(true)
+      })
+      const state = result.current
+      if (!state.visible) return
+
+      act(() => {
+        state.handleClear()
+      })
+
+      expect(onValuesChangeCallback).toHaveBeenCalledTimes(1)
     })
   })
 

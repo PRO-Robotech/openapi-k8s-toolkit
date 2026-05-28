@@ -6,6 +6,7 @@ import { CustomSizeTitle, HiddenContainer, ResetedFormItem, DefaultValueButton }
 import { useDesignNewLayout } from '../../organisms/BlackholeForm/context'
 import { getRequiredRule, prettyFieldPath } from '../helpers/validation'
 import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
+import { hasActionableDefaultValue } from '../helpers/buildPlaceholder'
 
 type TFormNamespaceInputProps = {
   name: TFormName
@@ -76,7 +77,7 @@ export const FormNamespaceInput: FC<TFormNamespaceInputProps> = ({
     return null
   }
 
-  const placeholder = defaultValue !== undefined ? `Default: ${defaultValue}` : 'Select namespace'
+  const placeholder = hasActionableDefaultValue(defaultValue) ? `Default: ${defaultValue}` : 'Select namespace'
 
   return (
     <HiddenContainer name={name}>

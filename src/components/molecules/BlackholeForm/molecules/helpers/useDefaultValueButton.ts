@@ -1,6 +1,8 @@
 import { useCallback, useMemo } from 'react'
 import { Form } from 'antd'
 import { TFormName } from 'localTypes/form'
+import { useOnValuesChangeCallback } from '../../organisms/BlackholeForm/context'
+import { hasActionableDefaultValue, TDisplayableDefaultValue } from './buildPlaceholder'
 
 type TDefaultValueButtonState =
   | { visible: false }
@@ -8,22 +10,25 @@ type TDefaultValueButtonState =
 
 export const useDefaultValueButton = (
   formFieldName: TFormName,
-  defaultValue: string | number | boolean | string[] | undefined,
+  defaultValue: TDisplayableDefaultValue | undefined,
   nullable?: boolean,
 ): TDefaultValueButtonState => {
   const form = Form.useFormInstance()
+  const onValuesChangeCallback = useOnValuesChangeCallback()
   const currentValue = Form.useWatch(formFieldName, form)
 
   const handleApply = useCallback(() => {
     form.setFieldValue(formFieldName, defaultValue)
-  }, [defaultValue, form, formFieldName])
+    onValuesChangeCallback?.()
+  }, [defaultValue, form, formFieldName, onValuesChangeCallback])
 
   const handleClear = useCallback(() => {
     form.setFieldValue(formFieldName, undefined)
-  }, [form, formFieldName])
+    onValuesChangeCallback?.()
+  }, [form, formFieldName, onValuesChangeCallback])
 
   return useMemo(() => {
-    if (defaultValue === undefined) {
+    if (!hasActionableDefaultValue(defaultValue)) {
       return { visible: false }
     }
 

@@ -35,7 +35,7 @@ export const FormBooleanInput: FC<TFormBooleanInputProps> = ({
 }) => {
   const designNewLayout = useDesignNewLayout()
   const formFieldName = arrName || name
-  const defaultBtn = useDefaultValueButton(formFieldName, defaultValue)
+  const defaultBtn = useDefaultValueButton(name, defaultValue)
 
   const title = <>{getStringByName(name)}</>
 

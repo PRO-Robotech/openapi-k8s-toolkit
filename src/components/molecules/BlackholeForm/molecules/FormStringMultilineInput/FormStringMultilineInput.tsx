@@ -72,10 +72,10 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
 
   const fixedName = name === 'nodeName' ? 'nodeNameBecauseOfSuddenBug' : name
   const formFieldName = arrName || fixedName
-  const formValue = Form.useWatch(formFieldName)
+  const formValue = Form.useWatch(fixedName)
   const form = Form.useFormInstance()
-  const defaultBtn = useDefaultValueButton(formFieldName, defaultValue, nullable)
-  const nullBtn = useNullToggleButton(formFieldName, nullable)
+  const defaultBtn = useDefaultValueButton(fixedName, defaultValue, nullable)
+  const nullBtn = useNullToggleButton(fixedName, nullable)
   const formatRule = !isBase64 ? getStringFormatRule(format, name) : undefined
   const patternRule = !isBase64 ? getPatternRule(pattern, name) : undefined
   const lengthRule = !isBase64 ? getStringLengthRule({ minLength, maxLength, name }) : undefined
@@ -135,7 +135,7 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
       </Flex>
       <ResetedFormItem
         key={arrKey !== undefined ? arrKey : Array.isArray(name) ? name.slice(-1)[0] : name}
-        name={arrName || fixedName}
+        name={formFieldName}
         rules={[
           getRequiredRule(forceNonRequired === false && !!required?.includes(getStringByName(name)), name, nullable),
           ...(formatRule ? [formatRule] : []),
@@ -164,7 +164,7 @@ export const FormStringMultilineInput: FC<TFormStringMultilineInputProps> = ({
             value={decoded}
             onChange={e => {
               try {
-                form.setFieldValue(formFieldName, toBase64(e.target.value))
+                form.setFieldValue(fixedName, toBase64(e.target.value))
                 setDecoded(e.target.value) // keep in sync immediately
               } catch {
                 // optional: surface a message via antd or keep silent

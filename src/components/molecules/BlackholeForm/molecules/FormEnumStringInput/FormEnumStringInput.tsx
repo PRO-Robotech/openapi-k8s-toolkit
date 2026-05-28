@@ -59,8 +59,8 @@ export const FormEnumStringInput: FC<TFormEnumStringInputProps> = ({
 
   const fixedName = name === 'nodeName' ? 'nodeNameBecauseOfSuddenBug' : name
   const formFieldName = arrName || fixedName
-  const defaultBtn = useDefaultValueButton(formFieldName, defaultValue, nullable)
-  const nullBtn = useNullToggleButton(formFieldName, nullable)
+  const defaultBtn = useDefaultValueButton(fixedName, defaultValue, nullable)
+  const nullBtn = useNullToggleButton(fixedName, nullable)
   const exampleTooltip = getExampleTooltip(defaultValue, example)
 
   const title = (

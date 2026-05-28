@@ -28,7 +28,7 @@ import {
   useUpdateIsTouchedPersisted,
 } from '../../organisms/BlackholeForm/context'
 import { resolveFormPath, normalizeNameToPath, listItemBasePath } from './utils'
-import { formatDefaultValue } from '../helpers/buildPlaceholder'
+import { formatDefaultValue, hasActionableDefaultValue } from '../helpers/buildPlaceholder'
 import { useDefaultValueButton } from '../helpers/useDefaultValueButton'
 import { getArrayItemsRule, getRequiredRule } from '../helpers/validation'
 
@@ -80,7 +80,7 @@ export const FormListInput: FC<TFormListInputProps> = ({
 
   const fixedName = name === 'nodeName' ? 'nodeNameBecauseOfSuddenBug' : name
   const formFieldName = arrName || fixedName
-  const defaultBtn = useDefaultValueButton(formFieldName, defaultValue)
+  const defaultBtn = useDefaultValueButton(fixedName, defaultValue)
   const arrayItemsRule = getArrayItemsRule({ minItems, maxItems, name })
 
   // Build absolute path of this field from the full 'fixedName'
@@ -127,19 +127,10 @@ export const FormListInput: FC<TFormListInputProps> = ({
     if (relatedPath && isTouchedPeristed[relatedPath.join('.')] && relatedFieldValue && !hasSeededRef.current) {
       relatedFieldValuePrev.current = relatedFieldValue
       hasSeededRef.current = true
-      form.setFieldValue(arrName || fixedName, undefined)
+      form.setFieldValue(fixedName, undefined)
       onValuesChangeCallBack?.()
     }
-  }, [
-    relatedPath,
-    relatedTouched,
-    isTouchedPeristed,
-    relatedFieldValue,
-    form,
-    arrName,
-    fixedName,
-    onValuesChangeCallBack,
-  ])
+  }, [relatedPath, relatedTouched, isTouchedPeristed, relatedFieldValue, form, fixedName, onValuesChangeCallBack])
 
   useEffect(() => {
     // only if previous value is touched
@@ -153,7 +144,7 @@ export const FormListInput: FC<TFormListInputProps> = ({
         (relatedFieldValuePrev.current !== 'unset' && relatedFieldValuePrev.current !== relatedFieldValue)) &&
       !hasFiredRef.current
     ) {
-      form.setFieldValue(arrName || fixedName, undefined)
+      form.setFieldValue(fixedName, undefined)
       onValuesChangeCallBack?.()
 
       // updating fired info
@@ -164,7 +155,7 @@ export const FormListInput: FC<TFormListInputProps> = ({
       // user has set it back → re‑arm for the next clear
       hasFiredRef.current = false
     }
-  }, [relatedPath, form, arrName, fixedName, relatedFieldValue, onValuesChangeCallBack, isTouchedPeristed])
+  }, [relatedPath, form, fixedName, relatedFieldValue, onValuesChangeCallBack, isTouchedPeristed])
 
   const uri = prepareTemplate({
     template: customProps.valueUri,
@@ -299,7 +290,9 @@ export const FormListInput: FC<TFormListInputProps> = ({
         >
           <Select
             mode={customProps.mode}
-            placeholder={defaultValue !== undefined ? `Default: ${formatDefaultValue(defaultValue)}` : 'Select'}
+            placeholder={
+              hasActionableDefaultValue(defaultValue) ? `Default: ${formatDefaultValue(defaultValue)}` : 'Select'
+            }
             options={uniqueOptions}
             filterOption={filterSelectOptions}
             disabled={isWaitingForRelatedValue}
