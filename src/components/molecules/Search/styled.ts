@@ -1,6 +1,7 @@
 import styled from 'styled-components'
 // import { Form, Tag, Select, Input } from 'antd'
 import { Form, Tag } from 'antd'
+import { resourceBadgeAbbrCss } from 'components/atoms/ResourceBadgeAbbr'
 
 const SelectTag = styled(Tag)`
   margin-inline-end: 4px;
@@ -173,11 +174,7 @@ type TAbbrProps = {
 
 const Abbr = styled.span<TAbbrProps>`
   background-color: ${({ $bgColor }) => $bgColor};
-  border-radius: 13px;
-  padding: 1px 5px;
-  font-size: 13px;
-  height: min-content;
-  margin-right: 4px;
+  ${resourceBadgeAbbrCss}
 `
 
 const ClearButtonHolder = styled.div`
