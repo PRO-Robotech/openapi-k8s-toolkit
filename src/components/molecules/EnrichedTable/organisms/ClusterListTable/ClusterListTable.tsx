@@ -3,14 +3,14 @@ import jp from 'jsonpath'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { Table, TableProps, PaginationProps, TablePaginationConfig } from 'antd'
-import { AnyObject } from 'antd/es/_util/type'
 import { get } from 'lodash'
 import { TNavigationResource } from 'localTypes/navigations'
 import { getEnrichedColumns } from '../EnrichedTable'
 import { TableComponents } from '../EnrichedTable/atoms'
 import { SyncedHorizontalScrollbar } from '../EnrichedTable/atoms/SyncedHorizontalScrollbar'
+import { TTableRecord } from '../EnrichedTable/types'
 
-export type TClusterListTableProps<T extends AnyObject = AnyObject> = {
+export type TClusterListTableProps<T extends TTableRecord = TTableRecord> = {
   theme: 'light' | 'dark'
   dataSource: TableProps<T>['dataSource']
   columns: TableProps<T>['columns']
@@ -36,7 +36,7 @@ export type TClusterListTableProps<T extends AnyObject = AnyObject> = {
   }
 }
 
-export const ClusterListTable = <T extends AnyObject = AnyObject>({
+export const ClusterListTable = <T extends TTableRecord = TTableRecord>({
   theme,
   dataSource,
   columns,
@@ -55,7 +55,7 @@ export const ClusterListTable = <T extends AnyObject = AnyObject>({
     return null
   }
 
-  const rowKey = (record: T) => record.key
+  const rowKey = (record: T) => record.key as React.Key
 
   const enrichedColumns = getEnrichedColumns({
     columns,

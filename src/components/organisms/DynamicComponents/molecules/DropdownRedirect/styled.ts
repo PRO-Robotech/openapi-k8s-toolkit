@@ -10,7 +10,7 @@ const TitleSelect = styled(Select)`
   &&.ant-select {
     cursor: pointer;
 
-    .ant-select-selector {
+    &.ant-select {
       border: none;
       background: transparent;
       box-shadow: none;
@@ -19,25 +19,23 @@ const TitleSelect = styled(Select)`
       cursor: pointer;
     }
 
-    .ant-select-selection-item {
+    .ant-select-content {
       font-size: 20px;
       line-height: 24px;
-      padding-inline-end: 24px;
       cursor: pointer;
     }
 
-    .ant-select-arrow {
+    .ant-select-suffix {
       font-size: 14px;
-      right: 0;
       cursor: pointer;
       color: inherit;
     }
 
-    &:hover .ant-select-selector {
+    &:hover {
       border: none;
     }
 
-    &.ant-select-focused .ant-select-selector {
+    &.ant-select-focused {
       border: none;
       box-shadow: none;
     }

@@ -96,7 +96,7 @@ export const AnnotationsModal: FC<TAnnotationsModalProps> = ({
 
   const openNotificationSuccess = () => {
     api.success({
-      message: notificationSuccessMessagePrepared,
+      title: notificationSuccessMessagePrepared,
       description: notificationSuccessMessageDescriptionPrepared,
       placement: 'bottomRight',
     })

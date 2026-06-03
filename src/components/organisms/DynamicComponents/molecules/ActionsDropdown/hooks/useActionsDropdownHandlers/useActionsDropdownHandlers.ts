@@ -46,7 +46,7 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TP
   const showSuccess = (actionLabel: string) => {
     invalidateMultiQuery()
     notificationApi.success({
-      message: `${actionLabel} successful`,
+      title: `${actionLabel} successful`,
       placement: 'bottomRight',
     })
   }
@@ -63,7 +63,7 @@ export const useActionsDropdownHandlers = ({ replaceValues, multiQueryData }: TP
 
   const showError = (actionLabel: string, error: unknown) => {
     notificationApi.error({
-      message: `${actionLabel} failed`,
+      title: `${actionLabel} failed`,
       description: getErrorDescription(error),
       placement: 'bottomRight',
     })

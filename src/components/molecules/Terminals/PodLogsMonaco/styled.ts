@@ -52,7 +52,7 @@ const CustomSelect = styled.div`
     }
   }
 
-  .ant-select-selection-placeholder {
+  .ant-select-placeholder {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -67,7 +67,7 @@ const FilterInput = styled.div`
     height: 32px;
   }
 
-  .ant-select-selection-placeholder {
+  .ant-select-placeholder {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

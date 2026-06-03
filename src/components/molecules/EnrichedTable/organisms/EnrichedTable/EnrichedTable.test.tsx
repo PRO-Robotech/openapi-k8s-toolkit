@@ -1,7 +1,7 @@
 import React from 'react'
 import { render } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import type { AnyObject } from 'antd/es/_util/type'
+import type { TTableRecord } from './types'
 import { EnrichedTable } from './EnrichedTable'
 
 const navigateMock = jest.fn()
@@ -48,7 +48,7 @@ describe('EnrichedTable', () => {
 
   const baseProps = {
     theme: 'light' as const,
-    dataSource: [{ key: 'row-1', name: 'row-name' }] as AnyObject[],
+    dataSource: [{ key: 'row-1', name: 'row-name' }] as TTableRecord[],
     columns: [{ title: 'Name', key: 'name', dataIndex: 'name' }],
   }
 
@@ -97,7 +97,7 @@ describe('EnrichedTable', () => {
     )
 
     const tableProps = tableMock.mock.calls[0][0] as {
-      onRow?: (record: AnyObject) => { onClick?: (event: { defaultPrevented?: boolean }) => void }
+      onRow?: (record: TTableRecord) => { onClick?: (event: { defaultPrevented?: boolean }) => void }
     }
     const rowProps = tableProps.onRow?.({ key: 'row-1', name: 'alpha' })
     rowProps?.onClick?.({ defaultPrevented: false })
@@ -122,7 +122,7 @@ describe('EnrichedTable', () => {
     )
 
     const tableProps = tableMock.mock.calls[0][0] as {
-      onRow?: (record: AnyObject) => { onClick?: (event: { defaultPrevented?: boolean }) => void }
+      onRow?: (record: TTableRecord) => { onClick?: (event: { defaultPrevented?: boolean }) => void }
     }
     const rowProps = tableProps.onRow?.({ key: 'row-1', name: 'alpha' })
     rowProps?.onClick?.({ defaultPrevented: false })

@@ -59,7 +59,7 @@ const meta: Meta<TArgs> = {
       options: ['small', 'middle', 'large'],
       description: 'Tabs size',
     },
-    tabPosition: {
+    tabPlacement: {
       control: 'radio',
       options: ['top', 'right', 'bottom', 'left'],
       description: 'Tabs position',
@@ -156,7 +156,7 @@ export const Default: Story = {
     id: 'example-antd-tabs',
     defaultActiveKey: 'tab1',
     size: 'middle',
-    tabPosition: 'top',
+    tabPlacement: 'top',
     type: 'line',
     centered: false,
     animated: true,
@@ -182,7 +182,7 @@ export const BottomPosition: Story = {
   args: {
     ...Default.args,
     id: 'example-antd-tabs-bottom',
-    tabPosition: 'bottom',
+    tabPlacement: 'bottom',
   },
 }
 

@@ -12,16 +12,16 @@ const CustomSelect = styled(Select)<TCustomSelectProps>`
 
   /* stylelint-disable declaration-no-important */
 
-  &&& .ant-select-selector {
+  &&&.ant-select {
     background: none;
     padding-inline-end: ${({ $paddingContainerEnd }) => $paddingContainerEnd || '12px'} !important;
   }
 
-  && .ant-select-selector,
-  && .ant-select-focused .ant-select-selector,
-  && .ant-select-selector:focus,
-  && .ant-select-selector:active,
-  && .ant-select-open .ant-select-selector {
+  &&.ant-select,
+  &&.ant-select-focused,
+  &&.ant-select:focus,
+  &&.ant-select:active,
+  &&.ant-select-open {
     align-items: flex-start;
     outline: none !important;
     outline-color: transparent !important;
@@ -30,11 +30,11 @@ const CustomSelect = styled(Select)<TCustomSelectProps>`
     padding-block: 4px !important;
   }
 
-  && .ant-select-selection-overflow {
+  && .ant-select-content {
     gap: 4px;
   }
 
-  && .ant-select-selection-overflow-item-rest .ant-select-selection-item {
+  && .ant-select-content-item-rest .ant-select-selection-item {
     background: 0;
   }
 
@@ -45,7 +45,7 @@ const CustomSelect = styled(Select)<TCustomSelectProps>`
     padding-inline: 8px;
   }
 
-  && .ant-select-multiple .ant-select-selection-overflow-item-suffix {
+  &&.ant-select-multiple .ant-select-content-item-suffix {
     min-height: 22px !important;
     margin-block: 0 !important;
   }

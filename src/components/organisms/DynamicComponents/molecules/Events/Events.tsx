@@ -162,7 +162,7 @@ export const Events: FC<{ data: TDynamicComponentsAppTypeMap['Events']; children
   if (isPermissionCheckEnabled && (listPermission.isPending || watchPermission.isPending)) {
     return (
       <Flex vertical gap={8}>
-        <Alert type="info" message="Checking permissions for events stream..." showIcon />
+        <Alert type="info" title="Checking permissions for events stream..." showIcon />
       </Flex>
     )
   }
@@ -174,7 +174,7 @@ export const Events: FC<{ data: TDynamicComponentsAppTypeMap['Events']; children
       : 'Failed to check permissions for events stream'
     return (
       <Flex vertical gap={8}>
-        <Alert type="error" message={message} showIcon />
+        <Alert type="error" title={message} showIcon />
       </Flex>
     )
   }
@@ -185,7 +185,7 @@ export const Events: FC<{ data: TDynamicComponentsAppTypeMap['Events']; children
   ) {
     return (
       <Flex vertical gap={8}>
-        <Alert type="error" message="Access denied (403)" showIcon />
+        <Alert type="error" title="Access denied (403)" showIcon />
       </Flex>
     )
   }

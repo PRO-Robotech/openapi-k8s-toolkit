@@ -324,7 +324,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
                 .then(res => {
                   const resName = res.data?.metadata?.name || name
                   notificationApi.success({
-                    message: `${kind} "${resName}" created successfully`,
+                    title: `${kind} "${resName}" created successfully`,
                     placement: 'bottomRight',
                   })
                   setIsLoading(false)
@@ -346,7 +346,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
                 .then(res => {
                   const resName = res.data?.metadata?.name || name
                   notificationApi.success({
-                    message: `${kind} "${resName}" updated successfully`,
+                    title: `${kind} "${resName}" updated successfully`,
                     placement: 'bottomRight',
                   })
                   setIsLoading(false)
@@ -714,7 +714,7 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
 
           const formattedPaths = inactiveCleanupPaths.map(path => prettyFieldPath(path)).join(', ')
           notificationApi.info({
-            message:
+            title:
               inactiveCleanupPaths.length === 1
                 ? 'Cleared 1 inactive branch field'
                 : `Cleared ${inactiveCleanupPaths.length} inactive branch fields`,
@@ -1452,26 +1452,26 @@ export const BlackholeForm: FC<TBlackholeFormProps> = ({
                 <Spacer $space={10} $samespace />
                 <Alert
                   type="warning"
-                  message="Only the data from the form will be sent. Empty fields will be removed recursively."
+                  title="Only the data from the form will be sent. Empty fields will be removed recursively."
                 />
               </>
             )}
             {/* {isCreate && createPermission.data?.status.allowed === false && (
               <>
                 <Spacer $space={10} $samespace />
-                <Alert type="warning" message="Insufficient rights to create" />
+                <Alert type="warning" title="Insufficient rights to create" />
               </>
             )}
             {!isCreate && updatePermission.data?.status.allowed === false && (
               <>
                 <Spacer $space={10} $samespace />
-                <Alert type="warning" message="Insufficient rights to edit" />
+                <Alert type="warning" title="Insufficient rights to edit" />
               </>
             )} */}
             {/* {error && (
               <>
                 <Spacer $space={10} $samespace />
-                <Alert message={`An error has occurred: ${error?.response?.data?.message} `} type="error" />
+                <Alert title={`An error has occurred: ${error?.response?.data?.message} `} type="error" />
               </>
             )} */}
           </Form>

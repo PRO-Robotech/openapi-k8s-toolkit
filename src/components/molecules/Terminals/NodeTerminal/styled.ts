@@ -8,15 +8,16 @@ const CustomSelect = styled.div`
   .ant-select:not(.ant-select-disabled) {
     cursor: pointer;
 
-    .ant-select-selector {
+    &.ant-select {
       cursor: pointer;
     }
 
-    .ant-select-selection-search-input {
+    .ant-select-input {
       cursor: pointer;
     }
 
-    .ant-select-selection-placeholder,
+    .ant-select-placeholder,
+    .ant-select-content,
     .ant-select-selection-item {
       cursor: pointer;
     }

@@ -95,7 +95,7 @@ export const TogglerSegmented: FC<{ data: TDynamicComponentsAppTypeMap['TogglerS
 
   const openNotificationSuccess = () => {
     api.success({
-      message: notificationSuccessMessagePrepared,
+      title: notificationSuccessMessagePrepared,
       description: notificationSuccessMessageDescriptionPrepared,
       placement: 'bottomRight',
     })
@@ -103,7 +103,7 @@ export const TogglerSegmented: FC<{ data: TDynamicComponentsAppTypeMap['TogglerS
 
   const openNotificationError = () => {
     api.error({
-      message: notificationErrorMessagePrepared,
+      title: notificationErrorMessagePrepared,
       description: notificationErrorMessageDescriptionPrepared,
       placement: 'bottomRight',
     })

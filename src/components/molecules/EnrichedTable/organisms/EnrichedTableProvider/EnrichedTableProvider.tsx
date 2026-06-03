@@ -162,7 +162,7 @@ export const EnrichedTableProvider: FC<TEnrichedTableProviderProps> = ({
   }
 
   if (isError) {
-    return <Alert message={isError} type="error" />
+    return <Alert title={isError} type="error" />
   }
 
   if (!preparedProps) {

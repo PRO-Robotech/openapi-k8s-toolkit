@@ -51,7 +51,7 @@ export const DeleteModalMany: FC<TDeleteModalManyProps> = ({ data, onClose }) =>
         },
       }}
     >
-      {error && <Alert type="error" message="Error while delete" description={error?.response?.data?.message} />}
+      {error && <Alert type="error" title="Error while delete" description={error?.response?.data?.message} />}
     </Modal>
   )
 }

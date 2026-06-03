@@ -155,7 +155,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
 
   const openNotificationSuccess = () => {
     api.success({
-      message: notificationSuccessMessagePrepared,
+      title: notificationSuccessMessagePrepared,
       description: notificationSuccessMessageDescriptionPrepared,
       placement: 'bottomRight',
     })
@@ -205,7 +205,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
                 setOpen(true)
               }}
               icon={<EditIcon />}
-              iconPosition="end"
+              iconPlacement="end"
             >
               Edit
             </Button>
@@ -356,7 +356,7 @@ export const Labels: FC<{ data: TDynamicComponentsAppTypeMap['Labels']; children
                 setOpen(true)
               }}
               icon={<EditIcon />}
-              iconPosition="end"
+              iconPlacement="end"
             >
               Edit
             </Button>

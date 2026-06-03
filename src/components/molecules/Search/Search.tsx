@@ -2,7 +2,6 @@
 import React, { FC } from 'react'
 import { theme as antdtheme, Form, Select, Input, SelectProps, Button, Checkbox, Flex, FormInstance } from 'antd'
 import { useSearchParams } from 'react-router-dom'
-import type { CustomTagProps } from 'rc-select/lib/BaseSelect'
 import { BaseOptionType } from 'antd/es/select'
 import { ClearOutlined } from '@ant-design/icons'
 import { TKindWithVersion } from 'localTypes/search'
@@ -11,6 +10,9 @@ import { hslFromString } from 'utils/hslFromString'
 import { getUppercase } from 'utils/getUppercase'
 import { kindByGvr } from 'utils/kindByGvr'
 import { Styled } from './styled'
+
+// antd v6 mangles rc-select internal type names; derive CustomTagProps from the public Select API instead
+type CustomTagProps = Parameters<NonNullable<SelectProps['tagRender']>>[0]
 
 export type TSearchProps = {
   cluster: string

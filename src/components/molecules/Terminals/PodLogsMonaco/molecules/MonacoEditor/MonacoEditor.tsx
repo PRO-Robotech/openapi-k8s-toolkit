@@ -102,7 +102,7 @@ export const MonacoEditor: FC<TMonacoEditorProps> = ({
         if (!shownErrorsRef.current.has(errorKey)) {
           shownErrorsRef.current.add(errorKey)
           notificationApi.error({
-            message: 'Log fetch error',
+            title: 'Log fetch error',
             description: data.payload,
             placement: 'bottomRight',
             duration: 10,

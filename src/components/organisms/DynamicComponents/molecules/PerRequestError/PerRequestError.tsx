@@ -11,5 +11,5 @@ export const PerRequestError: FC<TPerRequestErrorProps> = ({ error }) => {
 
   const message = typeof error === 'string' ? error : error.message
 
-  return <Alert type="error" message={message} showIcon />
+  return <Alert type="error" title={message} showIcon />
 }

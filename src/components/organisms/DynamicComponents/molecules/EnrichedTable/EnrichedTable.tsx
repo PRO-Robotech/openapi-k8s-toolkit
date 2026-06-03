@@ -231,11 +231,11 @@ export const EnrichedTable: FC<{ data: TDynamicComponentsAppTypeMap['EnrichedTab
   }
 
   if (fetchUrlPrepared && fetchedDataError) {
-    return <Alert message={`An error has occurred: ${extractErrorMessage(fetchedDataError)}`} type="error" />
+    return <Alert title={`An error has occurred: ${extractErrorMessage(fetchedDataError)}`} type="error" />
   }
 
   if (k8sResourceToFetchPrepared && fetchedDataSocketError) {
-    return <Alert message={`An error has occurred: ${extractErrorMessage(fetchedDataSocketError)}`} type="error" />
+    return <Alert title={`An error has occurred: ${extractErrorMessage(fetchedDataSocketError)}`} type="error" />
   }
 
   const dataFromOneOfHooks = fetchedData || fetchedDataSocket || {}

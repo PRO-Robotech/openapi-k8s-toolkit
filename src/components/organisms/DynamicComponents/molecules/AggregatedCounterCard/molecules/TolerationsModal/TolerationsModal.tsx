@@ -96,7 +96,7 @@ export const TolerationsModal: FC<TTolerationsModalProps> = ({
 
   const openNotificationSuccess = () => {
     api.success({
-      message: notificationSuccessMessagePrepared,
+      title: notificationSuccessMessagePrepared,
       description: notificationSuccessMessageDescriptionPrepared,
       placement: 'bottomRight',
     })

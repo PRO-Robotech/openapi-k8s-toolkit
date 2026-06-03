@@ -162,7 +162,7 @@ export const AddEditFormModal: FC<TAddEditFormModalProps> = ({
             mode="tags"
             placeholder="Enter tags. Separators: comma and space"
             tokenSeparators={[',', ' ']}
-            dropdownStyle={{ display: 'none' }}
+            styles={{ popup: { root: { display: 'none' } } }}
           />
         </Form.Item>
         <Form.Item label="Disabled" name="disabled">

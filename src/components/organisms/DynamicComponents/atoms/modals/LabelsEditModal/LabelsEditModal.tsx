@@ -118,7 +118,7 @@ export const LabelsEditModal: FC<TLabelsEditModalProps> = ({
         },
       }}
     >
-      {error && <Alert type="error" message="Error while submitting" description={error?.response?.data?.message} />}
+      {error && <Alert type="error" title="Error while submitting" description={error?.response?.data?.message} />}
       {modalDescriptionText && (
         <>
           <div style={modalDescriptionTextStyle}>{modalDescriptionText}</div>

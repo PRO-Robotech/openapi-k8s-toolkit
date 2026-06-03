@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { FC } from 'react'
-import { Button, message } from 'antd'
+import { Button, notification } from 'antd'
 import { CopyOutlined } from '@ant-design/icons'
 import { TDynamicComponentsAppTypeMap } from '../../types'
 import { useMultiQuery } from '../../../DynamicRendererWithProviders/providers/hybridDataProvider'
@@ -22,7 +22,7 @@ export const CopyButton: FC<{ data: TDynamicComponentsAppTypeMap['CopyButton']; 
     style,
   } = data
 
-  const [messageApi, contextHolder] = message.useMessage()
+  const [notificationApi, contextHolder] = notification.useNotification()
   const { data: multiQueryData, isLoading } = useMultiQuery()
   const partsOfUrl = usePartsOfUrl()
   const { shouldShowError, errorToShow } = useAutoPerRequestError(data)
@@ -38,14 +38,23 @@ export const CopyButton: FC<{ data: TDynamicComponentsAppTypeMap['CopyButton']; 
     try {
       if (copyTextPrepared !== null && copyTextPrepared !== undefined && copyTextPrepared !== '') {
         await navigator.clipboard.writeText(copyTextPrepared)
-        messageApi.success(successMessage)
+        notificationApi.success({
+          title: successMessage,
+          placement: 'bottomRight',
+        })
       } else {
-        messageApi.error(errorMessage)
+        notificationApi.error({
+          title: errorMessage,
+          placement: 'bottomRight',
+        })
       }
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Copy to clipboard failed:', error)
-      messageApi.error(errorMessage)
+      notificationApi.error({
+        title: errorMessage,
+        placement: 'bottomRight',
+      })
     }
   }
 

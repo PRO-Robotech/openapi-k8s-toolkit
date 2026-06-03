@@ -109,7 +109,7 @@ export const Toggler: FC<{ data: TDynamicComponentsAppTypeMap['Toggler']; childr
 
   const openNotificationSuccess = () => {
     api.success({
-      message: notificationSuccessMessagePrepared,
+      title: notificationSuccessMessagePrepared,
       description: notificationSuccessMessageDescriptionPrepared,
       placement: 'bottomRight',
     })
@@ -117,7 +117,7 @@ export const Toggler: FC<{ data: TDynamicComponentsAppTypeMap['Toggler']; childr
 
   const openNotificationError = () => {
     api.error({
-      message: notificationErrorMessagePrepared,
+      title: notificationErrorMessagePrepared,
       description: notificationErrorMessageDescriptionPrepared,
       placement: 'bottomRight',
     })

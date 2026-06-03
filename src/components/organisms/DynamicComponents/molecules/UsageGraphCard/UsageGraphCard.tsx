@@ -343,7 +343,7 @@ export const UsageGraphCard: FC<{ data: TUsageGraphCardProps; children?: any }> 
             color={token.colorInfoBgHover}
             styles={{
               root: { marginTop: '-35px' },
-              body: { padding: 0, borderRadius: 6 },
+              container: { padding: 0, borderRadius: 6 },
             }}
           >
             <Styled.GradientBar

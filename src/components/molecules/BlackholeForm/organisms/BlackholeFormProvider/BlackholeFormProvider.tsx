@@ -303,7 +303,7 @@ export const BlackholeFormProvider: FC<TBlackholeFormProviderProps> = ({
   }
 
   if (isError) {
-    return <Alert message={isError} type="error" />
+    return <Alert title={isError} type="error" />
   }
 
   if (!preparedData?.properties && !isError) {
