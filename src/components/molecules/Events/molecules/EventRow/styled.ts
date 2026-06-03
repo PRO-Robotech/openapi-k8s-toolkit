@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { resourceBadgeAbbrCss } from 'components/atoms/ResourceBadgeAbbr'
 
 type TCardProps = {
   $mainColor: string
@@ -43,11 +44,7 @@ type TAbbrProps = {
 
 const Abbr = styled.span<TAbbrProps>`
   background-color: ${({ $bgColor }) => $bgColor};
-  border-radius: 13px;
-  padding: 1px 5px;
-  font-size: 13px;
-  height: min-content;
-  margin-right: 4px;
+  ${resourceBadgeAbbrCss}
 `
 
 const TimeStamp = styled.div`
