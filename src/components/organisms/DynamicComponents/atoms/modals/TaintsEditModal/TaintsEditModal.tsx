@@ -7,6 +7,7 @@ import { ResetedFormItem, CustomSizeTitle } from 'components/molecules/Blackhole
 import { Spacer, PlusIcon, MinusIcon } from 'components/atoms'
 import { patchEntryWithReplaceOp } from 'api/forms'
 import { TTaintEffect, TTaintLike } from './types'
+import { validateGridCols } from '../gridColsValidation'
 import { Styled } from './styled'
 
 type TTaintsEditModalProps = {
@@ -58,6 +59,19 @@ export const TaintsEditModal: FC<TTaintsEditModalProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, form])
+
+  // Surface misconfigured `cols` (wrong length or spans not summing to 24) without rewriting the
+  // author's values — broken YAML factory configs warn in the console instead of silently breaking the layout.
+  useEffect(() => {
+    const result = validateGridCols(cols, {
+      component: 'Taints',
+      count: 4,
+      columns: 'Key, Value, Effect, actions',
+    })
+    if (!result.valid) {
+      console.warn(result.message)
+    }
+  }, [cols])
 
   const submit = () => {
     form
