@@ -3,7 +3,6 @@ import React, { ReactNode } from 'react'
 import jp from 'jsonpath'
 import { useNavigate } from 'react-router-dom'
 import { Table, TableProps, PaginationProps, TablePaginationConfig } from 'antd'
-import { AnyObject } from 'antd/es/_util/type'
 import { get } from 'lodash'
 import {
   TAdditionalPrinterColumnsColWidths,
@@ -15,10 +14,10 @@ import {
 } from 'localTypes/richTable'
 import { TableComponents } from './atoms'
 import { SyncedHorizontalScrollbar } from './atoms/SyncedHorizontalScrollbar'
-import { TInternalDataForControls } from './types'
+import { TInternalDataForControls, TTableRecord } from './types'
 import { getEnrichedColumns, getEnrichedColumnsWithControls } from './utils'
 
-export type TEnrichedTableProps<T extends AnyObject = AnyObject> = {
+export type TEnrichedTableProps<T extends TTableRecord = TTableRecord> = {
   theme: 'light' | 'dark'
   baseprefix?: string
   dataSource: TableProps<T>['dataSource']
@@ -56,7 +55,7 @@ export type TEnrichedTableProps<T extends AnyObject = AnyObject> = {
   }
 }
 
-export const EnrichedTable = <T extends AnyObject = AnyObject>({
+export const EnrichedTable = <T extends TTableRecord = TTableRecord>({
   theme,
   baseprefix,
   dataSource,
@@ -86,7 +85,7 @@ export const EnrichedTable = <T extends AnyObject = AnyObject>({
   }
 
   // for factory search
-  const rowKey = (record: T) => record.key
+  const rowKey = (record: T) => record.key as React.Key
 
   const enrichedColumns = getEnrichedColumns({
     columns,

@@ -86,13 +86,13 @@ export const MarketPlace: FC<TMarketPlaceProps> = ({
 
   const onCreateSuccess = () =>
     api.success({
-      message: 'Card created',
+      title: 'Card created',
       key: 'create-marketplace-success',
     })
 
   const onUpdateSuccess = () =>
     api.success({
-      message: 'Card modified',
+      title: 'Card modified',
       key: 'update-marketplace-success',
     })
 
@@ -188,7 +188,7 @@ export const MarketPlace: FC<TMarketPlaceProps> = ({
       {createUpdateError && (
         <Alert
           description={JSON.stringify(createUpdateError)}
-          message="Card was not created"
+          title="Card was not created"
           onClose={() => setCreateUpdateError(undefined)}
           type="error"
         />
@@ -196,7 +196,7 @@ export const MarketPlace: FC<TMarketPlaceProps> = ({
       {deleteError && (
         <Alert
           description={JSON.stringify(deleteError)}
-          message="Card was not deleted"
+          title="Card was not deleted"
           onClose={() => setDeleteError(undefined)}
           type="error"
         />

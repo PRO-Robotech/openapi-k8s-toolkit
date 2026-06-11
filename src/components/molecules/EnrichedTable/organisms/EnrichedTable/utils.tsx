@@ -3,7 +3,6 @@
 import { ReactNode } from 'react'
 import { NavigateFunction } from 'react-router-dom'
 import { TableProps, Dropdown, Tooltip, Flex } from 'antd'
-import { AnyObject } from 'antd/es/_util/type'
 import { CheckOutlined, CloseOutlined, SearchOutlined, MoreOutlined, QuestionCircleOutlined } from '@ant-design/icons'
 import { get } from 'lodash'
 import {
@@ -20,7 +19,7 @@ import { parseValueWithUnit, toBytes } from 'utils/converterBytes'
 import { parseCoresWithUnit, toCores } from 'utils/converterCores'
 import { TableFactory } from '../../molecules'
 import { ShortenedTextWithTooltip, FilterDropdown, TrimmedTags, TextAlignContainer, TinyButton } from './atoms'
-import { TInternalDataForControls } from './types'
+import { TInternalDataForControls, TTableRecord } from './types'
 
 const DEFAULT_FIXED_NAME_COLUMN_WIDTH = 240
 const DEFAULT_FIXED_ACTIONS_COLUMN_WIDTH = 60
@@ -70,7 +69,7 @@ const getFixedColumnSide = ({
 }: {
   shouldFixNameColumn: boolean
   shouldFixActionsColumn: boolean
-  currentFixed?: 'left' | 'right' | boolean
+  currentFixed?: 'start' | 'end' | 'left' | 'right' | boolean
 }) => {
   if (currentFixed !== undefined) {
     return currentFixed
@@ -210,7 +209,7 @@ export const getCellRender = ({
   return <div>Raw: {JSON.stringify(value)}</div>
 }
 
-export const getEnrichedColumns = <T extends AnyObject = AnyObject>({
+export const getEnrichedColumns = <T extends TTableRecord = TTableRecord>({
   columns,
   additionalPrinterColumnsUndefinedValues,
   additionalPrinterColumnsTrimLengths,
@@ -534,7 +533,7 @@ export const getEnrichedColumns = <T extends AnyObject = AnyObject>({
   })
 }
 
-export const getEnrichedColumnsWithControls = <T extends AnyObject = AnyObject>({
+export const getEnrichedColumnsWithControls = <T extends TTableRecord = TTableRecord>({
   enrichedColumns,
   navigate,
   baseprefix,

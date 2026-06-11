@@ -174,7 +174,7 @@ export const CreateFromFilesModal: FC<TCreateFromFilesModalProps> = ({
         },
       }}
     >
-      <Space direction="vertical" style={{ width: '100%' }} size="middle">
+      <Space orientation="vertical" style={{ width: '100%' }} size="middle">
         <div>
           <Typography.Text strong>Name</Typography.Text>
           <Input

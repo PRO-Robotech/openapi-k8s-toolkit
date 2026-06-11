@@ -42,3 +42,54 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: jest.fn(),
   })),
 })
+
+// antd 6 (the React scheduler and @rc-component internals) relies on MessageChannel for task
+// scheduling, which jsdom does not implement. The scheduler needs messages to actually be delivered,
+// so this polyfill wires the two ports together and dispatches asynchronously.
+if (typeof globalThis.MessageChannel === 'undefined') {
+  type TPort = {
+    onmessage: ((event: { data: unknown }) => void) | null
+    postMessage: (data: unknown) => void
+  }
+
+  class PolyfilledMessageChannel {
+    port1: TPort
+
+    port2: TPort
+
+    constructor() {
+      this.port1 = {
+        onmessage: null,
+        postMessage: data => {
+          const { onmessage } = this.port2
+          if (onmessage) setTimeout(() => onmessage({ data }), 0)
+        },
+      }
+      this.port2 = {
+        onmessage: null,
+        postMessage: data => {
+          const { onmessage } = this.port1
+          if (onmessage) setTimeout(() => onmessage({ data }), 0)
+        },
+      }
+    }
+  }
+
+  Object.defineProperty(globalThis, 'MessageChannel', {
+    configurable: true,
+    writable: true,
+    value: PolyfilledMessageChannel,
+  })
+}
+
+// antd 6 components (Tooltip, Input.TextArea autosize, Dropdown, Table, etc.) observe element size via
+// @rc-component/resize-observer, which relies on the ResizeObserver API that jsdom does not implement.
+Object.defineProperty(globalThis, 'ResizeObserver', {
+  configurable: true,
+  writable: true,
+  value: jest.fn().mockImplementation(() => ({
+    observe: jest.fn(),
+    unobserve: jest.fn(),
+    disconnect: jest.fn(),
+  })),
+})

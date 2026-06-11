@@ -144,7 +144,7 @@ export const Annotations: FC<{ data: TDynamicComponentsAppTypeMap['Annotations']
 
   const openNotificationSuccess = () => {
     api.success({
-      message: notificationSuccessMessagePrepared,
+      title: notificationSuccessMessagePrepared,
       description: notificationSuccessMessageDescriptionPrepared,
       placement: 'bottomRight',
     })

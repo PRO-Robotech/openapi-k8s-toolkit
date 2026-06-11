@@ -387,7 +387,7 @@ export const Events: FC<TEventsProps> = ({
       : undefined
 
   const listContent = (() => {
-    if (fatalError && state.order.length === 0) return <Alert type="error" message={fatalError} showIcon />
+    if (fatalError && state.order.length === 0) return <Alert type="error" title={fatalError} showIcon />
     if (state.order.length > 0) {
       return state.order.map(k => (
         <EventRow

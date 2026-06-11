@@ -142,7 +142,7 @@ export const Taints: FC<{ data: TDynamicComponentsAppTypeMap['Taints']; children
 
   const openNotificationSuccess = () => {
     api.success({
-      message: notificationSuccessMessagePrepared,
+      title: notificationSuccessMessagePrepared,
       description: notificationSuccessMessageDescriptionPrepared,
       placement: 'bottomRight',
     })

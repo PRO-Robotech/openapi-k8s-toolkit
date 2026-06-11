@@ -16,16 +16,16 @@ const UncontrolledSelect = styled(Select)<TUncontrolledSelectProps>`
     cursor: ${({ $isCursorPointer }) => ($isCursorPointer ? 'pointer' : 'default')} !important;
   }
 
-  && .ant-select-selector {
+  &&.ant-select {
     background: none;
     cursor: ${({ $isCursorPointer }) => ($isCursorPointer ? 'pointer' : 'default')};
   }
 
-  && .ant-select-selector,
-  && .ant-select-focused .ant-select-selector,
-  && .ant-select-selector:focus,
-  && .ant-select-selector:active,
-  && .ant-select-open .ant-select-selector {
+  &&.ant-select,
+  &&.ant-select-focused,
+  &&.ant-select:focus,
+  &&.ant-select:active,
+  &&.ant-select-open {
     align-items: flex-start;
     outline: none !important;
     outline-color: transparent !important;
@@ -34,11 +34,11 @@ const UncontrolledSelect = styled(Select)<TUncontrolledSelectProps>`
     padding-block: 4px !important;
   }
 
-  && .ant-select-selection-overflow {
+  && .ant-select-content {
     gap: 4px;
   }
 
-  && .ant-select-selection-overflow-item-rest .ant-select-selection-item {
+  && .ant-select-content-item-rest .ant-select-selection-item {
     background: 0;
   }
 

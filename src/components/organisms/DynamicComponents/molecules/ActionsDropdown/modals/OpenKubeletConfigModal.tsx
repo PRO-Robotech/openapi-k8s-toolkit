@@ -52,7 +52,7 @@ export const OpenKubeletConfigModal: FC<TOpenKubeletConfigModalProps> = ({ open,
         <Alert
           type="error"
           showIcon
-          message="Failed to load kubelet config"
+          title="Failed to load kubelet config"
           description={error instanceof Error ? error.message : 'Unknown error'}
         />
       )}

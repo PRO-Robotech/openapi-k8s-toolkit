@@ -53,7 +53,7 @@ export const PodLogsMonaco: FC<TPodLogsMonacoProps> = ({
     if (sinceTime && !isValidRFC3339(sinceTime) && !warningShownRef.current) {
       warningShownRef.current = true
       notificationApi.warning({
-        message: 'Invalid sinceTime format',
+        title: 'Invalid sinceTime format',
         description: `Value "${sinceTime}" is not valid RFC3339. Expected format: "2024-01-01T00:00:00Z"`,
         placement: 'bottomRight',
         duration: 10,

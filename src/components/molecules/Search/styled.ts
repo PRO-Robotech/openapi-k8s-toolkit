@@ -93,7 +93,7 @@ const HideableContainer = styled.div<THideableContainerProps>`
 // const LeftSideSelect = styled(Select)`
 //   /* stylelint-disable declaration-no-important */
 
-//   .ant-select-selector {
+//   &.ant-select {
 //     border-top-right-radius: 0 !important;
 //     border-bottom-right-radius: 0 !important;
 //     border-right-width: 0 !important;
@@ -111,7 +111,7 @@ const HideableContainer = styled.div<THideableContainerProps>`
 // `
 
 // const RightSideSelect = styled(Select)`
-//   .ant-select-selector {
+//   &.ant-select {
 //     border-top-left-radius: 0 !important;
 //     border-bottom-left-radius: 0 !important;
 //     border-left-width: 0 !important;

@@ -31,6 +31,7 @@ type TYamlEditorSingletonProps = {
 }
 
 const NOTIFICATION_KEY = 'yaml-data-changed' // Single static key = only one notification
+const DESIGN_NEW_LAYOUT_EDITOR_HEIGHT_OFFSET = 24
 
 // eslint-disable-next-line max-lines-per-function
 export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
@@ -56,6 +57,10 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
   const [yamlData, setYamlData] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<TRequestError>()
+  const editorHeight =
+    designNewLayout && !readOnly && designNewLayoutHeight
+      ? Math.max(designNewLayoutHeight - DESIGN_NEW_LAYOUT_EDITOR_HEIGHT_OFFSET, 160)
+      : designNewLayoutHeight
 
   // store initial and latest prefill YAML
   const initialPrefillYamlRef = useRef<string | null>(null)
@@ -126,7 +131,7 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
 
     api.info({
       key: NOTIFICATION_KEY,
-      message: 'Data changed',
+      title: 'Data changed',
       description: 'The source data has been updated. Reload to apply the latest changes (will discard your edits).',
       btn,
       placement: 'bottomRight',
@@ -186,7 +191,7 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
           setIsLoading(false)
           if (openNotification) {
             api.success({
-              message: 'Created successfully',
+              title: 'Created successfully',
               description: 'Entry was created',
               placement: 'topRight',
             })
@@ -208,7 +213,7 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
           setIsLoading(false)
           if (openNotification) {
             api.success({
-              message: 'Updated successfully',
+              title: 'Updated successfully',
               description: 'Entry was updated',
               placement: 'bottomRight',
             })
@@ -225,11 +230,11 @@ export const YamlEditorSingleton: FC<TYamlEditorSingletonProps> = ({
   return (
     <>
       {contextHolder}
-      <Styled.BorderRadiusContainer $designNewLayoutHeight={designNewLayoutHeight} $colorBorder={token.colorBorder}>
+      <Styled.BorderRadiusContainer $designNewLayoutHeight={editorHeight} $colorBorder={token.colorBorder}>
         <Editor
           defaultLanguage="yaml"
           width="100%"
-          height={designNewLayoutHeight || '75vh'}
+          height={editorHeight || '75vh'}
           value={yamlData}
           onMount={editor => {
             editorRef.current = editor

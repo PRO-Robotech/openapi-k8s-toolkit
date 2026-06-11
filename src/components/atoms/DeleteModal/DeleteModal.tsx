@@ -49,7 +49,7 @@ export const DeleteModal: FC<TDeleteModalProps> = ({ name, onClose, endpoint }) 
         },
       }}
     >
-      {error && <Alert type="error" message="Error while delete" description={error?.response?.data?.message} />}
+      {error && <Alert type="error" title="Error while delete" description={error?.response?.data?.message} />}
     </Modal>
   )
 }

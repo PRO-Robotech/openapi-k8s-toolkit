@@ -1,5 +1,5 @@
 import { FC, useState, useMemo } from 'react'
-import { Modal, Checkbox, Alert, Spin, Typography, List } from 'antd'
+import { Modal, Checkbox, Alert, Spin, Typography, theme as antdTheme } from 'antd'
 import { useDirectUnknownResource } from 'hooks/useDirectUnknownResource'
 import type { TResourceKind } from '../../../types/ActionsDropdown'
 
@@ -63,6 +63,7 @@ export const DownloadAsFilesModal: FC<TDownloadAsFilesModalProps> = ({
   resourceKind,
   name,
 }) => {
+  const { token } = antdTheme.useToken()
   const [selectedKeys, setSelectedKeys] = useState<string[]>([])
 
   const { data, isLoading, isError, error } = useDirectUnknownResource<Record<string, unknown>>({
@@ -126,7 +127,7 @@ export const DownloadAsFilesModal: FC<TDownloadAsFilesModalProps> = ({
         <Alert
           type="error"
           showIcon
-          message="Failed to load resource"
+          title="Failed to load resource"
           description={error instanceof Error ? error.message : 'Unknown error'}
         />
       )}
@@ -144,13 +145,24 @@ export const DownloadAsFilesModal: FC<TDownloadAsFilesModalProps> = ({
               Select all ({entries.length})
             </Checkbox>
           </div>
-          <List
-            size="small"
-            bordered
-            dataSource={entries}
-            style={{ maxHeight: 400, overflow: 'auto' }}
-            renderItem={entry => (
-              <List.Item style={{ padding: '4px 12px' }}>
+          <div
+            role="list"
+            style={{
+              maxHeight: 400,
+              overflow: 'auto',
+              border: `1px solid ${token.colorBorder}`,
+              borderRadius: token.borderRadiusLG,
+            }}
+          >
+            {entries.map((entry, index) => (
+              <div
+                role="listitem"
+                key={`${entry.isBinary ? 'binary' : 'data'}:${entry.key}`}
+                style={{
+                  padding: '4px 12px',
+                  borderBottom: index === entries.length - 1 ? undefined : `1px solid ${token.colorSplit}`,
+                }}
+              >
                 <Checkbox
                   checked={selectedKeys.includes(entry.key)}
                   onChange={e => handleToggleKey(entry.key, e.target.checked)}
@@ -162,9 +174,9 @@ export const DownloadAsFilesModal: FC<TDownloadAsFilesModalProps> = ({
                     </Typography.Text>
                   )}
                 </Checkbox>
-              </List.Item>
-            )}
-          />
+              </div>
+            ))}
+          </div>
         </>
       )}
     </Modal>

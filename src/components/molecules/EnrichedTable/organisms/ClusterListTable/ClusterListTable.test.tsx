@@ -1,7 +1,7 @@
 import React from 'react'
 import { render } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import type { AnyObject } from 'antd/es/_util/type'
+import type { TTableRecord } from '../EnrichedTable/types'
 import { ClusterListTable } from './ClusterListTable'
 
 const navigateMock = jest.fn()
@@ -47,7 +47,7 @@ describe('ClusterListTable', () => {
 
   const baseProps = {
     theme: 'light' as const,
-    dataSource: [{ key: 'row-1', clusterName: 'alpha' }] as AnyObject[],
+    dataSource: [{ key: 'row-1', clusterName: 'alpha' }] as TTableRecord[],
     columns: [{ title: 'Cluster', key: 'clusterName', dataIndex: 'clusterName' }],
   }
 
@@ -76,7 +76,7 @@ describe('ClusterListTable', () => {
     )
 
     const tableProps = tableMock.mock.calls[0][0] as {
-      onRow?: (record: AnyObject) => { onClick?: (event: { defaultPrevented?: boolean }) => Promise<void> }
+      onRow?: (record: TTableRecord) => { onClick?: (event: { defaultPrevented?: boolean }) => Promise<void> }
     }
     const rowProps = tableProps.onRow?.({ key: 'row-1', clusterName: 'alpha' })
     await rowProps?.onClick?.({ defaultPrevented: false })
@@ -101,7 +101,7 @@ describe('ClusterListTable', () => {
     )
 
     const tableProps = tableMock.mock.calls[0][0] as {
-      onRow?: (record: AnyObject) => { onClick?: (event: { defaultPrevented?: boolean }) => Promise<void> }
+      onRow?: (record: TTableRecord) => { onClick?: (event: { defaultPrevented?: boolean }) => Promise<void> }
     }
     const rowProps = tableProps.onRow?.({ key: 'row-1', clusterName: 'alpha' })
     await rowProps?.onClick?.({ defaultPrevented: false })

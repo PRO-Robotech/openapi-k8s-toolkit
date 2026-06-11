@@ -25,7 +25,7 @@ const DisabledTextArea = styled(Input.TextArea)<TDisabledInputProps>`
 `
 
 const NotificationOverrides = createGlobalStyle`
-  .no-message-notif .ant-notification-notice-message {
+  .no-message-notif .ant-notification-notice-title {
     margin-bottom: 0 !important;
   }
 `

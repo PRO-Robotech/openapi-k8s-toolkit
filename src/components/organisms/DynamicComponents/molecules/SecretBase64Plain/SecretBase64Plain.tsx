@@ -86,8 +86,7 @@ export const SecretBase64Plain: FC<{ data: TDynamicComponentsAppTypeMap['SecretB
       if (valueToCopy !== null && valueToCopy !== undefined) {
         await navigator.clipboard.writeText(valueToCopy)
         notificationApi.info({
-          // message: `Copied: ${decodedText.substring(0, 5)}...`,
-          message: notificationText || 'Text copied to clipboard',
+          title: notificationText || 'Text copied to clipboard',
           placement: 'bottomRight',
           closeIcon: null,
           style: {

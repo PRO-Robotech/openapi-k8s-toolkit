@@ -217,7 +217,7 @@ describe('useActionsDropdownHandlers - patch actions', () => {
         result.current.handleActionClick(cordonAction)
       })
 
-      expect(mockNotificationSuccess).toHaveBeenCalledWith(expect.objectContaining({ message: 'Cordon successful' }))
+      expect(mockNotificationSuccess).toHaveBeenCalledWith(expect.objectContaining({ title: 'Cordon successful' }))
       expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['multi'] })
     })
 
@@ -230,7 +230,7 @@ describe('useActionsDropdownHandlers - patch actions', () => {
         result.current.handleActionClick(cordonAction)
       })
 
-      expect(mockNotificationError).toHaveBeenCalledWith(expect.objectContaining({ message: 'Cordon failed' }))
+      expect(mockNotificationError).toHaveBeenCalledWith(expect.objectContaining({ title: 'Cordon failed' }))
     })
   })
 })
@@ -288,7 +288,7 @@ describe('useActionsDropdownHandlers - rollout restart', () => {
       })
 
       expect(mockNotificationSuccess).toHaveBeenCalledWith(
-        expect.objectContaining({ message: 'Rollout Restart successful' }),
+        expect.objectContaining({ title: 'Rollout Restart successful' }),
       )
     })
   })
@@ -370,7 +370,7 @@ describe('useActionsDropdownHandlers - triggerRun and rerunLast', () => {
     expect(mockCreateNewEntry).not.toHaveBeenCalled()
     expect(mockNotificationError).toHaveBeenCalledWith(
       expect.objectContaining({
-        message: 'Trigger run failed',
+        title: 'Trigger run failed',
         description: 'Could not resolve job template from resource data',
       }),
     )
@@ -486,7 +486,7 @@ describe('useActionsDropdownHandlers - triggerRun and rerunLast', () => {
     expect(mockCreateNewEntry).not.toHaveBeenCalled()
     expect(mockNotificationError).toHaveBeenCalledWith(
       expect.objectContaining({
-        message: 'Rerun job failed',
+        title: 'Rerun job failed',
         description: 'Could not resolve source job spec from resource data',
       }),
     )
@@ -562,7 +562,7 @@ describe('useActionsDropdownHandlers - evict action', () => {
       })
 
       expect(mockNotificationSuccess).toHaveBeenCalledWith(
-        expect.objectContaining({ message: 'Evict my-pod successful' }),
+        expect.objectContaining({ title: 'Evict my-pod successful' }),
       )
       expect(result.current.evictModalData).toBeNull()
       expect(result.current.isEvictLoading).toBe(false)
@@ -581,7 +581,7 @@ describe('useActionsDropdownHandlers - evict action', () => {
         result.current.handleEvictConfirm()
       })
 
-      expect(mockNotificationError).toHaveBeenCalledWith(expect.objectContaining({ message: 'Evict my-pod failed' }))
+      expect(mockNotificationError).toHaveBeenCalledWith(expect.objectContaining({ title: 'Evict my-pod failed' }))
       expect(result.current.evictModalData).toBeNull()
       expect(result.current.isEvictLoading).toBe(false)
     })
@@ -786,7 +786,7 @@ describe('useActionsDropdownHandlers - drain action', () => {
 
     expect(mockNotificationSuccess).toHaveBeenCalledWith(
       expect.objectContaining({
-        message: 'Drain my-node successful',
+        title: 'Drain my-node successful',
         description: 'Evicted 3 pod(s), skipped 1',
       }),
     )
@@ -810,7 +810,7 @@ describe('useActionsDropdownHandlers - drain action', () => {
 
     expect(mockNotificationSuccess).toHaveBeenCalledWith(
       expect.objectContaining({
-        message: 'Drain my-node successful',
+        title: 'Drain my-node successful',
         description: 'Evicted 0 pod(s), skipped 5',
       }),
     )
@@ -840,7 +840,7 @@ describe('useActionsDropdownHandlers - drain action', () => {
 
     expect(mockNotificationWarning).toHaveBeenCalledTimes(1)
     const call = mockNotificationWarning.mock.calls[0][0]
-    expect(call.message).toBe('Drain my-node partially completed')
+    expect(call.title).toBe('Drain my-node partially completed')
     expect(call.duration).toBe(0)
     expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['multi'] })
     expect(result.current.drainModalData).toBeNull()
@@ -860,7 +860,7 @@ describe('useActionsDropdownHandlers - drain action', () => {
       result.current.handleDrainConfirm()
     })
 
-    expect(mockNotificationError).toHaveBeenCalledWith(expect.objectContaining({ message: 'Drain my-node failed' }))
+    expect(mockNotificationError).toHaveBeenCalledWith(expect.objectContaining({ title: 'Drain my-node failed' }))
     expect(result.current.drainModalData).toBeNull()
     expect(result.current.isDrainLoading).toBe(false)
   })
@@ -952,7 +952,7 @@ describe('useActionsDropdownHandlers - rollback action', () => {
     })
 
     expect(mockNotificationSuccess).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'Rollback my-deploy successful' }),
+      expect.objectContaining({ title: 'Rollback my-deploy successful' }),
     )
     expect(result.current.rollbackModalData).toBeNull()
     expect(result.current.isRollbackLoading).toBe(false)
@@ -971,9 +971,7 @@ describe('useActionsDropdownHandlers - rollback action', () => {
       result.current.handleRollbackConfirm()
     })
 
-    expect(mockNotificationError).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'Rollback my-deploy failed' }),
-    )
+    expect(mockNotificationError).toHaveBeenCalledWith(expect.objectContaining({ title: 'Rollback my-deploy failed' }))
     expect(result.current.rollbackModalData).toBeNull()
     expect(result.current.isRollbackLoading).toBe(false)
   })
@@ -1162,7 +1160,7 @@ describe('useActionsDropdownHandlers - createFromFiles', () => {
     })
 
     expect(mockNotificationSuccess).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'Create Secret my-secret successful' }),
+      expect.objectContaining({ title: 'Create Secret my-secret successful' }),
     )
     expect(result.current.createFromFilesModalData).toBeNull()
     expect(result.current.isCreateFromFilesLoading).toBe(false)
@@ -1182,7 +1180,7 @@ describe('useActionsDropdownHandlers - createFromFiles', () => {
     })
 
     expect(mockNotificationError).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'Create Secret my-secret failed' }),
+      expect.objectContaining({ title: 'Create Secret my-secret failed' }),
     )
     expect(result.current.createFromFilesModalData).toBeNull()
     expect(result.current.isCreateFromFilesLoading).toBe(false)

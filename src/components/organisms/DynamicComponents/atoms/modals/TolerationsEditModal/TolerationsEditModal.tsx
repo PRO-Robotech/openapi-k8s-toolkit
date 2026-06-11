@@ -8,6 +8,7 @@ import { ResetedFormItem, CustomSizeTitle } from 'components/molecules/Blackhole
 import { Spacer, PlusIcon, MinusIcon } from 'components/atoms'
 import { patchEntryWithReplaceOp } from 'api/forms'
 import { TToleration, TTolerationOperator, TTaintEffect } from './types'
+import { validateGridCols } from '../gridColsValidation'
 import { Styled } from './styled'
 
 type TTolerationsEditModalProps = {
@@ -59,6 +60,19 @@ export const TolerationsEditModal: FC<TTolerationsEditModalProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, form])
+
+  // Surface misconfigured `cols` (wrong length or spans not summing to 24) without rewriting the
+  // author's values — broken YAML factory configs warn in the console instead of silently breaking the layout.
+  useEffect(() => {
+    const result = validateGridCols(cols, {
+      component: 'Tolerations',
+      count: 5,
+      columns: 'Key, Operator, Value, Effect, actions',
+    })
+    if (!result.valid) {
+      console.warn(result.message)
+    }
+  }, [cols])
 
   const submit = () => {
     form
@@ -112,7 +126,7 @@ export const TolerationsEditModal: FC<TTolerationsEditModalProps> = ({
         },
       }}
     >
-      {error && <Alert type="error" message="Error while submitting" description={error?.response?.data?.message} />}
+      {error && <Alert type="error" title="Error while submitting" description={error?.response?.data?.message} />}
       {modalDescriptionText && (
         <>
           <div style={modalDescriptionTextStyle}>{modalDescriptionText}</div>

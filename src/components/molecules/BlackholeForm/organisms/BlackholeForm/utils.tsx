@@ -5,7 +5,7 @@
 /* eslint-disable consistent-return */
 // import { Form, Button, Alert } from 'antd'
 import { Form, Button } from 'antd'
-import type { ValidatorRule } from 'rc-field-form/lib/interface'
+import type { FormListProps } from 'antd/es/form/FormList'
 import { getStringByName } from 'utils/getStringByName'
 import { TListInputCustomProps, TRangeInputCustomProps } from 'localTypes/formExtensions'
 import { TFormName, TExpandedControls, TNamespaceData, TPersistedControls, TUrlParams } from 'localTypes/form'
@@ -36,6 +36,8 @@ import {
   FormInlineYamlEditor,
 } from '../../molecules'
 import { Styled } from './styled'
+
+type ValidatorRule = NonNullable<FormListProps['rules']>[number]
 
 export const getStringFormItemFromSwagger = ({
   name,

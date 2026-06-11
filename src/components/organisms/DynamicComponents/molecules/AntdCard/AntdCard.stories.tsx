@@ -18,9 +18,10 @@ const meta: Meta<TInner> = {
       control: 'text',
       description: 'Card title',
     },
-    bordered: {
-      control: 'boolean',
-      description: 'Show card border',
+    variant: {
+      control: 'radio',
+      options: ['outlined', 'borderless'],
+      description: 'Card border variant',
     },
     hoverable: {
       control: 'boolean',
@@ -44,7 +45,7 @@ const meta: Meta<TInner> = {
     const data: TInner = {
       id: args.id,
       title: args.title,
-      bordered: args.bordered,
+      variant: args.variant,
       hoverable: args.hoverable,
       size: args.size,
       loading: args.loading,
@@ -72,7 +73,7 @@ export const Default: Story = {
   args: {
     id: 'example-antd-card',
     title: 'Example Antd Card',
-    bordered: true,
+    variant: 'outlined',
     hoverable: false,
     size: 'default',
     loading: false,

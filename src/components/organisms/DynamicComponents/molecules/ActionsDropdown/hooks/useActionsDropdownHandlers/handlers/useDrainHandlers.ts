@@ -38,14 +38,14 @@ export const useDrainHandlers = (
 
         if (failed.length > 0) {
           notificationApi.warning({
-            message: `${drainLabel} partially completed`,
+            title: `${drainLabel} partially completed`,
             description: buildDrainFailureDescription({ drained, failed, skipped }),
             placement: 'bottomRight',
             duration: 0,
           })
         } else {
           notificationApi.success({
-            message: `${drainLabel} successful`,
+            title: `${drainLabel} successful`,
             description: `Evicted ${drained} pod(s), skipped ${skipped}`,
             placement: 'bottomRight',
           })
