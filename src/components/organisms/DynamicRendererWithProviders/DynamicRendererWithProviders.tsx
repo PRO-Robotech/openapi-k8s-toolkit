@@ -6,7 +6,7 @@ import { prepareUrlsToFetchForDynamicRenderer } from 'utils/prepareUrlsToFetchFo
 import { TUseK8sSmartResourceParams } from 'hooks/useK8sSmartResource'
 import { DynamicRenderer, TDynamicRendererProps } from '../DynamicRenderer'
 import { ThemeProvider } from './providers/themeContext'
-import { FactoryConfigContextProvider } from './providers/factoryConfigProvider'
+import { FactoryConfigContextProvider, TNamespaceLabels } from './providers/factoryConfigProvider'
 import { PartsOfUrlProvider } from './providers/partsOfUrlContext'
 // import { MultiQueryProvider } from './multiQueryProvider'
 import { MultiQueryProvider } from './providers/hybridDataProvider'
@@ -29,6 +29,7 @@ export const DynamicRendererWithProviders = <T extends TItemTypeMap>(
     dataToApplyToContext?: unknown
     theme: 'dark' | 'light'
     nodeTerminalDefaultProfile?: string
+    namespaceLabels?: TNamespaceLabels
     disableEventBubbling?: boolean
     effectiveReqIndexes?: number[]
     effectiveItemsPath?: string | string[]
@@ -40,6 +41,7 @@ export const DynamicRendererWithProviders = <T extends TItemTypeMap>(
     dataToApplyToContext,
     theme,
     nodeTerminalDefaultProfile,
+    namespaceLabels,
     disableEventBubbling,
     effectiveReqIndexes,
     effectiveItemsPath,
@@ -87,7 +89,7 @@ export const DynamicRendererWithProviders = <T extends TItemTypeMap>(
       }}
     >
       <ThemeProvider theme={theme}>
-        <FactoryConfigContextProvider value={{ nodeTerminalDefaultProfile }}>
+        <FactoryConfigContextProvider value={{ nodeTerminalDefaultProfile, namespaceLabels }}>
           <PartsOfUrlProvider value={{ partsOfUrl: location.pathname.split('/') }}>
             <MultiQueryProvider
               items={[...preparedK8sResoucesUrls, ...preparedUrlsToFetch]}
