@@ -41,7 +41,11 @@ jest.mock('./providers/themeContext', () => ({
 
 // Factory config provider mock
 const FactoryConfigProviderMock = jest.fn(({ value, children }: any) => (
-  <div data-testid="factory-provider" data-profile={value?.nodeTerminalDefaultProfile ?? ''}>
+  <div
+    data-testid="factory-provider"
+    data-profile={value?.nodeTerminalDefaultProfile ?? ''}
+    data-namespace-label={value?.namespaceLabels?.label ?? ''}
+  >
     {children}
   </div>
 ))
@@ -128,6 +132,7 @@ describe('DynamicRendererWithProviders', () => {
         dataToApplyToContext={dataToApplyToContext}
         theme="light"
         nodeTerminalDefaultProfile="profile-1"
+        namespaceLabels={{ label: 'Project' }}
       />,
       route,
     )
@@ -139,6 +144,7 @@ describe('DynamicRendererWithProviders', () => {
     // FactoryConfig gets profile
     expect(FactoryConfigProviderMock).toHaveBeenCalled()
     expect(screen.getByTestId('factory-provider')).toHaveAttribute('data-profile', 'profile-1')
+    expect(screen.getByTestId('factory-provider')).toHaveAttribute('data-namespace-label', 'Project')
 
     // PartsOfUrl gets pathname parts
     expect(PartsOfUrlProviderMock).toHaveBeenCalled()

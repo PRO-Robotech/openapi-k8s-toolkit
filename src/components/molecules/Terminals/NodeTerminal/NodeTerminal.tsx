@@ -2,6 +2,7 @@ import React, { FC, useEffect, useMemo, useState } from 'react'
 import { Flex, Select, Typography } from 'antd'
 import { filterSelectOptions } from 'utils/filterSelectOptions'
 import { Spacer } from 'components/atoms'
+import { useFactoryConfig } from 'components/organisms/DynamicRendererWithProviders/providers/factoryConfigProvider'
 import { useListWatch } from 'hooks/useListThenWatch'
 import { XTerminal } from './molecules'
 import { Styled } from './styled'
@@ -15,6 +16,8 @@ export type TNodeTerminalProps = {
 }
 
 export const NodeTerminal: FC<TNodeTerminalProps> = ({ cluster, nodeName, substractHeight, listPodTemplatesNs }) => {
+  const { namespaceLabels } = useFactoryConfig()
+  const namespaceLabel = namespaceLabels?.label?.toLowerCase() ?? 'namespace'
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
   const [selectedContainer, setSelectedContainer] = useState<string | null>(null)
 
@@ -74,7 +77,7 @@ export const NodeTerminal: FC<TNodeTerminalProps> = ({ cluster, nodeName, substr
     return (
       <Styled.EmptyState>
         <Typography.Text type="secondary">
-          No PodTemplates found in namespace &ldquo;{listPodTemplatesNs}&rdquo;.
+          No PodTemplates found in {namespaceLabel} &ldquo;{listPodTemplatesNs}&rdquo;.
         </Typography.Text>
         <Typography.Text type="secondary">Create a PodTemplate to use the node terminal.</Typography.Text>
       </Styled.EmptyState>
